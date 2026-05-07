@@ -24,8 +24,9 @@ describe('ScheduleGrid', () => {
 
   it('renders time slot labels', () => {
     render(<ScheduleGrid {...mockProps} />)
-    expect(screen.getByText('10-12')).toBeInTheDocument()
-    expect(screen.getByText('20-22')).toBeInTheDocument()
+    // 주차별로 반복되므로 getAllByText 사용
+    expect(screen.getAllByText('10-12').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('20-22').length).toBeGreaterThan(0)
   })
 
   it('renders BREAKTIME cells for 12-13 row', () => {
