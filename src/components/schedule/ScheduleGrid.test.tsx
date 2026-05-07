@@ -14,10 +14,12 @@ const mockProps = {
 }
 
 describe('ScheduleGrid', () => {
-  it('renders day headers for April 2026', () => {
+  it('renders day-of-week headers', () => {
     render(<ScheduleGrid {...mockProps} />)
-    expect(screen.getByText('1')).toBeInTheDocument()
-    expect(screen.getByText('30')).toBeInTheDocument()
+    expect(screen.getByText('월')).toBeInTheDocument()
+    expect(screen.getByText('화')).toBeInTheDocument()
+    expect(screen.getByText('일')).toBeInTheDocument()
+    expect(screen.getByText('토')).toBeInTheDocument()
   })
 
   it('renders time slot labels', () => {
