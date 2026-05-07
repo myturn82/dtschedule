@@ -24,6 +24,14 @@ const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
 export function ScheduleGrid({ year, month, assignments, slotSettings, scheduleRules, dateOverrides, highlightName, onCellClick }: Props) {
   const days = getDaysInMonth(year, month)
 
+  const holidayDays = new Set(
+    days.filter(day => {
+      if (new Date(year, month - 1, day).getDay() === 0) return true
+      const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+      return dateOverrides.some(d => d.date === dateStr && d.is_holiday)
+    })
+  )
+
   return (
     <div className="overflow-x-auto">
       <table className="border-collapse text-sm w-full min-w-max">
@@ -47,12 +55,27 @@ export function ScheduleGrid({ year, month, assignments, slotSettings, scheduleR
           </tr>
         </thead>
         <tbody>
-          {TIME_SLOTS.map(slot => (
+          {TIME_SLOTS.map((slot, slotIndex) => (
             <tr key={slot}>
               <td className="border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 dark:text-gray-200 px-2 py-1 text-xs font-medium text-center sticky left-0 z-10 whitespace-nowrap">
                 {slot}
               </td>
               {days.map(day => {
+                if (holidayDays.has(day)) {
+                  if (slotIndex === 0) {
+                    return (
+                      <td
+                        key={day}
+                        rowSpan={TIME_SLOTS.length}
+                        className="border border-gray-200 dark:border-gray-600 bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-400 text-xs text-center align-middle"
+                      >
+                        휴관
+                      </td>
+                    )
+                  }
+                  return null
+                }
+
                 const cellState = getCellState(day, slot as TimeSlot, year, month, scheduleRules, slotSettings, dateOverrides, assignments)
                 return (
                   <td key={day} className="border border-gray-200 dark:border-gray-600 p-0">
