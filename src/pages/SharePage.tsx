@@ -12,13 +12,13 @@ export function SharePage() {
   const { assignments, slotSettings, scheduleRules, dateOverrides, loading } = useSchedule(year, month)
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="bg-white rounded-lg shadow p-4 max-w-full">
-        <div className="mb-2 text-xs text-gray-400 text-right">읽기 전용 공유 뷰</div>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 max-w-full">
+        <div className="mb-2 text-xs text-gray-400 dark:text-gray-500 text-right">읽기 전용 공유 뷰</div>
         <ScheduleHeader year={year} month={month} onPrev={() => {}} onNext={() => {}} />
         <Legend />
         {loading ? (
-          <div className="flex items-center justify-center h-64 text-gray-400">로딩 중...</div>
+          <div className="flex items-center justify-center h-64 text-gray-400 dark:text-gray-500">로딩 중...</div>
         ) : (
           <ScheduleGrid
             year={year} month={month}

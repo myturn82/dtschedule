@@ -29,7 +29,7 @@ export function ScheduleGrid({ year, month, assignments, slotSettings, scheduleR
       <table className="border-collapse text-sm w-full min-w-max">
         <thead>
           <tr>
-            <th className="border border-gray-300 bg-gray-100 px-2 py-1 text-xs sticky left-0 z-10">시간/일자</th>
+            <th className="border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 dark:text-gray-200 px-2 py-1 text-xs sticky left-0 z-10">시간/일자</th>
             {days.map(day => {
               const label = DAY_LABELS[new Date(year, month - 1, day).getDay()]
               const isSat = label === '토'
@@ -37,8 +37,8 @@ export function ScheduleGrid({ year, month, assignments, slotSettings, scheduleR
               return (
                 <th
                   key={day}
-                  className={`border border-gray-300 px-1 py-1 text-xs font-medium min-w-[4.5rem]
-                    ${isSun ? 'text-red-500 bg-red-50' : isSat ? 'text-blue-600 bg-blue-50' : 'bg-gray-50'}`}
+                  className={`border border-gray-300 dark:border-gray-600 px-1 py-1 text-xs font-medium min-w-[4.5rem]
+                    ${isSun ? 'text-red-500 bg-red-50 dark:bg-red-950' : isSat ? 'text-blue-600 bg-blue-50 dark:bg-blue-950' : 'bg-gray-50 dark:bg-gray-700 dark:text-gray-200'}`}
                 >
                   <span>{day}</span><br />{label}
                 </th>
@@ -49,13 +49,13 @@ export function ScheduleGrid({ year, month, assignments, slotSettings, scheduleR
         <tbody>
           {TIME_SLOTS.map(slot => (
             <tr key={slot}>
-              <td className="border border-gray-300 bg-gray-100 px-2 py-1 text-xs font-medium text-center sticky left-0 z-10 whitespace-nowrap">
+              <td className="border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 dark:text-gray-200 px-2 py-1 text-xs font-medium text-center sticky left-0 z-10 whitespace-nowrap">
                 {slot}
               </td>
               {days.map(day => {
                 const cellState = getCellState(day, slot as TimeSlot, year, month, scheduleRules, slotSettings, dateOverrides, assignments)
                 return (
-                  <td key={day} className="border border-gray-200 p-0">
+                  <td key={day} className="border border-gray-200 dark:border-gray-600 p-0">
                     <TimeSlotCell
                       cellState={cellState}
                       highlightName={highlightName}

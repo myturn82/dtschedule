@@ -37,7 +37,7 @@ export function MobileScheduleView({ year, month, assignments, slotSettings, sch
               key={d}
               onClick={() => setSelectedDay(d)}
               className={`flex-shrink-0 w-10 h-12 rounded text-xs font-medium border
-                ${selectedDay === d ? 'bg-blue-600 text-white border-blue-600' : 'bg-white border-gray-300'}
+                ${selectedDay === d ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 dark:text-gray-200'}
                 ${isSunDay && selectedDay !== d ? 'text-red-500' : ''}
                 ${isSatDay && selectedDay !== d ? 'text-blue-600' : ''}`}
             >
@@ -48,7 +48,7 @@ export function MobileScheduleView({ year, month, assignments, slotSettings, sch
         })}
       </div>
 
-      <div className="text-sm font-bold mb-2 text-gray-700">
+      <div className="text-sm font-bold mb-2 text-gray-700 dark:text-gray-200">
         {month}월 {selectedDay}일 ({dayLabel})
         {(isSun || isSat) && (
           <span className={`ml-2 text-xs ${isSun ? 'text-red-500' : 'text-blue-500'}`}>
@@ -61,7 +61,7 @@ export function MobileScheduleView({ year, month, assignments, slotSettings, sch
           const cellState = getCellState(selectedDay, slot as TimeSlot, year, month, scheduleRules, slotSettings, dateOverrides, assignments)
           return (
             <div key={slot} className="flex items-stretch gap-2">
-              <div className="w-16 text-xs font-medium text-gray-600 flex items-center justify-center bg-gray-100 rounded px-1">{slot}</div>
+              <div className="w-16 text-xs font-medium text-gray-600 dark:text-gray-300 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded px-1">{slot}</div>
               <div className="flex-1">
                 <TimeSlotCell
                   cellState={cellState}

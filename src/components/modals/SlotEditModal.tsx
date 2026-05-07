@@ -55,12 +55,12 @@ export function SlotEditModal({ target, cellState, profile, onClose, onAdd, onUp
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-bold">
+          <h2 className="text-lg font-bold dark:text-gray-100">
             {year}년 {month}월 {day}일 {timeSlot}시
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xl leading-none">&times;</button>
         </div>
 
         {cellState.assignments.length > 0 && (
@@ -68,8 +68,8 @@ export function SlotEditModal({ target, cellState, profile, onClose, onAdd, onUp
             {cellState.assignments.map(a => {
               const canEdit = isAdmin || a.user_id === profile?.id
               return (
-                <div key={a.id} className="flex items-center justify-between bg-gray-50 rounded px-3 py-1.5">
-                  <span className="text-sm">{a.volunteer_name}{a.note ? ` (${a.note})` : ''}</span>
+                <div key={a.id} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 rounded px-3 py-1.5">
+                  <span className="text-sm dark:text-gray-200">{a.volunteer_name}{a.note ? ` (${a.note})` : ''}</span>
                   {canEdit && (
                     <div className="flex gap-1">
                       <button onClick={() => startEdit(a)} className="text-xs text-blue-500 hover:underline">수정</button>
@@ -87,12 +87,12 @@ export function SlotEditModal({ target, cellState, profile, onClose, onAdd, onUp
             <input
               value={name} onChange={e => setName(e.target.value)}
               placeholder="봉사자 이름"
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
             <input
               value={note} onChange={e => setNote(e.target.value)}
               placeholder="메모 (선택, 예: 2-6)"
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
             {error && <p className="text-red-500 text-xs">{error}</p>}
             <div className="flex gap-2">
@@ -103,13 +103,13 @@ export function SlotEditModal({ target, cellState, profile, onClose, onAdd, onUp
               >
                 {loading ? '저장 중...' : editingId ? '수정' : '추가'}
               </button>
-              <button onClick={onClose} className="flex-1 border border-gray-300 rounded py-2 text-sm hover:bg-gray-50">
+              <button onClick={onClose} className="flex-1 border border-gray-300 dark:border-gray-600 dark:text-gray-200 rounded py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700">
                 닫기
               </button>
             </div>
           </div>
         ) : (
-          <p className="text-sm text-gray-500 text-center">로그인 후 스케줄을 입력할 수 있습니다.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 text-center">로그인 후 스케줄을 입력할 수 있습니다.</p>
         )}
       </div>
     </div>

@@ -26,13 +26,13 @@ export function ExportButton({ targetId, year, month }: Props) {
     <div className="flex gap-2">
       <button
         onClick={handleImageSave}
-        className="px-3 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50 flex items-center gap-1"
+        className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 dark:text-gray-200 rounded hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-1"
       >
         📷 이미지 저장
       </button>
       <button
         onClick={handleShareUrl}
-        className="px-3 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50 flex items-center gap-1"
+        className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 dark:text-gray-200 rounded hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-1"
       >
         🔗 공유 URL
       </button>

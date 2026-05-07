@@ -11,7 +11,7 @@ export function TimeSlotCell({ cellState, onClick, highlightName }: Props) {
 
   if (isBreaktime) {
     return (
-      <div className="min-h-[2.5rem] bg-gray-100 flex items-center justify-center text-xs text-gray-500 border border-gray-200">
+      <div className="min-h-[2.5rem] bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-xs text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-600">
         BREAKTIME
       </div>
     )
@@ -19,22 +19,22 @@ export function TimeSlotCell({ cellState, onClick, highlightName }: Props) {
 
   if (isHoliday || isClosed) {
     return (
-      <div className="min-h-[2.5rem] bg-gray-200 flex items-center justify-center text-xs text-gray-500 border border-gray-200">
+      <div className="min-h-[2.5rem] bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-xs text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-600">
         {isHoliday ? '휴관' : 'CLOSE'}
       </div>
     )
   }
 
   const bgClass = isNightShift
-    ? 'bg-pink-50 hover:bg-pink-100'
+    ? 'bg-pink-50 dark:bg-pink-950 hover:bg-pink-100 dark:hover:bg-pink-900'
     : isSaturdayShift
-    ? 'bg-yellow-50 hover:bg-yellow-100'
-    : 'bg-white hover:bg-blue-50'
+    ? 'bg-yellow-50 dark:bg-yellow-950 hover:bg-yellow-100 dark:hover:bg-yellow-900'
+    : 'bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-950'
 
   return (
     <button
       onClick={onClick}
-      className={`min-h-[2.5rem] w-full text-left px-1 py-0.5 border border-gray-200 ${bgClass} transition-colors`}
+      className={`min-h-[2.5rem] w-full text-left px-1 py-0.5 border border-gray-200 dark:border-gray-600 ${bgClass} transition-colors`}
     >
       {isNightShift && <span className="text-pink-400 mr-0.5">★</span>}
       {isSaturdayShift && !isNightShift && <span className="text-yellow-400 mr-0.5">★</span>}
@@ -42,7 +42,7 @@ export function TimeSlotCell({ cellState, onClick, highlightName }: Props) {
         {assignments.map(a => (
           <span
             key={a.id}
-            className={`text-xs truncate ${highlightName && a.volunteer_name.includes(highlightName) ? 'bg-yellow-200 font-bold rounded px-0.5' : ''}`}
+            className={`text-xs truncate dark:text-gray-200 ${highlightName && a.volunteer_name.includes(highlightName) ? 'bg-yellow-200 dark:bg-yellow-700 font-bold rounded px-0.5' : ''}`}
           >
             {a.volunteer_name}{a.note ? `(${a.note})` : ''}
           </span>

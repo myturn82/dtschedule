@@ -13,7 +13,12 @@ import { SlotEditModal } from '../components/modals/SlotEditModal'
 import { CapacityModal } from '../components/modals/CapacityModal'
 import type { ModalTarget } from '../types'
 
-export function SchedulePage() {
+interface Props {
+  isDark: boolean
+  onToggleDark: () => void
+}
+
+export function SchedulePage({ isDark, onToggleDark }: Props) {
   const today = new Date()
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth() + 1)
@@ -39,21 +44,28 @@ export function SchedulePage() {
     : null
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
       <div className="max-w-full mx-auto">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
           <FilterBar value={highlightName} onChange={setHighlightName} />
           <div className="flex items-center gap-2">
+            <button
+              onClick={onToggleDark}
+              className="px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-200"
+              aria-label="다크모드 토글"
+            >
+              {isDark ? '☀️' : '🌙'}
+            </button>
             <ExportButton targetId="schedule-grid-container" year={year} month={month} />
             {profile ? (
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">{profile.name} ({profile.role === 'admin' ? '관리자' : '봉사자'})</span>
+                <span className="text-sm text-gray-600 dark:text-gray-300">{profile.name} ({profile.role === 'admin' ? '관리자' : '봉사자'})</span>
                 {profile.role === 'admin' && (
-                  <button onClick={() => setShowCapacity(true)} className="px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50">
+                  <button onClick={() => setShowCapacity(true)} className="px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-200">
                     인원 설정
                   </button>
                 )}
-                <button onClick={signOut} className="px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50">
+                <button onClick={signOut} className="px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-200">
                   로그아웃
                 </button>
               </div>
@@ -65,11 +77,11 @@ export function SchedulePage() {
           </div>
         </div>
 
-        <div id="schedule-grid-container" className="bg-white rounded-lg shadow p-4">
+        <div id="schedule-grid-container" className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
           <ScheduleHeader year={year} month={month} onPrev={prevMonth} onNext={nextMonth} />
           <Legend />
           {loading ? (
-            <div className="flex items-center justify-center h-64 text-gray-400">로딩 중...</div>
+            <div className="flex items-center justify-center h-64 text-gray-400 dark:text-gray-500">로딩 중...</div>
           ) : (
             <>
               <div className="hidden md:block">
