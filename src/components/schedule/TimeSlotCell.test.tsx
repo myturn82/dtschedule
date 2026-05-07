@@ -36,10 +36,10 @@ describe('TimeSlotCell', () => {
     expect(onClick).toHaveBeenCalledOnce()
   })
 
-  it('applies pink background for night shift', () => {
+  it('applies night-shift token background for night shift', () => {
     const { container } = render(
       <TimeSlotCell cellState={{ ...baseCellState, isNightShift: true }} onClick={vi.fn()} highlightName={null} />
     )
-    expect(container.firstChild).toHaveClass('bg-pink-50')
+    expect(container.firstChild).toHaveClass('bg-schedule-night')
   })
 })
