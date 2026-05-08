@@ -10,7 +10,7 @@ export function FilterBar({ value, onChange }: Props) {
       <input
         type="text" value={value} onChange={e => onChange(e.target.value)}
         placeholder="봉사자 이름 입력"
-        className="border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 w-48"
+        className="border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 w-full sm:w-48"
       />
       {value && (
         <button onClick={() => onChange('')} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 text-sm">

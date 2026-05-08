@@ -41,17 +41,18 @@ export function ScheduleGrid({ year, month, assignments, slotSettings, scheduleR
   const weeks = getCalendarWeeks(year, month)
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto -mx-2 sm:mx-0">
       <table className="border-collapse text-sm w-full">
         <thead>
           <tr>
-            <th className="border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 dark:text-gray-200 px-2 py-1 text-xs sticky left-0 z-10 whitespace-nowrap">
-              시간/일자
+            <th className="border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 dark:text-gray-200 px-1 sm:px-2 py-1 text-[10px] sm:text-xs sticky left-0 z-10 whitespace-nowrap min-w-[3rem] sm:min-w-fit">
+              <span className="hidden sm:inline">시간/일자</span>
+              <span className="sm:hidden">시간</span>
             </th>
             {DOW_ORDER.map((dow, i) => (
               <th
                 key={dow}
-                className={`border border-gray-300 dark:border-gray-600 px-2 py-1 text-xs font-medium min-w-[5rem]
+                className={`border border-gray-300 dark:border-gray-600 px-0.5 sm:px-2 py-1 text-[10px] sm:text-xs font-medium min-w-[2.75rem] sm:min-w-[5rem]
                   ${dow === 0 ? 'text-red-500 bg-red-50 dark:bg-red-950' : dow === 6 ? 'text-blue-600 bg-blue-50 dark:bg-blue-950' : 'bg-gray-50 dark:bg-gray-700 dark:text-gray-200'}`}
               >
                 {DOW_LABELS[i]}
@@ -62,9 +63,8 @@ export function ScheduleGrid({ year, month, assignments, slotSettings, scheduleR
         <tbody>
           {weeks.map((week, weekIdx) => (
             <Fragment key={weekIdx}>
-              {/* 주차 날짜 헤더 행 */}
               <tr>
-                <td className="border-t-2 border-gray-400 dark:border-gray-500 border-x border-b border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 dark:text-gray-200 px-2 py-1 text-xs font-bold text-center sticky left-0 z-10">
+                <td className="border-t-2 border-gray-400 dark:border-gray-500 border-x border-b border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 dark:text-gray-200 px-1 sm:px-2 py-1 text-[10px] sm:text-xs font-bold text-center sticky left-0 z-10">
                   {weekIdx + 1}주
                 </td>
                 {week.map((day, dowIdx) => {
@@ -72,7 +72,7 @@ export function ScheduleGrid({ year, month, assignments, slotSettings, scheduleR
                   return (
                     <td
                       key={dowIdx}
-                      className={`border-t-2 border-gray-400 dark:border-gray-500 border-x border-b border-gray-200 dark:border-gray-600 text-center text-xs font-semibold py-1
+                      className={`border-t-2 border-gray-400 dark:border-gray-500 border-x border-b border-gray-200 dark:border-gray-600 text-center text-[10px] sm:text-xs font-semibold py-1
                         ${!day ? 'bg-gray-50 dark:bg-gray-800' : dow === 0 ? 'text-red-500 bg-red-50 dark:bg-red-950' : dow === 6 ? 'text-blue-600 bg-blue-50 dark:bg-blue-950' : 'bg-gray-50 dark:bg-gray-700 dark:text-gray-200'}`}
                     >
                       {day ?? ''}
@@ -80,10 +80,9 @@ export function ScheduleGrid({ year, month, assignments, slotSettings, scheduleR
                   )
                 })}
               </tr>
-              {/* 시간 슬롯 행 */}
               {TIME_SLOTS.map(slot => (
                 <tr key={slot}>
-                  <td className="border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 dark:text-gray-200 px-2 py-1 text-xs font-medium text-center sticky left-0 z-10 whitespace-nowrap">
+                  <td className="border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 dark:text-gray-200 px-0.5 sm:px-2 py-1 text-[10px] sm:text-xs font-medium text-center sticky left-0 z-10 whitespace-nowrap">
                     {slot}
                   </td>
                   {week.map((day, dowIdx) => {
