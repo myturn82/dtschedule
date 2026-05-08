@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useAdmin } from '../hooks/useAdmin'
-import { TIME_SLOTS } from '../types'
-import type { TimeSlot } from '../types'
+import { TIME_SLOTS, ROLE_LABELS } from '../types'
+import type { TimeSlot, UserRole } from '../types'
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
 
@@ -39,8 +39,7 @@ export function AdminPage() {
     return scheduleRules.find(r => r.day_of_week === dayOfWeek && r.time_slot === slot)
   }
 
-  async function handleRoleToggle(targetId: string, currentRole: 'admin' | 'volunteer') {
-    const newRole = currentRole === 'admin' ? 'volunteer' : 'admin'
+  async function handleRoleToggle(targetId: string, newRole: UserRole) {
     const err = await updateRole(targetId, newRole)
     if (err) setMessage({ text: err, isError: true })
   }
@@ -145,9 +144,11 @@ export function AdminPage() {
                             <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
                               p.role === 'admin'
                                 ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300'
+                                : p.role === '50plus'
+                                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
                                 : 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
                             }`}>
-                              {p.role === 'admin' ? '관리자' : '봉사자'}
+                              {ROLE_LABELS[p.role]}
                             </span>
                           </td>
                           <td className="px-4 py-3 text-xs text-gray-400 dark:text-gray-500 hidden sm:table-cell">
@@ -155,11 +156,15 @@ export function AdminPage() {
                           </td>
                           <td className="px-4 py-3">
                             {p.id !== profile.id && (
-                              <button
-                                onClick={() => handleRoleToggle(p.id, p.role)}
-                                className="px-2.5 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-300 whitespace-nowrap transition-colors">
-                                {p.role === 'admin' ? '봉사자로' : '관리자로'}
-                              </button>
+                              <select
+                                value={p.role}
+                                onChange={e => handleRoleToggle(p.id, e.target.value as UserRole)}
+                                className="text-xs border border-gray-300 dark:border-gray-600 rounded px-1.5 py-1 dark:bg-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                              >
+                                {(['volunteer', '50plus', 'admin'] as UserRole[]).map(r => (
+                                  <option key={r} value={r}>{ROLE_LABELS[r]}</option>
+                                ))}
+                              </select>
                             )}
                           </td>
                         </tr>

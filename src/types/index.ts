@@ -11,7 +11,19 @@ export const TIME_SLOTS: TimeSlot[] = [
   '10-12', '12-13', '13-14', '14-16', '16-18', '18-20', '20-22',
 ];
 
-export type UserRole = 'admin' | 'volunteer';
+export type UserRole = 'admin' | 'volunteer' | '50plus';
+export type VolunteerType = 'volunteer' | '50plus' | 'admin_note';
+
+export const ROLE_LABELS: Record<UserRole, string> = {
+  admin: '관리자',
+  volunteer: '자원봉사자',
+  '50plus': '50플러스활동가',
+};
+
+export const TYPE_LABELS: Record<VolunteerType, string> = {
+  volunteer: '자원봉사자',
+  '50plus': '50플러스활동가',
+};
 
 export interface Profile {
   id: string;
@@ -30,6 +42,9 @@ export interface Assignment {
   time_slot: TimeSlot;
   volunteer_name: string;
   note: string | null;
+  volunteer_type: VolunteerType;
+  time_sub: string | null;
+  color: string | null;
   user_id: string;
   created_at: string;
 }
@@ -72,4 +87,5 @@ export interface ModalTarget {
   month: number;
   day: number;
   timeSlot: TimeSlot;
+  volunteerType: VolunteerType;
 }
