@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { ROLE_LABELS } from '../types'
 import { useSchedule } from '../hooks/useSchedule'
 import { getCellState } from '../utils/cellState'
 import { ScheduleHeader } from '../components/schedule/ScheduleHeader'
@@ -11,6 +12,7 @@ import { ExportButton } from '../components/shared/ExportButton'
 import { LoginModal } from '../components/auth/LoginModal'
 import { SlotEditModal } from '../components/modals/SlotEditModal'
 import { CapacityModal } from '../components/modals/CapacityModal'
+import { HolidayNoteModal } from '../components/modals/HolidayNoteModal'
 import type { ModalTarget } from '../types'
 
 interface Props {
@@ -26,6 +28,7 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
   const [showLogin, setShowLogin] = useState(false)
   const [showCapacity, setShowCapacity] = useState(false)
   const [modalTarget, setModalTarget] = useState<ModalTarget | null>(null)
+  const [holidayTarget, setHolidayTarget] = useState<{ day: number; startHour: number; endHour: number } | null>(null)
 
   const navigate = useNavigate()
   const { profile, loading: authLoading, signIn, signUp, signInWithGoogle, signInWithKakao, signOut } = useAuth()
@@ -65,7 +68,7 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
             <ExportButton targetId="schedule-grid-container" year={year} month={month} />
             {profile ? (
               <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-xs text-gray-600 dark:text-gray-300">{profile.name} ({profile.role === 'admin' ? '관리자' : '봉사자'})</span>
+                <span className="text-xs text-gray-600 dark:text-gray-300">{profile.name} ({ROLE_LABELS[profile.role]})</span>
                 {profile.role === 'admin' && (
                   <>
                     <button onClick={() => navigate('/admin')} className="px-2 py-1 text-xs border border-blue-400 text-blue-600 dark:border-blue-500 dark:text-blue-400 rounded hover:bg-blue-50 dark:hover:bg-blue-900/30">
@@ -99,7 +102,11 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
               assignments={assignments} slotSettings={slotSettings}
               scheduleRules={scheduleRules} dateOverrides={dateOverrides}
               highlightName={highlightName || null}
+              profile={profile}
               onCellClick={setModalTarget}
+              onHolidayCellClick={profile?.role === 'admin'
+                ? (day, startHour, endHour) => setHolidayTarget({ day, startHour, endHour })
+                : undefined}
             />
           )}
         </div>
@@ -122,20 +129,37 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
           cellState={selectedCellState}
           profile={profile}
           onClose={() => setModalTarget(null)}
-          onAdd={(name, note) => addAssignment({
+          onAdd={(name, note, volunteerType, timeSub, color) => addAssignment({
             year, month, day: modalTarget.day,
             time_slot: modalTarget.timeSlot,
             volunteer_name: name,
             note: note || undefined,
+            volunteer_type: volunteerType,
+            time_sub: timeSub || undefined,
+            color: color || undefined,
             user_id: profile!.id
           })}
-          onUpdate={(id, name, note) => updateAssignment(id, { volunteer_name: name, note })}
+          onUpdate={(id, name, note, volunteerType, timeSub, color) => updateAssignment(id, { volunteer_name: name, note, volunteer_type: volunteerType, time_sub: timeSub ?? undefined, color: color ?? undefined })}
           onDelete={deleteAssignment}
         />
       )}
 
       {showCapacity && profile?.role === 'admin' && (
         <CapacityModal slotSettings={slotSettings} onClose={() => setShowCapacity(false)} onUpdate={updateSlotCapacity} />
+      )}
+
+      {holidayTarget !== null && profile?.role === 'admin' && (
+        <HolidayNoteModal
+          year={year} month={month} day={holidayTarget.day}
+          assignments={assignments}
+          profile={profile}
+          initialStartHour={holidayTarget.startHour}
+          initialEndHour={holidayTarget.endHour}
+          onClose={() => setHolidayTarget(null)}
+          onAdd={addAssignment}
+          onUpdate={(id, params) => updateAssignment(id, params)}
+          onDelete={deleteAssignment}
+        />
       )}
     </div>
   )

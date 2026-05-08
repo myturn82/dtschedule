@@ -21,12 +21,18 @@ interface AddParams {
   time_slot: TimeSlot
   volunteer_name: string
   note?: string
+  volunteer_type: string
+  time_sub?: string
+  color?: string
   user_id: string
 }
 
 interface UpdateParams {
   volunteer_name?: string
   note?: string
+  volunteer_type?: string
+  time_sub?: string
+  color?: string
 }
 
 export function useSchedule(year: number, month: number): ScheduleData {

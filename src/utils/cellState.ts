@@ -14,7 +14,7 @@ export function getCellState(
   const dayOfWeek = date.getDay()
   const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 
-  const isBreaktime = timeSlot === '12-13'
+  const isBreaktime = timeSlot === '12-13' && dayOfWeek !== 6  // 토요일은 12-13 정상 운영
   const override = dateOverrides.find(d => d.date === dateStr)
   const isHoliday = override?.is_holiday === true || dayOfWeek === 0
 
