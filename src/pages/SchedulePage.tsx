@@ -5,7 +5,6 @@ import { useSchedule } from '../hooks/useSchedule'
 import { getCellState } from '../utils/cellState'
 import { ScheduleHeader } from '../components/schedule/ScheduleHeader'
 import { ScheduleGrid } from '../components/schedule/ScheduleGrid'
-import { MobileScheduleView } from '../components/schedule/MobileScheduleView'
 import { Legend } from '../components/schedule/Legend'
 import { FilterBar } from '../components/shared/FilterBar'
 import { ExportButton } from '../components/shared/ExportButton'
@@ -51,11 +50,11 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
     : null
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-2 sm:p-4">
       <div className="max-w-full mx-auto">
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
+        <div className="flex flex-col gap-2 mb-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
           <FilterBar value={highlightName} onChange={setHighlightName} />
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
             <button
               onClick={onToggleDark}
               className="px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-200"
@@ -65,15 +64,15 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
             </button>
             <ExportButton targetId="schedule-grid-container" year={year} month={month} />
             {profile ? (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600 dark:text-gray-300">{profile.name} ({profile.role === 'admin' ? '관리자' : '봉사자'})</span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-xs text-gray-600 dark:text-gray-300">{profile.name} ({profile.role === 'admin' ? '관리자' : '봉사자'})</span>
                 {profile.role === 'admin' && (
                   <>
                     <button onClick={() => navigate('/admin')} className="px-2 py-1 text-xs border border-blue-400 text-blue-600 dark:border-blue-500 dark:text-blue-400 rounded hover:bg-blue-50 dark:hover:bg-blue-900/30">
-                      관리자 페이지
+                      관리자
                     </button>
                     <button onClick={() => setShowCapacity(true)} className="px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-200">
-                      인원 설정
+                      인원
                     </button>
                   </>
                 )}
@@ -89,32 +88,19 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
           </div>
         </div>
 
-        <div id="schedule-grid-container" className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+        <div id="schedule-grid-container" className="bg-white dark:bg-gray-800 rounded-lg shadow p-2 sm:p-4">
           <ScheduleHeader year={year} month={month} onPrev={prevMonth} onNext={nextMonth} />
           <Legend />
           {loading ? (
             <div className="flex items-center justify-center h-64 text-gray-400 dark:text-gray-500">로딩 중...</div>
           ) : (
-            <>
-              <div className="hidden md:block">
-                <ScheduleGrid
-                  year={year} month={month}
-                  assignments={assignments} slotSettings={slotSettings}
-                  scheduleRules={scheduleRules} dateOverrides={dateOverrides}
-                  highlightName={highlightName || null}
-                  onCellClick={setModalTarget}
-                />
-              </div>
-              <div className="block md:hidden">
-                <MobileScheduleView
-                  year={year} month={month}
-                  assignments={assignments} slotSettings={slotSettings}
-                  scheduleRules={scheduleRules} dateOverrides={dateOverrides}
-                  highlightName={highlightName || null}
-                  onCellClick={setModalTarget}
-                />
-              </div>
-            </>
+            <ScheduleGrid
+              year={year} month={month}
+              assignments={assignments} slotSettings={slotSettings}
+              scheduleRules={scheduleRules} dateOverrides={dateOverrides}
+              highlightName={highlightName || null}
+              onCellClick={setModalTarget}
+            />
           )}
         </div>
       </div>
