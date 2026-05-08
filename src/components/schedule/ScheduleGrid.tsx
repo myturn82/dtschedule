@@ -41,18 +41,18 @@ export function ScheduleGrid({ year, month, assignments, slotSettings, scheduleR
   const weeks = getCalendarWeeks(year, month)
 
   return (
-    <div className="overflow-x-auto -mx-2 sm:mx-0">
-      <table className="border-collapse text-sm w-full">
+    <div className="sm:overflow-x-auto">
+      <table className="border-collapse text-sm w-full table-fixed sm:table-auto">
         <thead>
           <tr>
-            <th className="border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 dark:text-gray-200 px-1 sm:px-2 py-1 text-[10px] sm:text-xs sticky left-0 z-10 whitespace-nowrap min-w-[3rem] sm:min-w-fit">
+            <th className="border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 dark:text-gray-200 px-0.5 sm:px-2 py-1 text-[10px] sm:text-xs sticky left-0 z-10 w-9 sm:w-auto whitespace-nowrap">
               <span className="hidden sm:inline">시간/일자</span>
               <span className="sm:hidden">시간</span>
             </th>
             {DOW_ORDER.map((dow, i) => (
               <th
                 key={dow}
-                className={`border border-gray-300 dark:border-gray-600 px-0.5 sm:px-2 py-1 text-[10px] sm:text-xs font-medium min-w-[2.75rem] sm:min-w-[5rem]
+                className={`border border-gray-300 dark:border-gray-600 px-0 sm:px-2 py-1 text-[10px] sm:text-xs font-medium sm:min-w-[5rem]
                   ${dow === 0 ? 'text-red-500 bg-red-50 dark:bg-red-950' : dow === 6 ? 'text-blue-600 bg-blue-50 dark:bg-blue-950' : 'bg-gray-50 dark:bg-gray-700 dark:text-gray-200'}`}
               >
                 {DOW_LABELS[i]}
@@ -64,7 +64,7 @@ export function ScheduleGrid({ year, month, assignments, slotSettings, scheduleR
           {weeks.map((week, weekIdx) => (
             <Fragment key={weekIdx}>
               <tr>
-                <td className="border-t-2 border-gray-400 dark:border-gray-500 border-x border-b border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 dark:text-gray-200 px-1 sm:px-2 py-1 text-[10px] sm:text-xs font-bold text-center sticky left-0 z-10">
+                <td className="border-t-2 border-gray-400 dark:border-gray-500 border-x border-b border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 dark:text-gray-200 px-0.5 sm:px-2 py-1 text-[10px] sm:text-xs font-bold text-center sticky left-0 z-10 w-9 sm:w-auto">
                   {weekIdx + 1}주
                 </td>
                 {week.map((day, dowIdx) => {
@@ -82,8 +82,9 @@ export function ScheduleGrid({ year, month, assignments, slotSettings, scheduleR
               </tr>
               {TIME_SLOTS.map(slot => (
                 <tr key={slot}>
-                  <td className="border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 dark:text-gray-200 px-0.5 sm:px-2 py-1 text-[10px] sm:text-xs font-medium text-center sticky left-0 z-10 whitespace-nowrap">
-                    {slot}
+                  <td className="border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 dark:text-gray-200 px-0.5 sm:px-2 py-1 text-[10px] sm:text-xs font-medium text-center sticky left-0 z-10 w-9 sm:w-auto">
+                    <span className="sm:hidden">{slot.split('-')[0]}</span>
+                    <span className="hidden sm:inline whitespace-nowrap">{slot}</span>
                   </td>
                   {week.map((day, dowIdx) => {
                     if (!day) {
