@@ -111,29 +111,12 @@ function buildBlockMap(
 
 // ── Column merge (volunteer or 50plus, independently) ────────────────────────
 
-function getVolKey(day: number, slot: TimeSlot, assignments: Assignment[]): string {
-  const slotA = assignments.filter(a =>
-    a.day === day && a.time_slot === slot &&
-    (!a.volunteer_type || a.volunteer_type === 'volunteer')
-  )
-  if (slotA.length === 0) return ''
-  return slotA.map(a => `${a.user_id}:${a.volunteer_name}:${a.note ?? ''}`).sort().join('|')
-}
-
-function getPlusKey(day: number, slot: TimeSlot, assignments: Assignment[]): string {
-  const slotA = assignments.filter(a =>
-    a.day === day && a.time_slot === slot && a.volunteer_type === '50plus'
-  )
-  if (slotA.length === 0) return ''
-  return slotA.map(a => `${a.user_id}:${a.volunteer_name}:${a.note ?? ''}`).sort().join('|')
-}
 
 function buildColMap(
   week: (number | null)[],
   year: number, month: number,
   scheduleRules: ScheduleRule[], slotSettings: SlotSetting[],
-  dateOverrides: DateOverride[], assignments: Assignment[],
-  keyFn: (day: number, slot: TimeSlot, assignments: Assignment[]) => string
+  dateOverrides: DateOverride[], assignments: Assignment[]
 ): Map<string, ColEntry> {
   const map = new Map<string, ColEntry>()
 
@@ -211,8 +194,8 @@ export function ScheduleGrid({
         <tbody>
           {weeks.map((week, weekIdx) => {
             const blockMap = buildBlockMap(week, year, month, scheduleRules, slotSettings, dateOverrides, assignments)
-            const volMap   = buildColMap(week, year, month, scheduleRules, slotSettings, dateOverrides, assignments, getVolKey)
-            const plusMap  = buildColMap(week, year, month, scheduleRules, slotSettings, dateOverrides, assignments, getPlusKey)
+            const volMap   = buildColMap(week, year, month, scheduleRules, slotSettings, dateOverrides, assignments)
+            const plusMap  = buildColMap(week, year, month, scheduleRules, slotSettings, dateOverrides, assignments)
 
             return (
               <Fragment key={weekIdx}>

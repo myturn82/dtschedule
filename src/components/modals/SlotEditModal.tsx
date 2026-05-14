@@ -39,13 +39,11 @@ function getRoleLabel(role: string): string {
 }
 
 export function SlotEditModal({ target, cellState, profile, onClose, onAdd, onUpdate, onDelete }: Props) {
-  const { day, month, year, timeSlot, volunteerType: defaultType } = target
+  const { day, month, timeSlot, volunteerType: defaultType } = target
 
   const isAdmin = profile?.role === 'admin' || profile?.role === 'team_leader'
   const isTeamLeader = profile?.role === 'team_leader'
   const profileType: VolunteerType = profile?.role === '50plus' ? '50plus' : 'volunteer'
-  const isSaturday = new Date(year, month - 1, day).getDay() === 6
-
   const [volunteerType, setVolunteerType] = useState<VolunteerType>(
     isAdmin ? defaultType : profileType
   )
