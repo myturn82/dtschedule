@@ -3,7 +3,7 @@ import { useState } from 'react'
 interface Props {
   onClose: () => void
   onSignIn: (email: string, password: string) => Promise<string | null>
-  onSignUp: (email: string, password: string, name: string, role: 'volunteer' | '50plus') => Promise<string | null>
+  onSignUp: (email: string, password: string, name: string, role: 'volunteer' | '50plus' | 'team_leader') => Promise<string | null>
   onGoogle: () => Promise<string | null>
   onKakao: () => Promise<string | null>
   hideCancelButton?: boolean
@@ -17,7 +17,7 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [name, setName] = useState('')
-  const [role, setRole] = useState<'volunteer' | '50plus'>('volunteer')
+  const [role, setRole] = useState<'volunteer' | '50plus' | 'team_leader'>('volunteer')
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -34,11 +34,21 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
     setLoading(true)
 
     if (mode === 'login') {
+      if (!email.trim() || !password) {
+        setError('이메일과 비밀번호를 입력해주세요.')
+        setLoading(false)
+        return
+      }
       const err = await onSignIn(email, password)
       setLoading(false)
       if (err) setError(err)
       else onClose()
     } else {
+      if (!name.trim()) {
+        setError('이름을 입력해주세요.')
+        setLoading(false)
+        return
+      }
       if (password !== confirmPassword) {
         setError('비밀번호가 일치하지 않습니다.')
         setLoading(false)
@@ -150,10 +160,11 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
                     <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1.5">
                       활동 유형
                     </label>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                       {([
                         { value: 'volunteer', label: '자원봉사자' },
-                        { value: '50plus', label: '50플러스 활동가' },
+                        { value: '50plus', label: '50플러스' },
+                        { value: 'team_leader', label: '팀장' },
                       ] as const).map(opt => (
                         <button
                           key={opt.value}

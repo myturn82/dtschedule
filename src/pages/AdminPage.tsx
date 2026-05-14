@@ -51,7 +51,10 @@ export function AdminPage() {
 
   async function handleDateSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!dateForm.date) return
+    if (!dateForm.date) {
+      setMessage({ text: '날짜를 선택해주세요.', isError: true })
+      return
+    }
     setSaving(true)
     const isHoliday = dateForm.type === 'holiday'
     const err = await addDateOverride(dateForm.date, !isHoliday, isHoliday, dateForm.label || null)

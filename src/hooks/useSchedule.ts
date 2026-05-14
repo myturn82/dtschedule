@@ -86,9 +86,17 @@ export function useSchedule(year: number, month: number): ScheduleData {
   }, [year, month])
 
   const addAssignment = useCallback(async (params: AddParams): Promise<string | null> => {
+    if (params.volunteer_type !== 'admin_note') {
+      const isDuplicate = assignments.some(
+        a => a.year === params.year && a.month === params.month &&
+             a.day === params.day && a.time_slot === params.time_slot &&
+             a.volunteer_name === params.volunteer_name
+      )
+      if (isDuplicate) return '이미 같은 봉사자가 배정되어 있습니다'
+    }
     const { error } = await supabase.from('assignments').insert(params)
     return error?.message ?? null
-  }, [])
+  }, [assignments])
 
   const updateAssignment = useCallback(async (id: string, params: UpdateParams): Promise<string | null> => {
     const { error } = await supabase.from('assignments').update(params).eq('id', id)
