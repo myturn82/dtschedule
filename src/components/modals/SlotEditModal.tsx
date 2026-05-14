@@ -23,16 +23,6 @@ function getTimeSubOptions(slot: string): { value: string; label: string }[] | n
   ]
 }
 
-const PLUS_COLORS = [
-  { label: '기본', value: '' },
-  { label: '파랑', value: '#BFDBFE' },
-  { label: '초록', value: '#BBF7D0' },
-  { label: '빨강', value: '#FECACA' },
-  { label: '주황', value: '#FED7AA' },
-  { label: '보라', value: '#E9D5FF' },
-  { label: '노랑', value: '#FEF08A' },
-]
-
 function formatTimeSub(ts: string | null): string {
   if (!ts) return ''
   if (ts.includes('~')) {
@@ -42,10 +32,17 @@ function formatTimeSub(ts: string | null): string {
   return `${ts}시`
 }
 
+function getRoleLabel(role: string): string {
+  if (role === '50plus') return '50+'
+  if (role === 'team_leader') return '팀장'
+  return '봉사'
+}
+
 export function SlotEditModal({ target, cellState, profile, onClose, onAdd, onUpdate, onDelete }: Props) {
   const { day, month, year, timeSlot, volunteerType: defaultType } = target
 
   const isAdmin = profile?.role === 'admin' || profile?.role === 'team_leader'
+  const isTeamLeader = profile?.role === 'team_leader'
   const profileType: VolunteerType = profile?.role === '50plus' ? '50plus' : 'volunteer'
   const isSaturday = new Date(year, month - 1, day).getDay() === 6
 
@@ -56,36 +53,51 @@ export function SlotEditModal({ target, cellState, profile, onClose, onAdd, onUp
   const [timeSub, setTimeSub] = useState<string | null>(null)
   const [selectedUserId, setSelectedUserId] = useState<string>(isAdmin ? '' : (profile?.id ?? ''))
   const [note, setNote] = useState('')
-  const [color, setColor] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  const { profiles } = useProfiles()
+  // 직접 입력 모드 (팀장 전용)
+  const [isDirectInput, setIsDirectInput] = useState(false)
+  const [directName, setDirectName] = useState('')
+  const [directVolunteerType] = useState<'volunteer' | '50plus'>(defaultType === '50plus' ? '50plus' : 'volunteer')
 
-  // Filter profiles by volunteer type for admin selection
-  const selectableProfiles = isAdmin
-    ? profiles.filter(p => {
-        if (volunteerType === '50plus') return p.role === '50plus'
-        return p.role === 'volunteer' || p.role === 'team_leader'
-      })
-    : []
+  const { profiles } = useProfiles()
 
   const selectedProfile = isAdmin
     ? profiles.find(p => p.id === selectedUserId) ?? null
     : profile
 
-  const displayedAssignments = cellState.assignments.filter(
-    a => !a.volunteer_type || a.volunteer_type === volunteerType
+  const effectiveVolunteerType: VolunteerType = isTeamLeader
+    ? (selectedProfile?.role === '50plus' ? '50plus' : 'volunteer')
+    : volunteerType
+
+  const displayedAssignments = isTeamLeader
+    ? cellState.assignments.filter(a => a.volunteer_type === defaultType)
+    : cellState.assignments.filter(a => !a.volunteer_type || a.volunteer_type === volunteerType)
+
+  const assignedNames = new Set(
+    displayedAssignments.filter(a => a.id !== editingId).map(a => a.volunteer_name)
   )
 
+  const selectableProfiles = isAdmin
+    ? isTeamLeader
+      ? defaultType === '50plus'
+        ? profiles.filter(p => p.role === '50plus' && !assignedNames.has(p.name))
+        : profiles.filter(p => (p.role === 'volunteer' || p.role === 'team_leader') && !assignedNames.has(p.name))
+      : profiles.filter(p => {
+          if (volunteerType === '50plus') return p.role === '50plus' && !assignedNames.has(p.name)
+          return (p.role === 'volunteer' || p.role === 'team_leader') && !assignedNames.has(p.name)
+        })
+    : []
+
   function startEdit(a: Assignment) {
+    setIsDirectInput(false)
     setEditingId(a.id)
     setSelectedUserId(a.user_id)
     setNote(a.note ?? '')
     setVolunteerType(a.volunteer_type ?? 'volunteer')
     setTimeSub(a.time_sub ?? null)
-    setColor(a.color ?? '')
   }
 
   function cancelEdit() {
@@ -93,19 +105,29 @@ export function SlotEditModal({ target, cellState, profile, onClose, onAdd, onUp
     setSelectedUserId(isAdmin ? '' : (profile?.id ?? ''))
     setNote('')
     setTimeSub(null)
-    setColor('')
   }
 
   async function handleAdd() {
+    if (isTeamLeader && isDirectInput) {
+      if (!directName.trim()) { setError('이름을 입력해주세요'); return }
+      setLoading(true)
+      const err = await onAdd(directName.trim(), note.trim(), directVolunteerType, timeSub, undefined, undefined)
+      setLoading(false)
+      if (err) setError(err)
+      else { setDirectName(''); setNote(''); setTimeSub(null); setError(null) }
+      return
+    }
+
     if (!selectedProfile) return
     if (!isAdmin && cellState.isFull) { setError('정원이 마감되었습니다'); return }
+    if (isAdmin && cellState.isFull && !window.confirm(`정원(${cellState.maxCapacity}명)이 초과됩니다. 계속 추가하시겠습니까?`)) return
     setLoading(true)
     const err = await onAdd(
       selectedProfile.name,
       note.trim(),
-      volunteerType,
+      effectiveVolunteerType,
       timeSub,
-      color || undefined,
+      undefined,
       isAdmin ? selectedProfile.id : undefined
     )
     setLoading(false)
@@ -114,14 +136,13 @@ export function SlotEditModal({ target, cellState, profile, onClose, onAdd, onUp
       setSelectedUserId(isAdmin ? '' : (profile?.id ?? ''))
       setNote('')
       setTimeSub(null)
-      setColor('')
     }
   }
 
   async function handleUpdate() {
     if (!editingId || !selectedProfile) return
     setLoading(true)
-    const err = await onUpdate(editingId, selectedProfile.name, note.trim(), volunteerType, timeSub, color || undefined)
+    const err = await onUpdate(editingId, selectedProfile.name, note.trim(), volunteerType, timeSub, undefined)
     setLoading(false)
     if (err) setError(err)
     else cancelEdit()
@@ -134,8 +155,19 @@ export function SlotEditModal({ target, cellState, profile, onClose, onAdd, onUp
     if (err) setError(err)
   }
 
-  const showColorPicker = volunteerType === '50plus'
+  const isAddDisabled = loading || (
+    isTeamLeader && isDirectInput && !editingId
+      ? !directName.trim()
+      : !selectedUserId
+  )
+
   const inputClass = 'w-full border border-[var(--color-border-strong)] rounded-xl px-3 py-2.5 text-sm bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500/60 transition-all duration-200'
+  const toggleBtn = (active: boolean) =>
+    `flex-1 py-1.5 text-xs font-semibold rounded-lg border transition-all duration-200 ${
+      active
+        ? 'bg-[var(--color-brand-primary)] text-white border-[var(--color-brand-primary)]'
+        : 'border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
+    }`
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -146,7 +178,9 @@ export function SlotEditModal({ target, cellState, profile, onClose, onAdd, onUp
             <h2 className="text-base font-bold text-[var(--color-text-primary)]">
               {month}월 {day}일
             </h2>
-            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{timeSlot}시 슬롯</p>
+            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+              {timeSlot}시 {isTeamLeader ? `· ${defaultType === '50plus' ? '50플러스활동가' : '자원봉사자'}` : '슬롯'}
+            </p>
           </div>
           <button
             onClick={onClose}
@@ -156,33 +190,35 @@ export function SlotEditModal({ target, cellState, profile, onClose, onAdd, onUp
           </button>
         </div>
 
-        {/* Type tabs */}
-        <div className="flex border-b border-[var(--color-border)] px-2">
-          {(['volunteer', '50plus'] as VolunteerType[]).map(t => {
-            const disabledByRole = !isAdmin && profileType !== t
-            const disabledBySaturday = isSaturday && t === '50plus'
-            const isDisabled = disabledByRole || disabledBySaturday
-            return (
-              <button
-                key={t}
-                onClick={() => {
-                  if (!isDisabled) {
-                    setVolunteerType(t)
-                    setSelectedUserId(isAdmin ? '' : (profile?.id ?? ''))
-                  }
-                }}
-                disabled={isDisabled}
-                className={`flex-1 py-2.5 text-xs font-semibold border-b-2 transition-all duration-200
-                  ${volunteerType === t
-                    ? 'border-[var(--color-brand-primary)] text-[var(--color-brand-primary)]'
-                    : 'border-transparent text-[var(--color-text-muted)]'}
-                  ${isDisabled ? 'opacity-40 cursor-not-allowed' : 'hover:text-[var(--color-text-secondary)]'}`}
-              >
-                {TYPE_LABELS[t]}{disabledBySaturday ? ' (토요일 제외)' : ''}
-              </button>
-            )
-          })}
-        </div>
+        {/* Type tabs — 팀장은 숨김 */}
+        {!isTeamLeader && (
+          <div className="flex border-b border-[var(--color-border)] px-2">
+            {(['volunteer', '50plus'] as VolunteerType[]).map(t => {
+              const disabledByRole = !isAdmin && profileType !== t
+              const disabledBySaturday = isSaturday && t === '50plus'
+              const isDisabled = disabledByRole || disabledBySaturday
+              return (
+                <button
+                  key={t}
+                  onClick={() => {
+                    if (!isDisabled) {
+                      setVolunteerType(t)
+                      setSelectedUserId(isAdmin ? '' : (profile?.id ?? ''))
+                    }
+                  }}
+                  disabled={isDisabled}
+                  className={`flex-1 py-2.5 text-xs font-semibold border-b-2 transition-all duration-200
+                    ${volunteerType === t
+                      ? 'border-[var(--color-brand-primary)] text-[var(--color-brand-primary)]'
+                      : 'border-transparent text-[var(--color-text-muted)]'}
+                    ${isDisabled ? 'opacity-40 cursor-not-allowed' : 'hover:text-[var(--color-text-secondary)]'}`}
+                >
+                  {TYPE_LABELS[t]}{disabledBySaturday ? ' (토요일 제외)' : ''}
+                </button>
+              )
+            })}
+          </div>
+        )}
 
         <div className="px-5 py-4 space-y-3">
           {/* Existing assignments */}
@@ -190,16 +226,22 @@ export function SlotEditModal({ target, cellState, profile, onClose, onAdd, onUp
             <div className="space-y-1.5">
               {displayedAssignments.map(a => {
                 const canEdit = isAdmin || a.user_id === profile?.id
+                const isOwnEntry = isTeamLeader && a.user_id === profile?.id && a.volunteer_name === profile?.name
                 return (
                   <div
                     key={a.id}
                     className="flex items-center justify-between rounded-xl px-3 py-2 border border-[var(--color-border)]"
-                    style={{ backgroundColor: a.color || undefined }}
+                    style={{ backgroundColor: isOwnEntry ? '#FEF9C3' : (a.color || undefined) }}
                   >
-                    <span className="text-sm text-[var(--color-text-primary)] font-medium">
+                    <span className="text-sm text-[var(--color-text-primary)] font-medium flex items-center flex-wrap gap-1">
                       {a.volunteer_name}
-                      {a.time_sub && <span className="ml-1.5 text-xs text-[var(--color-text-muted)] font-normal">({formatTimeSub(a.time_sub)})</span>}
-                      {a.note && <span className="ml-1.5 text-xs text-[var(--color-text-muted)] font-normal">· {a.note}</span>}
+                      {a.time_sub && <span className="text-xs text-[var(--color-text-muted)] font-normal">({formatTimeSub(a.time_sub)})</span>}
+                      {a.note && <span className="text-xs text-[var(--color-text-muted)] font-normal">· {a.note}</span>}
+                      {isTeamLeader && (
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${a.volunteer_type === '50plus' ? 'bg-orange-100 text-orange-600' : 'bg-blue-50 text-blue-500'}`}>
+                          {a.volunteer_type === '50plus' ? '50+' : '봉사'}
+                        </span>
+                      )}
                     </span>
                     {canEdit && (
                       <div className="flex gap-2 ml-2 shrink-0">
@@ -236,46 +278,52 @@ export function SlotEditModal({ target, cellState, profile, onClose, onAdd, onUp
                 </div>
               )}
 
-              {/* Color picker for 50plus */}
-              {showColorPicker && (
-                <div>
-                  <p className="text-xs font-medium text-[var(--color-text-muted)] mb-2">셀 색상</p>
-                  <div className="flex gap-2 flex-wrap">
-                    {PLUS_COLORS.map(opt => (
-                      <button
-                        key={opt.value}
-                        onClick={() => setColor(opt.value)}
-                        title={opt.label}
-                        className={`w-7 h-7 rounded-full border-2 transition-all duration-200
-                          ${color === opt.value ? 'border-[var(--color-brand-primary)] scale-110' : 'border-[var(--color-border-strong)] hover:border-[var(--color-text-muted)]'}`}
-                        style={{ backgroundColor: opt.value || '#F1F5F9' }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {/* Person selector */}
               {isAdmin ? (
-                <div>
-                  <p className="text-xs font-medium text-[var(--color-text-muted)] mb-2">봉사자 선택</p>
-                  {selectableProfiles.length === 0 ? (
-                    <p className="text-xs text-[var(--color-text-muted)] py-2 text-center">
-                      해당 유형으로 가입된 회원이 없습니다
-                    </p>
-                  ) : (
-                    <select
-                      value={selectedUserId}
-                      onChange={e => setSelectedUserId(e.target.value)}
+                <div className="space-y-2">
+                  {/* 팀장: 회원선택 / 직접입력 토글 (추가 모드만) */}
+                  {isTeamLeader && !editingId && (
+                    <div className="flex gap-1.5">
+                      <button onClick={() => { setIsDirectInput(false); setDirectName('') }} className={toggleBtn(!isDirectInput)}>
+                        회원 선택
+                      </button>
+                      <button onClick={() => { setIsDirectInput(true); setSelectedUserId('') }} className={toggleBtn(isDirectInput)}>
+                        직접 입력
+                      </button>
+                    </div>
+                  )}
+
+                  {isTeamLeader && isDirectInput && !editingId ? (
+                    /* 직접 입력 모드 — 유형은 클릭한 컬럼으로 고정 */
+                    <input
+                      value={directName}
+                      onChange={e => setDirectName(e.target.value)}
+                      placeholder={`${defaultType === '50plus' ? '50플러스활동가' : '봉사자'} 이름 입력`}
                       className={inputClass}
-                    >
-                      <option value="">-- 봉사자를 선택하세요 --</option>
-                      {selectableProfiles.map(p => (
-                        <option key={p.id} value={p.id}>
-                          {p.name}
-                        </option>
-                      ))}
-                    </select>
+                    />
+                  ) : (
+                    /* 회원 선택 드롭다운 */
+                    <div>
+                      <p className="text-xs font-medium text-[var(--color-text-muted)] mb-2">봉사자 선택</p>
+                      {selectableProfiles.length === 0 ? (
+                        <p className="text-xs text-[var(--color-text-muted)] py-2 text-center">
+                          해당 유형으로 가입된 회원이 없습니다
+                        </p>
+                      ) : (
+                        <select
+                          value={selectedUserId}
+                          onChange={e => setSelectedUserId(e.target.value)}
+                          className={inputClass}
+                        >
+                          <option value="">-- 봉사자를 선택하세요 --</option>
+                          {selectableProfiles.map(p => (
+                            <option key={p.id} value={p.id}>
+                              {p.name} [{getRoleLabel(p.role)}]
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
                   )}
                 </div>
               ) : (
@@ -300,7 +348,7 @@ export function SlotEditModal({ target, cellState, profile, onClose, onAdd, onUp
               <div className="flex gap-2">
                 <button
                   onClick={editingId ? handleUpdate : handleAdd}
-                  disabled={loading || !selectedUserId}
+                  disabled={isAddDisabled}
                   className="flex-1 bg-[var(--color-brand-primary)] text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50 transition-all duration-200 shadow-[0_2px_8px_rgba(37,99,235,0.25)]"
                 >
                   {loading ? '저장 중...' : editingId ? '수정 완료' : '추가'}
