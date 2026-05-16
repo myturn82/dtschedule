@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { useTenant } from '../contexts/TenantContext'
 import { ROLE_LABELS } from '../types'
 import { useSchedule } from '../hooks/useSchedule'
 import { useProfiles } from '../hooks/useProfiles'
+import { useTenantRoles } from '../hooks/useTenantRoles'
 import { getCellState } from '../utils/cellState'
 import { ScheduleHeader } from '../components/schedule/ScheduleHeader'
 import { ScheduleGrid } from '../components/schedule/ScheduleGrid'
@@ -33,15 +35,19 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
 
   const navigate = useNavigate()
   const { profile, loading: authLoading, signIn, signUp, signInWithGoogle, signInWithKakao, signOut } = useAuth()
+  const { tenant, tenantRole, timeSlots, slotLabels, legendItems, resetTenantSelection } = useTenant()
 
   useEffect(() => {
     if (!authLoading && !profile) setShowLogin(true)
     if (profile) setShowLogin(false)
   }, [authLoading, profile])
 
-  const { assignments, slotSettings, scheduleRules, dateOverrides, loading, addAssignment, updateAssignment, deleteAssignment, updateSlotCapacity } = useSchedule(year, month)
+  const { assignments, slotSettings, scheduleRules, dateOverrides, loading, addAssignment, updateAssignment, deleteAssignment, updateSlotCapacity } = useSchedule(tenant?.id ?? '', year, month)
   const { profiles } = useProfiles()
   const teamLeaderUserIds = new Set(profiles.filter(p => p.role === 'team_leader').map(p => p.id))
+  const { roles: tenantRoles } = useTenantRoles(tenant?.id ?? '')
+  const splitRoles = tenantRoles.filter(r => r.split_cell)
+  const isSplitMode = tenant?.settings?.tenant_mode === '직접입력'
 
   function prevMonth() {
     if (month === 1) { setYear(y => y - 1); setMonth(12) }
@@ -76,12 +82,21 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
 
             {profile ? (
               <div className="flex items-center gap-1.5 flex-wrap">
+                {profile.is_super_admin && tenant && (
+                  <button
+                    onClick={resetTenantSelection}
+                    className="text-xs font-medium px-2.5 py-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-all duration-200"
+                  >
+                    {tenant.name} · 조직 변경
+                  </button>
+                )}
+
                 <span className="text-xs text-[var(--color-text-secondary)] font-medium px-2.5 py-1 bg-[var(--color-surface-secondary)] rounded-xl border border-[var(--color-border)]">
                   {profile.name}
                   <span className="ml-1 text-[var(--color-text-muted)]">· {ROLE_LABELS[profile.role]}</span>
                 </span>
 
-                {profile.role === 'admin' && (
+                {(profile.role === 'admin' || tenantRole === 'admin') && (
                   <button
                     onClick={() => navigate('/admin')}
                     className="px-3 py-1.5 text-xs font-medium rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
@@ -121,8 +136,8 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
       <main className="px-2 py-2 sm:px-4 sm:py-3">
         <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-[var(--shadow-lg)] overflow-hidden animate-fade-up">
           <div className="px-3 py-3 sm:px-5 sm:py-4 border-b border-[var(--color-border)]">
-            <ScheduleHeader year={year} month={month} onPrev={prevMonth} onNext={nextMonth} />
-            <Legend />
+            <ScheduleHeader year={year} month={month} title={tenant?.settings?.title} onPrev={prevMonth} onNext={nextMonth} />
+            <Legend legendItems={legendItems} />
           </div>
 
           <div className="p-1.5 sm:p-3">
@@ -134,12 +149,20 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
             ) : (
               <ScheduleGrid
                 year={year} month={month}
+                timeSlots={timeSlots}
                 assignments={assignments} slotSettings={slotSettings}
                 scheduleRules={scheduleRules} dateOverrides={dateOverrides}
                 highlightName={highlightName || null}
                 profile={profile}
                 teamLeaderUserIds={teamLeaderUserIds}
+                splitRoles={splitRoles}
+                isSplitMode={isSplitMode}
+                slotLabels={slotLabels}
                 onCellClick={target => {
+                  if (isSplitMode) {
+                    setModalTarget(target)
+                    return
+                  }
                   const role = profile?.role
                   const targetIsSaturday = new Date(target.year, target.month - 1, target.day).getDay() === 6
                   if (role === 'volunteer' && target.volunteerType !== 'volunteer') return
@@ -171,8 +194,12 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
           target={modalTarget}
           cellState={selectedCellState}
           profile={profile}
+          splitRoles={splitRoles}
+          isSplitMode={isSplitMode}
+          slotLabels={slotLabels}
           onClose={() => setModalTarget(null)}
-          onAdd={(name, note, volunteerType, timeSub, color, userId) => addAssignment({
+          onAdd={(name, note, volunteerType, timeSub, color, userId, roleId, customerName, customerPhone) => addAssignment({
+            tenant_id: tenant!.id,
             year, month, day: modalTarget.day,
             time_slot: modalTarget.timeSlot,
             volunteer_name: name,
@@ -180,15 +207,27 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
             volunteer_type: volunteerType,
             time_sub: timeSub || undefined,
             color: color || undefined,
-            user_id: userId ?? profile!.id
+            user_id: userId ?? profile!.id,
+            role_id: roleId ?? null,
+            customer_name: customerName ?? null,
+            customer_phone: customerPhone ?? null,
           })}
-          onUpdate={(id, name, note, volunteerType, timeSub, color) => updateAssignment(id, { volunteer_name: name, note, volunteer_type: volunteerType, time_sub: timeSub ?? undefined, color: color ?? undefined })}
+          onUpdate={(id, name, note, volunteerType, timeSub, color, roleId, customerName, customerPhone) => updateAssignment(id, {
+            volunteer_name: name,
+            note,
+            volunteer_type: volunteerType,
+            time_sub: timeSub ?? undefined,
+            color: color ?? undefined,
+            role_id: roleId ?? null,
+            customer_name: customerName ?? null,
+            customer_phone: customerPhone ?? null,
+          })}
           onDelete={deleteAssignment}
         />
       )}
 
       {showCapacity && profile && (profile.role === 'admin' || profile.role === 'team_leader') && (
-        <CapacityModal slotSettings={slotSettings} onClose={() => setShowCapacity(false)} onUpdate={updateSlotCapacity} />
+        <CapacityModal slotSettings={slotSettings} timeSlots={timeSlots} slotLabels={slotLabels} onClose={() => setShowCapacity(false)} onUpdate={updateSlotCapacity} />
       )}
 
       {holidayTarget !== null && profile && (profile.role === 'admin' || profile.role === 'team_leader') && (
@@ -199,7 +238,7 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
           initialStartHour={holidayTarget.startHour}
           initialEndHour={holidayTarget.endHour}
           onClose={() => setHolidayTarget(null)}
-          onAdd={addAssignment}
+          onAdd={(params) => addAssignment({ ...params, tenant_id: tenant!.id })}
           onUpdate={(id, params) => updateAssignment(id, params)}
           onDelete={deleteAssignment}
         />

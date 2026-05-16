@@ -1,14 +1,17 @@
 import { useState } from 'react'
-import { TIME_SLOTS, DEFAULT_MAX_CAPACITY } from '../../types'
+import { DEFAULT_MAX_CAPACITY } from '../../types'
 import type { SlotSetting, TimeSlot } from '../../types'
+import { shortSlotLabel } from '../../utils/timeSlots'
 
 interface Props {
   slotSettings: SlotSetting[]
+  timeSlots: TimeSlot[]
+  slotLabels?: Record<string, string>
   onClose: () => void
   onUpdate: (timeSlot: TimeSlot, maxCapacity: number) => Promise<string | null>
 }
 
-export function CapacityModal({ slotSettings, onClose, onUpdate }: Props) {
+export function CapacityModal({ slotSettings, timeSlots, slotLabels = {}, onClose, onUpdate }: Props) {
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -23,11 +26,13 @@ export function CapacityModal({ slotSettings, onClose, onUpdate }: Props) {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-2xl shadow-[var(--shadow-xl)] w-full max-w-sm animate-scale-in">
-        <div className="flex justify-between items-center px-5 pt-5 pb-3 border-b border-[var(--color-border)]">
+      <div className="bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-2xl shadow-[var(--shadow-xl)] w-full max-w-md animate-scale-in flex flex-col max-h-[88vh]">
+
+        {/* Header */}
+        <div className="flex justify-between items-center px-5 pt-5 pb-3 border-b border-[var(--color-border)] shrink-0">
           <div>
-            <h2 className="text-base font-bold text-[var(--color-text-primary)]">슬롯별 최대 인원</h2>
-            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">시간대별 최대 봉사자 수를 설정합니다</p>
+            <h2 className="text-base font-bold text-[var(--color-text-primary)]">인원 설정</h2>
+            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">시간대별 최대 봉사자 수</p>
           </div>
           <button
             onClick={onClose}
@@ -37,47 +42,54 @@ export function CapacityModal({ slotSettings, onClose, onUpdate }: Props) {
           </button>
         </div>
 
-        <div className="px-5 py-4">
+        {/* Scrollable slot grid */}
+        <div className="px-5 py-4 overflow-y-auto">
           {error && (
             <p className="text-red-500 text-xs bg-red-50 dark:bg-red-950/30 px-3 py-2 rounded-lg border border-red-200 dark:border-red-900/50 mb-3">
               {error}
             </p>
           )}
-          <div className="space-y-2">
-            {TIME_SLOTS.map(slot => {
+          <div className="grid grid-cols-2 gap-2">
+            {timeSlots.map(slot => {
               const setting = slotSettings.find(s => s.time_slot === slot)
               return (
                 <div
                   key={slot}
-                  className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)]"
+                  className="flex items-center justify-between px-3 py-2 rounded-xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)]"
                 >
-                  <span className="text-sm font-medium text-[var(--color-text-primary)] w-20">
-                    {slot}시{slot === '12-13' && <span className="ml-1 text-[10px] text-[var(--color-text-muted)]">(토)</span>}
+                  <span className="text-xs font-medium text-[var(--color-text-primary)] shrink-0">
+                    {slotLabels[slot]
+                      ? <>{slotLabels[slot]} <span className="text-[10px] text-[var(--color-text-muted)] font-normal">{shortSlotLabel(slot)}</span></>
+                      : shortSlotLabel(slot)}
                   </span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 ml-2">
                     <input
                       type="number"
                       min={0}
-                      max={10}
+                      max={99}
                       defaultValue={setting?.max_capacity ?? DEFAULT_MAX_CAPACITY}
                       disabled={loading === slot}
                       onBlur={e => handleChange(slot as TimeSlot, e.target.value)}
-                      className="w-16 border border-[var(--color-border-strong)] rounded-lg px-2 py-1.5 text-sm text-center bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500/60 transition-all duration-200"
+                      className="w-12 border border-[var(--color-border-strong)] rounded-lg px-1 py-1 text-sm text-center bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500/60 transition-all duration-200 disabled:opacity-40"
                     />
-                    <span className="text-xs text-[var(--color-text-muted)] w-4">명</span>
+                    <span className="text-xs text-[var(--color-text-muted)]">명</span>
                   </div>
                 </div>
               )
             })}
           </div>
+        </div>
 
+        {/* Footer */}
+        <div className="px-5 pb-5 shrink-0">
           <button
             onClick={onClose}
-            className="mt-4 w-full border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] rounded-xl py-2.5 text-sm font-medium hover:bg-[var(--color-surface-hover)] transition-all duration-200"
+            className="w-full border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] rounded-xl py-2.5 text-sm font-medium hover:bg-[var(--color-surface-hover)] transition-all duration-200"
           >
             닫기
           </button>
         </div>
+
       </div>
     </div>
   )

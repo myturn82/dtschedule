@@ -1,11 +1,14 @@
 interface Props {
   year: number
   month: number
+  title?: string
   onPrev: () => void
   onNext: () => void
 }
 
-export function ScheduleHeader({ year, month, onPrev, onNext }: Props) {
+export function ScheduleHeader({ year, month, title, onPrev, onNext }: Props) {
+  const pageTitle = title || '스케줄'
+
   return (
     <div className="flex items-center justify-between gap-3 mb-1">
       <button
@@ -26,10 +29,10 @@ export function ScheduleHeader({ year, month, onPrev, onNext }: Props) {
           <span className="hidden sm:block text-xl">
             {year}년{' '}
             <span className="text-[var(--color-brand-primary)]">{String(month).padStart(2, '0')}월</span>
-            {' '}자원봉사활동 스케줄
+            {' '}{pageTitle}
           </span>
         </h1>
-        <p className="sm:hidden text-[10px] font-medium text-[var(--color-text-muted)] mt-0.5">자원봉사 스케줄</p>
+        <p className="sm:hidden text-[10px] font-medium text-[var(--color-text-muted)] mt-0.5">{pageTitle}</p>
       </div>
 
       <button

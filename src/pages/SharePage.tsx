@@ -1,5 +1,6 @@
 import { useSearchParams } from 'react-router-dom'
 import { useSchedule } from '../hooks/useSchedule'
+import { useTenant } from '../contexts/TenantContext'
 import { ScheduleHeader } from '../components/schedule/ScheduleHeader'
 import { ScheduleGrid } from '../components/schedule/ScheduleGrid'
 import { Legend } from '../components/schedule/Legend'
@@ -9,7 +10,12 @@ export function SharePage() {
   const year = parseInt(params.get('year') ?? String(new Date().getFullYear()))
   const month = parseInt(params.get('month') ?? String(new Date().getMonth() + 1))
 
-  const { assignments, slotSettings, scheduleRules, dateOverrides, loading } = useSchedule(year, month)
+  // Use current tenant from context (works when logged in).
+  // Anonymous share links require a public RLS policy (future enhancement).
+  const { tenant } = useTenant()
+  const tenantId = tenant?.id ?? ''
+
+  const { assignments, slotSettings, scheduleRules, dateOverrides, loading } = useSchedule(tenantId, year, month)
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
