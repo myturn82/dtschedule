@@ -12,7 +12,7 @@ export function SharePage() {
 
   // Use current tenant from context (works when logged in).
   // Anonymous share links require a public RLS policy (future enhancement).
-  const { tenant } = useTenant()
+  const { tenant, timeSlots } = useTenant()
   const tenantId = tenant?.id ?? ''
 
   const { assignments, slotSettings, scheduleRules, dateOverrides, loading } = useSchedule(tenantId, year, month)
@@ -28,6 +28,7 @@ export function SharePage() {
         ) : (
           <ScheduleGrid
             year={year} month={month}
+            timeSlots={timeSlots}
             assignments={assignments} slotSettings={slotSettings}
             scheduleRules={scheduleRules} dateOverrides={dateOverrides}
             highlightName={null}

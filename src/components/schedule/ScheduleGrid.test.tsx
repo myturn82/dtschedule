@@ -5,6 +5,7 @@ import { ScheduleGrid } from './ScheduleGrid'
 const mockProps = {
   year: 2026,
   month: 4,
+  timeSlots: ['10-12', '12-13', '20-22'] as string[],
   assignments: [],
   slotSettings: [],
   scheduleRules: [],
