@@ -15,6 +15,7 @@ interface ScheduleData {
 }
 
 interface AddParams {
+  tenant_id: string
   year: number
   month: number
   day: number
@@ -25,6 +26,9 @@ interface AddParams {
   time_sub?: string
   color?: string
   user_id: string
+  role_id?: string | null
+  customer_name?: string | null
+  customer_phone?: string | null
 }
 
 interface UpdateParams {
@@ -33,9 +37,12 @@ interface UpdateParams {
   volunteer_type?: VolunteerType
   time_sub?: string
   color?: string
+  role_id?: string | null
+  customer_name?: string | null
+  customer_phone?: string | null
 }
 
-export function useSchedule(year: number, month: number): ScheduleData {
+export function useSchedule(tenantId: string, year: number, month: number): ScheduleData {
   const [assignments, setAssignments] = useState<Assignment[]>([])
   const [slotSettings, setSlotSettings] = useState<SlotSetting[]>([])
   const [scheduleRules, setScheduleRules] = useState<ScheduleRule[]>([])
@@ -43,12 +50,17 @@ export function useSchedule(year: number, month: number): ScheduleData {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!tenantId) return
     setLoading(true)
     Promise.all([
-      supabase.from('assignments').select('*').eq('year', year).eq('month', month),
-      supabase.from('slot_settings').select('*'),
-      supabase.from('schedule_rules').select('*'),
+      supabase.from('assignments').select('*')
+        .eq('tenant_id', tenantId).eq('year', year).eq('month', month),
+      supabase.from('slot_settings').select('*')
+        .eq('tenant_id', tenantId),
+      supabase.from('schedule_rules').select('*')
+        .eq('tenant_id', tenantId),
       supabase.from('date_overrides').select('*')
+        .eq('tenant_id', tenantId)
         .gte('date', `${year}-${String(month).padStart(2, '0')}-01`)
         .lte('date', `${year}-${String(month).padStart(2, '0')}-31`),
     ]).then(([a, ss, sr, dov]) => {
@@ -59,38 +71,40 @@ export function useSchedule(year: number, month: number): ScheduleData {
       setLoading(false)
     })
 
-    // Realtime: 다른 사용자 변경사항 실시간 반영
     const channel = supabase
-      .channel(`assignments-${year}-${month}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'assignments', filter: `year=eq.${year}` },
-        payload => setAssignments(prev => {
-          const incoming = payload.new as Assignment
-          if (incoming.month !== month) return prev
-          return prev.some(a => a.id === incoming.id) ? prev : [...prev, incoming]
-        })
-      )
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'assignments', filter: `year=eq.${year}` },
-        payload => {
-          const updated = payload.new as Assignment
-          if (updated.month === month) {
-            setAssignments(prev => prev.map(a => a.id === updated.id ? updated : a))
-          }
+      .channel(`assignments-${tenantId}-${year}-${month}`)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'assignments',
+        filter: `tenant_id=eq.${tenantId}`,
+      }, payload => setAssignments(prev => {
+        const incoming = payload.new as Assignment
+        if (incoming.year !== year || incoming.month !== month) return prev
+        return prev.some(a => a.id === incoming.id) ? prev : [...prev, incoming]
+      }))
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'assignments',
+        filter: `tenant_id=eq.${tenantId}`,
+      }, payload => {
+        const updated = payload.new as Assignment
+        if (updated.year === year && updated.month === month) {
+          setAssignments(prev => prev.map(a => a.id === updated.id ? updated : a))
         }
-      )
-      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'assignments' },
-        payload => setAssignments(prev => prev.filter(a => a.id !== payload.old.id))
-      )
+      })
+      .on('postgres_changes', {
+        event: 'DELETE', schema: 'public', table: 'assignments',
+      }, payload => setAssignments(prev => prev.filter(a => a.id !== payload.old.id)))
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
-  }, [year, month])
+  }, [tenantId, year, month])
 
   const addAssignment = useCallback(async (params: AddParams): Promise<string | null> => {
     if (params.volunteer_type !== 'admin_note') {
       const isDuplicate = assignments.some(
         a => a.year === params.year && a.month === params.month &&
              a.day === params.day && a.time_slot === params.time_slot &&
-             a.volunteer_name === params.volunteer_name
+             a.volunteer_name === params.volunteer_name &&
+             a.role_id === (params.role_id ?? null)
       )
       if (isDuplicate) return '이미 같은 봉사자가 배정되어 있습니다'
     }
@@ -115,12 +129,15 @@ export function useSchedule(year: number, month: number): ScheduleData {
   const updateSlotCapacity = useCallback(async (timeSlot: TimeSlot, maxCapacity: number): Promise<string | null> => {
     const { error } = await supabase
       .from('slot_settings')
-      .upsert({ time_slot: timeSlot, max_capacity: maxCapacity }, { onConflict: 'time_slot' })
+      .upsert(
+        { tenant_id: tenantId, time_slot: timeSlot, max_capacity: maxCapacity },
+        { onConflict: 'tenant_id,time_slot' }
+      )
     if (error) return error.message
-    const { data } = await supabase.from('slot_settings').select('*')
+    const { data } = await supabase.from('slot_settings').select('*').eq('tenant_id', tenantId)
     if (data) setSlotSettings(data)
     return null
-  }, [])
+  }, [tenantId])
 
   return { assignments, slotSettings, scheduleRules, dateOverrides, loading, addAssignment, updateAssignment, deleteAssignment, updateSlotCapacity }
 }

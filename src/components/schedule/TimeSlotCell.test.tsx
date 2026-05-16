@@ -10,33 +10,33 @@ const baseCellState: CellState = {
 }
 
 const baseAssignment: Assignment = {
-  id: '1', year: 2026, month: 4, day: 1,
+  id: '1', tenant_id: 'test-tenant', year: 2026, month: 4, day: 1,
   time_slot: '10-12', volunteer_name: '이연화',
   note: null, user_id: 'u1', created_at: '',
   volunteer_type: 'volunteer', time_sub: null, color: null,
 }
 
 describe('TimeSlotCell', () => {
-  it('shows Break text when isBreaktime', () => {
+  it('shows Break text when isBreaktime (vol col)', () => {
     render(
       <TimeSlotCell
         cellState={{ ...baseCellState, isBreaktime: true }}
         timeSlot="12-13"
-        onClickVolunteer={vi.fn()}
-        onClickPlus={vi.fn()}
+        colType="vol"
+        onClick={vi.fn()}
         highlightName={null}
       />
     )
     expect(screen.getByText('Break')).toBeInTheDocument()
   })
 
-  it('shows CLOSE text when isClosed', () => {
+  it('shows CLOSE text when isClosed (vol col)', () => {
     render(
       <TimeSlotCell
         cellState={{ ...baseCellState, isClosed: true }}
         timeSlot="10-12"
-        onClickVolunteer={vi.fn()}
-        onClickPlus={vi.fn()}
+        colType="vol"
+        onClick={vi.fn()}
         highlightName={null}
       />
     )
@@ -49,27 +49,27 @@ describe('TimeSlotCell', () => {
       <TimeSlotCell
         cellState={state}
         timeSlot="10-12"
-        onClickVolunteer={vi.fn()}
-        onClickPlus={vi.fn()}
+        colType="vol"
+        onClick={vi.fn()}
         highlightName={null}
       />
     )
     expect(screen.getByText('이연화')).toBeInTheDocument()
   })
 
-  it('calls onClickVolunteer when volunteer cell clicked', () => {
-    const onClickVolunteer = vi.fn()
+  it('calls onClick when volunteer cell clicked', () => {
+    const onClick = vi.fn()
     render(
       <TimeSlotCell
         cellState={baseCellState}
         timeSlot="10-12"
-        onClickVolunteer={onClickVolunteer}
-        onClickPlus={vi.fn()}
+        colType="vol"
+        onClick={onClick}
         highlightName={null}
       />
     )
     fireEvent.click(screen.getAllByRole('button')[0])
-    expect(onClickVolunteer).toHaveBeenCalledOnce()
+    expect(onClick).toHaveBeenCalledOnce()
   })
 
   it('applies night-shift background for night shift', () => {
@@ -77,8 +77,8 @@ describe('TimeSlotCell', () => {
       <TimeSlotCell
         cellState={{ ...baseCellState, isNightShift: true }}
         timeSlot="20-22"
-        onClickVolunteer={vi.fn()}
-        onClickPlus={vi.fn()}
+        colType="vol"
+        onClick={vi.fn()}
         highlightName={null}
       />
     )

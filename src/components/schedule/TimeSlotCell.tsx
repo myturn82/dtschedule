@@ -3,10 +3,11 @@ import type { Assignment, CellState } from '../../types'
 interface Props {
   cellState: CellState
   timeSlot: string
-  colType: 'vol' | 'plus'
+  colType: 'vol' | 'plus' | 'role'
   onClick: () => void
   highlightName: string | null
   teamLeaderUserIds?: Set<string>
+  roleId?: string | null
 }
 
 function getSlotHours(timeSlot: string): number[] {
@@ -48,6 +49,11 @@ function NameList({ assignments, highlightName, small, teamLeaderUserIds }: {
               }`}
           >
             {displayText}
+            {a.customer_name && (
+              <span className="block text-[6px] sm:text-[8px] text-[var(--color-text-muted)] font-normal leading-tight">
+                → {a.customer_name}{a.customer_phone ? ` · ${a.customer_phone}` : ''}
+              </span>
+            )}
           </span>
         )
       })}
@@ -55,7 +61,7 @@ function NameList({ assignments, highlightName, small, teamLeaderUserIds }: {
   )
 }
 
-export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightName, teamLeaderUserIds }: Props) {
+export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightName, teamLeaderUserIds, roleId }: Props) {
   const { isBreaktime, isClosed, isHoliday, isNightShift, isSaturdayShift, assignments, isFull } = cellState
   const PLUS_BG = '#FED7AA'
   const [slotStart, slotEnd] = timeSlot.split('-').map(Number)
@@ -83,11 +89,45 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
     )
   }
 
+  const slotHours = getSlotHours(timeSlot)
+
+  // ── role column (split mode) ─────────────────────────────────────────────────
+  if (colType === 'role') {
+    const roleAssignments = assignments.filter(a => a.role_id === roleId)
+    const shouldSplitRole = slotHours.length === 2 && roleAssignments.some(a => a.time_sub && !a.time_sub.includes('~'))
+
+    if (shouldSplitRole) {
+      return (
+        <div className="flex flex-col divide-y divide-[var(--color-border-table)] h-full">
+          {slotHours.map(hour => {
+            const hourAssignments = roleAssignments.filter(a => assignmentCoversHour(a.time_sub, hour))
+            return (
+              <button key={hour} onClick={onClick}
+                className="flex-1 min-h-[1rem] flex flex-col items-center justify-center px-0.5 transition-all duration-150 active:scale-[0.98] bg-[var(--color-surface)] hover:bg-blue-50/50 dark:hover:bg-blue-950/20">
+                <NameList assignments={hourAssignments} highlightName={highlightName} teamLeaderUserIds={teamLeaderUserIds} />
+              </button>
+            )
+          })}
+        </div>
+      )
+    }
+
+    return (
+      <button onClick={onClick}
+        className={`w-full ${cellMinH} flex flex-col items-center justify-center px-0.5 transition-all duration-150 active:scale-[0.98] bg-[var(--color-surface)] hover:bg-blue-50/50 dark:hover:bg-blue-950/20`}>
+        <NameList assignments={roleAssignments} highlightName={highlightName} teamLeaderUserIds={teamLeaderUserIds} />
+        {isFull && roleAssignments.length > 0 && (
+          <span className="text-[7px] sm:text-[10px] text-red-500 font-semibold mt-0.5 bg-red-50 dark:bg-red-950/30 px-1 rounded-sm leading-tight">마감</span>
+        )}
+      </button>
+    )
+  }
+
+  // ── legacy vol / plus columns ────────────────────────────────────────────────
   const volunteerAssignments = assignments.filter(a => !a.volunteer_type || a.volunteer_type === 'volunteer')
   const plusAssignments = assignments.filter(a => a.volunteer_type === '50plus')
   const saturdayAssignments = isSaturdayShift ? [...volunteerAssignments, ...plusAssignments] : volunteerAssignments
   const hasTeamLeaderInVol = !!(teamLeaderUserIds && volunteerAssignments.some(a => teamLeaderUserIds.has(a.user_id)))
-  const slotHours = getSlotHours(timeSlot)
 
   if (colType === 'vol') {
     const bgClass = hasTeamLeaderInVol

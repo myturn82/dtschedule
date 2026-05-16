@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { getCellState } from '../../utils/cellState'
-import { TIME_SLOTS } from '../../types'
+import { slotStartLabel } from '../../utils/timeSlots'
 import { TimeSlotCell } from './TimeSlotCell'
 import type { Assignment, SlotSetting, ScheduleRule, DateOverride, TimeSlot, ModalTarget } from '../../types'
 
 interface Props {
   year: number
   month: number
+  timeSlots: TimeSlot[]
+  slotLabels?: Record<string, string>
   assignments: Assignment[]
   slotSettings: SlotSetting[]
   scheduleRules: ScheduleRule[]
@@ -17,7 +19,7 @@ interface Props {
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
 
-export function MobileScheduleView({ year, month, assignments, slotSettings, scheduleRules, dateOverrides, highlightName, onCellClick }: Props) {
+export function MobileScheduleView({ year, month, timeSlots, slotLabels = {}, assignments, slotSettings, scheduleRules, dateOverrides, highlightName, onCellClick }: Props) {
   const daysCount = new Date(year, month, 0).getDate()
   const days = Array.from({ length: daysCount }, (_, i) => i + 1)
   const [selectedDay, setSelectedDay] = useState(1)
@@ -57,19 +59,32 @@ export function MobileScheduleView({ year, month, assignments, slotSettings, sch
         )}
       </div>
       <div className="space-y-1">
-        {TIME_SLOTS.map(slot => {
-          const cellState = getCellState(selectedDay, slot as TimeSlot, year, month, scheduleRules, slotSettings, dateOverrides, assignments)
+        {timeSlots.map(slot => {
+          const cellState = getCellState(selectedDay, slot, year, month, scheduleRules, slotSettings, dateOverrides, assignments)
           return (
             <div key={slot} className="flex items-stretch gap-2">
-              <div className="w-16 text-xs font-medium text-gray-600 dark:text-gray-300 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded px-1">{slot}</div>
-              <div className="flex-1">
-                <TimeSlotCell
-                  cellState={cellState}
-                  timeSlot={slot}
-                  highlightName={highlightName}
-                  onClickVolunteer={() => onCellClick({ year, month, day: selectedDay, timeSlot: slot as TimeSlot, volunteerType: 'volunteer' })}
-                  onClickPlus={() => onCellClick({ year, month, day: selectedDay, timeSlot: slot as TimeSlot, volunteerType: '50plus' })}
-                />
+              <div className="w-16 text-xs font-medium text-gray-600 dark:text-gray-300 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded px-1 truncate">{slotLabels[slot] ?? slotStartLabel(slot)}</div>
+              <div className="flex-1 flex">
+                <div className="flex-1">
+                  <TimeSlotCell
+                    cellState={cellState}
+                    timeSlot={slot}
+                    colType="vol"
+                    highlightName={highlightName}
+                    onClick={() => onCellClick({ year, month, day: selectedDay, timeSlot: slot, volunteerType: 'volunteer' })}
+                  />
+                </div>
+                {!isSat && (
+                  <div className="w-[40%]">
+                    <TimeSlotCell
+                      cellState={cellState}
+                      timeSlot={slot}
+                      colType="plus"
+                      highlightName={highlightName}
+                      onClick={() => onCellClick({ year, month, day: selectedDay, timeSlot: slot, volunteerType: '50plus' })}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           )
