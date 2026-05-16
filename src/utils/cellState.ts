@@ -16,9 +16,10 @@ export function getCellState(
   const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 
   const override = dateOverrides.find(d => d.date === dateStr)
-  const isHoliday = override?.is_holiday === true || dayOfWeek === 0
-
   const rule = scheduleRules.find(r => r.day_of_week === dayOfWeek && r.time_slot === timeSlot)
+
+  // Sunday is treated as holiday only when no explicit open rule exists for it
+  const isHoliday = override?.is_holiday === true || (dayOfWeek === 0 && rule?.is_open !== true)
 
   // Breaktime: slot is closed by rule on a non-holiday day (e.g. lunch break)
   const isClosedByRule = rule ? !rule.is_open : true
