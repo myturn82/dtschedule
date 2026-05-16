@@ -1,6 +1,6 @@
 import { Fragment } from 'react'
 import { getCellState } from '../../utils/cellState'
-import { slotStartLabel, parseSlotLabel } from '../../utils/timeSlots'
+import { slotStartLabel } from '../../utils/timeSlots'
 import { TimeSlotCell } from './TimeSlotCell'
 import type { Assignment, SlotSetting, ScheduleRule, DateOverride, TimeSlot, ModalTarget, Profile, TenantRole } from '../../types'
 

@@ -14,6 +14,7 @@ const baseAssignment: Assignment = {
   time_slot: '10-12', volunteer_name: '이연화',
   note: null, user_id: 'u1', created_at: '',
   volunteer_type: 'volunteer', time_sub: null, color: null,
+  role_id: null, customer_name: null, customer_phone: null,
 }
 
 describe('TimeSlotCell', () => {
