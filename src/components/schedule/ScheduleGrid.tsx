@@ -1,6 +1,7 @@
 import { Fragment } from 'react'
 import { getCellState } from '../../utils/cellState'
 import { rangeSlotLabel } from '../../utils/timeSlots'
+import { getKoreanHolidayName } from '../../utils/koreanHolidays'
 import { TimeSlotCell } from './TimeSlotCell'
 import type { Assignment, SlotSetting, ScheduleRule, DateOverride, TimeSlot, ModalTarget, Profile, TenantRole } from '../../types'
 
@@ -214,6 +215,11 @@ export function ScheduleGrid({
                   </td>
                   {week.map((day, dowIdx) => {
                     const dow = DOW_ORDER[dowIdx]
+                    const dateStr = day
+                      ? `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+                      : null
+                    const holidayName = dateStr ? getKoreanHolidayName(dateStr) : null
+                    const isHolidayCell = holidayName !== null || dow === 0
                     return (
                       <td
                         key={dowIdx}
@@ -221,13 +227,18 @@ export function ScheduleGrid({
                         className={`border-t-2 border-[var(--color-border-strong)] border-x border-b border-[var(--color-border-table)] text-center text-[9px] sm:text-xs font-bold py-1
                           ${!day
                             ? 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)]'
-                            : dow === 0
+                            : (isHolidayCell || dow === 0)
                             ? 'text-red-500 bg-red-50/50 dark:bg-red-950/30'
                             : dow === 6
                             ? 'text-blue-500 bg-blue-50/50 dark:bg-blue-950/30'
                             : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)]'}`}
                       >
                         {day ?? ''}
+                        {holidayName && (
+                          <span className="block text-[7px] sm:text-[9px] font-medium leading-tight truncate px-0.5">
+                            {holidayName}
+                          </span>
+                        )}
                       </td>
                     )
                   })}
