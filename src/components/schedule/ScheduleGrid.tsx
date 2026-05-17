@@ -391,6 +391,23 @@ export function ScheduleGrid({
 
                       // Legacy mode: vol + plus columns
                       const isSat = dow === 6
+
+                      // Breaktime in legacy mode → merge vol+plus into one cell
+                      if (cellState.isBreaktime) {
+                        return (
+                          <td
+                            key={dowIdx}
+                            colSpan={isSat ? 1 : 2}
+                            className="border border-[var(--color-border-table)] p-0 bg-schedule-close text-center"
+                          >
+                            <div className="flex items-center justify-center min-h-[1.25rem] sm:min-h-[1.75rem]">
+                              <span className="sm:hidden text-[8px] text-[var(--color-text-muted)] font-medium">✕</span>
+                              <span className="hidden sm:inline text-[9px] text-[var(--color-text-muted)] font-medium">CLOSE</span>
+                            </div>
+                          </td>
+                        )
+                      }
+
                       const volMerge  = colMap.get(`${dowIdx}-${slotIdx}`)  ?? { skip: false, rowspan: 1 }
                       const plusMerge = colMap.get(`${dowIdx}-${slotIdx}`) ?? { skip: false, rowspan: 1 }
 
