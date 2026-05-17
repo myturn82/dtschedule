@@ -348,6 +348,23 @@ export function ScheduleGrid({
                       if (isSplitMode) {
                         const merge = colMap.get(`${dowIdx}-${slotIdx}`) ?? { skip: false, rowspan: 1 }
                         if (merge.skip) return null
+
+                        // Breaktime in split mode → merge all role columns into one
+                        if (cellState.isBreaktime) {
+                          return (
+                            <td
+                              key={dowIdx}
+                              colSpan={splitCount}
+                              className="border border-[var(--color-border-table)] p-0 bg-schedule-breaktime text-center"
+                            >
+                              <div className="flex items-center justify-center min-h-[1.25rem] sm:min-h-[1.75rem]">
+                                <span className="sm:hidden text-[8px] text-[var(--color-text-muted)] font-medium">✕</span>
+                                <span className="hidden sm:inline text-[9px] text-[var(--color-text-muted)] font-medium">CLOSE</span>
+                              </div>
+                            </td>
+                          )
+                        }
+
                         return (
                           <Fragment key={dowIdx}>
                             {splitRoles.map(role => (
