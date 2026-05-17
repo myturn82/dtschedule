@@ -15,26 +15,39 @@
   --spacing-cell-min-height: var(--spacing-cell-min-height);
 }
 
-/* ── Design system variables (Supanova) ─────────────────────── */
+/* ── Design system variables ─────────────────────────────────── */
 :root {
-  --color-bg: #eef0f5;
-  --color-surface: #ffffff;
-  --color-surface-secondary: #f8fafc;
-  --color-surface-hover: #f1f5f9;
+  /* Warm cream palette (light mode) */
+  --color-bg: #F4F1EA;
+  --color-surface: #FFFFFF;
+  --color-surface-secondary: #FBF9F4;
+  --color-surface-hover: #F0ECE3;
 
-  --color-border: rgba(15, 23, 42, 0.08);
-  --color-border-strong: rgba(15, 23, 42, 0.15);
-  --color-border-table: rgba(15, 23, 42, 0.09);
+  --color-border: rgba(20, 23, 28, 0.07);
+  --color-border-strong: rgba(20, 23, 28, 0.14);
+  --color-border-table: rgba(20, 23, 28, 0.09);
 
-  --color-text-primary: #0f172a;
-  --color-text-secondary: #475569;
-  --color-text-muted: #94a3b8;
+  --color-text-primary: #14171C;
+  --color-text-secondary: #353A44;
+  --color-text-muted: #8A8F99;
 
-  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.05);
-  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
-  --shadow-md: 0 4px 8px rgba(15, 23, 42, 0.08), 0 2px 4px rgba(15, 23, 42, 0.04);
-  --shadow-lg: 0 12px 28px rgba(15, 23, 42, 0.10), 0 4px 8px rgba(15, 23, 42, 0.05);
-  --shadow-xl: 0 24px 48px rgba(15, 23, 42, 0.14), 0 8px 16px rgba(15, 23, 42, 0.06);
+  /* Tag tints */
+  --tint-sun: oklch(0.93 0.06 70);
+  --tint-sun-ink: oklch(0.42 0.10 60);
+  --tint-break: oklch(0.93 0.05 230);
+  --tint-break-ink: oklch(0.42 0.10 240);
+  --tint-sat: oklch(0.93 0.05 160);
+  --tint-sat-ink: oklch(0.40 0.10 160);
+  --tint-moon: oklch(0.93 0.05 290);
+  --tint-moon-ink: oklch(0.40 0.11 290);
+  --tint-plus: oklch(0.93 0.05 20);
+  --tint-plus-ink: oklch(0.42 0.12 20);
+
+  --shadow-xs: 0 1px 2px rgba(20, 23, 28, 0.04);
+  --shadow-sm: 0 1px 0 rgba(20, 23, 28, 0.04), 0 1px 2px rgba(20, 23, 28, 0.04);
+  --shadow-md: 0 1px 0 rgba(20, 23, 28, 0.04), 0 8px 24px -8px rgba(20, 23, 28, 0.08);
+  --shadow-lg: 0 1px 0 rgba(20, 23, 28, 0.04), 0 20px 40px -20px rgba(20, 23, 28, 0.18);
+  --shadow-xl: 0 24px 48px rgba(20, 23, 28, 0.14), 0 8px 16px rgba(20, 23, 28, 0.06);
 }
 
 .dark {
@@ -68,7 +81,13 @@
 /* ─────────────────────────────────────────────────────────────── */
 
 html {
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-feature-settings: "ss06", "ss07", "tnum";
+}
+
+.font-mono-num {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
 }
 
 * {
