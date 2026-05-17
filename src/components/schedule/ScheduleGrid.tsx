@@ -1,6 +1,6 @@
 import { Fragment } from 'react'
 import { getCellState } from '../../utils/cellState'
-import { slotStartLabel } from '../../utils/timeSlots'
+import { rangeSlotLabel } from '../../utils/timeSlots'
 import { TimeSlotCell } from './TimeSlotCell'
 import type { Assignment, SlotSetting, ScheduleRule, DateOverride, TimeSlot, ModalTarget, Profile, TenantRole } from '../../types'
 
@@ -254,8 +254,8 @@ export function ScheduleGrid({
                 {timeSlots.map((slot, slotIdx) => (
                   <tr key={slot}>
                     <td className="border border-[var(--color-border-table)] bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] px-0.5 sm:px-1 py-1 text-[9px] sm:text-[10px] font-medium text-center sticky left-0 z-10 w-10 sm:w-20 whitespace-nowrap overflow-hidden">
-                      <span className="block truncate" title={slotStartLabel(slot)}>
-                        {slotLabels[slot] ?? slotStartLabel(slot)}
+                      <span className="block truncate" title={rangeSlotLabel(slot)}>
+                        {slotLabels[slot] ?? rangeSlotLabel(slot)}
                       </span>
                     </td>
                     {week.map((day, dowIdx) => {
