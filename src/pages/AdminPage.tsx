@@ -143,7 +143,7 @@ export function AdminPage() {
   }, [adminTenant?.id, adminTenant?.settings])
 
   if (authLoading || orgLoading) {
-    return <div className="min-h-screen flex items-center justify-center text-gray-400">로딩 중...</div>
+    return <div className="min-h-screen flex items-center justify-center text-[var(--color-text-muted)]">로딩 중...</div>
   }
 
   // Access control: super admin, current tenant admin, or admin of any org
@@ -153,10 +153,10 @@ export function AdminPage() {
 
   if (!profile || !canAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg)]">
         <div className="text-center">
-          <p className="text-gray-500 dark:text-gray-400 mb-4">관리자 권한이 필요합니다.</p>
-          <button onClick={() => navigate('/')} className="text-blue-600 dark:text-blue-400 hover:underline text-sm">← 메인으로 돌아가기</button>
+          <p className="text-[var(--color-text-muted)] mb-4">관리자 권한이 필요합니다.</p>
+          <button onClick={() => navigate('/')} className="text-[var(--color-brand-primary)] hover:underline text-sm">← 메인으로 돌아가기</button>
         </div>
       </div>
     )
@@ -348,16 +348,16 @@ export function AdminPage() {
     }
   }
 
-  const inputCls = 'border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400'
+  const inputCls = 'border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]'
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-[var(--color-bg)]">
       {/* Sticky header */}
-      <div className="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-10">
+      <div className="bg-[var(--color-surface)] shadow-sm sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-3 flex-wrap">
-            <button onClick={() => navigate('/')} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm shrink-0">← 뒤로</button>
-            <h1 className="text-base font-bold text-gray-900 dark:text-white shrink-0">관리자 대시보드</h1>
+            <button onClick={() => navigate('/')} className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] text-sm shrink-0">← 뒤로</button>
+            <h1 className="text-base font-bold text-[var(--color-text-primary)] shrink-0">관리자 대시보드</h1>
             {/* Org selector */}
             {availableTenants.length > 1 ? (
               <select
@@ -366,23 +366,23 @@ export function AdminPage() {
                   const t = availableTenants.find(t => t.id === e.target.value)
                   if (t) setAdminTenant(t)
                 }}
-                className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 dark:bg-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="text-sm border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30"
               >
                 {availableTenants.map(t => (
                   <option key={t.id} value={t.id}>{t.name}</option>
                 ))}
               </select>
             ) : (
-              <span className="text-sm text-gray-500 dark:text-gray-400">· {adminTenant?.name}</span>
+              <span className="text-sm text-[var(--color-text-muted)]">· {adminTenant?.name}</span>
             )}
           </div>
-          <span className="text-sm text-gray-500 dark:text-gray-400">{profile.name}</span>
+          <span className="text-sm text-[var(--color-text-muted)]">{profile.name}</span>
         </div>
-        <div className="max-w-5xl mx-auto px-4 border-t dark:border-gray-700 flex overflow-x-auto">
+        <div className="max-w-5xl mx-auto px-4 border-t border-[var(--color-border)] flex overflow-x-auto whitespace-nowrap">
           {(Object.keys(TAB_LABELS) as Tab[]).map(t => (
             <button key={t} onClick={() => setTab(t)}
               className={`shrink-0 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
-                tab === t ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                tab === t ? 'border-[var(--color-brand-primary)] text-[var(--color-brand-primary)]' : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
               }`}>
               {TAB_LABELS[t]}
             </button>
@@ -401,26 +401,26 @@ export function AdminPage() {
         )}
 
         {!adminTenant ? (
-          <div className="text-center py-16 text-gray-400">관리할 조직을 선택해 주세요.</div>
+          <div className="text-center py-16 text-[var(--color-text-muted)]">관리할 조직을 선택해 주세요.</div>
         ) : loading ? (
-          <div className="text-center py-16 text-gray-400">로딩 중...</div>
+          <div className="text-center py-16 text-[var(--color-text-muted)]">로딩 중...</div>
         ) : (
           <>
             {/* ── 회원 관리 ── */}
             {tab === 'members' && (
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">회원 ({members.length}명)</p>
+                  <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-semibold">회원 ({members.length}명)</p>
                   <div className="flex gap-2">
                     <button
                       onClick={() => { setShowDirectCreate(v => !v); setShowAddMember(false) }}
-                      className="px-3 py-1.5 text-xs font-medium border border-orange-400 text-orange-600 rounded-lg hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                      className="px-3 py-1.5 text-xs font-medium border border-orange-400 text-orange-600 rounded-lg hover:bg-orange-50"
                     >
                       + 직접 등록
                     </button>
                     <button
                       onClick={() => { setShowAddMember(v => !v); setShowDirectCreate(false) }}
-                      className="px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                      className="px-3 py-1.5 text-xs font-medium bg-[var(--color-brand-primary)] text-white rounded-lg hover:bg-[var(--color-brand-primary-hover)]"
                     >
                       + 회원 추가
                     </button>
@@ -428,31 +428,31 @@ export function AdminPage() {
                 </div>
 
                 {showDirectCreate && (
-                  <form onSubmit={handleDirectCreate} className="mb-4 p-4 bg-white dark:bg-gray-800 rounded-xl shadow space-y-3">
-                    <p className="text-xs font-semibold text-orange-600 dark:text-orange-400">
+                  <form onSubmit={handleDirectCreate} className="mb-4 p-4 bg-[var(--color-surface)] rounded-xl shadow space-y-3">
+                    <p className="text-xs font-semibold text-orange-600">
                       직접 등록 — 이메일 인증 없이 계정을 생성하고 이 조직에 자동으로 추가합니다
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs text-gray-500 mb-1">이름 *</label>
+                        <label className="block text-xs text-[var(--color-text-muted)] mb-1">이름 *</label>
                         <input type="text" required value={directForm.name}
                           onChange={e => setDirectForm(p => ({ ...p, name: e.target.value }))}
                           placeholder="홍길동" className={inputCls + ' w-full'} />
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-500 mb-1">이메일 *</label>
+                        <label className="block text-xs text-[var(--color-text-muted)] mb-1">이메일 *</label>
                         <input type="email" required value={directForm.email}
                           onChange={e => setDirectForm(p => ({ ...p, email: e.target.value }))}
                           placeholder="test@example.com" className={inputCls + ' w-full'} />
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-500 mb-1">비밀번호 * (6자 이상)</label>
+                        <label className="block text-xs text-[var(--color-text-muted)] mb-1">비밀번호 * (6자 이상)</label>
                         <input type="password" required minLength={6} value={directForm.password}
                           onChange={e => setDirectForm(p => ({ ...p, password: e.target.value }))}
                           placeholder="••••••" className={inputCls + ' w-full'} />
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-500 mb-1">역할</label>
+                        <label className="block text-xs text-[var(--color-text-muted)] mb-1">역할</label>
                         <select value={directForm.roleId}
                           onChange={e => setDirectForm(p => ({ ...p, roleId: e.target.value }))}
                           className={inputCls + ' w-full'}>
@@ -467,7 +467,7 @@ export function AdminPage() {
                         {directSaving ? '생성 중...' : '계정 생성'}
                       </button>
                       <button type="button" onClick={() => setShowDirectCreate(false)}
-                        className="px-4 py-1.5 border border-gray-300 dark:border-gray-600 text-sm rounded-lg text-gray-500">
+                        className="px-4 py-1.5 border border-[var(--color-border-strong)] text-sm rounded-lg text-[var(--color-text-muted)]">
                         취소
                       </button>
                     </div>
@@ -475,42 +475,42 @@ export function AdminPage() {
                 )}
 
                 {showAddMember && (
-                  <form onSubmit={handleAddMember} className="mb-4 p-4 bg-white dark:bg-gray-800 rounded-xl shadow flex gap-2 items-end flex-wrap">
+                  <form onSubmit={handleAddMember} className="mb-4 p-4 bg-[var(--color-surface)] rounded-xl shadow flex gap-2 items-end flex-wrap">
                     <div className="flex-1 min-w-48">
-                      <label className="block text-xs text-gray-500 mb-1">이메일</label>
+                      <label className="block text-xs text-[var(--color-text-muted)] mb-1">이메일</label>
                       <input type="email" value={addEmail} onChange={e => setAddEmail(e.target.value)}
                         placeholder="member@example.com" required className={inputCls + ' w-full'} />
                     </div>
                     <button type="submit" disabled={saving}
-                      className="px-4 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50">
+                      className="px-4 py-1.5 bg-[var(--color-brand-primary)] text-white text-sm rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50">
                       {saving ? '추가 중...' : '추가'}
                     </button>
                     <button type="button" onClick={() => setShowAddMember(false)}
-                      className="px-4 py-1.5 border border-gray-300 dark:border-gray-600 text-sm rounded-lg text-gray-500">
+                      className="px-4 py-1.5 border border-[var(--color-border-strong)] text-sm rounded-lg text-[var(--color-text-muted)]">
                       취소
                     </button>
                   </form>
                 )}
 
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow overflow-x-auto">
+                <div className="bg-[var(--color-surface)] rounded-xl shadow overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="bg-gray-50 dark:bg-gray-700/50 border-b dark:border-gray-700">
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400">이름</th>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 hidden sm:table-cell">이메일</th>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400">역할</th>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400">접근권한</th>
+                      <tr className="bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">이름</th>
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)] hidden sm:table-cell">이메일</th>
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">역할</th>
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">접근권한</th>
                         <th className="px-4 py-3"></th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                    <tbody className="divide-y divide-[var(--color-border)]">
                       {members.map(m => (
-                        <tr key={m.user_id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                          <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
+                        <tr key={m.user_id} className="hover:bg-[var(--color-surface-hover)]">
+                          <td className="px-4 py-3 font-medium text-[var(--color-text-primary)]">
                             {m.profile?.name ?? '-'}
-                            {m.user_id === profile.id && <span className="ml-1.5 text-xs text-gray-400">(나)</span>}
+                            {m.user_id === profile.id && <span className="ml-1.5 text-xs text-[var(--color-text-muted)]">(나)</span>}
                           </td>
-                          <td className="px-4 py-3 text-gray-500 dark:text-gray-400 hidden sm:table-cell text-xs">{m.profile?.email ?? '-'}</td>
+                          <td className="px-4 py-3 text-[var(--color-text-muted)] hidden sm:table-cell text-xs">{m.profile?.email ?? '-'}</td>
                           <td className="px-4 py-3">
                             <select
                               value={m.role_id ?? ''}
@@ -518,7 +518,7 @@ export function AdminPage() {
                                 const err = await updateMemberTenantRole(m.user_id, e.target.value || null)
                                 if (err) msg(err, true)
                               }}
-                              className="text-xs border border-gray-300 dark:border-gray-600 rounded px-1.5 py-1 dark:bg-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                              className="text-xs border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-secondary)] rounded px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-primary)]/30"
                             >
                               <option value="">미지정</option>
                               {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
@@ -532,13 +532,13 @@ export function AdminPage() {
                                   const err = await updateMemberAccess(m.user_id, e.target.value as TenantAccessRole)
                                   if (err) msg(err, true)
                                 }}
-                                className="text-xs border border-gray-300 dark:border-gray-600 rounded px-1.5 py-1 dark:bg-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                                className="text-xs border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-secondary)] rounded px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-primary)]/30"
                               >
                                 <option value="member">멤버</option>
                                 <option value="admin">관리자</option>
                               </select>
                             ) : (
-                              <span className="text-xs text-gray-400">{m.role === 'admin' ? '관리자' : '멤버'}</span>
+                              <span className="text-xs text-[var(--color-text-muted)]">{m.role === 'admin' ? '관리자' : '멤버'}</span>
                             )}
                           </td>
                           <td className="px-4 py-3">
@@ -549,7 +549,7 @@ export function AdminPage() {
                                   const err = await removeMember(m.user_id)
                                   if (err) msg(err, true)
                                 }}
-                                className="px-2 py-1 text-xs text-red-600 border border-red-200 rounded hover:bg-red-50 dark:border-red-800 dark:text-red-400"
+                                className="px-2 py-1 text-xs text-red-600 border border-red-200 rounded hover:bg-red-50"
                               >
                                 삭제
                               </button>
@@ -566,22 +566,22 @@ export function AdminPage() {
             {/* ── 역할 관리 ── */}
             {tab === 'roles' && (
               <div className="max-w-lg">
-                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold mb-3">역할 목록</p>
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden mb-4">
+                <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-semibold mb-3">역할 목록</p>
+                <div className="bg-[var(--color-surface)] rounded-xl shadow overflow-x-auto mb-4">
                   {roles.length === 0 ? (
-                    <p className="text-sm text-gray-400 px-4 py-6 text-center">등록된 역할이 없습니다.</p>
+                    <p className="text-sm text-[var(--color-text-muted)] px-4 py-6 text-center">등록된 역할이 없습니다.</p>
                   ) : (
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="bg-gray-50 dark:bg-gray-700/50 border-b dark:border-gray-700">
-                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400">역할명</th>
-                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400">셀 분리</th>
+                        <tr className="bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
+                          <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">역할명</th>
+                          <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">셀 분리</th>
                           <th className="px-4 py-3"></th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                      <tbody className="divide-y divide-[var(--color-border)]">
                         {roles.map(r => (
-                          <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                          <tr key={r.id} className="hover:bg-[var(--color-surface-hover)]">
                             <td className="px-4 py-3">
                               {editingRoleId === r.id ? (
                                 <div className="flex items-center gap-1.5">
@@ -607,18 +607,18 @@ export function AdminPage() {
                                       if (err) msg(err, true)
                                       else setEditingRoleId(null)
                                     }}
-                                    className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">
+                                    className="px-2 py-1 text-xs bg-[var(--color-brand-primary)] text-white rounded hover:bg-[var(--color-brand-primary-hover)]">
                                     저장
                                   </button>
                                   <button type="button" onClick={() => setEditingRoleId(null)}
-                                    className="px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+                                    className="px-2 py-1 text-xs border border-[var(--color-border-strong)] rounded hover:bg-[var(--color-surface-hover)]">
                                     취소
                                   </button>
                                 </div>
                               ) : (
                                 <button type="button"
                                   onClick={() => { setEditingRoleId(r.id); setEditRoleName(r.name) }}
-                                  className="font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 text-left">
+                                  className="font-medium text-[var(--color-text-primary)] hover:text-[var(--color-brand-primary)] text-left">
                                   {r.name}
                                 </button>
                               )}
@@ -631,8 +631,8 @@ export function AdminPage() {
                                 }}
                                 className={`inline-flex px-2 py-0.5 rounded text-xs font-medium cursor-pointer transition-colors
                                   ${r.split_cell
-                                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 hover:bg-blue-200'
-                                    : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400 hover:bg-gray-200'}`}
+                                    ? 'bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary)]/20'
+                                    : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)]'}`}
                               >
                                 {r.split_cell ? '분리' : '미분리'}
                               </button>
@@ -644,7 +644,7 @@ export function AdminPage() {
                                   const err = await deleteRole(r.id)
                                   if (err) msg(err, true)
                                 }}
-                                className="px-2 py-1 text-xs text-red-600 border border-red-200 rounded hover:bg-red-50 dark:border-red-800 dark:text-red-400"
+                                className="px-2 py-1 text-xs text-red-600 border border-red-200 rounded hover:bg-red-50"
                               >
                                 삭제
                               </button>
@@ -656,19 +656,19 @@ export function AdminPage() {
                   )}
                 </div>
 
-                <form onSubmit={handleAddRole} className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 space-y-3">
-                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">역할 추가</p>
+                <form onSubmit={handleAddRole} className="bg-[var(--color-surface)] rounded-xl shadow p-4 space-y-3">
+                  <p className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">역할 추가</p>
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">역할명</label>
+                    <label className="block text-xs text-[var(--color-text-muted)] mb-1">역할명</label>
                     <input type="text" value={newRoleName} onChange={e => setNewRoleName(e.target.value)}
                       placeholder="예: 팀장" maxLength={30} className={inputCls + ' w-full'} required />
                   </div>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" checked={newRoleSplitCell} onChange={e => setNewRoleSplitCell(e.target.checked)}
-                      className="rounded border-gray-300 text-blue-600" />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">셀 분리 (역할별 별도 컬럼)</span>
+                      className="rounded border-[var(--color-border-strong)] accent-[var(--color-brand-primary)]" />
+                    <span className="text-sm text-[var(--color-text-secondary)]">셀 분리 (역할별 별도 컬럼)</span>
                   </label>
-                  <button type="submit" className="px-4 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">추가</button>
+                  <button type="submit" className="px-4 py-1.5 bg-[var(--color-brand-primary)] text-white text-sm rounded-lg hover:bg-[var(--color-brand-primary-hover)]">추가</button>
                 </form>
               </div>
             )}
@@ -676,12 +676,12 @@ export function AdminPage() {
             {/* ── 스케줄 규칙 ── */}
             {tab === 'rules' && (
               <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold mb-3">요일별 운영 규칙</p>
+                <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-semibold mb-3">요일별 운영 규칙</p>
 
                 {/* Missing rules banner */}
                 {adminTimeSlots.some(slot => !scheduleRules.some(r => r.time_slot === slot)) && (
-                  <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg flex items-center justify-between gap-3">
-                    <span className="text-sm text-yellow-700 dark:text-yellow-300">일부 슬롯에 규칙이 없습니다. 규칙을 생성해 주세요.</span>
+                  <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center justify-between gap-3">
+                    <span className="text-sm text-yellow-700">일부 슬롯에 규칙이 없습니다. 규칙을 생성해 주세요.</span>
                     <button
                       type="button"
                       disabled={saving}
@@ -699,20 +699,20 @@ export function AdminPage() {
                   </div>
                 )}
 
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow overflow-x-auto">
+                <div className="bg-[var(--color-surface)] rounded-xl shadow overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="bg-gray-50 dark:bg-gray-700/50 border-b dark:border-gray-700">
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400">시간</th>
+                      <tr className="bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">시간</th>
                         {DAY_LABELS.map(d => (
-                          <th key={d} className="px-3 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 text-center">{d}</th>
+                          <th key={d} className="px-3 py-3 text-xs font-semibold text-[var(--color-text-muted)] text-center">{d}</th>
                         ))}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                    <tbody className="divide-y divide-[var(--color-border)]">
                       {adminTimeSlots.map(slot => (
                         <tr key={slot}>
-                          <td className="px-4 py-2.5 font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">{parseSlotLabel(slot)}</td>
+                          <td className="px-4 py-2.5 font-medium text-[var(--color-text-secondary)] whitespace-nowrap">{parseSlotLabel(slot)}</td>
                           {DAY_LABELS.map((_, dayIdx) => {
                             const rule = getRule(dayIdx, slot)
                             return (
@@ -722,10 +722,10 @@ export function AdminPage() {
                                     const err = await toggleScheduleRule(rule.id, rule.is_open)
                                     if (err) msg(err, true)
                                   }}
-                                    className={`px-2.5 py-0.5 rounded text-xs font-medium transition-colors ${rule.is_open ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 hover:bg-green-200' : 'bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-600'}`}>
+                                    className={`px-2.5 py-0.5 rounded text-xs font-medium transition-colors ${rule.is_open ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)]'}`}>
                                     {rule.is_open ? '운영' : '미운영'}
                                   </button>
-                                ) : <span className="text-gray-300 dark:text-gray-600">-</span>}
+                                ) : <span className="text-[var(--color-border-strong)]">-</span>}
                               </td>
                             )
                           })}
@@ -734,7 +734,7 @@ export function AdminPage() {
                     </tbody>
                   </table>
                 </div>
-                <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">버튼 클릭 시 즉시 저장됩니다.</p>
+                <p className="mt-2 text-xs text-[var(--color-text-muted)]">버튼 클릭 시 즉시 저장됩니다.</p>
               </div>
             )}
 
@@ -742,56 +742,56 @@ export function AdminPage() {
             {tab === 'dates' && (
               <div className="space-y-6">
                 <div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold mb-3">날짜 추가</p>
-                  <form onSubmit={handleDateSubmit} className="bg-white dark:bg-gray-800 rounded-xl shadow p-4">
+                  <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-semibold mb-3">날짜 추가</p>
+                  <form onSubmit={handleDateSubmit} className="bg-[var(--color-surface)] rounded-xl shadow p-4">
                     <div className="flex flex-wrap gap-3 items-end">
                       <div>
-                        <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">날짜</label>
+                        <label className="block text-xs text-[var(--color-text-muted)] mb-1">날짜</label>
                         <input type="date" value={dateForm.date} onChange={e => setDateForm(f => ({ ...f, date: e.target.value }))} required className={inputCls} />
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">유형</label>
+                        <label className="block text-xs text-[var(--color-text-muted)] mb-1">유형</label>
                         <select value={dateForm.type} onChange={e => setDateForm(f => ({ ...f, type: e.target.value as 'holiday' | 'special' }))} className={inputCls}>
                           <option value="holiday">휴관일</option>
                           <option value="special">특별 운영일</option>
                         </select>
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">레이블 (선택)</label>
+                        <label className="block text-xs text-[var(--color-text-muted)] mb-1">레이블 (선택)</label>
                         <input type="text" value={dateForm.label} onChange={e => setDateForm(f => ({ ...f, label: e.target.value }))} placeholder="예: 추석연휴" maxLength={100} className={inputCls + ' w-36'} />
                       </div>
-                      <button type="submit" disabled={saving} className="px-4 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50">
+                      <button type="submit" disabled={saving} className="px-4 py-1.5 bg-[var(--color-brand-primary)] text-white text-sm rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50">
                         {saving ? '저장 중...' : '추가'}
                       </button>
                     </div>
                   </form>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold mb-3">설정된 날짜 ({dateOverrides.length}건)</p>
-                  {dateOverrides.length === 0 ? <p className="text-sm text-gray-400">설정된 날짜가 없습니다.</p> : (
-                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden">
+                  <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-semibold mb-3">설정된 날짜 ({dateOverrides.length}건)</p>
+                  {dateOverrides.length === 0 ? <p className="text-sm text-[var(--color-text-muted)]">설정된 날짜가 없습니다.</p> : (
+                    <div className="bg-[var(--color-surface)] rounded-xl shadow overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
-                          <tr className="bg-gray-50 dark:bg-gray-700/50 border-b dark:border-gray-700">
-                            <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400">날짜</th>
-                            <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400">유형</th>
-                            <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400">레이블</th>
+                          <tr className="bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
+                            <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">날짜</th>
+                            <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">유형</th>
+                            <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">레이블</th>
                             <th className="px-4 py-3"></th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                        <tbody className="divide-y divide-[var(--color-border)]">
                           {dateOverrides.map(d => (
-                            <tr key={d.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                              <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">{d.date}</td>
+                            <tr key={d.id} className="hover:bg-[var(--color-surface-hover)]">
+                              <td className="px-4 py-3 font-medium text-[var(--color-text-primary)]">{d.date}</td>
                               <td className="px-4 py-3">
-                                <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${d.is_holiday ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'}`}>
+                                <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${d.is_holiday ? 'bg-red-100 text-red-700' : 'bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)]'}`}>
                                   {d.is_holiday ? '휴관일' : '특별운영'}
                                 </span>
                               </td>
-                              <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{d.label ?? '-'}</td>
+                              <td className="px-4 py-3 text-[var(--color-text-muted)]">{d.label ?? '-'}</td>
                               <td className="px-4 py-3">
                                 <button onClick={async () => { const err = await deleteDateOverride(d.id); if (err) msg(err, true) }}
-                                  className="px-2.5 py-1 text-xs text-red-600 border border-red-200 rounded hover:bg-red-50 dark:border-red-800 dark:text-red-400">
+                                  className="px-2.5 py-1 text-xs text-red-600 border border-red-200 rounded hover:bg-red-50">
                                   삭제
                                 </button>
                               </td>
@@ -808,33 +808,33 @@ export function AdminPage() {
             {/* ── 조직 설정 ── */}
             {tab === 'settings' && (
               <form onSubmit={handleSettingsSave} className="max-w-lg space-y-6">
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-5 space-y-4">
-                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">기본 정보</p>
+                <div className="bg-[var(--color-surface)] rounded-xl shadow p-5 space-y-4">
+                  <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-semibold">기본 정보</p>
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">조직명</label>
+                    <label className="block text-xs text-[var(--color-text-muted)] mb-1">조직명</label>
                     <input type="text" value={settingsName} onChange={e => setSettingsName(e.target.value)} maxLength={50} className={inputCls + ' w-full'} />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">페이지 타이틀</label>
+                    <label className="block text-xs text-[var(--color-text-muted)] mb-1">페이지 타이틀</label>
                     <input type="text" value={settingsTitle} onChange={e => setSettingsTitle(e.target.value)} maxLength={50} className={inputCls + ' w-full'} />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">테마 색상 (#RRGGBB, 선택)</label>
+                    <label className="block text-xs text-[var(--color-text-muted)] mb-1">테마 색상 (#RRGGBB, 선택)</label>
                     <input type="text" value={settingsTheme} onChange={e => setSettingsTheme(e.target.value)} placeholder="#2563eb" maxLength={7} className={inputCls + ' w-full'} />
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-5 space-y-4">
-                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">타임슬롯</p>
+                <div className="bg-[var(--color-surface)] rounded-xl shadow p-5 space-y-4">
+                  <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-semibold">타임슬롯</p>
 
                   {/* Templates */}
                   <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">템플릿 적용</p>
+                    <p className="text-xs text-[var(--color-text-muted)] mb-2">템플릿 적용</p>
                     <div className="flex gap-2 flex-wrap">
                       {SLOT_TEMPLATES.map(t => (
                         <button key={t.label} type="button"
                           onClick={() => setSlotList(t.slots)}
-                          className="px-3 py-1.5 text-xs rounded-lg border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+                          className="px-3 py-1.5 text-xs rounded-lg border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:border-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary)] hover:bg-[var(--color-surface-hover)] transition-colors">
                           {t.label}
                         </button>
                       ))}
@@ -843,34 +843,34 @@ export function AdminPage() {
 
                   {/* Manual add */}
                   <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">직접 추가</p>
+                    <p className="text-xs text-[var(--color-text-muted)] mb-2">직접 추가</p>
                     <div className="flex items-end gap-2 flex-wrap">
                       <div>
-                        <label className="block text-xs text-gray-500 mb-1">시작</label>
+                        <label className="block text-xs text-[var(--color-text-muted)] mb-1">시작</label>
                         <select value={slotStart} onChange={e => setSlotStart(Number(e.target.value))} className={inputCls}>
                           {START_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                         </select>
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-500 mb-1">종료</label>
+                        <label className="block text-xs text-[var(--color-text-muted)] mb-1">종료</label>
                         <select value={slotEnd} onChange={e => setSlotEnd(Number(e.target.value))} className={inputCls}>
                           {END_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                         </select>
                       </div>
                       <button type="button" onClick={handleAddSlot}
-                        className="px-3 py-1.5 text-sm border border-blue-500 text-blue-600 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20">
+                        className="px-3 py-1.5 text-sm border border-[var(--color-brand-primary)] text-[var(--color-brand-primary)] rounded-lg hover:bg-[var(--color-surface-hover)]">
                         + 추가
                       </button>
                     </div>
                   </div>
 
                   {slotList.length === 0 ? (
-                    <p className="text-xs text-gray-400">등록된 슬롯이 없습니다.</p>
+                    <p className="text-xs text-[var(--color-text-muted)]">등록된 슬롯이 없습니다.</p>
                   ) : (
                     <ul className="space-y-1.5">
                       {slotList.map(slot => (
-                        <li key={slot} className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                          <span className="text-sm text-gray-700 dark:text-gray-300 w-32 shrink-0">{parseSlotLabel(slot)}</span>
+                        <li key={slot} className="flex items-center gap-2 px-3 py-2 bg-[var(--color-surface-secondary)] rounded-lg">
+                          <span className="text-sm text-[var(--color-text-secondary)] w-32 shrink-0">{parseSlotLabel(slot)}</span>
                           <input
                             type="text"
                             placeholder="레이블 (예: 햇님타임)"
@@ -881,7 +881,7 @@ export function AdminPage() {
                               else delete next[slot]
                               return next
                             })}
-                            className="flex-1 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                            className="flex-1 text-sm border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]"
                           />
                           <button type="button" onClick={() => {
                             setSlotList(prev => prev.filter(s => s !== slot))
@@ -894,7 +894,7 @@ export function AdminPage() {
                 </div>
 
                 <button type="submit" disabled={saving}
-                  className="px-5 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50">
+                  className="px-5 py-2 bg-[var(--color-brand-primary)] text-white text-sm rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50">
                   {saving ? '저장 중...' : '저장'}
                 </button>
               </form>
@@ -903,12 +903,12 @@ export function AdminPage() {
             {/* ── 범례 관리 ── */}
             {tab === 'legend' && (
               <div className="max-w-lg space-y-4">
-                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">
+                <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-semibold">
                   범례 항목 ({legendItems.length}개) — 추가/삭제 즉시 저장됩니다
                 </p>
 
                 {legendItems.length === 0 && (
-                  <p className="text-xs text-gray-400">항목이 없으면 기본 범례가 표시됩니다.</p>
+                  <p className="text-xs text-[var(--color-text-muted)]">항목이 없으면 기본 범례가 표시됩니다.</p>
                 )}
 
                 <ul className="space-y-2">
@@ -949,11 +949,11 @@ export function AdminPage() {
                             </select>
                             <button type="button" onClick={saveLegendEdit}
                               disabled={!editLegendIcon.trim() || !editLegendLabel.trim()}
-                              className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-40 shrink-0">
+                              className="px-3 py-1 text-xs bg-[var(--color-brand-primary)] text-white rounded hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40 shrink-0">
                               저장
                             </button>
                             <button type="button" onClick={() => setEditingLegendId(null)}
-                              className="px-3 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700 shrink-0">
+                              className="px-3 py-1 text-xs border border-[var(--color-border-strong)] rounded hover:bg-[var(--color-surface-hover)] shrink-0">
                               취소
                             </button>
                           </div>
@@ -962,11 +962,11 @@ export function AdminPage() {
                             <span className={`text-[11px] font-bold ${s.icon}`}>{item.icon}</span>
                             <span className="text-xs text-[var(--color-text-secondary)] font-medium flex-1">{item.label}</span>
                             <button type="button" onClick={() => startEditLegend(item)}
-                              className="px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700 shrink-0">
+                              className="px-2 py-1 text-xs border border-[var(--color-border-strong)] rounded hover:bg-[var(--color-surface-hover)] shrink-0">
                               수정
                             </button>
                             <button type="button" onClick={() => removeLegendItem(item.id)}
-                              className="px-2 py-1 text-xs text-red-600 border border-red-200 rounded hover:bg-red-50 dark:border-red-800 dark:text-red-400 shrink-0">
+                              className="px-2 py-1 text-xs text-red-600 border border-red-200 rounded hover:bg-red-50 shrink-0">
                               삭제
                             </button>
                           </div>
@@ -976,11 +976,11 @@ export function AdminPage() {
                   })}
                 </ul>
 
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 space-y-3">
-                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">새 항목 추가</p>
+                <div className="bg-[var(--color-surface)] rounded-xl shadow p-4 space-y-3">
+                  <p className="text-xs font-semibold text-[var(--color-text-muted)]">새 항목 추가</p>
                   <div className="flex gap-2 flex-wrap items-end">
                     <div>
-                      <label className="block text-xs text-gray-500 mb-1">아이콘</label>
+                      <label className="block text-xs text-[var(--color-text-muted)] mb-1">아이콘</label>
                       <input
                         type="text"
                         maxLength={2}
@@ -991,7 +991,7 @@ export function AdminPage() {
                       />
                     </div>
                     <div className="flex-1 min-w-40">
-                      <label className="block text-xs text-gray-500 mb-1">레이블</label>
+                      <label className="block text-xs text-[var(--color-text-muted)] mb-1">레이블</label>
                       <input
                         type="text"
                         value={newLegendLabel}
@@ -1002,7 +1002,7 @@ export function AdminPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-500 mb-1">색상</label>
+                      <label className="block text-xs text-[var(--color-text-muted)] mb-1">색상</label>
                       <select
                         value={newLegendColor}
                         onChange={e => setNewLegendColor(e.target.value as LegendColor)}
@@ -1023,7 +1023,7 @@ export function AdminPage() {
                       type="button"
                       onClick={addLegendItem}
                       disabled={!newLegendIcon.trim() || !newLegendLabel.trim()}
-                      className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-40"
+                      className="px-4 py-1.5 text-sm bg-[var(--color-brand-primary)] text-white rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40"
                     >
                       + 추가
                     </button>

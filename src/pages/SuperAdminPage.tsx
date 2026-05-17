@@ -41,7 +41,7 @@ function SlotEditor({ slots, onChange }: SlotEditorProps) {
     onChange([...slots, slot].sort((a, b) => parseFloat(a) - parseFloat(b)))
   }
 
-  const selectCls = 'px-2 py-1.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm'
+  const selectCls = 'px-2 py-1.5 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]'
 
   return (
     <div className="space-y-3">
@@ -54,7 +54,7 @@ function SlotEditor({ slots, onChange }: SlotEditorProps) {
               key={t.label}
               type="button"
               onClick={() => applyTemplate(t.slots)}
-              className="px-3 py-1.5 text-xs rounded-xl border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+              className="px-3 py-1.5 text-xs rounded-xl border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary)] hover:bg-[var(--color-surface-hover)] transition-colors"
             >
               {t.label}
             </button>
@@ -85,7 +85,7 @@ function SlotEditor({ slots, onChange }: SlotEditorProps) {
           <button
             type="button"
             onClick={handleAdd}
-            className="px-3 py-1.5 text-sm border border-blue-500 text-blue-600 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/20"
+            className="px-3 py-1.5 text-sm border border-[var(--color-brand-primary)] text-[var(--color-brand-primary)] rounded-xl hover:bg-[var(--color-surface-hover)]"
           >
             + 추가
           </button>
@@ -100,7 +100,7 @@ function SlotEditor({ slots, onChange }: SlotEditorProps) {
         <ul className="space-y-1">
           {slots.map(slot => (
             <li key={slot} className="flex items-center justify-between px-3 py-1.5 bg-[var(--color-surface-secondary)] rounded-xl">
-              <span className="text-sm text-[var(--color-text)]">{parseSlotLabel(slot)}</span>
+              <span className="text-sm text-[var(--color-text-primary)]">{parseSlotLabel(slot)}</span>
               <button
                 type="button"
                 onClick={() => onChange(slots.filter(s => s !== slot))}
@@ -321,14 +321,14 @@ export function SuperAdminPage() {
 
   if (!profile?.is_super_admin) return null
 
-  const inputCls = 'w-full px-3 py-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm'
+  const inputCls = 'w-full px-3 py-2 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]'
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] p-4 sm:p-8">
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-[var(--color-text)]">슈퍼어드민</h1>
-          <button onClick={() => navigate('/')} className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text)]">
+          <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">슈퍼어드민</h1>
+          <button onClick={() => navigate('/')} className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]">
             ← 돌아가기
           </button>
         </div>
@@ -341,10 +341,10 @@ export function SuperAdminPage() {
 
         {/* Create button */}
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-[var(--color-text)]">조직 목록 ({tenants.length})</h2>
+          <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">조직 목록 ({tenants.length})</h2>
           <button
             onClick={() => setShowCreate(v => !v)}
-            className="px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+            className="px-4 py-2 rounded-xl bg-[var(--color-brand-primary)] text-white text-sm font-medium hover:bg-[var(--color-brand-primary-hover)]"
           >
             + 새 조직
           </button>
@@ -353,7 +353,7 @@ export function SuperAdminPage() {
         {/* Create form */}
         {showCreate && (
           <form onSubmit={createTenant} className="mb-6 p-5 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] space-y-4">
-            <h3 className="font-semibold text-[var(--color-text)]">새 조직 만들기</h3>
+            <h3 className="font-semibold text-[var(--color-text-primary)]">새 조직 만들기</h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {([
@@ -389,9 +389,9 @@ export function SuperAdminPage() {
                       value={mode}
                       checked={form.tenant_mode === mode}
                       onChange={() => setForm(prev => ({ ...prev, tenant_mode: mode }))}
-                      className="accent-blue-600"
+                      className="accent-[var(--color-brand-primary)]"
                     />
-                    <span className="text-sm text-[var(--color-text)]">{mode}모드</span>
+                    <span className="text-sm text-[var(--color-text-primary)]">{mode}모드</span>
                   </label>
                 ))}
               </div>
@@ -403,7 +403,7 @@ export function SuperAdminPage() {
               <button
                 type="submit"
                 disabled={saving || !form.slug || !form.name}
-                className="px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-40"
+                className="px-4 py-2 rounded-xl bg-[var(--color-brand-primary)] text-white text-sm font-medium hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40"
               >
                 {saving ? '저장 중...' : '생성'}
               </button>
@@ -430,12 +430,12 @@ export function SuperAdminPage() {
                       <input
                         value={editName}
                         onChange={e => setEditName(e.target.value)}
-                        className="text-sm font-semibold px-2 py-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] w-48"
+                        className="text-sm font-semibold px-2 py-1 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] w-48 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]"
                         onKeyDown={e => { if (e.key === 'Enter') saveName(t); if (e.key === 'Escape') setEditingNameId(null) }}
                         autoFocus
                       />
                       <button onClick={() => saveName(t)} disabled={nameSaving}
-                        className="px-2 py-1 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-40">
+                        className="px-2 py-1 text-xs bg-[var(--color-brand-primary)] text-white rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40">
                         {nameSaving ? '...' : '저장'}
                       </button>
                       <button onClick={() => setEditingNameId(null)}
@@ -446,7 +446,7 @@ export function SuperAdminPage() {
                   ) : (
                     <button
                       onClick={() => { setEditingNameId(t.id); setEditName(t.name) }}
-                      className="font-semibold text-[var(--color-text)] hover:text-blue-600 text-left"
+                      className="font-semibold text-[var(--color-text-primary)] hover:text-[var(--color-brand-primary)] text-left"
                     >
                       {t.name}
                     </button>
@@ -479,7 +479,7 @@ export function SuperAdminPage() {
                   </button>
                   <button
                     onClick={() => navigate(`/admin?org=${t.id}`)}
-                    className="px-3 py-1 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="px-3 py-1 text-xs font-medium bg-[var(--color-brand-primary)] text-white rounded-lg hover:bg-[var(--color-brand-primary-hover)] transition-colors"
                   >
                     관리
                   </button>
@@ -502,7 +502,7 @@ export function SuperAdminPage() {
                       type="button"
                       disabled={editSaving}
                       onClick={() => saveEdit(t)}
-                      className="px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-40"
+                      className="px-4 py-2 rounded-xl bg-[var(--color-brand-primary)] text-white text-sm font-medium hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40"
                     >
                       {editSaving ? '저장 중...' : '저장'}
                     </button>

@@ -32,7 +32,7 @@ export function TenantSelectPage() {
             </div>
             <button
               onClick={() => navigate('/superadmin')}
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap"
+              className="text-sm text-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary-hover)] font-medium whitespace-nowrap"
             >
               슈퍼어드민 관리 →
             </button>
