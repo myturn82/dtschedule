@@ -43,7 +43,7 @@ export function Legend({ legendItems }: Props) {
       <span className="text-[11px] font-medium text-[var(--color-text-muted)] mr-1 whitespace-nowrap">
         범례
       </span>
-      {items.map(({ id, icon, label, color }) => {
+      {items.map(({ id, label, color }) => {
         const isActive = active.has(id)
         const s = LEGEND_COLOR_STYLES[color]
         const dot = DOT_COLORS[color]
