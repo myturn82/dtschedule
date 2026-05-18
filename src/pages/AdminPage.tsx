@@ -6,7 +6,7 @@ import { useTenant } from '../contexts/TenantContext'
 import { useTenantRoles } from '../hooks/useTenantRoles'
 import { supabase } from '../lib/supabase'
 import { buildSlot, parseSlotLabel, generateTimeSlots, DEFAULT_TIME_SLOTS, SLOT_TEMPLATES } from '../utils/timeSlots'
-import type { TimeSlot, Tenant, TenantAccessRole, LegendItem, LegendColor } from '../types'
+import type { TimeSlot, Tenant, TenantAccessRole, LegendItem, LegendColor, CustomFieldDef } from '../types'
 import { LEGEND_COLOR_STYLES } from '../components/schedule/Legend'
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
@@ -20,7 +20,7 @@ function makeTimeOpt(halfHours: number) {
 const START_OPTIONS = Array.from({ length: 48 }, (_, i) => makeTimeOpt(i))
 const END_OPTIONS   = Array.from({ length: 48 }, (_, i) => makeTimeOpt(i + 1))
 
-type Tab = 'members' | 'roles' | 'rules' | 'dates' | 'settings' | 'legend'
+type Tab = 'members' | 'roles' | 'rules' | 'dates' | 'settings' | 'legend' | 'custom_fields'
 
 const TAB_LABELS: Record<Tab, string> = {
   members: '회원 관리',
@@ -29,6 +29,7 @@ const TAB_LABELS: Record<Tab, string> = {
   dates: '날짜 설정',
   settings: '조직 설정',
   legend: '범례 관리',
+  custom_fields: '입력 필드',
 }
 
 export function AdminPage() {
@@ -95,6 +96,16 @@ export function AdminPage() {
   const [editLegendLabel, setEditLegendLabel] = useState('')
   const [editLegendColor, setEditLegendColor] = useState<LegendColor>('blue')
 
+  // Custom fields tab
+  const [customFields, setCustomFields] = useState<CustomFieldDef[]>([])
+  const [newFieldLabel, setNewFieldLabel] = useState('')
+  const [newFieldType, setNewFieldType] = useState<'text' | 'select'>('text')
+  const [newFieldRequired, setNewFieldRequired] = useState(true)
+  const [newFieldOptions, setNewFieldOptions] = useState('')
+  const [newFieldPlaceholder, setNewFieldPlaceholder] = useState('')
+  const [editingFieldId, setEditingFieldId] = useState<string | null>(null)
+  const [editField, setEditField] = useState<Omit<CustomFieldDef, 'id'>>({ label: '', type: 'text', required: true, options: [], placeholder: '' })
+
   // Sync settings form when adminTenant changes
   useEffect(() => {
     if (!adminTenant) return
@@ -105,6 +116,7 @@ export function AdminPage() {
     setSettingsTheme(s.theme_color ?? '')
     setSlotLabels(s.slot_labels ?? {})
     setLegendItems(s.legend_items ?? [])
+    setCustomFields(s.custom_fields ?? [])
   }, [adminTenant?.id])
 
   // Load available orgs based on user role
@@ -238,6 +250,95 @@ export function AdminPage() {
     }
     setEditingLegendId(null)
     msg('수정됐습니다.')
+  }
+
+  // ── 커스텀 필드 CRUD ──────────────────────────────────────────────────────────
+
+  async function addCustomField(e: React.FormEvent) {
+    e.preventDefault()
+    if (!newFieldLabel.trim() || !adminTenantId) return
+    const newField: CustomFieldDef = {
+      id: Date.now().toString(),
+      label: newFieldLabel.trim(),
+      type: newFieldType,
+      required: newFieldRequired,
+      options: newFieldType === 'select' ? newFieldOptions.split(',').map(s => s.trim()).filter(Boolean) : undefined,
+      placeholder: newFieldPlaceholder.trim() || undefined,
+    }
+    const next = [...customFields, newField]
+    const err = await updateTenantSettings(adminTenantId, { custom_fields: next })
+    if (err) { msg(err, true); return }
+    setCustomFields(next)
+    if (adminTenant) {
+      const updated = { ...adminTenant, settings: { ...adminTenant.settings, custom_fields: next } }
+      setAdminTenant(updated)
+      if (adminTenant.id === tenant?.id) updateCurrentTenant(updated)
+    }
+    setNewFieldLabel('')
+    setNewFieldType('text')
+    setNewFieldRequired(true)
+    setNewFieldOptions('')
+    setNewFieldPlaceholder('')
+    msg('필드가 추가됐습니다.')
+  }
+
+  async function removeCustomField(id: string) {
+    if (!adminTenantId) return
+    const next = customFields.filter(f => f.id !== id)
+    const err = await updateTenantSettings(adminTenantId, { custom_fields: next })
+    if (err) { msg(err, true); return }
+    setCustomFields(next)
+    if (adminTenant) {
+      const updated = { ...adminTenant, settings: { ...adminTenant.settings, custom_fields: next } }
+      setAdminTenant(updated)
+      if (adminTenant.id === tenant?.id) updateCurrentTenant(updated)
+    }
+  }
+
+  async function saveFieldEdit() {
+    if (!editingFieldId || !editField.label.trim() || !adminTenantId) return
+    const next = customFields.map(f =>
+      f.id === editingFieldId
+        ? {
+            ...f,
+            label: editField.label.trim(),
+            type: editField.type,
+            required: editField.required,
+            options: editField.type === 'select' ? (editField.options ?? []) : undefined,
+            placeholder: editField.placeholder?.trim() || undefined,
+          }
+        : f
+    )
+    const err = await updateTenantSettings(adminTenantId, { custom_fields: next })
+    if (err) { msg(err, true); return }
+    setCustomFields(next)
+    if (adminTenant) {
+      const updated = { ...adminTenant, settings: { ...adminTenant.settings, custom_fields: next } }
+      setAdminTenant(updated)
+      if (adminTenant.id === tenant?.id) updateCurrentTenant(updated)
+    }
+    setEditingFieldId(null)
+    msg('수정됐습니다.')
+  }
+
+  function moveField(id: string, dir: -1 | 1) {
+    const idx = customFields.findIndex(f => f.id === id)
+    if (idx < 0) return
+    const next = [...customFields]
+    const target = idx + dir
+    if (target < 0 || target >= next.length) return
+    ;[next[idx], next[target]] = [next[target], next[idx]]
+    setCustomFields(next)
+    if (adminTenantId) {
+      updateTenantSettings(adminTenantId, { custom_fields: next }).then(err => {
+        if (err) msg(err, true)
+        else if (adminTenant) {
+          const updated = { ...adminTenant, settings: { ...adminTenant.settings, custom_fields: next } }
+          setAdminTenant(updated)
+          if (adminTenant.id === tenant?.id) updateCurrentTenant(updated)
+        }
+      })
+    }
   }
 
   async function handleDirectCreate(e: React.FormEvent) {
@@ -1029,6 +1130,132 @@ export function AdminPage() {
                     </button>
                   </div>
                 </div>
+              </div>
+            )}
+            {/* ── 입력 필드 관리 ── */}
+            {tab === 'custom_fields' && (
+              <div className="max-w-lg space-y-4">
+                <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-semibold">
+                  직접입력 모드 커스텀 필드 ({customFields.length}개)
+                  {customFields.length > 0 && <span className="ml-2 normal-case font-normal text-[var(--color-brand-primary)]">첫 번째 필드가 이름(성명) 필드로 사용됩니다</span>}
+                </p>
+
+                {customFields.length === 0 && (
+                  <p className="text-xs text-[var(--color-text-muted)]">필드가 없으면 기본 이름+연락처 입력이 표시됩니다.</p>
+                )}
+
+                <ul className="space-y-2">
+                  {customFields.map((field, idx) => {
+                    const isEditing = editingFieldId === field.id
+                    return (
+                      <li key={field.id} className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3">
+                        {isEditing ? (
+                          <div className="space-y-2">
+                            <input
+                              type="text"
+                              value={editField.label}
+                              onChange={e => setEditField(f => ({ ...f, label: e.target.value }))}
+                              placeholder="필드명"
+                              className={inputCls + ' w-full'}
+                            />
+                            <div className="flex gap-2 flex-wrap">
+                              <select
+                                value={editField.type}
+                                onChange={e => setEditField(f => ({ ...f, type: e.target.value as 'text' | 'select' }))}
+                                className={inputCls}
+                              >
+                                <option value="text">텍스트</option>
+                                <option value="select">선택(드롭다운)</option>
+                              </select>
+                              <label className="flex items-center gap-1.5 text-sm text-[var(--color-text-secondary)] cursor-pointer">
+                                <input type="checkbox" checked={editField.required} onChange={e => setEditField(f => ({ ...f, required: e.target.checked }))} className="accent-[var(--color-brand-primary)]" />
+                                필수
+                              </label>
+                            </div>
+                            {editField.type === 'select' && (
+                              <input
+                                type="text"
+                                value={(editField.options ?? []).join(', ')}
+                                onChange={e => setEditField(f => ({ ...f, options: e.target.value.split(',').map(s => s.trim()).filter(Boolean) }))}
+                                placeholder="선택지 (쉼표로 구분)"
+                                className={inputCls + ' w-full'}
+                              />
+                            )}
+                            <input
+                              type="text"
+                              value={editField.placeholder ?? ''}
+                              onChange={e => setEditField(f => ({ ...f, placeholder: e.target.value }))}
+                              placeholder="플레이스홀더 (선택)"
+                              className={inputCls + ' w-full'}
+                            />
+                            <div className="flex gap-2">
+                              <button type="button" onClick={saveFieldEdit}
+                                className="px-3 py-1 text-xs bg-[var(--color-brand-primary)] text-white rounded-lg hover:bg-[var(--color-brand-primary-hover)]">저장</button>
+                              <button type="button" onClick={() => setEditingFieldId(null)}
+                                className="px-3 py-1 text-xs border border-[var(--color-border-strong)] rounded-lg hover:bg-[var(--color-surface-hover)]">취소</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 min-w-0">
+                              <span className="text-sm font-medium text-[var(--color-text-primary)]">{field.label}</span>
+                              {idx === 0 && <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] font-semibold">이름</span>}
+                              <span className="ml-2 text-xs text-[var(--color-text-muted)]">{field.type === 'select' ? `선택 (${(field.options ?? []).join(', ')})` : '텍스트'}</span>
+                              {field.required && <span className="ml-1 text-xs text-red-500">*필수</span>}
+                            </div>
+                            <div className="flex gap-1 shrink-0">
+                              <button type="button" onClick={() => moveField(field.id, -1)} disabled={idx === 0}
+                                className="px-1.5 py-1 text-xs border border-[var(--color-border)] rounded hover:bg-[var(--color-surface-hover)] disabled:opacity-30">↑</button>
+                              <button type="button" onClick={() => moveField(field.id, 1)} disabled={idx === customFields.length - 1}
+                                className="px-1.5 py-1 text-xs border border-[var(--color-border)] rounded hover:bg-[var(--color-surface-hover)] disabled:opacity-30">↓</button>
+                              <button type="button" onClick={() => { setEditingFieldId(field.id); setEditField({ label: field.label, type: field.type, required: field.required, options: field.options ?? [], placeholder: field.placeholder ?? '' }) }}
+                                className="px-2 py-1 text-xs border border-[var(--color-border-strong)] rounded hover:bg-[var(--color-surface-hover)]">수정</button>
+                              <button type="button" onClick={async () => { if (!confirm(`"${field.label}" 필드를 삭제할까요?`)) return; await removeCustomField(field.id) }}
+                                className="px-2 py-1 text-xs text-red-600 border border-red-200 rounded hover:bg-red-50">삭제</button>
+                            </div>
+                          </div>
+                        )}
+                      </li>
+                    )
+                  })}
+                </ul>
+
+                <form onSubmit={addCustomField} className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 space-y-3">
+                  <p className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">새 필드 추가</p>
+                  <div>
+                    <label className="block text-xs text-[var(--color-text-muted)] mb-1">필드명 *</label>
+                    <input type="text" required value={newFieldLabel} onChange={e => setNewFieldLabel(e.target.value)}
+                      placeholder="예: 성명, 컷트/파마 여부, 위치" maxLength={50} className={inputCls + ' w-full'} />
+                  </div>
+                  <div className="flex gap-3 flex-wrap items-center">
+                    <div>
+                      <label className="block text-xs text-[var(--color-text-muted)] mb-1">타입</label>
+                      <select value={newFieldType} onChange={e => setNewFieldType(e.target.value as 'text' | 'select')} className={inputCls}>
+                        <option value="text">텍스트</option>
+                        <option value="select">선택(드롭다운)</option>
+                      </select>
+                    </div>
+                    <label className="flex items-center gap-1.5 text-sm text-[var(--color-text-secondary)] cursor-pointer mt-4">
+                      <input type="checkbox" checked={newFieldRequired} onChange={e => setNewFieldRequired(e.target.checked)} className="accent-[var(--color-brand-primary)]" />
+                      필수 입력
+                    </label>
+                  </div>
+                  {newFieldType === 'select' && (
+                    <div>
+                      <label className="block text-xs text-[var(--color-text-muted)] mb-1">선택지 (쉼표로 구분)</label>
+                      <input type="text" value={newFieldOptions} onChange={e => setNewFieldOptions(e.target.value)}
+                        placeholder="예: 컷트, 파마, 염색, 기타" className={inputCls + ' w-full'} />
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-xs text-[var(--color-text-muted)] mb-1">플레이스홀더 (선택)</label>
+                    <input type="text" value={newFieldPlaceholder} onChange={e => setNewFieldPlaceholder(e.target.value)}
+                      placeholder="입력 안내 문구" maxLength={100} className={inputCls + ' w-full'} />
+                  </div>
+                  <button type="submit" className="px-4 py-1.5 bg-[var(--color-brand-primary)] text-white text-sm rounded-lg hover:bg-[var(--color-brand-primary-hover)]">
+                    + 추가
+                  </button>
+                </form>
               </div>
             )}
           </>

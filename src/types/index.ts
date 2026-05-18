@@ -2,6 +2,8 @@
 // dynamically from tenant settings via generateTimeSlots().
 export type TimeSlot = string;
 
+export type ViewType = 'month' | 'week' | 'day';
+
 // Legacy default slots for the volunteer org — components should prefer
 // the timeSlots array from TenantContext instead.
 export const TIME_SLOTS: TimeSlot[] = [
@@ -11,6 +13,15 @@ export const TIME_SLOTS: TimeSlot[] = [
 export const DEFAULT_MAX_CAPACITY = 2;
 
 // ─── Tenant types ─────────────────────────────────────────────────────────────
+
+export interface CustomFieldDef {
+  id: string;
+  label: string;
+  type: 'text' | 'select';
+  required: boolean;
+  options?: string[];
+  placeholder?: string;
+}
 
 export interface TenantSettings {
   open_from: string;               // 'HH:MM'
@@ -24,6 +35,7 @@ export interface TenantSettings {
   tenant_mode?: '직접입력' | '회원선택';
   slot_labels?: Record<string, string>;
   legend_items?: LegendItem[];
+  custom_fields?: CustomFieldDef[];
 }
 
 export type LegendColor = 'amber' | 'pink' | 'slate' | 'yellow' | 'blue' | 'green' | 'purple' | 'red' | 'indigo'
@@ -115,6 +127,7 @@ export interface Assignment {
   role_id: string | null;
   customer_name: string | null;
   customer_phone: string | null;
+  extra_data?: Record<string, string>;
   created_at: string;
 }
 

@@ -1,19 +1,23 @@
 import { useState } from 'react'
-import type { Assignment, CellState, ModalTarget, Profile, TenantRole, VolunteerType } from '../../types'
+import type { Assignment, CellState, ModalTarget, Profile, TenantRole, VolunteerType, CustomFieldDef } from '../../types'
 import { TYPE_LABELS } from '../../types'
 import { parseSlotLabel } from '../../utils/timeSlots'
 import { useProfiles } from '../../hooks/useProfiles'
+import type { ProfileWithRole } from '../../hooks/useProfiles'
 
 interface Props {
   target: ModalTarget
   cellState: CellState
   profile: Profile | null
+  tenantRole?: 'admin' | 'member' | null
   splitRoles?: TenantRole[]
   isSplitMode?: boolean
+  tenantMode?: '직접입력' | '회원선택'
+  customFields?: CustomFieldDef[]
   slotLabels?: Record<string, string>
   onClose: () => void
-  onAdd: (name: string, note: string, volunteerType: VolunteerType, timeSub: string | null, color?: string, userId?: string, roleId?: string | null, customerName?: string | null, customerPhone?: string | null) => Promise<string | null>
-  onUpdate: (id: string, name: string, note: string, volunteerType: VolunteerType, timeSub: string | null, color?: string, roleId?: string | null, customerName?: string | null, customerPhone?: string | null) => Promise<string | null>
+  onAdd: (name: string, note: string, volunteerType: VolunteerType, timeSub: string | null, color?: string, userId?: string, roleId?: string | null, customerName?: string | null, customerPhone?: string | null, extraData?: Record<string, string>) => Promise<string | null>
+  onUpdate: (id: string, name: string, note: string, volunteerType: VolunteerType, timeSub: string | null, color?: string, roleId?: string | null, customerName?: string | null, customerPhone?: string | null, extraData?: Record<string, string>) => Promise<string | null>
   onDelete: (id: string) => Promise<string | null>
 }
 
@@ -47,11 +51,20 @@ function getRoleLabel(role: string): string {
   return '봉사'
 }
 
-export function SlotEditModal({ target, cellState, profile, splitRoles = [], isSplitMode = false, slotLabels = {}, onClose, onAdd, onUpdate, onDelete }: Props) {
+export function SlotEditModal({
+  target, cellState, profile, tenantRole,
+  splitRoles = [], isSplitMode = false,
+  tenantMode = '회원선택', customFields = [],
+  slotLabels = {},
+  onClose, onAdd, onUpdate, onDelete,
+}: Props) {
   const { day, month, timeSlot, volunteerType: defaultType, roleId: initialRoleId } = target
-  const isAdmin = profile?.role === 'admin' || profile?.role === 'team_leader'
+  const isAdmin = profile?.role === 'admin' || profile?.role === 'team_leader' || tenantRole === 'admin'
   const isTeamLeader = profile?.role === 'team_leader'
   const profileType: VolunteerType = profile?.role === '50plus' ? '50plus' : 'volunteer'
+
+  const isFreeform = tenantMode === '직접입력'
+  const useDynamicFields = isFreeform && customFields.length > 0
 
   const [volunteerType, setVolunteerType] = useState<VolunteerType>(
     isAdmin ? defaultType : profileType
@@ -65,10 +78,14 @@ export function SlotEditModal({ target, cellState, profile, splitRoles = [], isS
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  // Split mode (business) state
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(
     initialRoleId ?? (splitRoles[0]?.id ?? null)
   )
+
+  // 동적 필드 값 (useDynamicFields 모드)
+  const [fieldValues, setFieldValues] = useState<Record<string, string>>({})
+
+  // 레거시 직접입력 필드 (fallback)
   const [freeformName, setFreeformName] = useState('')
   const [freeformPhone, setFreeformPhone] = useState('')
 
@@ -76,7 +93,6 @@ export function SlotEditModal({ target, cellState, profile, splitRoles = [], isS
 
   const { profiles } = useProfiles()
 
-  // Legacy mode only
   const selectedProfile = isAdmin
     ? profiles.find(p => p.id === selectedUserId) ?? null
     : profile
@@ -91,38 +107,39 @@ export function SlotEditModal({ target, cellState, profile, splitRoles = [], isS
     ? cellState.assignments.filter(a => a.volunteer_type === defaultType)
     : cellState.assignments.filter(a => !a.volunteer_type || a.volunteer_type === volunteerType)
 
+  // DB 제약: (year, month, day, time_slot, volunteer_name) 고유 → 역할 무관하게 같은 슬롯 중복 배정 불가
   const assignedNames = new Set(
-    displayedAssignments.filter(a => a.id !== editingId).map(a => a.volunteer_name)
+    cellState.assignments.filter(a => a.id !== editingId).map(a => a.volunteer_name)
   )
 
-  // Legacy mode member filtering
-  const selectableProfiles = (!isSplitMode && isAdmin)
-    ? isTeamLeader
-      ? defaultType === '50plus'
-        ? profiles.filter(p => p.role === '50plus' && !assignedNames.has(p.name))
-        : profiles.filter(p => (p.role === 'volunteer' || p.role === 'team_leader') && !assignedNames.has(p.name))
-      : profiles.filter(p => {
-          if (volunteerType === '50plus') return p.role === '50plus' && !assignedNames.has(p.name)
-          return (p.role === 'volunteer' || p.role === 'team_leader') && !assignedNames.has(p.name)
-        })
+  const selectableProfiles = (!isFreeform && isAdmin)
+    ? isSplitMode
+      // split 모드: 선택된 역할(tenantRoleId)에 배정된 회원만 표시
+      ? (profiles as ProfileWithRole[]).filter(p =>
+          p.tenantRoleId === selectedRoleId && !assignedNames.has(p.name)
+        )
+      // 비분리 모드: 회원 관리에 등록된 모든 테넌트 회원 표시 (이미 배정된 회원만 제외)
+      : profiles.filter(p => !assignedNames.has(p.name))
     : []
 
-  const totalTypeProfiles = (!isSplitMode && isAdmin)
-    ? isTeamLeader
-      ? defaultType === '50plus'
-        ? profiles.filter(p => p.role === '50plus')
-        : profiles.filter(p => p.role === 'volunteer' || p.role === 'team_leader')
-      : volunteerType === '50plus'
-        ? profiles.filter(p => p.role === '50plus')
-        : profiles.filter(p => p.role === 'volunteer' || p.role === 'team_leader')
+  const totalTypeProfiles = (!isFreeform && isAdmin)
+    ? isSplitMode
+      ? (profiles as ProfileWithRole[]).filter(p => p.tenantRoleId === selectedRoleId)
+      : profiles
     : []
 
   function startEdit(a: Assignment) {
     setEditingId(a.id)
     setNote(a.note ?? '')
     setTimeSub(a.time_sub ?? null)
-    if (isSplitMode) {
-      setSelectedRoleId(a.role_id ?? null)
+    if (isSplitMode) setSelectedRoleId(a.role_id ?? null)
+    if (useDynamicFields) {
+      const nameFieldId = customFields[0]?.id
+      const restored: Record<string, string> = {}
+      if (nameFieldId) restored[nameFieldId] = a.volunteer_name
+      Object.assign(restored, a.extra_data ?? {})
+      setFieldValues(restored)
+    } else if (isFreeform) {
       setFreeformName(a.volunteer_name)
       setFreeformPhone(a.customer_phone ?? '')
     } else {
@@ -135,94 +152,127 @@ export function SlotEditModal({ target, cellState, profile, splitRoles = [], isS
     setEditingId(null)
     setNote('')
     setTimeSub(defaultTimeSub)
+    setFieldValues({})
     setFreeformName('')
     setFreeformPhone('')
     setSelectedUserId(isAdmin ? '' : (profile?.id ?? ''))
   }
 
   async function handleAdd() {
-    if (isSplitMode) {
+    setError(null)
+    let name: string
+    let userId: string | undefined
+    let customerPhone: string | null = null
+    let extraData: Record<string, string> | undefined
+
+    if (useDynamicFields) {
+      // 동적 필드 유효성 검사
+      for (const field of customFields) {
+        if (field.required && !fieldValues[field.id]?.trim()) {
+          setError(`"${field.label}"은(는) 필수 항목입니다`)
+          return
+        }
+      }
+      const nameFieldId = customFields[0].id
+      name = fieldValues[nameFieldId]?.trim() ?? ''
+      if (!name) return
+      // 첫 번째 필드 제외 나머지 extra_data에 저장
+      const rest: Record<string, string> = {}
+      customFields.slice(1).forEach(f => {
+        if (fieldValues[f.id]?.trim()) rest[f.id] = fieldValues[f.id].trim()
+      })
+      if (Object.keys(rest).length > 0) extraData = rest
+    } else if (isFreeform) {
       if (!freeformName.trim()) return
       if (!freeformPhone.trim()) { setError('연락처를 입력해주세요'); return }
       if (!isValidPhone(freeformPhone.trim())) { setError('연락처 형식이 올바르지 않습니다. (예: 010-1234-5678)'); return }
-      if (cellState.isFull && !window.confirm(`정원(${cellState.maxCapacity}명)이 초과됩니다. 계속 추가하시겠습니까?`)) return
-      setLoading(true)
-      const err = await onAdd(
-        freeformName.trim(),
-        note.trim(),
-        'volunteer',
-        timeSub,
-        undefined,
-        undefined,
-        selectedRoleId,
-        null,
-        freeformPhone.trim() || null
-      )
-      setLoading(false)
-      if (err) setError(err)
-      else {
-        setNote('')
-        setTimeSub(defaultTimeSub)
-        setFreeformName('')
-        setFreeformPhone('')
-      }
-      return
+      name = freeformName.trim()
+      customerPhone = freeformPhone.trim()
+    } else {
+      if (!selectedProfile) return
+      name = selectedProfile.name
+      userId = isAdmin ? selectedProfile.id : undefined
     }
 
-    // Legacy mode
-    if (!selectedProfile) return
-    if (!isAdmin && cellState.isFull) { setError('정원이 마감되었습니다'); return }
-    if (isAdmin && cellState.isFull && !window.confirm(`정원(${cellState.maxCapacity}명)이 초과됩니다. 계속 추가하시겠습니까?`)) return
+    if (cellState.isFull) {
+      if (!isAdmin && !isFreeform) { setError('정원이 마감되었습니다'); return }
+      if (!window.confirm(`정원(${cellState.maxCapacity}명)이 초과됩니다. 계속 추가하시겠습니까?`)) return
+    }
+
     setLoading(true)
     const err = await onAdd(
-      selectedProfile.name,
+      name,
       note.trim(),
-      effectiveVolunteerType,
+      isFreeform ? 'volunteer' : effectiveVolunteerType,
       timeSub,
       undefined,
-      isAdmin ? selectedProfile.id : undefined,
-      undefined,
+      userId,
+      isSplitMode ? selectedRoleId : undefined,
       null,
-      null
+      customerPhone,
+      extraData,
     )
     setLoading(false)
-    if (err) setError(err)
-    else {
+    if (err) { setError(err); return }
+    setNote('')
+    setTimeSub(defaultTimeSub)
+    if (useDynamicFields) {
+      setFieldValues({})
+    } else if (isFreeform) {
+      setFreeformName('')
+      setFreeformPhone('')
+    } else {
       setSelectedUserId(isAdmin ? '' : (profile?.id ?? ''))
-      setNote('')
-      setTimeSub(defaultTimeSub)
     }
   }
 
   async function handleUpdate() {
     if (!editingId) return
+    setError(null)
 
-    if (isSplitMode) {
+    let name: string
+    let customerPhone: string | null = null
+    let extraData: Record<string, string> | undefined
+
+    if (useDynamicFields) {
+      for (const field of customFields) {
+        if (field.required && !fieldValues[field.id]?.trim()) {
+          setError(`"${field.label}"은(는) 필수 항목입니다`)
+          return
+        }
+      }
+      const nameFieldId = customFields[0].id
+      name = fieldValues[nameFieldId]?.trim() ?? ''
+      if (!name) return
+      const rest: Record<string, string> = {}
+      customFields.slice(1).forEach(f => {
+        if (fieldValues[f.id]?.trim()) rest[f.id] = fieldValues[f.id].trim()
+      })
+      if (Object.keys(rest).length > 0) extraData = rest
+    } else if (isFreeform) {
       if (!freeformName.trim()) return
       if (!freeformPhone.trim()) { setError('연락처를 입력해주세요'); return }
       if (!isValidPhone(freeformPhone.trim())) { setError('연락처 형식이 올바르지 않습니다. (예: 010-1234-5678)'); return }
-      setLoading(true)
-      const err = await onUpdate(
-        editingId,
-        freeformName.trim(),
-        note.trim(),
-        'volunteer',
-        timeSub,
-        undefined,
-        selectedRoleId,
-        null,
-        freeformPhone.trim() || null
-      )
-      setLoading(false)
-      if (err) setError(err)
-      else cancelEdit()
-      return
+      name = freeformName.trim()
+      customerPhone = freeformPhone.trim()
+    } else {
+      if (!selectedProfile) return
+      name = selectedProfile.name
     }
 
-    // Legacy mode
-    if (!selectedProfile) return
     setLoading(true)
-    const err = await onUpdate(editingId, selectedProfile.name, note.trim(), volunteerType, timeSub, undefined, undefined, null, null)
+    const err = await onUpdate(
+      editingId,
+      name,
+      note.trim(),
+      isFreeform ? 'volunteer' : volunteerType,
+      timeSub,
+      undefined,
+      isSplitMode ? selectedRoleId : undefined,
+      null,
+      customerPhone,
+      extraData,
+    )
     setLoading(false)
     if (err) setError(err)
     else cancelEdit()
@@ -235,11 +285,15 @@ export function SlotEditModal({ target, cellState, profile, splitRoles = [], isS
     if (err) setError(err)
   }
 
-  const isAddDisabled = loading || (
-    isSplitMode
-      ? !freeformName.trim() || !freeformPhone.trim() || !isValidPhone(freeformPhone.trim())
-      : !selectedUserId
-  )
+  const isAddDisabled = loading || (() => {
+    if (useDynamicFields) {
+      return customFields.some(f => f.required && !fieldValues[f.id]?.trim())
+    }
+    if (isFreeform) {
+      return !freeformName.trim() || !freeformPhone.trim() || !isValidPhone(freeformPhone.trim())
+    }
+    return !selectedUserId
+  })()
 
   const inputClass = 'w-full border border-[var(--color-border-strong)] rounded-xl px-3 py-2.5 text-sm bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500/60 transition-all duration-200'
 
@@ -267,7 +321,7 @@ export function SlotEditModal({ target, cellState, profile, splitRoles = [], isS
           </button>
         </div>
 
-        {/* Role selector (split mode) OR type tabs (legacy) */}
+        {/* Role selector (split mode) OR type tabs (회원선택 모드) */}
         {isSplitMode ? (
           splitRoles.length > 1 && (
             <div className="flex border-b border-[var(--color-border)] px-4 py-2 gap-2 items-center">
@@ -276,8 +330,10 @@ export function SlotEditModal({ target, cellState, profile, splitRoles = [], isS
                 value={selectedRoleId ?? ''}
                 onChange={e => {
                   setSelectedRoleId(e.target.value || null)
+                  setFieldValues({})
                   setFreeformName('')
                   setFreeformPhone('')
+                  setSelectedUserId(isAdmin ? '' : (profile?.id ?? ''))
                 }}
                 className={inputClass}
               >
@@ -287,7 +343,7 @@ export function SlotEditModal({ target, cellState, profile, splitRoles = [], isS
               </select>
             </div>
           )
-        ) : !isTeamLeader && (
+        ) : !isTeamLeader && !isFreeform && (
           <div className="flex border-b border-[var(--color-border)] px-2">
             {(['volunteer', '50plus'] as VolunteerType[]).map(t => {
               const isDisabled = !isAdmin && profileType !== t
@@ -330,13 +386,21 @@ export function SlotEditModal({ target, cellState, profile, splitRoles = [], isS
                     <span className="text-sm text-[var(--color-text-primary)] font-medium flex items-center flex-wrap gap-1">
                       {a.volunteer_name}
                       {a.time_sub && <span className="text-xs text-[var(--color-text-muted)] font-normal">({formatTimeSub(a.time_sub)})</span>}
-                      {isSplitMode ? (
-                        a.customer_phone && <span className="text-xs text-[var(--color-text-muted)] font-normal">· {a.customer_phone}</span>
+                      {isFreeform ? (
+                        <>
+                          {a.customer_phone && <span className="text-xs text-[var(--color-text-muted)] font-normal">· {a.customer_phone}</span>}
+                          {/* 동적 필드 추가 값 표시 */}
+                          {useDynamicFields && a.extra_data && customFields.slice(1).map(f =>
+                            a.extra_data?.[f.id] ? (
+                              <span key={f.id} className="text-xs text-[var(--color-text-muted)] font-normal">· {a.extra_data[f.id]}</span>
+                            ) : null
+                          )}
+                          {a.note && <span className="text-xs text-[var(--color-text-muted)] font-normal">· {a.note}</span>}
+                        </>
                       ) : (
                         a.note && <span className="text-xs text-[var(--color-text-muted)] font-normal">· {a.note}</span>
                       )}
-                      {isSplitMode && a.note && <span className="text-xs text-[var(--color-text-muted)] font-normal">· {a.note}</span>}
-                      {!isSplitMode && isTeamLeader && (
+                      {!isFreeform && isTeamLeader && (
                         <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${a.volunteer_type === '50plus' ? 'bg-orange-100 text-orange-600' : 'bg-blue-50 text-blue-500'}`}>
                           {a.volunteer_type === '50plus' ? '50+' : '봉사'}
                         </span>
@@ -378,8 +442,47 @@ export function SlotEditModal({ target, cellState, profile, splitRoles = [], isS
               )}
 
               {/* Input section */}
-              {isSplitMode ? (
-                /* Business mode: free-form name + phone */
+              {useDynamicFields ? (
+                /* 동적 커스텀 필드 */
+                <>
+                  {customFields.map(field => (
+                    <div key={field.id}>
+                      <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
+                        {field.label}{field.required && <span className="text-red-500 ml-0.5">*</span>}
+                      </label>
+                      {field.type === 'select' && (field.options?.length ?? 0) > 0 ? (
+                        <select
+                          value={fieldValues[field.id] ?? ''}
+                          onChange={e => setFieldValues(prev => ({ ...prev, [field.id]: e.target.value }))}
+                          className={inputClass}
+                        >
+                          <option value="">{field.placeholder || `-- ${field.label} 선택 --`}</option>
+                          {field.options!.map(opt => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          type="text"
+                          value={fieldValues[field.id] ?? ''}
+                          onChange={e => setFieldValues(prev => ({ ...prev, [field.id]: e.target.value }))}
+                          placeholder={field.placeholder || `${field.label}${field.required ? ' (필수)' : ' (선택)'}`}
+                          maxLength={100}
+                          className={inputClass}
+                        />
+                      )}
+                    </div>
+                  ))}
+                  <input
+                    value={note}
+                    onChange={e => setNote(e.target.value)}
+                    placeholder="메모 (선택)"
+                    maxLength={200}
+                    className={inputClass}
+                  />
+                </>
+              ) : isFreeform ? (
+                /* 레거시 직접입력 모드 (이름 + 연락처) */
                 <>
                   <input
                     value={freeformName}
@@ -404,11 +507,11 @@ export function SlotEditModal({ target, cellState, profile, splitRoles = [], isS
                   />
                 </>
               ) : (
-                /* Volunteer mode: member selector + note */
+                /* 회원선택 모드 */
                 <>
                   {isAdmin ? (
                     <div>
-                      <p className="text-xs font-medium text-[var(--color-text-muted)] mb-2">봉사자 선택</p>
+                      <p className="text-xs font-medium text-[var(--color-text-muted)] mb-2">회원 선택</p>
                       {selectableProfiles.length === 0 ? (
                         <p className="text-xs text-[var(--color-text-muted)] py-2 text-center">
                           {totalTypeProfiles.length === 0
@@ -421,7 +524,7 @@ export function SlotEditModal({ target, cellState, profile, splitRoles = [], isS
                           onChange={e => setSelectedUserId(e.target.value)}
                           className={inputClass}
                         >
-                          <option value="">-- 봉사자를 선택하세요 --</option>
+                          <option value="">-- 회원을 선택하세요 --</option>
                           {selectableProfiles.map(p => (
                             <option key={p.id} value={p.id}>
                               {p.name} [{getRoleLabel(p.role)}]
