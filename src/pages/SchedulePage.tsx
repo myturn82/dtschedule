@@ -9,6 +9,8 @@ import { useTenantRoles } from '../hooks/useTenantRoles'
 import { getCellState } from '../utils/cellState'
 import { ScheduleHeader } from '../components/schedule/ScheduleHeader'
 import { ScheduleGrid } from '../components/schedule/ScheduleGrid'
+import { WeekGrid } from '../components/schedule/WeekGrid'
+import { DayView } from '../components/schedule/DayView'
 import { Legend } from '../components/schedule/Legend'
 import { FilterBar } from '../components/shared/FilterBar'
 import { ExportButton } from '../components/shared/ExportButton'
@@ -16,7 +18,7 @@ import { LoginModal } from '../components/auth/LoginModal'
 import { SlotEditModal } from '../components/modals/SlotEditModal'
 import { CapacityModal } from '../components/modals/CapacityModal'
 import { HolidayNoteModal } from '../components/modals/HolidayNoteModal'
-import type { ModalTarget } from '../types'
+import type { ModalTarget, ViewType } from '../types'
 
 interface Props {
   isDark: boolean
@@ -27,6 +29,8 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
   const today = new Date()
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth() + 1)
+  const [day, setDay] = useState(today.getDate())
+  const [viewType, setViewType] = useState<ViewType>('month')
   const [highlightName, setHighlightName] = useState('')
   const [showLogin, setShowLogin] = useState(false)
   const [showCapacity, setShowCapacity] = useState(false)
@@ -35,14 +39,26 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
 
   const navigate = useNavigate()
   const { profile, loading: authLoading, signIn, signUp, signInWithGoogle, signInWithKakao, signOut } = useAuth()
-  const { tenant, tenantRole, timeSlots, slotLabels, legendItems, resetTenantSelection } = useTenant()
+  const { tenant, tenantRole, timeSlots, slotLabels, legendItems, resetTenantSelection, customFields } = useTenant()
+  const tenantMode = tenant?.settings?.tenant_mode ?? '회원선택'
 
   useEffect(() => {
     if (!authLoading && !profile) setShowLogin(true)
     if (profile) setShowLogin(false)
   }, [authLoading, profile])
 
-  const { assignments, slotSettings, scheduleRules, dateOverrides, loading, addAssignment, updateAssignment, deleteAssignment, updateSlotCapacity } = useSchedule(tenant?.id ?? '', year, month)
+  // 주 뷰에서 월 경계를 넘는 경우 인접 월도 로드
+  // 해당 주의 일요일(마지막 날) 계산: 월요일 기준 주이므로 월요일 + 6일
+  const _anchorDow = new Date(year, month - 1, day).getDay()
+  const _mondayOffset = (_anchorDow + 6) % 7  // 월요일까지 가야 하는 일수
+  const _sundayDate = new Date(year, month - 1, day - _mondayOffset + 6)
+  const adjYear = _sundayDate.getFullYear()
+  const adjMonth = _sundayDate.getMonth() + 1
+  const needsAdj = viewType === 'week' && (adjYear !== year || adjMonth !== month)
+
+  const { assignments: primaryAssignments, slotSettings, scheduleRules, dateOverrides, loading, addAssignment, updateAssignment, deleteAssignment, updateSlotCapacity } = useSchedule(tenant?.id ?? '', year, month)
+  const { assignments: adjAssignments } = useSchedule(needsAdj ? (tenant?.id ?? '') : '', adjYear, adjMonth)
+  const assignments = needsAdj ? [...primaryAssignments, ...adjAssignments] : primaryAssignments
   const { profiles } = useProfiles()
   const teamLeaderUserIds = new Set(profiles.filter(p => p.role === 'team_leader').map(p => p.id))
   const { roles: tenantRoles } = useTenantRoles(tenant?.id ?? '')
@@ -72,8 +88,30 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
     else setMonth(m => m + 1)
   }
 
+  function shiftDate(delta: number) {
+    const d = new Date(year, month - 1, day)
+    d.setDate(d.getDate() + delta)
+    setYear(d.getFullYear())
+    setMonth(d.getMonth() + 1)
+    setDay(d.getDate())
+  }
+
+  function getWeekDays(y: number, m: number, d: number): Date[] {
+    const anchor = new Date(y, m - 1, d)
+    const dow = anchor.getDay()
+    const monday = new Date(anchor)
+    monday.setDate(anchor.getDate() - ((dow + 6) % 7))
+    return Array.from({ length: 7 }, (_, i) => {
+      const dd = new Date(monday)
+      dd.setDate(monday.getDate() + i)
+      return dd
+    })
+  }
+
+  const weekDays = getWeekDays(year, month, day)
+
   const selectedCellState = modalTarget
-    ? getCellState(modalTarget.day, modalTarget.timeSlot, year, month, scheduleRules, slotSettings, dateOverrides, assignments)
+    ? getCellState(modalTarget.day, modalTarget.timeSlot, modalTarget.year, modalTarget.month, scheduleRules, slotSettings, dateOverrides, assignments)
     : null
 
   return (
@@ -96,6 +134,14 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
 
             {profile ? (
               <div className="flex items-center gap-1.5 flex-wrap">
+                {profile.is_super_admin && (
+                  <button
+                    onClick={() => navigate('/superadmin')}
+                    className="text-xs font-medium px-2.5 py-1 rounded-xl border border-purple-300 dark:border-purple-700 bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-all duration-200"
+                  >
+                    슈퍼어드민
+                  </button>
+                )}
                 {profile.is_super_admin && tenant && (
                   <button
                     onClick={resetTenantSelection}
@@ -151,11 +197,15 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
         <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-[var(--shadow-lg)] overflow-hidden animate-fade-up">
           <div className="px-3 py-3 sm:px-5 sm:py-4 border-b border-[var(--color-border)]">
             <ScheduleHeader
-              year={year} month={month}
+              year={year} month={month} day={day}
               title={tenant?.settings?.title}
               filledCount={filledCount}
               operatingDays={operatingDays}
-              onPrev={prevMonth} onNext={nextMonth}
+              viewType={viewType}
+              onViewTypeChange={setViewType}
+              weekDays={weekDays}
+              onPrev={() => viewType === 'month' ? prevMonth() : shiftDate(viewType === 'week' ? -7 : -1)}
+              onNext={() => viewType === 'month' ? nextMonth() : shiftDate(viewType === 'week' ? 7 : 1)}
             />
             <Legend legendItems={legendItems} />
           </div>
@@ -166,7 +216,7 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
                 <div className="w-8 h-8 border-2 border-[var(--color-brand-primary)] border-t-transparent rounded-full animate-spin" />
                 <span className="text-sm text-[var(--color-text-muted)]">스케줄을 불러오는 중...</span>
               </div>
-            ) : (
+            ) : viewType === 'month' ? (
               <ScheduleGrid
                 year={year} month={month}
                 timeSlots={timeSlots}
@@ -179,10 +229,7 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
                 isSplitMode={isSplitMode}
                 slotLabels={slotLabels}
                 onCellClick={target => {
-                  if (isSplitMode) {
-                    setModalTarget(target)
-                    return
-                  }
+                  if (isSplitMode) { setModalTarget(target); return }
                   const role = profile?.role
                   const targetIsSaturday = new Date(target.year, target.month - 1, target.day).getDay() === 6
                   if (role === 'volunteer' && target.volunteerType !== 'volunteer') return
@@ -190,8 +237,55 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
                   setModalTarget(target)
                 }}
                 onHolidayCellClick={profile && (profile.role === 'admin' || profile.role === 'team_leader')
-                  ? (day, startHour, endHour) => setHolidayTarget({ day, startHour, endHour })
+                  ? (d, startHour, endHour) => setHolidayTarget({ day: d, startHour, endHour })
                   : undefined}
+              />
+            ) : viewType === 'week' ? (
+              <>
+                <WeekGrid
+                  weekDays={weekDays}
+                  timeSlots={timeSlots}
+                  assignments={assignments} slotSettings={slotSettings}
+                  scheduleRules={scheduleRules} dateOverrides={dateOverrides}
+                  highlightName={highlightName || null}
+                  profile={profile}
+                  splitRoles={splitRoles}
+                  isSplitMode={isSplitMode}
+                  slotLabels={slotLabels}
+                  selectedDay={new Date(year, month - 1, day)}
+                  onDateHeaderClick={d => {
+                    setYear(d.getFullYear())
+                    setMonth(d.getMonth() + 1)
+                    setDay(d.getDate())
+                  }}
+                  onCellClick={target => { setDay(target.day); setModalTarget(target) }}
+                />
+                {/* 선택된 날짜 상세 */}
+                <div className="mt-3 pt-3 border-t border-[var(--color-border)]">
+                  <DayView
+                    year={year} month={month} day={day}
+                    timeSlots={timeSlots}
+                    assignments={assignments} slotSettings={slotSettings}
+                    scheduleRules={scheduleRules} dateOverrides={dateOverrides}
+                    profile={profile}
+                    splitRoles={splitRoles}
+                    isSplitMode={isSplitMode}
+                    slotLabels={slotLabels}
+                    onCellClick={target => setModalTarget(target)}
+                  />
+                </div>
+              </>
+            ) : (
+              <DayView
+                year={year} month={month} day={day}
+                timeSlots={timeSlots}
+                assignments={assignments} slotSettings={slotSettings}
+                scheduleRules={scheduleRules} dateOverrides={dateOverrides}
+                profile={profile}
+                splitRoles={splitRoles}
+                isSplitMode={isSplitMode}
+                slotLabels={slotLabels}
+                onCellClick={target => setModalTarget(target)}
               />
             )}
           </div>
@@ -214,11 +308,14 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
           target={modalTarget}
           cellState={selectedCellState}
           profile={profile}
+          tenantRole={tenantRole}
           splitRoles={splitRoles}
           isSplitMode={isSplitMode}
+          tenantMode={tenantMode}
+          customFields={customFields}
           slotLabels={slotLabels}
           onClose={() => setModalTarget(null)}
-          onAdd={(name, note, volunteerType, timeSub, color, userId, roleId, customerName, customerPhone) => addAssignment({
+          onAdd={(name, note, volunteerType, timeSub, color, userId, roleId, customerName, customerPhone, extraData) => addAssignment({
             tenant_id: tenant!.id,
             year, month, day: modalTarget.day,
             time_slot: modalTarget.timeSlot,
@@ -231,8 +328,9 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
             role_id: roleId ?? null,
             customer_name: customerName ?? null,
             customer_phone: customerPhone ?? null,
+            extra_data: extraData,
           })}
-          onUpdate={(id, name, note, volunteerType, timeSub, color, roleId, customerName, customerPhone) => updateAssignment(id, {
+          onUpdate={(id, name, note, volunteerType, timeSub, color, roleId, customerName, customerPhone, extraData) => updateAssignment(id, {
             volunteer_name: name,
             note,
             volunteer_type: volunteerType,
@@ -241,6 +339,7 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
             role_id: roleId ?? null,
             customer_name: customerName ?? null,
             customer_phone: customerPhone ?? null,
+            extra_data: extraData,
           })}
           onDelete={deleteAssignment}
         />

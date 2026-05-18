@@ -29,6 +29,7 @@ interface AddParams {
   role_id?: string | null
   customer_name?: string | null
   customer_phone?: string | null
+  extra_data?: Record<string, string>
 }
 
 interface UpdateParams {
@@ -40,6 +41,7 @@ interface UpdateParams {
   role_id?: string | null
   customer_name?: string | null
   customer_phone?: string | null
+  extra_data?: Record<string, string>
 }
 
 export function useSchedule(tenantId: string, year: number, month: number): ScheduleData {
@@ -103,10 +105,9 @@ export function useSchedule(tenantId: string, year: number, month: number): Sche
       const isDuplicate = assignments.some(
         a => a.year === params.year && a.month === params.month &&
              a.day === params.day && a.time_slot === params.time_slot &&
-             a.volunteer_name === params.volunteer_name &&
-             a.role_id === (params.role_id ?? null)
+             a.volunteer_name === params.volunteer_name
       )
-      if (isDuplicate) return '이미 같은 봉사자가 배정되어 있습니다'
+      if (isDuplicate) return '이미 같은 회원이 배정되어 있습니다'
     }
     const { error } = await supabase.from('assignments').insert(params)
     return error?.message ?? null

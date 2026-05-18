@@ -36,7 +36,7 @@ export function CapacityModal({ slotSettings, timeSlots, slotLabels = {}, onClos
         <div className="flex justify-between items-center px-5 pt-5 pb-3 border-b border-[var(--color-border)] shrink-0">
           <div>
             <h2 className="text-base font-bold text-[var(--color-text-primary)]">인원 설정</h2>
-            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">시간대별 최대 봉사자 수</p>
+            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">시간대별 최대 인원 수</p>
           </div>
           <button
             onClick={onClose}
