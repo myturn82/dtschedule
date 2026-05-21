@@ -6,10 +6,11 @@ interface AuthState {
   profile: Profile | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<string | null>
-  signUp: (email: string, password: string, name: string, role: 'volunteer' | '50plus' | 'team_leader') => Promise<string | null>
+  signUp: (email: string, password: string, name: string, role: 'volunteer' | '50plus' | 'team_leader' | 'admin', tenantId?: string, tenantRoleId?: string) => Promise<string | null>
   signInWithGoogle: () => Promise<string | null>
   signInWithKakao: () => Promise<string | null>
   signOut: () => Promise<void>
+  deleteAccount: () => Promise<string | null>
 }
 
 export function useAuth(): AuthState {
@@ -31,7 +32,7 @@ export function useAuth(): AuthState {
   }, [])
 
   async function fetchProfile(userId: string) {
-    const { data } = await supabase.from('profiles').select('*').eq('id', userId).single()
+    const { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
     setProfile(data)
     setLoading(false)
   }
@@ -44,17 +45,23 @@ export function useAuth(): AuthState {
     return error.message
   }, [])
 
-  const signUp = useCallback(async (email: string, password: string, name: string, role: 'volunteer' | '50plus' | 'team_leader'): Promise<string | null> => {
+  const signUp = useCallback(async (email: string, password: string, name: string, role: 'volunteer' | '50plus' | 'team_leader' | 'admin', tenantId?: string, tenantRoleId?: string): Promise<string | null> => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { name, role } },
+      options: {
+        data: {
+          name, role,
+          ...(tenantId ? { tenant_id: tenantId } : {}),
+          ...(tenantRoleId ? { tenant_role_id: tenantRoleId } : {}),
+        },
+      },
     })
     if (error) {
-      if (error.message === 'User already registered') return '이미 가입된 이메일입니다.'
+      if (error.message === 'User already registered') return '이미 가입된 이메일입니다. 로그인 후 재신청해 주세요.'
       return error.message
     }
-    if (data.user?.identities?.length === 0) return '이미 가입된 이메일입니다.'
+    if (data.user?.identities?.length === 0) return '이미 가입된 이메일입니다. 로그인 후 재신청해 주세요.'
     return null
   }, [])
 
@@ -81,5 +88,16 @@ export function useAuth(): AuthState {
     await supabase.auth.signOut()
   }, [])
 
-  return { profile, loading, signIn, signUp, signInWithGoogle, signInWithKakao, signOut }
+  const deleteAccount = useCallback(async (): Promise<string | null> => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return '로그인이 필요합니다.'
+    const { data, error } = await supabase.functions.invoke('delete-account', {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    })
+    if (error || data?.error) return data?.error ?? error?.message ?? '오류가 발생했습니다.'
+    await supabase.auth.signOut()
+    return null
+  }, [])
+
+  return { profile, loading, signIn, signUp, signInWithGoogle, signInWithKakao, signOut, deleteAccount }
 }

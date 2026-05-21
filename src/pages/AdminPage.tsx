@@ -20,10 +20,11 @@ function makeTimeOpt(halfHours: number) {
 const START_OPTIONS = Array.from({ length: 48 }, (_, i) => makeTimeOpt(i))
 const END_OPTIONS   = Array.from({ length: 48 }, (_, i) => makeTimeOpt(i + 1))
 
-type Tab = 'members' | 'roles' | 'rules' | 'dates' | 'settings' | 'legend' | 'custom_fields'
+type Tab = 'members' | 'pending' | 'roles' | 'rules' | 'dates' | 'settings' | 'legend' | 'custom_fields'
 
 const TAB_LABELS: Record<Tab, string> = {
   members: '회원 관리',
+  pending: '승인 대기',
   roles: '역할 관리',
   rules: '스케줄 규칙',
   dates: '날짜 설정',
@@ -52,7 +53,7 @@ export function AdminPage() {
     addMember, removeMember, updateMemberTenantRole, updateMemberAccess,
     toggleScheduleRule, upsertScheduleRulesForSlots,
     addDateOverride, deleteDateOverride,
-    updateTenantSettings, updateTenantName,
+    updateTenantSettings, updateTenantName, approveUser,
   } = useAdmin(adminTenantId)
   const { roles, addRole, deleteRole, updateRole } = useTenantRoles(adminTenantId)
 
@@ -480,14 +481,24 @@ export function AdminPage() {
           <span className="text-sm text-[var(--color-text-muted)]">{profile.name}</span>
         </div>
         <div className="max-w-5xl mx-auto px-4 border-t border-[var(--color-border)] flex overflow-x-auto whitespace-nowrap">
-          {(Object.keys(TAB_LABELS) as Tab[]).map(t => (
-            <button key={t} onClick={() => setTab(t)}
-              className={`shrink-0 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
-                tab === t ? 'border-[var(--color-brand-primary)] text-[var(--color-brand-primary)]' : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
-              }`}>
-              {TAB_LABELS[t]}
-            </button>
-          ))}
+          {(Object.keys(TAB_LABELS) as Tab[]).map(t => {
+            const pendingCount = t === 'pending'
+              ? members.filter(m => !m.is_approved).length
+              : 0
+            return (
+              <button key={t} onClick={() => setTab(t)}
+                className={`shrink-0 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px flex items-center gap-1.5 ${
+                  tab === t ? 'border-[var(--color-brand-primary)] text-[var(--color-brand-primary)]' : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
+                }`}>
+                {TAB_LABELS[t]}
+                {pendingCount > 0 && (
+                  <span className="inline-flex items-center justify-center w-4 h-4 text-[9px] font-bold rounded-full bg-red-500 text-white">
+                    {pendingCount}
+                  </span>
+                )}
+              </button>
+            )
+          })}
         </div>
       </div>
 
@@ -664,6 +675,66 @@ export function AdminPage() {
               </div>
             )}
 
+            {/* ── 승인 대기 ── */}
+            {tab === 'pending' && (
+              <div className="max-w-lg">
+                <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-semibold mb-3">승인 대기 회원</p>
+                {(() => {
+                  const pendingMembers = members.filter(m => !m.is_approved)
+                  if (pendingMembers.length === 0) {
+                    return <p className="text-sm text-[var(--color-text-muted)] px-4 py-6 text-center">승인 대기 중인 회원이 없습니다.</p>
+                  }
+                  return (
+                    <div className="bg-[var(--color-surface)] rounded-xl shadow overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
+                            <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">이름</th>
+                            <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)] hidden sm:table-cell">이메일</th>
+                            <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">역할</th>
+                            <th className="px-4 py-3"></th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[var(--color-border)]">
+                          {pendingMembers.map(m => (
+                            <tr key={m.user_id} className="hover:bg-[var(--color-surface-hover)]">
+                              <td className="px-4 py-3 font-medium text-[var(--color-text-primary)]">{m.profile?.name ?? '-'}</td>
+                              <td className="px-4 py-3 text-[var(--color-text-muted)] hidden sm:table-cell text-xs">{m.profile?.email ?? '-'}</td>
+                              <td className="px-4 py-3 text-xs text-[var(--color-text-secondary)]">{m.profile?.role ?? '-'}</td>
+                              <td className="px-4 py-3">
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={async () => {
+                                      const err = await approveUser(m.user_id)
+                                      if (err) msg(err, true)
+                                      else msg(`${m.profile?.name ?? '회원'}을(를) 승인했습니다.`)
+                                    }}
+                                    className="px-3 py-1 text-xs font-medium rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors"
+                                  >
+                                    승인
+                                  </button>
+                                  <button
+                                    onClick={async () => {
+                                      if (!confirm(`"${m.profile?.name ?? '회원'}"을(를) 거절하고 조직에서 제외할까요?`)) return
+                                      const err = await removeMember(m.user_id)
+                                      if (err) msg(err, true)
+                                    }}
+                                    className="px-3 py-1 text-xs font-medium rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
+                                  >
+                                    거절
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )
+                })()}
+              </div>
+            )}
+
             {/* ── 역할 관리 ── */}
             {tab === 'roles' && (
               <div className="max-w-lg">
@@ -725,18 +796,33 @@ export function AdminPage() {
                               )}
                             </td>
                             <td className="px-4 py-3">
-                              <button
-                                onClick={async () => {
-                                  const err = await updateRole(r.id, { split_cell: !r.split_cell })
-                                  if (err) msg(err, true)
-                                }}
-                                className={`inline-flex px-2 py-0.5 rounded text-xs font-medium cursor-pointer transition-colors
-                                  ${r.split_cell
-                                    ? 'bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary)]/20'
-                                    : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)]'}`}
-                              >
-                                {r.split_cell ? '분리' : '미분리'}
-                              </button>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={async () => {
+                                    const err = await updateRole(r.id, { split_cell: !r.split_cell })
+                                    if (err) msg(err, true)
+                                  }}
+                                  className={`inline-flex px-2 py-0.5 rounded text-xs font-medium cursor-pointer transition-colors
+                                    ${r.split_cell && !r.indicator_bar
+                                      ? 'bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary)]/20'
+                                      : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)]'}`}
+                                >
+                                  {r.split_cell && !r.indicator_bar ? '분리' : '미분리'}
+                                </button>
+                                <button
+                                  onClick={async () => {
+                                    const err = await updateRole(r.id, { indicator_bar: !r.indicator_bar })
+                                    if (err) msg(err, true)
+                                  }}
+                                  title="셀 분리 대신 좌측 컬러 바로 표시"
+                                  className={`inline-flex px-2 py-0.5 rounded text-xs font-medium cursor-pointer transition-colors
+                                    ${r.indicator_bar
+                                      ? 'bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400'
+                                      : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)]'}`}
+                                >
+                                  {r.indicator_bar ? '바 표시' : '바 없음'}
+                                </button>
+                              </div>
                             </td>
                             <td className="px-4 py-3">
                               <button

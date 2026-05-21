@@ -17,6 +17,7 @@ interface Props {
   profile?: Profile | null
   teamLeaderUserIds?: Set<string>
   splitRoles?: TenantRole[]
+  indicatorBarRoles?: TenantRole[]
   isSplitMode?: boolean
   slotLabels?: Record<string, string>
   onCellClick: (target: ModalTarget) => void
@@ -162,7 +163,7 @@ function buildColMap(
 
 export function ScheduleGrid({
   year, month, timeSlots, assignments, slotSettings, scheduleRules, dateOverrides,
-  highlightName, profile, teamLeaderUserIds, splitRoles = [], isSplitMode = false, slotLabels = {}, onCellClick, onHolidayCellClick,
+  highlightName, profile, teamLeaderUserIds, splitRoles = [], indicatorBarRoles = [], isSplitMode = false, slotLabels = {}, onCellClick, onHolidayCellClick,
 }: Props) {
   const isAdmin = profile?.role === 'admin' || profile?.role === 'team_leader'
   const weeks = getCalendarWeeks(year, month)
@@ -393,6 +394,7 @@ export function ScheduleGrid({
                                   onClick={() => onCellClick({ year, month, day, timeSlot: slot, volunteerType: 'volunteer', roleId: role.id })}
                                   highlightName={highlightName}
                                   teamLeaderUserIds={teamLeaderUserIds}
+                                  indicatorBarRoles={indicatorBarRoles}
                                 />
                               </td>
                             ))}
@@ -437,6 +439,7 @@ export function ScheduleGrid({
                                 onClick={() => onCellClick({ year, month, day, timeSlot: slot, volunteerType: 'volunteer' })}
                                 highlightName={highlightName}
                                 teamLeaderUserIds={teamLeaderUserIds}
+                                indicatorBarRoles={indicatorBarRoles}
                               />
                             </td>
                           )}

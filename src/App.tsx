@@ -22,8 +22,8 @@ function AppRoutes() {
     )
   }
 
-  // Logged-in user with no tenant memberships → pending approval
-  // Super admins bypass this so they can always reach /superadmin and /admin
+  // 승인된 조직이 없으면 PendingPage (슈퍼어드민 제외)
+  // memberships는 TenantContext에서 이미 is_approved=true만 필터됨
   if (profile && memberships.length === 0 && !profile.is_super_admin) {
     return (
       <Routes>

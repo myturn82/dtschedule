@@ -7,7 +7,7 @@ interface TenantRolesState {
   loading: boolean
   addRole: (name: string, splitCell?: boolean, requiresCustomerInfo?: boolean) => Promise<string | null>
   deleteRole: (id: string) => Promise<string | null>
-  updateRole: (id: string, fields: Partial<Pick<TenantRole, 'name' | 'display_order' | 'split_cell' | 'requires_customer_info'>>) => Promise<string | null>
+  updateRole: (id: string, fields: Partial<Pick<TenantRole, 'name' | 'display_order' | 'split_cell' | 'indicator_bar' | 'requires_customer_info'>>) => Promise<string | null>
 }
 
 export function useTenantRoles(tenantId: string): TenantRolesState {
@@ -46,7 +46,7 @@ export function useTenantRoles(tenantId: string): TenantRolesState {
     return error?.message ?? null
   }, [])
 
-  const updateRole = useCallback(async (id: string, fields: Partial<Pick<TenantRole, 'name' | 'display_order' | 'split_cell' | 'requires_customer_info'>>): Promise<string | null> => {
+  const updateRole = useCallback(async (id: string, fields: Partial<Pick<TenantRole, 'name' | 'display_order' | 'split_cell' | 'indicator_bar' | 'requires_customer_info'>>): Promise<string | null> => {
     const { error } = await supabase.from('tenant_roles').update(fields).eq('id', id)
     if (!error) setRoles(prev => prev.map(r => r.id === id ? { ...r, ...fields } : r))
     return error?.message ?? null

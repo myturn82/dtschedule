@@ -109,7 +109,10 @@ export function useSchedule(tenantId: string, year: number, month: number): Sche
       )
       if (isDuplicate) return '이미 같은 회원이 배정되어 있습니다'
     }
-    const { error } = await supabase.from('assignments').insert(params)
+    const { data, error } = await supabase.from('assignments').insert(params).select().single()
+    if (!error && data) setAssignments(prev =>
+      prev.some(a => a.id === (data as Assignment).id) ? prev : [...prev, data as Assignment]
+    )
     return error?.message ?? null
   }, [assignments])
 
