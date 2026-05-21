@@ -59,11 +59,13 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       .eq('user_id', userId)
 
     const list = (data ?? []) as MembershipWithTenant[]
-    setMemberships(list)
+    // 승인된 멤버십만 사용 (is_approved가 없으면 true로 간주 — 마이그레이션 전 호환)
+    const approved = list.filter(m => m.is_approved !== false)
+    setMemberships(approved)
 
-    if (list.length === 1) {
-      setTenantState(list[0].tenant)
-      setTenantRole(list[0].role)
+    if (approved.length === 1) {
+      setTenantState(approved[0].tenant)
+      setTenantRole(approved[0].role)
     }
 
     setLoading(false)

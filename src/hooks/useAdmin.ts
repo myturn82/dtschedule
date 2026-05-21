@@ -18,6 +18,7 @@ interface AdminState {
   deleteDateOverride: (id: string) => Promise<string | null>
   updateTenantSettings: (tenantId: string, settings: Partial<TenantSettings>) => Promise<string | null>
   updateTenantName: (tenantId: string, name: string) => Promise<string | null>
+  approveUser: (userId: string) => Promise<string | null>
 }
 
 export function useAdmin(tenantId: string): AdminState {
@@ -51,7 +52,7 @@ export function useAdmin(tenantId: string): AdminState {
   const addMember = useCallback(async (email: string, roleId?: string): Promise<string | null> => {
     const { data: user, error: findErr } = await supabase
       .from('profiles')
-      .select('id, name, email, avatar_url, role, is_super_admin, created_at')
+      .select('*')
       .eq('email', email)
       .single()
     if (findErr || !user) return '해당 이메일로 가입된 사용자가 없습니다.'
@@ -161,11 +162,25 @@ export function useAdmin(tenantId: string): AdminState {
     return error?.message ?? null
   }, [])
 
+  const approveUser = useCallback(async (userId: string): Promise<string | null> => {
+    const { error } = await supabase
+      .from('tenant_members')
+      .update({ is_approved: true })
+      .eq('tenant_id', tenantId)
+      .eq('user_id', userId)
+    if (!error) {
+      setMembers(prev => prev.map(m =>
+        m.user_id === userId ? { ...m, is_approved: true } : m
+      ))
+    }
+    return error?.message ?? null
+  }, [tenantId])
+
   return {
     members, profiles, scheduleRules, dateOverrides, loading,
     addMember, removeMember, updateMemberTenantRole, updateMemberAccess,
     toggleScheduleRule, upsertScheduleRulesForSlots,
     addDateOverride, deleteDateOverride,
-    updateTenantSettings, updateTenantName,
+    updateTenantSettings, updateTenantName, approveUser,
   }
 }

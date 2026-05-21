@@ -158,6 +158,9 @@ export function SuperAdminPage() {
   const [nameSaving, setNameSaving]       = useState(false)
   const [deletingSaving, setDeletingSaving] = useState(false)
 
+  // Pending admin approvals
+  const [pendingAdmins, setPendingAdmins] = useState<import('../types').Profile[]>([])
+
   useEffect(() => {
     if (!authLoading && (!profile || !profile.is_super_admin)) navigate('/')
   }, [profile, authLoading, navigate])
@@ -167,9 +170,22 @@ export function SuperAdminPage() {
       setLoading(false)
       return
     }
-    supabase.from('tenants').select('*').order('created_at').then(({ data, error }) => {
-      if (error) setMessage(`테넌트 로드 오류: ${error.message}`)
-      setTenants(data ?? [])
+    Promise.all([
+      supabase.from('tenants').select('*').order('created_at'),
+      supabase
+        .from('tenant_members')
+        .select('*, profile:profiles!inner(*)')
+        .eq('is_approved', false)
+        .eq('profiles.role', 'admin'),
+    ]).then(([tenantsRes, pendingRes]) => {
+      if (tenantsRes.error) setMessage(`테넌트 로드 오류: ${tenantsRes.error.message}`)
+      setTenants(tenantsRes.data ?? [])
+      const admins = (pendingRes.data ?? [])
+        .map((m: { profile: import('../types').Profile }) => m.profile)
+        .filter(Boolean)
+      // 중복 제거 (같은 유저가 여러 조직에 pending일 수 있음)
+      const seen = new Set<string>()
+      setPendingAdmins(admins.filter(p => { if (seen.has(p.id)) return false; seen.add(p.id); return true }))
       setLoading(false)
     })
   }, [profile])
@@ -340,6 +356,66 @@ export function SuperAdminPage() {
         )}
 
         {/* Create button */}
+        {/* ── 관리자 승인 대기 ── */}
+        {pendingAdmins.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">
+              관리자 승인 대기
+              <span className="ml-2 inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-full bg-red-500 text-white">{pendingAdmins.length}</span>
+            </h2>
+            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">이름</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">이메일</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">가입일</th>
+                    <th className="px-4 py-3"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--color-border)]">
+                  {pendingAdmins.map(p => (
+                    <tr key={p.id} className="hover:bg-[var(--color-surface-hover)]">
+                      <td className="px-4 py-3 font-medium text-[var(--color-text-primary)]">{p.name}</td>
+                      <td className="px-4 py-3 text-[var(--color-text-muted)] text-xs">{p.email ?? '-'}</td>
+                      <td className="px-4 py-3 text-[var(--color-text-muted)] text-xs">{p.created_at.slice(0, 10)}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={async () => {
+                              const { error } = await supabase
+                                .from('tenant_members')
+                                .update({ is_approved: true })
+                                .eq('user_id', p.id)
+                                .eq('is_approved', false)
+                              if (error) setMessage(`승인 오류: ${error.message}`)
+                              else setPendingAdmins(prev => prev.filter(a => a.id !== p.id))
+                            }}
+                            className="px-3 py-1 text-xs font-medium rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors"
+                          >
+                            승인
+                          </button>
+                          <button
+                            onClick={async () => {
+                              if (!confirm(`"${p.name}"의 가입을 거절할까요? (프로필이 삭제됩니다)`)) return
+                              const { error } = await supabase.from('profiles').delete().eq('id', p.id)
+                              if (error) setMessage(`거절 오류: ${error.message}`)
+                              else setPendingAdmins(prev => prev.filter(a => a.id !== p.id))
+                            }}
+                            className="px-3 py-1 text-xs font-medium rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
+                          >
+                            거절
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">조직 목록 ({tenants.length})</h2>
           <button

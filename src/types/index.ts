@@ -66,6 +66,7 @@ export interface TenantMember {
   user_id: string;
   role: TenantAccessRole;
   role_id: string | null;          // FK → tenant_roles.id
+  is_approved: boolean;
   created_at: string;
 }
 
@@ -75,6 +76,7 @@ export interface TenantRole {
   tenant_id: string;
   name: string;
   split_cell: boolean;
+  indicator_bar: boolean;
   requires_customer_info: boolean;
   display_order: number;
   created_at: string;
@@ -108,6 +110,7 @@ export interface Profile {
   avatar_url: string | null;
   role: UserRole;
   is_super_admin: boolean;
+  is_approved: boolean;
   created_at: string;
 }
 

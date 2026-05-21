@@ -18,6 +18,7 @@ import { LoginModal } from '../components/auth/LoginModal'
 import { SlotEditModal } from '../components/modals/SlotEditModal'
 import { CapacityModal } from '../components/modals/CapacityModal'
 import { HolidayNoteModal } from '../components/modals/HolidayNoteModal'
+import { ConfirmDialog } from '../components/shared/ConfirmDialog'
 import type { ModalTarget, ViewType } from '../types'
 
 interface Props {
@@ -34,11 +35,12 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
   const [highlightName, setHighlightName] = useState('')
   const [showLogin, setShowLogin] = useState(false)
   const [showCapacity, setShowCapacity] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [modalTarget, setModalTarget] = useState<ModalTarget | null>(null)
   const [holidayTarget, setHolidayTarget] = useState<{ day: number; startHour: number; endHour: number } | null>(null)
 
   const navigate = useNavigate()
-  const { profile, loading: authLoading, signIn, signUp, signInWithGoogle, signInWithKakao, signOut } = useAuth()
+  const { profile, loading: authLoading, signIn, signUp, signInWithGoogle, signInWithKakao, signOut, deleteAccount } = useAuth()
   const { tenant, tenantRole, timeSlots, slotLabels, legendItems, resetTenantSelection, customFields } = useTenant()
   const tenantMode = tenant?.settings?.tenant_mode ?? '회원선택'
 
@@ -62,8 +64,12 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
   const { profiles } = useProfiles()
   const teamLeaderUserIds = new Set(profiles.filter(p => p.role === 'team_leader').map(p => p.id))
   const { roles: tenantRoles } = useTenantRoles(tenant?.id ?? '')
-  const splitRoles = tenantRoles.filter(r => r.split_cell)
+  const splitRoles = tenantRoles.filter(r => r.split_cell && !r.indicator_bar)
+  const indicatorBarRoles = tenantRoles.filter(r => r.indicator_bar)
   const isSplitMode = splitRoles.length > 0
+  // 역할 배정 모달용: split_cell 또는 indicator_bar가 true인 역할 모두 포함
+  const assignableRoles = tenantRoles.filter(r => r.split_cell || r.indicator_bar)
+  const isAssignableMode = assignableRoles.length > 0
 
   const filledCount = useMemo(
     () => assignments.filter(a => a.volunteer_type !== 'admin_note').length,
@@ -179,6 +185,12 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
                 >
                   로그아웃
                 </button>
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="px-3 py-1.5 text-xs font-medium rounded-xl border border-red-200 dark:border-red-800/40 text-red-500 dark:text-red-400 bg-[var(--color-surface-secondary)] hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-200"
+                >
+                  회원탈퇴
+                </button>
               </div>
             ) : (
               <button
@@ -226,6 +238,7 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
                 profile={profile}
                 teamLeaderUserIds={teamLeaderUserIds}
                 splitRoles={splitRoles}
+                indicatorBarRoles={indicatorBarRoles}
                 isSplitMode={isSplitMode}
                 slotLabels={slotLabels}
                 onCellClick={target => {
@@ -309,8 +322,8 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
           cellState={selectedCellState}
           profile={profile}
           tenantRole={tenantRole}
-          splitRoles={splitRoles}
-          isSplitMode={isSplitMode}
+          splitRoles={assignableRoles}
+          isSplitMode={isAssignableMode}
           tenantMode={tenantMode}
           customFields={customFields}
           slotLabels={slotLabels}
@@ -342,6 +355,22 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
             extra_data: extraData,
           })}
           onDelete={deleteAssignment}
+        />
+      )}
+
+      {showDeleteConfirm && (
+        <ConfirmDialog
+          title="회원탈퇴"
+          message={`정말 탈퇴하시겠습니까?\n탈퇴 후 모든 데이터가 삭제되며\n동일한 이메일로 재가입이 가능합니다.`}
+          confirmLabel="탈퇴하기"
+          cancelLabel="취소"
+          danger
+          onCancel={() => setShowDeleteConfirm(false)}
+          onConfirm={async () => {
+            setShowDeleteConfirm(false)
+            const err = await deleteAccount()
+            if (err) alert(err)
+          }}
         />
       )}
 

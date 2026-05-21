@@ -112,19 +112,25 @@ export function SlotEditModal({
     cellState.assignments.filter(a => a.id !== editingId).map(a => a.volunteer_name)
   )
 
+  const isIndicatorBarRole = selectedRole?.indicator_bar ?? false
+
   const selectableProfiles = (!isFreeform && isAdmin)
     ? isSplitMode
-      // split 모드: 선택된 역할(tenantRoleId)에 배정된 회원만 표시
-      ? (profiles as ProfileWithRole[]).filter(p =>
-          p.tenantRoleId === selectedRoleId && !assignedNames.has(p.name)
-        )
-      // 비분리 모드: 회원 관리에 등록된 모든 테넌트 회원 표시 (이미 배정된 회원만 제외)
+      ? isIndicatorBarRole
+        // indicator_bar 역할: team_leader 프로필 회원만 표시
+        ? profiles.filter(p => p.role === 'team_leader' && !assignedNames.has(p.name))
+        // 일반 split 역할: tenantRoleId로 필터
+        : (profiles as ProfileWithRole[]).filter(p =>
+            p.tenantRoleId === selectedRoleId && !assignedNames.has(p.name)
+          )
       : profiles.filter(p => !assignedNames.has(p.name))
     : []
 
   const totalTypeProfiles = (!isFreeform && isAdmin)
     ? isSplitMode
-      ? (profiles as ProfileWithRole[]).filter(p => p.tenantRoleId === selectedRoleId)
+      ? isIndicatorBarRole
+        ? profiles.filter(p => p.role === 'team_leader')
+        : (profiles as ProfileWithRole[]).filter(p => p.tenantRoleId === selectedRoleId)
       : profiles
     : []
 

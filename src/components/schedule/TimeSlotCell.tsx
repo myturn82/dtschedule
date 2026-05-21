@@ -1,4 +1,6 @@
-import type { Assignment, CellState } from '../../types'
+import type { Assignment, CellState, TenantRole } from '../../types'
+
+const INDICATOR_BAR_COLOR = 'oklch(0.65 0.15 60)'
 
 interface Props {
   cellState: CellState
@@ -8,6 +10,7 @@ interface Props {
   highlightName: string | null
   teamLeaderUserIds?: Set<string>
   roleId?: string | null
+  indicatorBarRoles?: TenantRole[]
 }
 
 function getSlotHours(timeSlot: string): number[] {
@@ -85,7 +88,7 @@ function EmptyHint() {
   )
 }
 
-export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightName, teamLeaderUserIds, roleId }: Props) {
+export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightName, teamLeaderUserIds, roleId, indicatorBarRoles }: Props) {
   const { isBreaktime, isClosed, isHoliday, isSaturdayShift, assignments, isFull } = cellState
   const [slotStart, slotEnd] = timeSlot.split('-').map(Number)
   const cellMinH = slotEnd - slotStart === 1
@@ -128,6 +131,14 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
 
   const slotHours = getSlotHours(timeSlot)
 
+  // indicator_bar 역할 배정 감지 (colType 무관하게 공통 계산)
+  const indicatorBarUserIds = new Set(
+    (indicatorBarRoles ?? []).flatMap(role =>
+      assignments.filter(a => a.role_id === role.id).map(a => a.user_id)
+    )
+  )
+  const hasIndicatorBar = indicatorBarUserIds.size > 0
+
   // ── role column (split mode) ─────────────────────────────────────────────────
   if (colType === 'role') {
     const roleAssignments = assignments.filter(a => a.role_id === roleId)
@@ -139,11 +150,13 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
         <div className="flex flex-col divide-y divide-[var(--color-border-table)] h-full">
           {slotHours.map(hour => {
             const hourA = roleAssignments.filter(a => assignmentCoversHour(a.time_sub, hour))
+            const hourHasBar = assignments.filter(a => assignmentCoversHour(a.time_sub, hour)).some(a => indicatorBarUserIds.has(a.user_id))
             return (
               <button key={hour} onClick={onClick}
-                className="flex-1 min-h-[1rem] flex flex-col items-center justify-center transition-all duration-150 active:scale-[0.98] group"
+                className="relative flex-1 min-h-[1rem] flex flex-col items-center justify-center transition-all duration-150 active:scale-[0.98] group"
                 style={{ background: hourA.length ? tint.bg : 'var(--color-surface)' }}
               >
+                {hourHasBar && <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: INDICATOR_BAR_COLOR }} />}
                 {hourA.length
                   ? <NameChips assignments={hourA} highlightName={highlightName} tintBg={tint.bg} tintInk={tint.ink} teamLeaderUserIds={teamLeaderUserIds} />
                   : <EmptyHint />
@@ -157,9 +170,10 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
 
     return (
       <button onClick={onClick}
-        className={`w-full ${cellMinH} flex flex-col items-center justify-center transition-all duration-150 active:scale-[0.98] group`}
+        className={`relative w-full ${cellMinH} flex flex-col items-center justify-center transition-all duration-150 active:scale-[0.98] group`}
         style={{ background: hasAssignments ? tint.bg : 'var(--color-surface)' }}
       >
+        {hasIndicatorBar && <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: INDICATOR_BAR_COLOR }} />}
         {hasAssignments
           ? <>
               <NameChips assignments={roleAssignments} highlightName={highlightName} tintBg={tint.bg} tintInk={tint.ink} teamLeaderUserIds={teamLeaderUserIds} />
@@ -179,9 +193,12 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
 
   const teamLeaderTint = { bg: 'oklch(0.95 0.07 85)', ink: 'oklch(0.42 0.12 80)' }
 
+  const indicatorTint = { bg: 'oklch(0.97 0.04 60)', ink: 'oklch(0.45 0.12 60)' }
+
   if (colType === 'vol') {
     const activeTint = hasTeamLeaderInVol ? teamLeaderTint : effectiveTint
-    const hasAssign = saturdayAssignments.filter(a => !teamLeaderUserIds?.has(a.user_id)).length > 0
+    const visibleAssignments = saturdayAssignments.filter(a => !teamLeaderUserIds?.has(a.user_id) && !indicatorBarUserIds.has(a.user_id))
+    const hasAssign = visibleAssignments.length > 0
     const shouldSplit = slotHours.length === 2 && saturdayAssignments.some(a => a.time_sub && !a.time_sub.includes('~'))
 
     if (shouldSplit) {
@@ -190,15 +207,19 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
           {slotHours.map(hour => {
             const hourVol = saturdayAssignments.filter(a => assignmentCoversHour(a.time_sub, hour))
             const hourHasLeader = !!(teamLeaderUserIds && hourVol.some(a => teamLeaderUserIds.has(a.user_id)))
-            const hourTint = hourHasLeader ? teamLeaderTint : effectiveTint
-            const hourVisible = hourVol.filter(a => !teamLeaderUserIds?.has(a.user_id))
+            const hourHasBar = hourVol.some(a => indicatorBarUserIds.has(a.user_id))
+            const hourVisible = hourVol.filter(a => !teamLeaderUserIds?.has(a.user_id) && !indicatorBarUserIds.has(a.user_id))
+            const hourTint = hourHasLeader ? teamLeaderTint : hourHasBar && !hourVisible.length ? indicatorTint : effectiveTint
             return (
               <button key={hour} onClick={onClick}
-                className="flex-1 min-h-[1rem] flex flex-col items-center justify-center transition-all duration-150 active:scale-[0.98] group"
-                style={{ background: hourVisible.length ? hourTint.bg : 'var(--color-surface)' }}
+                className="relative flex-1 min-h-[1rem] flex flex-col items-center justify-center transition-all duration-150 active:scale-[0.98] group"
+                style={{ background: (hourVisible.length || hourHasBar) ? hourTint.bg : 'var(--color-surface)' }}
               >
+                {hourHasBar && (
+                  <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: INDICATOR_BAR_COLOR }} />
+                )}
                 {hourVisible.length
-                  ? <NameChips assignments={hourVol} highlightName={highlightName} tintBg={hourTint.bg} tintInk={hourTint.ink} teamLeaderUserIds={teamLeaderUserIds} />
+                  ? <NameChips assignments={hourVisible} highlightName={highlightName} tintBg={hourTint.bg} tintInk={hourTint.ink} teamLeaderUserIds={teamLeaderUserIds} />
                   : <EmptyHint />
                 }
               </button>
@@ -208,14 +229,18 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
       )
     }
 
+    const cellTint = hasTeamLeaderInVol ? teamLeaderTint : hasIndicatorBar && !hasAssign ? indicatorTint : activeTint
     return (
       <button onClick={onClick}
-        className={`w-full ${cellMinH} flex flex-col items-center justify-center transition-all duration-150 active:scale-[0.98] group`}
-        style={{ background: hasAssign ? activeTint.bg : 'var(--color-surface)' }}
+        className={`relative w-full ${cellMinH} flex flex-col items-center justify-center transition-all duration-150 active:scale-[0.98] group`}
+        style={{ background: hasAssign || hasIndicatorBar ? cellTint.bg : 'var(--color-surface)' }}
       >
+        {hasIndicatorBar && (
+          <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: INDICATOR_BAR_COLOR }} />
+        )}
         {hasAssign
           ? <>
-              <NameChips assignments={saturdayAssignments} highlightName={highlightName} tintBg={activeTint.bg} tintInk={activeTint.ink} teamLeaderUserIds={teamLeaderUserIds} />
+              <NameChips assignments={visibleAssignments} highlightName={highlightName} tintBg={cellTint.bg} tintInk={cellTint.ink} teamLeaderUserIds={teamLeaderUserIds} />
               {isFull && <span className="text-[7px] sm:text-[9px] font-semibold mt-0.5 px-1.5 py-0.5 rounded-full" style={{ background: 'oklch(0.97 0.02 25)', color: 'oklch(0.55 0.16 25)' }}>마감</span>}
             </>
           : <EmptyHint />
