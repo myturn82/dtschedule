@@ -175,25 +175,47 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
           .lm-digit-lbl { font-size: 22px; margin-top: 8px; }
           .lm-form { padding: 28px 32px; }
         }
-        @media (max-width: 840px) {
+        /* Tablet: stacked layout */
+        @media (max-width: 1099px) and (min-width: 541px) {
           .lm-layout { grid-template-columns: 1fr; }
-          .lm-hero { padding: 24px 28px 28px 64px; min-height: 340px; }
-          .lm-digit { font-size: 240px; bottom: -70px; right: -30px; }
-          .lm-digit-lbl { display: none; }
-          .lm-form { padding: 28px 24px; }
+          .lm-hero { padding: 32px 40px 32px 72px; min-height: 320px; }
+          .lm-heroMain { margin-top: 32px; }
+          .lm-miniSched { display: none; }
+          .lm-digit { font-size: 280px; bottom: -90px; right: -40px; }
+          .lm-digit-lbl { font-size: 22px; margin-top: 8px; }
+          .lm-form { padding: 32px 40px 48px; }
+          .lm-formCard { max-width: 480px; margin: 16px auto; }
+          .lm-formH1 { font-size: 30px; }
         }
+        /* Mobile: unified paper surface */
         @media (max-width: 540px) {
-          .lm-hero { padding: 22px 20px 24px 52px; min-height: 280px; }
-          .lm-ticks { width: 36px; }
-          .lm-tick { font-size: 8px; }
-          .lm-days { height: 24px; }
-          .lm-day { font-size: 8px; letter-spacing: 0.6px; }
-          .lm-digit { font-size: 180px; bottom: -60px; right: -24px; letter-spacing: -6px; }
-          .lm-form { padding: 20px 16px; }
+          .lm-layout { grid-template-columns: 1fr; background: oklch(0.94 0.012 80); }
+          .lm-hero { padding: 12px 16px 0; background: transparent; overflow: visible; min-height: auto; }
+          .lm-heroMain { display: none; }
+          .lm-ticks { display: none; }
+          .lm-now { display: none; }
+          .lm-days { position: relative; top: auto; left: auto; right: auto; height: 26px; border-bottom: 0; margin-top: 10px; background: #fff; border: 1px solid rgba(20,23,28,0.10); border-radius: 8px; overflow: hidden; }
+          .lm-day { font-size: 9px; letter-spacing: 0.5px; border-right-color: rgba(20,23,28,0.10); }
+          .lm-digit { position: fixed; bottom: -40px; right: -20px; font-size: 200px; letter-spacing: -8px; -webkit-text-stroke-width: 1.5px; z-index: 0; pointer-events: none; }
+          .lm-digit-lbl { display: none; }
+          .lm-form { padding: 14px 16px 24px; background: transparent; position: relative; z-index: 1; }
+          .lm-form::before { display: none; }
+          .lm-formCard { display: flex; flex-direction: column; margin: 0 auto; max-width: 480px; }
+          .lm-formHello { order: 1; font-size: 10.5px; margin: 4px 0; letter-spacing: 0.8px; color: oklch(0.66 0.16 28) !important; font-weight: 600; }
+          .lm-formH1 { order: 2; font-size: 22px; margin: 0 0 14px; letter-spacing: -0.6px; }
+          .lm-formLede { display: none; }
+          .lm-tabs { order: 3; margin-bottom: 14px; }
+          .lm-loginForm { order: 4; }
+          .lm-divider { order: 5; margin: 14px 0 12px; font-size: 11.5px; }
+          .lm-socials { order: 6; gap: 8px; margin-bottom: 0; }
+          .lm-socialBtn { height: 44px; font-size: 13.5px; }
+          .lm-formFooter { display: none; }
         }
         @media (max-width: 380px) {
-          .lm-hero { padding: 20px 16px 22px 44px; }
-          .lm-ticks { width: 28px; }
+          .lm-hero { padding: 10px 14px 0; }
+          .lm-form { padding: 12px 14px 22px; }
+          .lm-formH1 { font-size: 20px; }
+          .lm-digit { font-size: 160px; }
         }
       `}</style>
 
@@ -237,7 +259,7 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
           </div>
 
           {/* Hero main content */}
-          <div style={{ marginTop: 'auto', marginBottom: 0, position: 'relative', zIndex: 1 }}>
+          <div className="lm-heroMain" style={{ marginTop: 'auto', marginBottom: 0, position: 'relative', zIndex: 1 }}>
             {/* Eyebrow */}
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 12, color: P.heroFgSoft, marginBottom: 16, letterSpacing: 0.4, textTransform: 'uppercase', fontWeight: 500, whiteSpace: 'nowrap' }}>
               <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'oklch(0.75 0.18 145)', boxShadow: '0 0 0 4px oklch(0.75 0.18 145 / 0.25)', display: 'inline-block', animation: 'lmPulse 1.6s ease-in-out infinite' }} />
@@ -323,7 +345,7 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
             </div>
           )}
 
-          <div style={{ width: '100%', maxWidth: 420, margin: 'auto', position: 'relative', zIndex: 1 }}>
+          <div className="lm-formCard" style={{ width: '100%', maxWidth: 420, margin: 'auto', position: 'relative', zIndex: 1 }}>
             {success ? (
               <div style={{ textAlign: 'center', padding: '40px 0' }}>
                 <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'oklch(0.96 0.04 145)', display: 'grid', placeItems: 'center', margin: '0 auto 16px', fontSize: 22 }}>✓</div>
@@ -332,16 +354,16 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
               </div>
             ) : (
               <>
-                <div style={{ fontSize: 13, color: '#6B7280', fontWeight: 500, marginBottom: 8 }}>WELCOME</div>
-                <h2 style={{ fontSize: 34, lineHeight: 1.1, letterSpacing: -1.2, fontWeight: 700, margin: '0 0 10px', color: '#14171C' }}>
+                <div className="lm-formHello" style={{ fontSize: 13, color: '#6B7280', fontWeight: 500, marginBottom: 8 }}>WELCOME</div>
+                <h2 className="lm-formH1" style={{ fontSize: 34, lineHeight: 1.1, letterSpacing: -1.2, fontWeight: 700, margin: '0 0 10px', color: '#14171C' }}>
                   {mode === 'login' ? <>다시 만나서<br />반가워요 👋</> : <>새로 오셨나요?<br />반갑습니다 🙌</>}
                 </h2>
-                <p style={{ fontSize: 14, color: '#6B7280', margin: '0 0 24px', lineHeight: 1.5 }}>
+                <p className="lm-formLede" style={{ fontSize: 14, color: '#6B7280', margin: '0 0 24px', lineHeight: 1.5 }}>
                   {mode === 'login' ? '이메일 또는 소셜 계정으로 로그인해 주세요.' : '조직을 선택하고 활동을 시작해 보세요.'}
                 </p>
 
                 {/* Tabs */}
-                <div style={{ display: 'inline-flex', background: 'rgba(20,23,28,0.06)', padding: 4, borderRadius: 12, marginBottom: 22, position: 'relative' }}>
+                <div className="lm-tabs" style={{ display: 'inline-flex', background: 'rgba(20,23,28,0.06)', padding: 4, borderRadius: 12, marginBottom: 22, position: 'relative' }}>
                   <div style={{ position: 'absolute', top: 4, height: 'calc(100% - 8px)', background: '#fff', borderRadius: 9, boxShadow: '0 1px 0 rgba(20,23,28,0.04),0 2px 8px -2px rgba(20,23,28,0.10)', transition: 'transform .25s cubic-bezier(.4,0,.2,1),width .25s cubic-bezier(.4,0,.2,1)', zIndex: 0, width: pillStyle.width, transform: `translateX(${pillStyle.left}px)` }} />
                   {(['login','signup'] as Mode[]).map(t => (
                     <button key={t} ref={t==='login'?tabLoginRef:tabSignupRef} onClick={() => switchMode(t)}
@@ -352,7 +374,7 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
                 </div>
 
                 {/* Social */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 22 }}>
+                <div className="lm-socials" style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 22 }}>
                   <button onClick={handleGoogle} disabled={loading} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, width: '100%', height: 48, fontSize: 14, fontWeight: 600, borderRadius: 12, border: '1px solid rgba(20,23,28,0.09)', background: '#fff', color: '#14171C', cursor: 'pointer', font: 'inherit', whiteSpace: 'nowrap' }}>
                     <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20.4H24v7.1h11.3c-1.5 4.1-5.4 7-11.3 7-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5-5C32.9 5.1 28.7 3.4 24 3.4 12.5 3.4 3.4 12.5 3.4 24S12.5 44.6 24 44.6c11 0 20-8 20-20 0-1.4-.1-2.7-.4-4.1z"/><path fill="#FF3D00" d="M5.3 13.6l5.8 4.3C12.8 14.1 18 11 24 11c3 0 5.8 1.1 7.9 3l5-5C32.9 5.1 28.7 3.4 24 3.4 16.4 3.4 9.8 7.6 5.3 13.6z"/><path fill="#4CAF50" d="M24 44.6c4.6 0 8.7-1.7 11.9-4.5l-5.5-4.6c-1.7 1.3-3.9 2.1-6.4 2.1-5.8 0-10.7-3.9-11.2-7H7v4.7C10.5 40.6 16.8 44.6 24 44.6z"/><path fill="#1976D2" d="M43.6 20.5H42V20.4H24v7.1h11.3c-.7 2-2 3.7-3.6 5l5.5 4.6c-.4.4 5.8-4.2 5.8-13.2 0-1.4-.1-2.7-.4-3.4z"/></svg>
                     Google로 계속하기
@@ -363,11 +385,11 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
                   </button>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0 18px', color: '#8A8F99', fontSize: 12, fontWeight: 500 }}>
+                <div className="lm-divider" style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0 18px', color: '#8A8F99', fontSize: 12, fontWeight: 500 }}>
                   <div style={{ flex: 1, height: 1, background: 'rgba(20,23,28,0.14)' }} />또는 이메일로 계속<div style={{ flex: 1, height: 1, background: 'rgba(20,23,28,0.14)' }} />
                 </div>
 
-                <form onSubmit={handleSubmit}>
+                <form className="lm-loginForm" onSubmit={handleSubmit}>
                   {mode === 'signup' && (
                     <>
                       {/* 조직 선택 */}
