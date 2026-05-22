@@ -19,6 +19,9 @@ import { SlotEditModal } from '../components/modals/SlotEditModal'
 import { CapacityModal } from '../components/modals/CapacityModal'
 import { HolidayNoteModal } from '../components/modals/HolidayNoteModal'
 import { ConfirmDialog } from '../components/shared/ConfirmDialog'
+import { AutoAssignPreviewModal } from '../components/modals/AutoAssignPreviewModal'
+import { computeAutoAssignments } from '../utils/autoAssign'
+import type { ProposedAssignment } from '../utils/autoAssign'
 import type { ModalTarget, ViewType } from '../types'
 
 interface Props {
@@ -36,12 +39,17 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
   const [showLogin, setShowLogin] = useState(false)
   const [showCapacity, setShowCapacity] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
+  const [showNoClearTarget, setShowNoClearTarget] = useState(false)
+  const [autoProposals, setAutoProposals] = useState<ProposedAssignment[] | null>(null)
   const [modalTarget, setModalTarget] = useState<ModalTarget | null>(null)
   const [holidayTarget, setHolidayTarget] = useState<{ day: number; startHour: number; endHour: number } | null>(null)
 
   const navigate = useNavigate()
   const { profile, loading: authLoading, signIn, signUp, signInWithGoogle, signInWithKakao, signOut, deleteAccount } = useAuth()
-  const { tenant, tenantRole, timeSlots, slotLabels, legendItems, resetTenantSelection, customFields } = useTenant()
+  const { tenant, tenantRole, memberships, timeSlots, slotLabels, legendItems, resetTenantSelection, customFields } = useTenant()
+  const memberRoleId = memberships.find(m => m.tenant_id === tenant?.id)?.role_id ?? null
+  const isPrivileged = profile?.is_super_admin || tenantRole === 'admin'
   const tenantMode = tenant?.settings?.tenant_mode ?? '회원선택'
 
   useEffect(() => {
@@ -58,8 +66,8 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
   const adjMonth = _sundayDate.getMonth() + 1
   const needsAdj = viewType === 'week' && (adjYear !== year || adjMonth !== month)
 
-  const { assignments: primaryAssignments, slotSettings, scheduleRules, dateOverrides, loading, addAssignment, updateAssignment, deleteAssignment, updateSlotCapacity } = useSchedule(tenant?.id ?? '', year, month)
-  const { assignments: adjAssignments } = useSchedule(needsAdj ? (tenant?.id ?? '') : '', adjYear, adjMonth)
+  const { assignments: primaryAssignments, slotSettings, scheduleRules, dateOverrides, loading, addAssignment, updateAssignment, deleteAssignment, clearAssignments, updateSlotCapacity } = useSchedule(tenant?.id ?? '', year, month)
+  const { assignments: adjAssignments, clearAssignments: clearAdjAssignments } = useSchedule(needsAdj ? (tenant?.id ?? '') : '', adjYear, adjMonth)
   const assignments = needsAdj ? [...primaryAssignments, ...adjAssignments] : primaryAssignments
   const { profiles } = useProfiles()
   const teamLeaderUserIds = new Set(profiles.filter(p => p.role === 'team_leader').map(p => p.id))
@@ -116,6 +124,35 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
 
   const weekDays = getWeekDays(year, month, day)
 
+  function getTargetDays(): Date[] {
+    if (viewType === 'month') {
+      const count = new Date(year, month, 0).getDate()
+      return Array.from({ length: count }, (_, i) => new Date(year, month - 1, i + 1))
+    }
+    if (viewType === 'week') return weekDays
+    return [new Date(year, month - 1, day)]
+  }
+
+  function handleAutoAssign() {
+    if (tenantMode !== '회원선택') return
+    const proposals = computeAutoAssignments({
+      days: getTargetDays(),
+      timeSlots,
+      assignments,
+      slotSettings,
+      scheduleRules,
+      dateOverrides,
+      profiles,
+      splitRoles,
+      isSplitMode,
+    })
+    if (!proposals.length) {
+      alert('배정할 빈 슬롯이 없거나 배정 가능한 회원이 없습니다.')
+      return
+    }
+    setAutoProposals(proposals)
+  }
+
   const selectedCellState = modalTarget
     ? getCellState(modalTarget.day, modalTarget.timeSlot, modalTarget.year, modalTarget.month, scheduleRules, slotSettings, dateOverrides, assignments)
     : null
@@ -162,7 +199,7 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
                   <span className="ml-1 text-[var(--color-text-muted)]">· {ROLE_LABELS[profile.role]}</span>
                 </span>
 
-                {(profile.role === 'admin' || tenantRole === 'admin') && (
+                {isPrivileged && (
                   <button
                     onClick={() => navigate('/admin')}
                     className="px-3 py-1.5 text-xs font-medium rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
@@ -170,12 +207,39 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
                     관리자
                   </button>
                 )}
-                {(profile.role === 'admin' || profile.role === 'team_leader') && (
+                {isPrivileged && (
                   <button
                     onClick={() => setShowCapacity(true)}
                     className="px-3 py-1.5 text-xs font-medium rounded-xl border border-[var(--color-border)] text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] hover:bg-[var(--color-surface-hover)] transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                   >
                     인원 설정
+                  </button>
+                )}
+                {isPrivileged && tenantMode === '회원선택' && (
+                  <button
+                    onClick={handleAutoAssign}
+                    className="px-3 py-1.5 text-xs font-medium rounded-xl border border-blue-200 dark:border-blue-800/40 text-blue-500 dark:text-blue-400 bg-[var(--color-surface-secondary)] hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    자동배정
+                  </button>
+                )}
+                {isPrivileged && (
+                  <button
+                    onClick={() => {
+                      const hasClearTarget = viewType === 'month'
+                        ? assignments.some(a => a.year === year && a.month === month)
+                        : viewType === 'week'
+                        ? assignments.some(a => weekDays.some(d => d.getFullYear() === a.year && d.getMonth() + 1 === a.month && d.getDate() === a.day))
+                        : assignments.some(a => a.year === year && a.month === month && a.day === day)
+                      if (!hasClearTarget) {
+                        setShowNoClearTarget(true)
+                        return
+                      }
+                      setShowClearConfirm(true)
+                    }}
+                    className="px-3 py-1.5 text-xs font-medium rounded-xl border border-red-200 dark:border-red-800/40 text-red-500 dark:text-red-400 bg-[var(--color-surface-secondary)] hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    초기화
                   </button>
                 )}
 
@@ -236,20 +300,24 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
                 scheduleRules={scheduleRules} dateOverrides={dateOverrides}
                 highlightName={highlightName || null}
                 profile={profile}
+                tenantRole={tenantRole}
+                memberRoleId={memberRoleId}
                 teamLeaderUserIds={teamLeaderUserIds}
                 splitRoles={splitRoles}
                 indicatorBarRoles={indicatorBarRoles}
                 isSplitMode={isSplitMode}
                 slotLabels={slotLabels}
                 onCellClick={target => {
-                  if (isSplitMode) { setModalTarget(target); return }
-                  const role = profile?.role
-                  const targetIsSaturday = new Date(target.year, target.month - 1, target.day).getDay() === 6
-                  if (role === 'volunteer' && target.volunteerType !== 'volunteer') return
-                  if (role === '50plus' && target.volunteerType !== '50plus' && !targetIsSaturday) return
+                  if (isSplitMode) {
+                    if (tenantRole === 'member') {
+                      if (!memberRoleId || target.roleId !== memberRoleId) return
+                    }
+                    setModalTarget(target)
+                    return
+                  }
                   setModalTarget(target)
                 }}
-                onHolidayCellClick={profile && (profile.role === 'admin' || profile.role === 'team_leader')
+                onHolidayCellClick={profile && isPrivileged
                   ? (d, startHour, endHour) => setHolidayTarget({ day: d, startHour, endHour })
                   : undefined}
               />
@@ -271,7 +339,13 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
                     setMonth(d.getMonth() + 1)
                     setDay(d.getDate())
                   }}
-                  onCellClick={target => { setDay(target.day); setModalTarget(target) }}
+                  onCellClick={target => {
+                    setDay(target.day)
+                    if (isSplitMode && tenantRole === 'member') {
+                      if (!memberRoleId || target.roleId !== memberRoleId) return
+                    }
+                    setModalTarget(target)
+                  }}
                 />
                 {/* 선택된 날짜 상세 */}
                 <div className="mt-3 pt-3 border-t border-[var(--color-border)]">
@@ -284,7 +358,12 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
                     splitRoles={splitRoles}
                     isSplitMode={isSplitMode}
                     slotLabels={slotLabels}
-                    onCellClick={target => setModalTarget(target)}
+                    onCellClick={target => {
+                      if (isSplitMode && tenantRole === 'member') {
+                        if (!memberRoleId || target.roleId !== memberRoleId) return
+                      }
+                      setModalTarget(target)
+                    }}
                   />
                 </div>
               </>
@@ -298,7 +377,12 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
                 splitRoles={splitRoles}
                 isSplitMode={isSplitMode}
                 slotLabels={slotLabels}
-                onCellClick={target => setModalTarget(target)}
+                onCellClick={target => {
+                  if (isSplitMode && tenantRole === 'member') {
+                    if (!memberRoleId || target.roleId !== memberRoleId) return
+                  }
+                  setModalTarget(target)
+                }}
               />
             )}
           </div>
@@ -322,6 +406,7 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
           cellState={selectedCellState}
           profile={profile}
           tenantRole={tenantRole}
+          memberRoleId={memberRoleId}
           splitRoles={assignableRoles}
           isSplitMode={isAssignableMode}
           tenantMode={tenantMode}
@@ -374,11 +459,85 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
         />
       )}
 
-      {showCapacity && profile && (profile.role === 'admin' || profile.role === 'team_leader') && (
+      {autoProposals !== null && (
+        <AutoAssignPreviewModal
+          proposals={autoProposals}
+          onClose={() => setAutoProposals(null)}
+          onConfirm={async (selected) => {
+            const errors: string[] = []
+            for (const p of selected) {
+              const err = await addAssignment({
+                tenant_id: tenant!.id,
+                year: p.year,
+                month: p.month,
+                day: p.day,
+                time_slot: p.timeSlot,
+                volunteer_name: p.userName,
+                volunteer_type: p.volunteerType,
+                user_id: p.userId,
+                role_id: p.roleId ?? null,
+              })
+              if (err) errors.push(err)
+            }
+            setAutoProposals(null)
+            if (errors.length) {
+              alert(`${selected.length - errors.length}건 저장 완료, ${errors.length}건 실패`)
+            }
+          }}
+        />
+      )}
+
+      {showNoClearTarget && (
+        <ConfirmDialog
+          title="초기화 대상 없음"
+          message="해당 기간에 초기화할 스케줄이 없습니다."
+          confirmLabel="확인"
+          hideCancelButton
+          onConfirm={() => setShowNoClearTarget(false)}
+          onCancel={() => setShowNoClearTarget(false)}
+        />
+      )}
+
+      {showClearConfirm && (
+        <ConfirmDialog
+          title="스케줄 초기화"
+          message={
+            viewType === 'month'
+              ? `${year}년 ${month}월 스케줄을 전체 삭제합니다.\n이 작업은 되돌릴 수 없습니다.`
+              : viewType === 'week'
+              ? `${weekDays[0].getMonth() + 1}월 ${weekDays[0].getDate()}일 ~ ${weekDays[6].getMonth() + 1}월 ${weekDays[6].getDate()}일\n해당 주의 스케줄을 삭제합니다.\n이 작업은 되돌릴 수 없습니다.`
+              : `${year}년 ${month}월 ${day}일 스케줄을 삭제합니다.\n이 작업은 되돌릴 수 없습니다.`
+          }
+          confirmLabel="삭제"
+          cancelLabel="취소"
+          danger
+          onCancel={() => setShowClearConfirm(false)}
+          onConfirm={async () => {
+            setShowClearConfirm(false)
+            let err: string | null = null
+            if (viewType === 'month') {
+              err = await clearAssignments()
+            } else if (viewType === 'day') {
+              err = await clearAssignments([day])
+            } else {
+              // week: split days by month
+              const primaryDays = weekDays.filter(d => d.getFullYear() === year && d.getMonth() + 1 === month).map(d => d.getDate())
+              if (primaryDays.length) err = await clearAssignments(primaryDays)
+              if (!err && needsAdj) {
+                const adjDays = weekDays.filter(d => d.getFullYear() === adjYear && d.getMonth() + 1 === adjMonth).map(d => d.getDate())
+                if (adjDays.length) err = await clearAdjAssignments(adjDays)
+              }
+            }
+            if (err) alert(err)
+          }}
+        />
+      )}
+
+      {showCapacity && profile && isPrivileged && (
         <CapacityModal slotSettings={slotSettings} timeSlots={timeSlots} slotLabels={slotLabels} onClose={() => setShowCapacity(false)} onUpdate={updateSlotCapacity} />
       )}
 
-      {holidayTarget !== null && profile && (profile.role === 'admin' || profile.role === 'team_leader') && (
+      {holidayTarget !== null && profile && isPrivileged && (
         <HolidayNoteModal
           year={year} month={month} day={holidayTarget.day}
           assignments={assignments}

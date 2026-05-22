@@ -10,6 +10,7 @@ interface Props {
   cellState: CellState
   profile: Profile | null
   tenantRole?: 'admin' | 'member' | null
+  memberRoleId?: string | null
   splitRoles?: TenantRole[]
   isSplitMode?: boolean
   tenantMode?: '직접입력' | '회원선택'
@@ -52,15 +53,14 @@ function getRoleLabel(role: string): string {
 }
 
 export function SlotEditModal({
-  target, cellState, profile, tenantRole,
+  target, cellState, profile, tenantRole, memberRoleId,
   splitRoles = [], isSplitMode = false,
   tenantMode = '회원선택', customFields = [],
   slotLabels = {},
   onClose, onAdd, onUpdate, onDelete,
 }: Props) {
   const { day, month, timeSlot, volunteerType: defaultType, roleId: initialRoleId } = target
-  const isAdmin = profile?.role === 'admin' || profile?.role === 'team_leader' || tenantRole === 'admin'
-  const isTeamLeader = profile?.role === 'team_leader'
+  const isAdmin = profile?.is_super_admin || tenantRole === 'admin'
   const profileType: VolunteerType = profile?.role === '50plus' ? '50plus' : 'volunteer'
 
   const isFreeform = tenantMode === '직접입력'
@@ -79,7 +79,7 @@ export function SlotEditModal({
   const [loading, setLoading] = useState(false)
 
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(
-    initialRoleId ?? (splitRoles[0]?.id ?? null)
+    initialRoleId ?? (!isAdmin && memberRoleId ? memberRoleId : (splitRoles[0]?.id ?? null))
   )
 
   // 동적 필드 값 (useDynamicFields 모드)
@@ -97,13 +97,13 @@ export function SlotEditModal({
     ? profiles.find(p => p.id === selectedUserId) ?? null
     : profile
 
-  const effectiveVolunteerType: VolunteerType = isTeamLeader
+  const effectiveVolunteerType: VolunteerType = isAdmin
     ? (selectedProfile?.role === '50plus' ? '50plus' : 'volunteer')
     : volunteerType
 
   const displayedAssignments = isSplitMode
     ? cellState.assignments.filter(a => a.role_id === selectedRoleId)
-    : isTeamLeader
+    : isAdmin
     ? cellState.assignments.filter(a => a.volunteer_type === defaultType)
     : cellState.assignments.filter(a => !a.volunteer_type || a.volunteer_type === volunteerType)
 
@@ -112,15 +112,9 @@ export function SlotEditModal({
     cellState.assignments.filter(a => a.id !== editingId).map(a => a.volunteer_name)
   )
 
-  const isIndicatorBarRole = selectedRole?.indicator_bar ?? false
-
   const selectableProfiles = (!isFreeform && isAdmin)
     ? isSplitMode
-      ? isIndicatorBarRole
-        // indicator_bar 역할: team_leader 프로필 회원만 표시
-        ? profiles.filter(p => p.role === 'team_leader' && !assignedNames.has(p.name))
-        // 일반 split 역할: tenantRoleId로 필터
-        : (profiles as ProfileWithRole[]).filter(p =>
+      ? (profiles as ProfileWithRole[]).filter(p =>
             p.tenantRoleId === selectedRoleId && !assignedNames.has(p.name)
           )
       : profiles.filter(p => !assignedNames.has(p.name))
@@ -128,9 +122,7 @@ export function SlotEditModal({
 
   const totalTypeProfiles = (!isFreeform && isAdmin)
     ? isSplitMode
-      ? isIndicatorBarRole
-        ? profiles.filter(p => p.role === 'team_leader')
-        : (profiles as ProfileWithRole[]).filter(p => p.tenantRoleId === selectedRoleId)
+      ? (profiles as ProfileWithRole[]).filter(p => p.tenantRoleId === selectedRoleId)
       : profiles
     : []
 
@@ -271,7 +263,7 @@ export function SlotEditModal({
       editingId,
       name,
       note.trim(),
-      isFreeform ? 'volunteer' : volunteerType,
+      isFreeform ? 'volunteer' : effectiveVolunteerType,
       timeSub,
       undefined,
       isSplitMode ? selectedRoleId : undefined,
@@ -316,7 +308,7 @@ export function SlotEditModal({
               {slotLabels[timeSlot]
                 ? `${slotLabels[timeSlot]} (${parseSlotLabel(timeSlot)})`
                 : parseSlotLabel(timeSlot)}
-              {isSplitMode && selectedRole ? ` · ${selectedRole.name}` : isTeamLeader ? ` · ${defaultType === '50plus' ? '50플러스활동가' : '자원봉사자'}` : ''}
+              {isSplitMode && selectedRole ? ` · ${selectedRole.name}` : !isSplitMode && isAdmin ? ` · ${defaultType === '50plus' ? '50플러스활동가' : '자원봉사자'}` : ''}
             </p>
           </div>
           <button
@@ -329,7 +321,7 @@ export function SlotEditModal({
 
         {/* Role selector (split mode) OR type tabs (회원선택 모드) */}
         {isSplitMode ? (
-          splitRoles.length > 1 && (
+          isAdmin && splitRoles.length > 1 ? (
             <div className="flex border-b border-[var(--color-border)] px-4 py-2 gap-2 items-center">
               <p className="text-xs font-medium text-[var(--color-text-muted)] shrink-0">역할</p>
               <select
@@ -339,7 +331,7 @@ export function SlotEditModal({
                   setFieldValues({})
                   setFreeformName('')
                   setFreeformPhone('')
-                  setSelectedUserId(isAdmin ? '' : (profile?.id ?? ''))
+                  setSelectedUserId('')
                 }}
                 className={inputClass}
               >
@@ -348,8 +340,13 @@ export function SlotEditModal({
                 ))}
               </select>
             </div>
-          )
-        ) : !isTeamLeader && !isFreeform && (
+          ) : !isAdmin && selectedRole ? (
+            <div className="flex border-b border-[var(--color-border)] px-4 py-2 gap-2 items-center">
+              <p className="text-xs font-medium text-[var(--color-text-muted)] shrink-0">역할</p>
+              <p className="text-sm font-semibold text-[var(--color-text-primary)]">{selectedRole.name}</p>
+            </div>
+          ) : null
+        ) : !isAdmin && !isFreeform && (
           <div className="flex border-b border-[var(--color-border)] px-2">
             {(['volunteer', '50plus'] as VolunteerType[]).map(t => {
               const isDisabled = !isAdmin && profileType !== t
@@ -382,7 +379,7 @@ export function SlotEditModal({
             <div className="space-y-1.5">
               {displayedAssignments.map(a => {
                 const canEdit = isAdmin || a.user_id === profile?.id
-                const isOwnEntry = isTeamLeader && a.user_id === profile?.id && a.volunteer_name === profile?.name
+                const isOwnEntry = !isAdmin && a.user_id === profile?.id && a.volunteer_name === profile?.name
                 return (
                   <div
                     key={a.id}
@@ -406,7 +403,7 @@ export function SlotEditModal({
                       ) : (
                         a.note && <span className="text-xs text-[var(--color-text-muted)] font-normal">· {a.note}</span>
                       )}
-                      {!isFreeform && isTeamLeader && (
+                      {!isFreeform && isAdmin && !isSplitMode && (
                         <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${a.volunteer_type === '50plus' ? 'bg-orange-100 text-orange-600' : 'bg-blue-50 text-blue-500'}`}>
                           {a.volunteer_type === '50plus' ? '50+' : '봉사'}
                         </span>
