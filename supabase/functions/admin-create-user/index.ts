@@ -79,12 +79,13 @@ Deno.serve(async (req) => {
     })
     if (profileErr) return json({ error: `프로필 생성 오류: ${profileErr.message}` }, 500)
 
-    // tenant_members 추가
+    // tenant_members 추가 (직접 생성이므로 즉시 승인)
     const { error: memberErr } = await supabaseAdmin.from('tenant_members').upsert({
       tenant_id,
       user_id: newUser.user.id,
       role: 'member',
       role_id: role_id ?? null,
+      is_approved: true,
     }, { onConflict: 'tenant_id,user_id' })
     if (memberErr) return json({ error: `조직 등록 오류: ${memberErr.message}` }, 500)
 

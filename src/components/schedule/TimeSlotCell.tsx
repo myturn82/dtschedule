@@ -64,7 +64,7 @@ function NameChips({ assignments, highlightName, tintBg, tintInk, teamLeaderUser
         return (
           <div
             key={a.id}
-            className={`rounded-[6px] px-1.5 py-0.5 leading-tight ${textSize} font-semibold w-full truncate`}
+            className={`rounded-[6px] px-1.5 py-0.5 leading-tight ${textSize} font-semibold w-full truncate text-center`}
             style={isHighlighted
               ? { background: '#fef08a', color: '#92400e' }
               : { background: tintBg, color: tintInk }}
@@ -155,7 +155,7 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
             const hourHasBar = assignments.filter(a => assignmentCoversHour(a.time_sub, hour)).some(a => indicatorBarUserIds.has(a.user_id))
             return (
               <button key={hour} onClick={onClick}
-                className={`relative flex-1 min-h-[1rem] flex flex-col items-center ${hourA.length ? 'justify-start py-0.5' : 'justify-center'} transition-all duration-150 active:scale-[0.98] group`}
+                className={`relative flex-1 min-h-[1rem] flex flex-col items-center justify-center transition-all duration-150 active:scale-[0.98] group`}
                 style={{ background: hourA.length ? tint.bg : 'var(--color-surface)' }}
               >
                 {onIndicatorBarClick ? (
@@ -179,7 +179,7 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
 
     return (
       <button onClick={onClick}
-        className={`relative w-full h-full ${cellMinH} flex flex-col items-center ${hasAssignments ? 'justify-start py-0.5' : 'justify-center'} transition-all duration-150 active:scale-[0.98] group`}
+        className={`relative w-full h-full ${cellMinH} flex flex-col items-center justify-center transition-all duration-150 active:scale-[0.98] group`}
         style={{ background: hasAssignments ? tint.bg : 'var(--color-surface)' }}
       >
         {onIndicatorBarClick ? (
@@ -228,7 +228,7 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
             const hourTint = hourHasLeader ? teamLeaderTint : hourHasBar && !hourVisible.length ? indicatorTint : effectiveTint
             return (
               <button key={hour} onClick={onClick}
-                className={`relative flex-1 min-h-[1rem] flex flex-col items-center ${hourVisible.length ? 'justify-start py-0.5' : 'justify-center'} transition-all duration-150 active:scale-[0.98] group`}
+                className={`relative flex-1 min-h-[1rem] flex flex-col items-center justify-center transition-all duration-150 active:scale-[0.98] group`}
                 style={{ background: (hourVisible.length || hourHasBar) ? hourTint.bg : 'var(--color-surface)' }}
               >
                 {onIndicatorBarClick ? (
@@ -253,7 +253,7 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
     const cellTint = hasTeamLeaderInVol ? teamLeaderTint : hasIndicatorBar && !hasAssign ? indicatorTint : activeTint
     return (
       <button onClick={onClick}
-        className={`relative w-full h-full ${cellMinH} flex flex-col items-center ${hasAssign ? 'justify-start py-0.5' : 'justify-center'} transition-all duration-150 active:scale-[0.98] group`}
+        className={`relative w-full h-full ${cellMinH} flex flex-col items-center justify-center transition-all duration-150 active:scale-[0.98] group`}
         style={{ background: hasAssign || hasIndicatorBar ? cellTint.bg : 'var(--color-surface)' }}
       >
         {onIndicatorBarClick ? (
@@ -287,7 +287,7 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
           const hourPlus = plusAssignments.filter(a => assignmentCoversHour(a.time_sub, hour))
           return (
             <button key={hour} onClick={onClick}
-              className={`flex-1 min-h-[1rem] flex flex-col items-center ${hourPlus.length ? 'justify-start py-0.5' : 'justify-center'} transition-all duration-150 active:scale-[0.98] group`}
+              className={`flex-1 min-h-[1rem] flex flex-col items-center justify-center transition-all duration-150 active:scale-[0.98] group`}
               style={{ background: hourPlus.length ? plusTint.bg : 'var(--color-surface)' }}
             >
               {hourPlus.length
@@ -303,7 +303,7 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
 
   return (
     <button onClick={onClick}
-      className={`w-full h-full ${cellMinH} flex flex-col items-center ${hasPlusAssign ? 'justify-start py-0.5' : 'justify-center'} transition-all duration-150 active:scale-[0.98] group`}
+      className={`w-full h-full ${cellMinH} flex flex-col items-center justify-center transition-all duration-150 active:scale-[0.98] group`}
       style={{ background: hasPlusAssign ? plusTint.bg : 'var(--color-surface)' }}
     >
       {hasPlusAssign
