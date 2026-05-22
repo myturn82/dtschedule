@@ -8,6 +8,7 @@ interface AdminState {
   scheduleRules: ScheduleRule[]
   dateOverrides: DateOverride[]
   loading: boolean
+  reloadMembers: () => Promise<void>
   addMember: (email: string, roleId?: string) => Promise<string | null>
   removeMember: (userId: string) => Promise<string | null>
   updateMemberTenantRole: (userId: string, roleId: string | null) => Promise<string | null>
@@ -27,6 +28,18 @@ export function useAdmin(tenantId: string): AdminState {
   const [dateOverrides, setDateOverrides] = useState<DateOverride[]>([])
   const [loading, setLoading] = useState(true)
 
+  const reloadMembers = useCallback(async () => {
+    if (!tenantId) return
+    const m = await supabase
+      .from('tenant_members')
+      .select('*, profile:profiles(*), tenant_role:tenant_roles(*)')
+      .eq('tenant_id', tenantId)
+    setMembers(
+      ((m.data ?? []) as unknown as TenantMemberWithRole[])
+        .filter(member => member.profile?.is_super_admin !== true)
+    )
+  }, [tenantId])
+
   useEffect(() => {
     if (!tenantId) return
     async function loadAll() {
@@ -39,7 +52,10 @@ export function useAdmin(tenantId: string): AdminState {
           .order('day_of_week').order('time_slot'),
         supabase.from('date_overrides').select('*').eq('tenant_id', tenantId).order('date'),
       ])
-      setMembers((m.data ?? []) as unknown as TenantMemberWithRole[])
+      setMembers(
+        ((m.data ?? []) as unknown as TenantMemberWithRole[])
+          .filter(member => member.profile?.is_super_admin !== true)
+      )
       setScheduleRules(r.data ?? [])
       setDateOverrides(d.data ?? [])
       setLoading(false)
@@ -56,10 +72,11 @@ export function useAdmin(tenantId: string): AdminState {
       .eq('email', email)
       .single()
     if (findErr || !user) return '해당 이메일로 가입된 사용자가 없습니다.'
+    if (user.is_super_admin) return '슈퍼어드민 계정은 조직에 추가할 수 없습니다.'
 
     const { data, error } = await supabase
       .from('tenant_members')
-      .insert({ tenant_id: tenantId, user_id: user.id, role: 'member', role_id: roleId ?? null })
+      .insert({ tenant_id: tenantId, user_id: user.id, role: 'member', role_id: roleId ?? null, is_approved: true })
       .select('*, profile:profiles(*), tenant_role:tenant_roles(*)')
       .single()
     if (error?.code === '23505') return '이미 소속된 회원입니다.'
@@ -178,6 +195,7 @@ export function useAdmin(tenantId: string): AdminState {
 
   return {
     members, profiles, scheduleRules, dateOverrides, loading,
+    reloadMembers,
     addMember, removeMember, updateMemberTenantRole, updateMemberAccess,
     toggleScheduleRule, upsertScheduleRulesForSlots,
     addDateOverride, deleteDateOverride,

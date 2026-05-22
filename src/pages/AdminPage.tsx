@@ -50,6 +50,7 @@ export function AdminPage() {
 
   const {
     members, scheduleRules, dateOverrides, loading,
+    reloadMembers,
     addMember, removeMember, updateMemberTenantRole, updateMemberAccess,
     toggleScheduleRule, upsertScheduleRulesForSlots,
     addDateOverride, deleteDateOverride,
@@ -360,6 +361,7 @@ export function AdminPage() {
       msg(data?.error ?? error?.message ?? '오류가 발생했습니다.', true)
       return
     }
+    await reloadMembers()
     msg(`${directForm.name} (${directForm.email}) 계정이 생성되고 조직에 추가됐습니다.`)
     setDirectForm({ email: '', name: '', password: '', roleId: '' })
     setShowDirectCreate(false)
@@ -700,7 +702,7 @@ export function AdminPage() {
                             <tr key={m.user_id} className="hover:bg-[var(--color-surface-hover)]">
                               <td className="px-4 py-3 font-medium text-[var(--color-text-primary)]">{m.profile?.name ?? '-'}</td>
                               <td className="px-4 py-3 text-[var(--color-text-muted)] hidden sm:table-cell text-xs">{m.profile?.email ?? '-'}</td>
-                              <td className="px-4 py-3 text-xs text-[var(--color-text-secondary)]">{m.profile?.role ?? '-'}</td>
+                              <td className="px-4 py-3 text-xs text-[var(--color-text-secondary)]">{m.tenant_role?.name ?? '-'}</td>
                               <td className="px-4 py-3">
                                 <div className="flex gap-2">
                                   <button

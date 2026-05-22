@@ -78,6 +78,7 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
   // 역할 배정 모달용: split_cell 또는 indicator_bar가 true인 역할 모두 포함
   const assignableRoles = tenantRoles.filter(r => r.split_cell || r.indicator_bar)
   const isAssignableMode = assignableRoles.length > 0
+  const memberTenantRoleName = tenantRoles.find(r => r.id === memberRoleId)?.name ?? null
 
   const filledCount = useMemo(
     () => assignments.filter(a => a.volunteer_type !== 'admin_note').length,
@@ -196,7 +197,7 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
 
                 <span className="text-xs text-[var(--color-text-secondary)] font-medium px-2.5 py-1 bg-[var(--color-surface-secondary)] rounded-xl border border-[var(--color-border)]">
                   {profile.name}
-                  <span className="ml-1 text-[var(--color-text-muted)]">· {ROLE_LABELS[profile.role]}</span>
+                  <span className="ml-1 text-[var(--color-text-muted)]">· {memberTenantRoleName ?? ROLE_LABELS[profile.role]}</span>
                 </span>
 
                 {isPrivileged && (
@@ -322,51 +323,33 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
                   : undefined}
               />
             ) : viewType === 'week' ? (
-              <>
-                <WeekGrid
-                  weekDays={weekDays}
-                  timeSlots={timeSlots}
-                  assignments={assignments} slotSettings={slotSettings}
-                  scheduleRules={scheduleRules} dateOverrides={dateOverrides}
-                  highlightName={highlightName || null}
-                  profile={profile}
-                  splitRoles={splitRoles}
-                  isSplitMode={isSplitMode}
-                  slotLabels={slotLabels}
-                  selectedDay={new Date(year, month - 1, day)}
-                  onDateHeaderClick={d => {
-                    setYear(d.getFullYear())
-                    setMonth(d.getMonth() + 1)
-                    setDay(d.getDate())
-                  }}
-                  onCellClick={target => {
-                    setDay(target.day)
-                    if (isSplitMode && tenantRole === 'member') {
-                      if (!memberRoleId || target.roleId !== memberRoleId) return
-                    }
-                    setModalTarget(target)
-                  }}
-                />
-                {/* 선택된 날짜 상세 */}
-                <div className="mt-3 pt-3 border-t border-[var(--color-border)]">
-                  <DayView
-                    year={year} month={month} day={day}
-                    timeSlots={timeSlots}
-                    assignments={assignments} slotSettings={slotSettings}
-                    scheduleRules={scheduleRules} dateOverrides={dateOverrides}
-                    profile={profile}
-                    splitRoles={splitRoles}
-                    isSplitMode={isSplitMode}
-                    slotLabels={slotLabels}
-                    onCellClick={target => {
-                      if (isSplitMode && tenantRole === 'member') {
-                        if (!memberRoleId || target.roleId !== memberRoleId) return
-                      }
-                      setModalTarget(target)
-                    }}
-                  />
-                </div>
-              </>
+              <WeekGrid
+                weekDays={weekDays}
+                timeSlots={timeSlots}
+                assignments={assignments} slotSettings={slotSettings}
+                scheduleRules={scheduleRules} dateOverrides={dateOverrides}
+                highlightName={highlightName || null}
+                profile={profile}
+                splitRoles={splitRoles}
+                isSplitMode={isSplitMode}
+                slotLabels={slotLabels}
+                selectedDay={new Date(year, month - 1, day)}
+                memberRoleId={memberRoleId}
+                tenantRole={tenantRole}
+                teamLeaderUserIds={teamLeaderUserIds}
+                isPrivileged={isPrivileged}
+                onDateHeaderClick={d => {
+                  setYear(d.getFullYear())
+                  setMonth(d.getMonth() + 1)
+                  setDay(d.getDate())
+                }}
+                onCellClick={target => {
+                  if (isSplitMode && tenantRole === 'member') {
+                    if (!memberRoleId || target.roleId !== memberRoleId) return
+                  }
+                  setModalTarget(target)
+                }}
+              />
             ) : (
               <DayView
                 year={year} month={month} day={day}

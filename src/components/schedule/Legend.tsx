@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import type { LegendItem, LegendColor } from '../../types'
 
 export const DEFAULT_LEGEND_ITEMS: LegendItem[] = []
@@ -34,7 +33,6 @@ interface Props {
 
 export function Legend({ legendItems }: Props) {
   const items = legendItems ?? []
-  const [active, setActive] = useState<Set<string>>(() => new Set(items.map(i => i.id)))
 
   if (!items.length) return null
 
@@ -44,31 +42,16 @@ export function Legend({ legendItems }: Props) {
         범례
       </span>
       {items.map(({ id, label, color }) => {
-        const isActive = active.has(id)
         const s = LEGEND_COLOR_STYLES[color]
         const dot = DOT_COLORS[color]
         return (
-          <button
+          <span
             key={id}
-            type="button"
-            onClick={() => setActive(prev => {
-              const next = new Set(prev)
-              if (next.has(id)) next.delete(id)
-              else next.add(id)
-              return next
-            })}
-            className={`inline-flex items-center gap-1.5 px-2.5 py-[6px] rounded-full text-[12px] font-medium whitespace-nowrap transition-all duration-150
-              ${isActive
-                ? `${s.bg} border ${s.border} ${s.icon}`
-                : 'bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-muted)]'
-              }`}
+            className={`inline-flex items-center gap-1.5 px-2.5 py-[6px] rounded-full text-[12px] font-medium whitespace-nowrap ${s.bg} border ${s.border} ${s.icon}`}
           >
-            <span
-              className="w-2 h-2 rounded-full shrink-0 flex-none"
-              style={{ background: isActive ? dot : 'var(--color-text-muted)' }}
-            />
+            <span className="w-2 h-2 rounded-full shrink-0 flex-none" style={{ background: dot }} />
             <span>{label}</span>
-          </button>
+          </span>
         )
       })}
     </div>
