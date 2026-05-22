@@ -11,6 +11,7 @@ interface ScheduleData {
   addAssignment: (params: AddParams) => Promise<string | null>
   updateAssignment: (id: string, params: UpdateParams) => Promise<string | null>
   deleteAssignment: (id: string) => Promise<string | null>
+  clearAssignments: (days?: number[]) => Promise<string | null>
   updateSlotCapacity: (timeSlot: TimeSlot, maxCapacity: number) => Promise<string | null>
 }
 
@@ -130,6 +131,23 @@ export function useSchedule(tenantId: string, year: number, month: number): Sche
     return null
   }, [])
 
+  const clearAssignments = useCallback(async (days?: number[]): Promise<string | null> => {
+    let query = supabase.from('assignments')
+      .delete()
+      .eq('tenant_id', tenantId)
+      .eq('year', year)
+      .eq('month', month)
+    if (days?.length) query = query.in('day', days)
+    const { error } = await query
+    if (error) return error.message
+    setAssignments(prev =>
+      days?.length
+        ? prev.filter(a => !(a.year === year && a.month === month && days.includes(a.day)))
+        : []
+    )
+    return null
+  }, [tenantId, year, month])
+
   const updateSlotCapacity = useCallback(async (timeSlot: TimeSlot, maxCapacity: number): Promise<string | null> => {
     const { error } = await supabase
       .from('slot_settings')
@@ -143,5 +161,5 @@ export function useSchedule(tenantId: string, year: number, month: number): Sche
     return null
   }, [tenantId])
 
-  return { assignments, slotSettings, scheduleRules, dateOverrides, loading, addAssignment, updateAssignment, deleteAssignment, updateSlotCapacity }
+  return { assignments, slotSettings, scheduleRules, dateOverrides, loading, addAssignment, updateAssignment, deleteAssignment, clearAssignments, updateSlotCapacity }
 }

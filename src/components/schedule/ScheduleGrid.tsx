@@ -15,6 +15,8 @@ interface Props {
   dateOverrides: DateOverride[]
   highlightName: string | null
   profile?: Profile | null
+  tenantRole?: 'admin' | 'member' | null
+  memberRoleId?: string | null
   teamLeaderUserIds?: Set<string>
   splitRoles?: TenantRole[]
   indicatorBarRoles?: TenantRole[]
@@ -163,9 +165,10 @@ function buildColMap(
 
 export function ScheduleGrid({
   year, month, timeSlots, assignments, slotSettings, scheduleRules, dateOverrides,
-  highlightName, profile, teamLeaderUserIds, splitRoles = [], indicatorBarRoles = [], isSplitMode = false, slotLabels = {}, onCellClick, onHolidayCellClick,
+  highlightName, profile, tenantRole, memberRoleId, teamLeaderUserIds, splitRoles = [], indicatorBarRoles = [], isSplitMode = false, slotLabels = {}, onCellClick, onHolidayCellClick,
 }: Props) {
-  const isAdmin = profile?.role === 'admin' || profile?.role === 'team_leader'
+  const isAdmin = profile?.is_super_admin || tenantRole === 'admin'
+  const isIndicatorBarMember = !isAdmin && indicatorBarRoles.some(r => r.id === memberRoleId)
   const weeks = getCalendarWeeks(year, month)
   const splitCount = splitRoles.length
 
@@ -379,7 +382,7 @@ export function ScheduleGrid({
 
                         return (
                           <Fragment key={dowIdx}>
-                            {splitRoles.map(role => (
+                            {splitRoles.map((role, roleIdx) => (
                               <td
                                 key={role.id}
                                 rowSpan={merge.rowspan > 1 ? merge.rowspan : undefined}
@@ -395,6 +398,10 @@ export function ScheduleGrid({
                                   highlightName={highlightName}
                                   teamLeaderUserIds={teamLeaderUserIds}
                                   indicatorBarRoles={indicatorBarRoles}
+                                  canInteract={isAdmin || memberRoleId === role.id}
+                                  onIndicatorBarClick={isIndicatorBarMember && roleIdx === 0
+                                    ? () => onCellClick({ year, month, day, timeSlot: slot, volunteerType: 'volunteer', roleId: memberRoleId! })
+                                    : undefined}
                                 />
                               </td>
                             ))}

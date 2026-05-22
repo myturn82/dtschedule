@@ -4,12 +4,14 @@ interface Props {
   confirmLabel?: string
   cancelLabel?: string
   danger?: boolean
+  hideCancelButton?: boolean
   onConfirm: () => void
   onCancel: () => void
 }
 
 export function ConfirmDialog({
   title, message, confirmLabel = '확인', cancelLabel = '취소', danger = false,
+  hideCancelButton = false,
   onConfirm, onCancel,
 }: Props) {
   return (
@@ -20,12 +22,14 @@ export function ConfirmDialog({
           <p className="text-sm text-[var(--color-text-secondary)] whitespace-pre-line">{message}</p>
         </div>
         <div className="flex gap-2 px-6 pb-6">
-          <button
-            onClick={onCancel}
-            className="flex-1 py-2.5 text-sm font-medium rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-all duration-200"
-          >
-            {cancelLabel}
-          </button>
+          {!hideCancelButton && (
+            <button
+              onClick={onCancel}
+              className="flex-1 py-2.5 text-sm font-medium rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-all duration-200"
+            >
+              {cancelLabel}
+            </button>
+          )}
           <button
             onClick={onConfirm}
             className={`flex-1 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 ${
