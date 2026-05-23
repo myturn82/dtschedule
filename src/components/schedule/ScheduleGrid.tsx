@@ -397,7 +397,7 @@ export function ScheduleGrid({
                                   onClick={() => onCellClick({ year, month, day, timeSlot: slot, volunteerType: 'volunteer', roleId: role.id })}
                                   highlightName={highlightName}
                                   teamLeaderUserIds={teamLeaderUserIds}
-                                  indicatorBarRoles={indicatorBarRoles}
+                                  indicatorBarRoles={roleIdx === 0 ? indicatorBarRoles : []}
                                   canInteract={isAdmin || memberRoleId === role.id}
                                   onIndicatorBarClick={isIndicatorBarMember && roleIdx === 0
                                     ? () => onCellClick({ year, month, day, timeSlot: slot, volunteerType: 'volunteer', roleId: memberRoleId! })
