@@ -5,7 +5,7 @@ import type { TenantRole } from '../types'
 interface TenantRolesState {
   roles: TenantRole[]
   loading: boolean
-  addRole: (name: string, splitCell?: boolean, requiresCustomerInfo?: boolean) => Promise<string | null>
+  addRole: (name: string, splitCell?: boolean, requiresCustomerInfo?: boolean, indicatorBar?: boolean) => Promise<string | null>
   deleteRole: (id: string) => Promise<string | null>
   updateRole: (id: string, fields: Partial<Pick<TenantRole, 'name' | 'display_order' | 'split_cell' | 'indicator_bar' | 'requires_customer_info'>>) => Promise<string | null>
 }
@@ -28,11 +28,11 @@ export function useTenantRoles(tenantId: string): TenantRolesState {
       })
   }, [tenantId])
 
-  const addRole = useCallback(async (name: string, splitCell = false, requiresCustomerInfo = false): Promise<string | null> => {
+  const addRole = useCallback(async (name: string, splitCell = false, requiresCustomerInfo = false, indicatorBar = false): Promise<string | null> => {
     const maxOrder = roles.reduce((m, r) => Math.max(m, r.display_order), -1)
     const { data, error } = await supabase
       .from('tenant_roles')
-      .insert({ tenant_id: tenantId, name, split_cell: splitCell, requires_customer_info: requiresCustomerInfo, display_order: maxOrder + 1 })
+      .insert({ tenant_id: tenantId, name, split_cell: splitCell, indicator_bar: indicatorBar, requires_customer_info: requiresCustomerInfo, display_order: maxOrder + 1 })
       .select()
       .single()
     if (!error && data) setRoles(prev => [...prev, data])

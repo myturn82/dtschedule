@@ -331,6 +331,7 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
                 highlightName={highlightName || null}
                 profile={profile}
                 splitRoles={splitRoles}
+                indicatorBarRoles={indicatorBarRoles}
                 isSplitMode={isSplitMode}
                 slotLabels={slotLabels}
                 selectedDay={new Date(year, month - 1, day)}

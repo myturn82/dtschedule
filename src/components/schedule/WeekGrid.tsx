@@ -3,6 +3,7 @@ import { getCellState } from '../../utils/cellState'
 import { parseSlotLabel } from '../../utils/timeSlots'
 
 const DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일']
+const INDICATOR_BAR_COLOR = 'oklch(0.65 0.15 60)'
 
 const STRIPE_STYLE = {
   background: 'repeating-linear-gradient(135deg, transparent 0 6px, rgba(20,23,28,0.03) 6px 12px)',
@@ -27,6 +28,7 @@ interface Props {
   highlightName: string | null
   profile: Profile | null
   splitRoles?: TenantRole[]
+  indicatorBarRoles?: TenantRole[]
   isSplitMode?: boolean
   slotLabels?: Record<string, string>
   selectedDay?: Date | null
@@ -40,13 +42,14 @@ interface Props {
 
 export function WeekGrid({
   weekDays, timeSlots, assignments, slotSettings, scheduleRules, dateOverrides,
-  highlightName, splitRoles = [], isSplitMode = false, slotLabels = {},
+  highlightName, splitRoles = [], indicatorBarRoles = [], isSplitMode = false, slotLabels = {},
   selectedDay, onDateHeaderClick, onCellClick,
   memberRoleId, teamLeaderUserIds, isPrivileged = false,
 }: Props) {
   const today = new Date()
   const activeRoles = isSplitMode && splitRoles.length > 0 ? splitRoles : []
   const isAdmin = isPrivileged
+  const indicatorBarRoleIds = new Set(indicatorBarRoles.map(r => r.id))
 
   function isSameDay(a: Date, b: Date) {
     return a.getFullYear() === b.getFullYear() &&
@@ -167,12 +170,16 @@ export function WeekGrid({
 
                 // ── Split mode: role sub-columns ──
                 if (activeRoles.length > 0) {
+                  const hasBar = cs.assignments.some(a => a.role_id && indicatorBarRoleIds.has(a.role_id))
                   return (
                     <div
                       key={di}
-                      className="border-l border-[var(--color-border)] grid"
+                      className="relative border-l border-[var(--color-border)] grid"
                       style={{ gridTemplateColumns: `repeat(${activeRoles.length}, 1fr)` }}
                     >
+                      {hasBar && (
+                        <span className="absolute left-0 top-0 bottom-0 w-[3px] z-10 pointer-events-none" style={{ background: INDICATOR_BAR_COLOR }} />
+                      )}
                       {activeRoles.map((role, ri) => {
                         const roleAssigns = cs.assignments.filter(
                           a => a.role_id === role.id && !teamLeaderUserIds?.has(a.user_id)
@@ -190,7 +197,8 @@ export function WeekGrid({
                             }}
                             className={`flex flex-col items-center justify-center gap-0.5 p-1 transition-colors ${
                               ri > 0 ? 'border-l border-dashed border-[var(--color-border-strong)]' : ''
-                            } ${canClick ? 'group hover:bg-[var(--color-surface-hover)]' : 'cursor-default'}`}
+                            } ${canClick ? (roleAssigns.length > 0 ? 'group hover:brightness-95' : 'group hover:bg-[var(--color-surface-hover)]') : 'cursor-default'}`}
+                            style={{ background: roleAssigns.length > 0 ? tint.bg : undefined }}
                           >
                             {roleAssigns.length > 0 ? (
                               roleAssigns.map(a => {
@@ -218,8 +226,9 @@ export function WeekGrid({
                 }
 
                 // ── Non-split mode: single cell ──
+                const hasBar = cs.assignments.some(a => a.role_id && indicatorBarRoleIds.has(a.role_id))
                 const visibleAssigns = cs.assignments.filter(
-                  a => a.volunteer_type !== 'admin_note' && !teamLeaderUserIds?.has(a.user_id)
+                  a => a.volunteer_type !== 'admin_note' && !teamLeaderUserIds?.has(a.user_id) && !indicatorBarRoleIds.has(a.role_id ?? '')
                 )
                 const tint = isMoon
                   ? { bg: 'var(--tint-moon)', ink: 'var(--tint-moon-ink)' }
@@ -229,8 +238,12 @@ export function WeekGrid({
                   <button
                     key={di}
                     onClick={() => onCellClick({ year: y, month: m, day, timeSlot: slot, volunteerType: 'volunteer' })}
-                    className="border-l border-[var(--color-border)] flex flex-col items-center justify-center gap-0.5 p-1 group hover:bg-[var(--color-surface-hover)] transition-colors"
+                    className={`relative border-l border-[var(--color-border)] flex flex-col items-center justify-center gap-0.5 p-1 group transition-colors ${visibleAssigns.length > 0 ? 'hover:brightness-95' : 'hover:bg-[var(--color-surface-hover)]'}`}
+                    style={{ background: visibleAssigns.length > 0 ? tint.bg : undefined }}
                   >
+                    {hasBar && (
+                      <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: INDICATOR_BAR_COLOR }} />
+                    )}
                     {visibleAssigns.length > 0 ? (
                       visibleAssigns.map(a => {
                         const isHighlighted = !!(highlightName && a.volunteer_name.includes(highlightName))

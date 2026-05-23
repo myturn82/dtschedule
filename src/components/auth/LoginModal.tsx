@@ -253,7 +253,25 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
 
           {/* Brand mark */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, position: 'relative', zIndex: 1 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: '#14171C', color: '#fff', display: 'grid', placeItems: 'center', fontSize: 15, fontWeight: 700, letterSpacing: -0.3, flexShrink: 0 }}>볼</div>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="36" height="36" style={{ flexShrink: 0, borderRadius: 10, overflow: 'hidden' }}>
+              <rect width="512" height="512" rx="112" fill="#FBF9F4"/>
+              <rect x="64"     y="142.8" width="55.67" height="68.8" rx="16" fill="oklch(0.85 0.10 70)"/>
+              <rect x="129.67" y="142.8" width="55.67" height="68.8" rx="16" fill="oklch(0.66 0.16 28)"/>
+              <rect x="326.67" y="142.8" width="55.67" height="68.8" rx="16" fill="oklch(0.78 0.09 230)"/>
+              <rect x="392.33" y="142.8" width="55.67" height="68.8" rx="16" fill="oklch(0.75 0.10 160)"/>
+              <rect x="64"     y="221.6" width="55.67" height="68.8" rx="16" fill="oklch(0.72 0.10 290)"/>
+              <rect x="129.67" y="221.6" width="55.67" height="68.8" rx="16" fill="oklch(0.85 0.10 70)"/>
+              <rect x="326.67" y="221.6" width="55.67" height="68.8" rx="16" fill="oklch(0.66 0.16 28)"/>
+              <rect x="392.33" y="221.6" width="55.67" height="68.8" rx="16" fill="oklch(0.78 0.09 230)"/>
+              <rect x="64"     y="300.4" width="55.67" height="68.8" rx="16" fill="oklch(0.75 0.10 160)"/>
+              <rect x="129.67" y="300.4" width="55.67" height="68.8" rx="16" fill="oklch(0.72 0.10 290)"/>
+              <rect x="326.67" y="300.4" width="55.67" height="68.8" rx="16" fill="oklch(0.85 0.10 70)"/>
+              <rect x="392.33" y="300.4" width="55.67" height="68.8" rx="16" fill="oklch(0.66 0.16 28)"/>
+              <rect x="64"     y="379.2" width="55.67" height="68.8" rx="16" fill="oklch(0.78 0.09 230)"/>
+              <rect x="129.67" y="379.2" width="55.67" height="68.8" rx="16" fill="oklch(0.75 0.10 160)"/>
+              <rect x="326.67" y="379.2" width="55.67" height="68.8" rx="16" fill="oklch(0.72 0.10 290)"/>
+              <rect x="392.33" y="379.2" width="55.67" height="68.8" rx="16" fill="oklch(0.85 0.10 70)"/>
+            </svg>
             <span style={{ fontSize: 16, fontWeight: 600, letterSpacing: -0.2, color: P.heroFg, whiteSpace: 'nowrap' }}>스케줄러</span>
             <span style={{ marginLeft: 8, fontSize: 10, fontFamily: '"JetBrains Mono", monospace', padding: '3px 8px', borderRadius: 999, background: P.pillBg, border: `1px solid ${P.pillBorder}`, color: P.heroFgSoft, letterSpacing: 0.4, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>workspace</span>
           </div>

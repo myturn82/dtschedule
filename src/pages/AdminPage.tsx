@@ -74,6 +74,7 @@ export function AdminPage() {
   // Roles tab
   const [newRoleName, setNewRoleName] = useState('')
   const [newRoleSplitCell, setNewRoleSplitCell] = useState(false)
+  const [newRoleIndicatorBar, setNewRoleIndicatorBar] = useState(false)
   const [newRoleRequiresCustomerInfo, setNewRoleRequiresCustomerInfo] = useState(false)
   const [editingRoleId, setEditingRoleId] = useState<string | null>(null)
   const [editRoleName, setEditRoleName] = useState('')
@@ -375,10 +376,11 @@ export function AdminPage() {
       msg('같은 이름의 역할이 이미 존재합니다.', true)
       return
     }
-    const err = await addRole(trimmedName, newRoleSplitCell, newRoleRequiresCustomerInfo)
+    const err = await addRole(trimmedName, newRoleSplitCell, newRoleRequiresCustomerInfo, newRoleIndicatorBar)
     if (err) { msg(err, true); return }
     setNewRoleName('')
     setNewRoleSplitCell(false)
+    setNewRoleIndicatorBar(false)
     setNewRoleRequiresCustomerInfo(false)
   }
 
@@ -750,6 +752,7 @@ export function AdminPage() {
                         <tr className="bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
                           <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">역할명</th>
                           <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">셀 분리</th>
+                          <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">바표시</th>
                           <th className="px-4 py-3"></th>
                         </tr>
                       </thead>
@@ -798,33 +801,33 @@ export function AdminPage() {
                               )}
                             </td>
                             <td className="px-4 py-3">
-                              <div className="flex items-center gap-2">
-                                <button
-                                  onClick={async () => {
-                                    const err = await updateRole(r.id, { split_cell: !r.split_cell })
-                                    if (err) msg(err, true)
-                                  }}
-                                  className={`inline-flex px-2 py-0.5 rounded text-xs font-medium cursor-pointer transition-colors
-                                    ${r.split_cell && !r.indicator_bar
-                                      ? 'bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary)]/20'
-                                      : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)]'}`}
-                                >
-                                  {r.split_cell && !r.indicator_bar ? '분리' : '미분리'}
-                                </button>
-                                <button
-                                  onClick={async () => {
-                                    const err = await updateRole(r.id, { indicator_bar: !r.indicator_bar })
-                                    if (err) msg(err, true)
-                                  }}
-                                  title="셀 분리 대신 좌측 컬러 바로 표시"
-                                  className={`inline-flex px-2 py-0.5 rounded text-xs font-medium cursor-pointer transition-colors
-                                    ${r.indicator_bar
-                                      ? 'bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400'
-                                      : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)]'}`}
-                                >
-                                  {r.indicator_bar ? '바 표시' : '바 없음'}
-                                </button>
-                              </div>
+                              <button
+                                onClick={async () => {
+                                  const err = await updateRole(r.id, { split_cell: !r.split_cell })
+                                  if (err) msg(err, true)
+                                }}
+                                className={`inline-flex px-2 py-0.5 rounded text-xs font-medium cursor-pointer transition-colors
+                                  ${r.split_cell
+                                    ? 'bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary)]/20'
+                                    : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)]'}`}
+                              >
+                                {r.split_cell ? '분리' : '미분리'}
+                              </button>
+                            </td>
+                            <td className="px-4 py-3">
+                              <button
+                                onClick={async () => {
+                                  const err = await updateRole(r.id, { indicator_bar: !r.indicator_bar })
+                                  if (err) msg(err, true)
+                                }}
+                                title="셀 분리 대신 좌측 컬러 바로 표시"
+                                className={`inline-flex px-2 py-0.5 rounded text-xs font-medium cursor-pointer transition-colors
+                                  ${r.indicator_bar
+                                    ? 'bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400'
+                                    : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)]'}`}
+                              >
+                                {r.indicator_bar ? '바 표시' : '바 없음'}
+                              </button>
                             </td>
                             <td className="px-4 py-3">
                               <button
@@ -856,6 +859,11 @@ export function AdminPage() {
                     <input type="checkbox" checked={newRoleSplitCell} onChange={e => setNewRoleSplitCell(e.target.checked)}
                       className="rounded border-[var(--color-border-strong)] accent-[var(--color-brand-primary)]" />
                     <span className="text-sm text-[var(--color-text-secondary)]">셀 분리 (역할별 별도 컬럼)</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={newRoleIndicatorBar} onChange={e => setNewRoleIndicatorBar(e.target.checked)}
+                      className="rounded border-[var(--color-border-strong)] accent-[var(--color-brand-primary)]" />
+                    <span className="text-sm text-[var(--color-text-secondary)]">바 표시 (좌측 컬러 바로 표시)</span>
                   </label>
                   <button type="submit" className="px-4 py-1.5 bg-[var(--color-brand-primary)] text-white text-sm rounded-lg hover:bg-[var(--color-brand-primary-hover)]">추가</button>
                 </form>
