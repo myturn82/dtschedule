@@ -46,7 +46,7 @@ const P = {
 export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hideCancelButton }: Props) {
   const [mode, setMode] = useState<Mode>('login')
   const [email, setEmail] = useState(() => localStorage.getItem('lastLoginEmail') ?? '')
-  const [password, setPassword] = useState('qwer1234')
+  const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [name, setName] = useState('')
   const [showPw, setShowPw] = useState(false)
