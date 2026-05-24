@@ -25,5 +25,10 @@ dist-ssr
 
 .vercel
 
+# Environment variables (never commit secrets)
+.env
+.env.*
+!.env.example
+
 # Generated design tokens (built from tokens.json)
 src/styles/tokens.css
