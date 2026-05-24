@@ -1,6 +1,6 @@
 import type { Assignment, SlotSetting, ScheduleRule, DateOverride, ModalTarget, Profile, TenantRole, TimeSlot, TenantAccessRole } from '../../types'
 import { getCellState } from '../../utils/cellState'
-import { parseSlotLabel } from '../../utils/timeSlots'
+import { parseSlotLabel, formatTimeSub } from '../../utils/timeSlots'
 
 const DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일']
 const INDICATOR_BAR_COLOR = 'oklch(0.65 0.15 60)'
@@ -203,15 +203,17 @@ export function WeekGrid({
                             {roleAssigns.length > 0 ? (
                               roleAssigns.map(a => {
                                 const isHighlighted = !!(highlightName && a.volunteer_name.includes(highlightName))
+                                const timeLbl = a.time_sub ? formatTimeSub(a.time_sub) : null
                                 return (
                                   <div
                                     key={a.id}
-                                    className="w-full rounded-md px-1 py-0.5 text-[8px] sm:text-[10px] font-semibold text-center truncate"
+                                    className="w-full rounded-md px-1 py-0.5 text-[8px] sm:text-[10px] font-semibold text-center"
                                     style={isHighlighted
                                       ? { background: '#fef08a', color: '#92400e' }
                                       : { background: tint.bg, color: tint.ink }}
                                   >
-                                    {a.volunteer_name}
+                                    <span className="truncate block">{a.volunteer_name}</span>
+                                    {timeLbl && <span className="block text-[6px] sm:text-[8px] font-normal opacity-60">{timeLbl}</span>}
                                   </div>
                                 )
                               })
@@ -247,15 +249,17 @@ export function WeekGrid({
                     {visibleAssigns.length > 0 ? (
                       visibleAssigns.map(a => {
                         const isHighlighted = !!(highlightName && a.volunteer_name.includes(highlightName))
+                        const timeLbl = a.time_sub ? formatTimeSub(a.time_sub) : null
                         return (
                           <div
                             key={a.id}
-                            className="w-full rounded-md px-1 py-0.5 text-[8px] sm:text-[10px] font-semibold text-center truncate"
+                            className="w-full rounded-md px-1 py-0.5 text-[8px] sm:text-[10px] font-semibold text-center"
                             style={isHighlighted
                               ? { background: '#fef08a', color: '#92400e' }
                               : { background: tint.bg, color: tint.ink }}
                           >
-                            {a.volunteer_name}
+                            <span className="truncate block">{a.volunteer_name}</span>
+                            {timeLbl && <span className="block text-[6px] sm:text-[8px] font-normal opacity-60">{timeLbl}</span>}
                           </div>
                         )
                       })

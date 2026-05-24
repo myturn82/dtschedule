@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { Assignment, CellState, ModalTarget, Profile, TenantRole, VolunteerType, CustomFieldDef } from '../../types'
 import { TYPE_LABELS } from '../../types'
-import { parseSlotLabel } from '../../utils/timeSlots'
+import { parseSlotLabel, getTimeSubOptions, formatTimeSub } from '../../utils/timeSlots'
 import { useProfiles } from '../../hooks/useProfiles'
 import type { ProfileWithRole } from '../../hooks/useProfiles'
 
@@ -20,25 +20,6 @@ interface Props {
   onAdd: (name: string, note: string, volunteerType: VolunteerType, timeSub: string | null, color?: string, userId?: string, roleId?: string | null, customerName?: string | null, customerPhone?: string | null, extraData?: Record<string, string>) => Promise<string | null>
   onUpdate: (id: string, name: string, note: string, volunteerType: VolunteerType, timeSub: string | null, color?: string, roleId?: string | null, customerName?: string | null, customerPhone?: string | null, extraData?: Record<string, string>) => Promise<string | null>
   onDelete: (id: string) => Promise<string | null>
-}
-
-function getTimeSubOptions(slot: string): { value: string; label: string }[] | null {
-  const [start, end] = slot.split('-').map(Number)
-  if (end - start !== 2) return null
-  return [
-    { value: `${start}`, label: `${start}시` },
-    { value: `${start + 1}`, label: `${start + 1}시` },
-    { value: `${start}~${start + 1}`, label: `${start}~${end}시` },
-  ]
-}
-
-function formatTimeSub(ts: string | null): string {
-  if (!ts) return ''
-  if (ts.includes('~')) {
-    const [s, e] = ts.split('~').map(Number)
-    return `${s}~${e + 1}시`
-  }
-  return `${ts}시`
 }
 
 const PHONE_RE = /^[0-9]{2,4}-[0-9]{3,4}-[0-9]{4}$|^[0-9]{9,11}$/
@@ -125,6 +106,14 @@ export function SlotEditModal({
       ? (profiles as ProfileWithRole[]).filter(p => p.tenantRoleId === selectedRoleId)
       : profiles
     : []
+
+  // 선택 가능한 항목이 1개뿐이면 자동 선택
+  const singleProfileId = selectableProfiles.length === 1 ? selectableProfiles[0].id : null
+  useEffect(() => {
+    if (isAdmin && !editingId && singleProfileId) {
+      setSelectedUserId(singleProfileId)
+    }
+  }, [isAdmin, editingId, singleProfileId])
 
   function startEdit(a: Assignment) {
     setEditingId(a.id)

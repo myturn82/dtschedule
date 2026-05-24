@@ -5,8 +5,10 @@ import { useTenant } from '../contexts/TenantContext'
 import { ROLE_LABELS } from '../types'
 import { useSchedule } from '../hooks/useSchedule'
 import { useProfiles } from '../hooks/useProfiles'
+import type { ProfileWithRole } from '../hooks/useProfiles'
 import { useTenantRoles } from '../hooks/useTenantRoles'
 import { getCellState } from '../utils/cellState'
+import { getTimeSubOptions } from '../utils/timeSlots'
 import { ScheduleHeader } from '../components/schedule/ScheduleHeader'
 import { ScheduleGrid } from '../components/schedule/ScheduleGrid'
 import { WeekGrid } from '../components/schedule/WeekGrid'
@@ -43,6 +45,7 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
   const [showNoClearTarget, setShowNoClearTarget] = useState(false)
   const [autoProposals, setAutoProposals] = useState<ProposedAssignment[] | null>(null)
   const [modalTarget, setModalTarget] = useState<ModalTarget | null>(null)
+  const [directRegMsg, setDirectRegMsg] = useState<string | null>(null)
   const [holidayTarget, setHolidayTarget] = useState<{ day: number; startHour: number; endHour: number } | null>(null)
 
   const navigate = useNavigate()
@@ -152,6 +155,60 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
       return
     }
     setAutoProposals(proposals)
+  }
+
+  async function handleCellClick(target: ModalTarget) {
+    if (isSplitMode && tenantRole === 'member') {
+      if (!memberRoleId || target.roleId !== memberRoleId) return
+    }
+
+    if (
+      tenantMode === '회원선택' &&
+      !isPrivileged &&
+      profile &&
+      !getTimeSubOptions(target.timeSlot)
+    ) {
+      const cs = getCellState(
+        target.day, target.timeSlot, target.year, target.month,
+        scheduleRules, slotSettings, dateOverrides, assignments
+      )
+      if (!cs.isClosed && !cs.isHoliday && !cs.isBreaktime) {
+        const alreadyIn = cs.assignments.some(a => a.user_id === profile.id)
+        if (!alreadyIn) {
+          const roleAssigns = target.roleId
+            ? cs.assignments.filter(a => a.role_id === target.roleId)
+            : cs.assignments
+          const remaining = cs.maxCapacity - roleAssigns.length
+          const roleProfileCount = target.roleId
+            ? (profiles as ProfileWithRole[]).filter(p => p.tenantRoleId === target.roleId).length
+            : 0
+          const shouldSkipPopup = cs.maxCapacity === 1 || remaining === 1 || roleProfileCount === 1
+          if (remaining > 0 && shouldSkipPopup) {
+            const err = await addAssignment({
+              tenant_id: tenant!.id,
+              year: target.year, month: target.month, day: target.day,
+              time_slot: target.timeSlot,
+              volunteer_name: profile.name,
+              volunteer_type: profile.role === '50plus' ? '50plus' : 'volunteer',
+              user_id: profile.id,
+              role_id: target.roleId ?? null,
+              note: undefined,
+              time_sub: undefined,
+              color: undefined,
+              customer_name: null,
+              customer_phone: null,
+            })
+            if (!err) {
+              setDirectRegMsg('등록되었습니다')
+              setTimeout(() => setDirectRegMsg(null), 2000)
+            }
+            return
+          }
+        }
+      }
+    }
+
+    setModalTarget(target)
   }
 
   const selectedCellState = modalTarget
@@ -308,16 +365,7 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
                 indicatorBarRoles={indicatorBarRoles}
                 isSplitMode={isSplitMode}
                 slotLabels={slotLabels}
-                onCellClick={target => {
-                  if (isSplitMode) {
-                    if (tenantRole === 'member') {
-                      if (!memberRoleId || target.roleId !== memberRoleId) return
-                    }
-                    setModalTarget(target)
-                    return
-                  }
-                  setModalTarget(target)
-                }}
+                onCellClick={handleCellClick}
                 onHolidayCellClick={profile && isPrivileged
                   ? (d, startHour, endHour) => setHolidayTarget({ day: d, startHour, endHour })
                   : undefined}
@@ -344,12 +392,7 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
                   setMonth(d.getMonth() + 1)
                   setDay(d.getDate())
                 }}
-                onCellClick={target => {
-                  if (isSplitMode && tenantRole === 'member') {
-                    if (!memberRoleId || target.roleId !== memberRoleId) return
-                  }
-                  setModalTarget(target)
-                }}
+                onCellClick={handleCellClick}
               />
             ) : (
               <DayView
@@ -361,12 +404,7 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
                 splitRoles={splitRoles}
                 isSplitMode={isSplitMode}
                 slotLabels={slotLabels}
-                onCellClick={target => {
-                  if (isSplitMode && tenantRole === 'member') {
-                    if (!memberRoleId || target.roleId !== memberRoleId) return
-                  }
-                  setModalTarget(target)
-                }}
+                onCellClick={handleCellClick}
               />
             )}
           </div>
@@ -533,6 +571,12 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
           onUpdate={(id, params) => updateAssignment(id, params)}
           onDelete={deleteAssignment}
         />
+      )}
+
+      {directRegMsg && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl bg-[var(--color-brand-primary)] text-white text-sm font-medium shadow-lg animate-fade-up pointer-events-none">
+          {directRegMsg}
+        </div>
       )}
     </div>
   )

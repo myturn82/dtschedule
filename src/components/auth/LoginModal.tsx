@@ -20,27 +20,16 @@ const DEFAULT_ROLES = [
   { value: 'team_leader' as const, label: '팀장' },
 ]
 
-const GRAIN_URL = `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.15 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>")`
-
 const DAY_LABELS = ['MON','TUE','WED','THU','FRI','SAT','SUN']
-const TIME_TICKS = ['10','11','12','13','14','15','16','17','18','19','20']
+const TIME_TICKS = ['09','10','11','12','·','13','14','15','16','17','18']
+const MONTH_NAMES = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
 
-// paper theme tokens
-const P = {
-  heroBg:     'oklch(0.94 0.012 80)',
-  heroLine:   'rgba(20,23,28,0.06)',
-  heroLineStr:'rgba(20,23,28,0.10)',
-  heroStroke: 'rgba(20,23,28,0.10)',
-  heroFg:     'oklch(0.18 0.02 60)',
-  heroFgSoft: 'oklch(0.40 0.02 60)',
-  heroFgMute: 'oklch(0.55 0.02 60)',
-  glowA:      'oklch(0.55 0.18 30)',
-  glowB:      'oklch(0.50 0.16 60)',
-  pillBg:     'rgba(20,23,28,0.04)',
-  pillBorder: 'rgba(20,23,28,0.10)',
-  sat:        'oklch(0.45 0.13 230)',
-  sun:        'oklch(0.50 0.16 25)',
-  accent:     'oklch(0.66 0.16 28)',
+function getWeekNumber(d: Date): number {
+  const dt = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
+  const day = dt.getUTCDay() || 7
+  dt.setUTCDate(dt.getUTCDate() + 4 - day)
+  const yearStart = new Date(Date.UTC(dt.getUTCFullYear(), 0, 1))
+  return Math.ceil((((dt.getTime() - yearStart.getTime()) / 86400000) + 1) / 7)
 }
 
 export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hideCancelButton }: Props) {
@@ -65,6 +54,13 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
   const tabSignupRef = useRef<HTMLButtonElement>(null)
   const [pillStyle, setPillStyle] = useState({ width: 0, left: 0 })
 
+  const now = new Date()
+  const weekNum = getWeekNumber(now)
+  const todayDow = now.getDay()
+  const monthStr = String(now.getMonth() + 1).padStart(2, '0')
+  const yearNum = now.getFullYear()
+  const monthName = MONTH_NAMES[now.getMonth()]
+
   useEffect(() => {
     supabase.from('tenants').select('id, name').order('name').then(({ data }) => {
       setTenants(data ?? [])
@@ -84,7 +80,7 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
     if (!ref || !wrap) return
     const r = ref.getBoundingClientRect()
     const pr = wrap.getBoundingClientRect()
-    setPillStyle({ width: r.width, left: r.left - pr.left - 4 })
+    setPillStyle({ width: r.width, left: r.left - pr.left - 3 })
   }
   useEffect(() => { updatePill(mode) }, [mode])
   useEffect(() => {
@@ -96,6 +92,9 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
   function switchMode(m: Mode) { setMode(m); setError(null); setSuccess(null) }
 
   const hasCustomRoles = tenantRoles !== null && tenantRoles.length > 0
+  const accent = 'oklch(0.66 0.16 28)'
+  const accentSoft = 'oklch(0.95 0.04 28)'
+  const accentInk = 'oklch(0.38 0.13 28)'
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault(); setError(null); setLoading(true)
@@ -127,133 +126,164 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
   async function handleKakao() { setLoading(true); setError(null); const err = await onKakao(); setLoading(false); if (err) setError(err) }
 
   const inputSt: React.CSSProperties = {
-    width: '100%', height: 48, padding: '0 14px 0 44px',
+    width: '100%', height: 42, padding: '0 14px 0 40px',
     background: '#fff', border: '1px solid rgba(20,23,28,0.09)',
-    borderRadius: 12, fontSize: 14, color: '#14171C', outline: 'none',
-    fontFamily: 'inherit', transition: 'border-color .12s, box-shadow .12s',
+    borderRadius: 10, fontSize: 13.5, color: '#14171C', outline: 'none', fontFamily: 'inherit',
   }
 
   return (
-    <div className="lm-root" style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', minHeight: '100dvh' }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 50 }}>
       <style>{`
-        .lm-root { font-family: "Pretendard Variable", Pretendard, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
-        .lm-layout { display: grid; grid-template-columns: 1.15fr 1fr; min-height: 100dvh; }
-        .lm-hero { position: relative; overflow: hidden; isolation: isolate; padding: 40px 56px 40px 76px; display: flex; flex-direction: column; background: oklch(0.94 0.012 80); color: oklch(0.18 0.02 60); }
-        /* graph paper grid */
-        .lm-grid { position: absolute; inset: 0; z-index: -3; pointer-events: none;
-          background-image: linear-gradient(to right, rgba(20,23,28,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(20,23,28,0.06) 1px, transparent 1px);
-          background-size: 56px 56px; background-position: -1px -1px; }
-        /* weekday strip */
-        .lm-days { position: absolute; top: 0; left: 0; right: 0; height: 28px; z-index: -1; pointer-events: none; display: grid; grid-template-columns: repeat(7,1fr); border-bottom: 1px solid rgba(20,23,28,0.10); }
-        .lm-day { display: flex; align-items: center; justify-content: center; font-family: "JetBrains Mono", monospace; font-size: 9px; font-weight: 600; letter-spacing: 0.8px; color: oklch(0.55 0.02 60); border-right: 1px solid rgba(20,23,28,0.10); }
-        .lm-day:last-child { border-right: 0; }
-        .lm-day.sat { color: oklch(0.45 0.13 230); }
-        .lm-day.sun { color: oklch(0.50 0.16 25); }
-        .lm-day.today { background: oklch(0.66 0.16 28); color: white; }
-        /* time ticks */
-        .lm-ticks { position: absolute; left: 0; top: 28px; bottom: 0; width: 48px; z-index: -1; pointer-events: none; display: flex; flex-direction: column; border-right: 1px solid rgba(20,23,28,0.10); }
-        .lm-tick { flex: 1; display: flex; align-items: center; justify-content: center; font-family: "JetBrains Mono", monospace; font-size: 9px; font-weight: 500; letter-spacing: 0.3px; color: oklch(0.55 0.02 60); border-bottom: 1px dashed rgba(20,23,28,0.06); }
-        .lm-tick:last-child { border-bottom: 0; }
-        /* big outline digit */
-        .lm-digit { position: absolute; bottom: -120px; right: -60px; font-size: 380px; line-height: 0.85; font-weight: 800; letter-spacing: -10px; color: transparent; -webkit-text-stroke: 2px rgba(20,23,28,0.10); user-select: none; z-index: -2; font-feature-settings: "tnum"; pointer-events: none; font-family: "JetBrains Mono", monospace; }
-        .lm-digit-lbl { display: block; font-family: "Pretendard Variable", Pretendard, sans-serif; font-size: 28px; color: oklch(0.55 0.02 60); letter-spacing: 4px; font-weight: 600; -webkit-text-stroke: 0; margin-top: 12px; margin-left: 20px; }
-        /* NOW line */
-        .lm-now { position: absolute; left: 48px; right: 0; height: 1px; background: oklch(0.66 0.16 28); z-index: -1; pointer-events: none; animation: lmNowMove 16s ease-in-out infinite alternate; box-shadow: 0 0 0 0.5px oklch(0.66 0.16 28); }
-        .lm-now::before { content: ""; position: absolute; left: -4px; top: 50%; transform: translateY(-50%); width: 7px; height: 7px; background: oklch(0.66 0.16 28); border-radius: 50%; box-shadow: 0 0 0 3px oklch(0.94 0.012 80); }
-        .lm-now::after { content: "NOW"; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: oklch(0.94 0.012 80); padding: 1px 6px; font-family: "JetBrains Mono", monospace; font-size: 8.5px; font-weight: 700; letter-spacing: 1.2px; color: oklch(0.66 0.16 28); border-radius: 3px; border: 1px solid oklch(0.66 0.16 28); }
-        @keyframes lmNowMove { 0% { top: 45%; } 100% { top: 58%; } }
-        @keyframes lmPulse { 0%,100% { box-shadow: 0 0 0 4px oklch(0.75 0.18 145 / 0.25); } 50% { box-shadow: 0 0 0 8px oklch(0.75 0.18 145 / 0); } }
-        /* grain */
-        .lm-grain { position: absolute; inset: 0; pointer-events: none; z-index: -1; opacity: 0.25; mix-blend-mode: multiply; background-image: ${GRAIN_URL}; }
-        /* form side */
-        .lm-form { background: #F4F1EA; display: flex; flex-direction: column; padding: 32px 40px; position: relative; overflow: hidden; overflow-y: auto; }
-        .lm-form::before { content: ""; position: absolute; top: -150px; right: -150px; width: 360px; height: 360px; border-radius: 50%; background: oklch(0.88 0.10 28); filter: blur(80px); opacity: 0.4; pointer-events: none; }
-        /* responsive */
-        @media (max-width: 1100px) {
-          .lm-hero { padding: 36px 40px 36px 64px; }
-          .lm-digit { font-size: 300px; bottom: -90px; right: -40px; }
-          .lm-digit-lbl { font-size: 22px; margin-top: 8px; }
-          .lm-form { padding: 28px 32px; }
+        .lmp {
+          font-family: "Pretendard Variable", Pretendard, system-ui, sans-serif;
+          -webkit-font-smoothing: antialiased;
+          background: #F4F1EA;
+          position: relative;
+          width: 100%;
+          height: 100dvh;
+          overflow: hidden;
+          display: grid;
+          grid-template-rows: var(--bh,52px) var(--dh,32px) 1fr auto;
+          grid-template-columns: var(--tw,48px) 1fr;
         }
-        /* Tablet: stacked layout */
-        @media (max-width: 1099px) and (min-width: 541px) {
-          .lm-layout { grid-template-columns: 1fr; }
-          .lm-hero { padding: 32px 40px 32px 72px; min-height: 320px; }
-          .lm-heroMain { margin-top: 32px; }
-          .lm-miniSched { display: none; }
-          .lm-digit { font-size: 280px; bottom: -90px; right: -40px; }
-          .lm-digit-lbl { font-size: 22px; margin-top: 8px; }
-          .lm-form { padding: 32px 40px 48px; }
-          .lm-formCard { max-width: 480px; margin: 16px auto; }
-          .lm-formH1 { font-size: 30px; }
+        /* background layers */
+        .lmp-bg-grid {
+          position: absolute;
+          top: calc(var(--bh,52px) + var(--dh,32px));
+          left: var(--tw,48px); right: 0; bottom: 0;
+          z-index: 0; pointer-events: none;
+          background-image:
+            linear-gradient(to right, rgba(20,23,28,0.07) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(20,23,28,0.07) 1px, transparent 1px);
+          background-size: 56px 56px;
+          background-position: -1px -1px;
+          mask-image: linear-gradient(to bottom,rgba(0,0,0,0.9) 0%,rgba(0,0,0,0.5) 65%,rgba(0,0,0,0.15) 100%);
+          -webkit-mask-image: linear-gradient(to bottom,rgba(0,0,0,0.9) 0%,rgba(0,0,0,0.5) 65%,rgba(0,0,0,0.15) 100%);
         }
-        /* Mobile: unified paper surface */
+        .lmp-bg-digit {
+          position: absolute; bottom: -110px; right: -50px;
+          font-size: 380px; line-height: 0.85; font-weight: 800; letter-spacing: -10px;
+          color: transparent; -webkit-text-stroke: 1.5px rgba(20,23,28,0.07);
+          user-select: none; z-index: 0; font-family: "JetBrains Mono", monospace; pointer-events: none;
+        }
+        .lmp-bg-digit .sm { font-size:0.30em; letter-spacing:0; margin-left:-10px; -webkit-text-stroke:1.2px rgba(20,23,28,0.06); }
+        .lmp-bg-digit .lbl { display:block; font-family:"Pretendard Variable",Pretendard,sans-serif; font-size:22px; color:rgba(20,23,28,0.18); letter-spacing:4px; font-weight:600; -webkit-text-stroke:0; margin-top:12px; margin-left:20px; }
+        .lmp-bg-now {
+          position: absolute;
+          left: var(--tw,48px); right: 0; height: 1px;
+          background: oklch(0.66 0.16 28); z-index: 1; pointer-events: none; opacity: 0.7;
+          animation: lmpNow 18s ease-in-out infinite alternate;
+        }
+        .lmp-bg-now::before { content:""; position:absolute; left:-4px; top:50%; transform:translateY(-50%); width:8px; height:8px; background:oklch(0.66 0.16 28); border-radius:50%; box-shadow:0 0 0 3px #F4F1EA; }
+        .lmp-bg-now::after { content:"NOW"; position:absolute; right:18px; top:50%; transform:translateY(-50%); background:#F4F1EA; padding:1px 7px; font-family:"JetBrains Mono",monospace; font-size:9px; font-weight:700; letter-spacing:1.2px; color:oklch(0.66 0.16 28); border-radius:3px; border:1px solid oklch(0.66 0.16 28); }
+        @keyframes lmpNow {
+          0%   { top: calc(var(--bh,52px) + var(--dh,32px) + 28%); }
+          100% { top: calc(var(--bh,52px) + var(--dh,32px) + 55%); }
+        }
+        /* brand bar */
+        .lmp-brand-bar {
+          grid-row:1; grid-column:1/-1;
+          display:flex; align-items:center; padding:0 24px 0 20px;
+          border-bottom:1px solid rgba(20,23,28,0.07);
+          background:#F4F1EA; z-index:3; position:relative;
+        }
+        .lmp-brand-pill {
+          margin-left:4px; font-size:10px; font-family:"JetBrains Mono",monospace;
+          padding:3px 8px; border-radius:999px; background:#fff;
+          border:1px solid rgba(20,23,28,0.09); color:#6B7280; letter-spacing:0.4px; text-transform:uppercase; white-space:nowrap;
+        }
+        .lmp-top-nav { margin-left:auto; display:flex; align-items:center; gap:8px; font-size:13px; color:#6B7280; white-space:nowrap; }
+        .lmp-nav-btn { color:#14171C; font-weight:600; padding:6px 12px; border-radius:8px; background:#fff; border:1px solid rgba(20,23,28,0.09); cursor:pointer; font:inherit; font-size:13px; transition:background .12s; }
+        .lmp-nav-btn:hover { background:#ECE8DF; }
+        /* day strip */
+        .lmp-day-strip {
+          grid-row:2; grid-column:1/-1;
+          display:grid; grid-template-columns:var(--tw,48px) repeat(7,1fr);
+          background:#FBF9F4; border-bottom:1px solid rgba(20,23,28,0.07); z-index:2; position:relative;
+        }
+        .lmp-day-corner { border-right:1px solid rgba(20,23,28,0.07); display:flex; align-items:center; justify-content:center; font-family:"JetBrains Mono",monospace; font-size:9px; font-weight:600; color:#B8BBC2; letter-spacing:0.6px; }
+        .lmp-day-cell { display:flex; align-items:center; justify-content:center; font-family:"JetBrains Mono",monospace; font-size:10px; font-weight:600; letter-spacing:0.8px; color:#8A8F99; border-right:1px solid rgba(20,23,28,0.07); }
+        .lmp-day-cell:last-child { border-right:0; }
+        .lmp-day-cell.sat { color:oklch(0.55 0.13 240); }
+        .lmp-day-cell.sun { color:oklch(0.55 0.16 25); }
+        .lmp-day-cell.today { background:oklch(0.66 0.16 28); color:white; }
+        /* time gutter */
+        .lmp-time-gutter { grid-row:3; grid-column:1; border-right:1px solid rgba(20,23,28,0.07); background:#FBF9F4; display:flex; flex-direction:column; z-index:2; position:relative; }
+        .lmp-tick { flex:1; display:flex; align-items:center; justify-content:center; font-family:"JetBrains Mono",monospace; font-size:10px; font-weight:500; color:#8A8F99; border-bottom:1px dashed rgba(20,23,28,0.07); }
+        .lmp-tick:last-child { border-bottom:0; }
+        .lmp-tick.lunch { color:#B8BBC2; font-style:italic; }
+        /* stage */
+        .lmp-stage {
+          grid-row:3; grid-column:2; z-index:2; position:relative;
+          overflow-y:auto; min-height:0;
+          display:flex; flex-direction:column; align-items:center; justify-content:center;
+          padding:24px 28px;
+        }
+        /* form card */
+        .lmp-card {
+          position:relative; z-index:5; width:100%; max-width:420px;
+          background:#fff; border:1px solid rgba(20,23,28,0.07); border-radius:18px;
+          padding:28px 28px 26px; margin:auto;
+          box-shadow:0 1px 0 rgba(20,23,28,0.03),0 22px 60px -28px rgba(20,23,28,0.22),0 4px 14px -8px rgba(20,23,28,0.10);
+        }
+        /* footer */
+        .lmp-footer {
+          grid-row:4; grid-column:1/-1; border-top:1px solid rgba(20,23,28,0.07);
+          background:#F4F1EA; z-index:3; position:relative; height:36px;
+          display:flex; align-items:center; padding:0 24px; font-size:11px; color:#8A8F99; gap:12px;
+        }
+        .lmp-foot-dot { width:3px; height:3px; border-radius:50%; background:#B8BBC2; flex-shrink:0; }
+        /* ─── responsive ─── */
+        @media (max-width: 900px) {
+          .lmp { --bh:48px; --tw:40px; --dh:30px; }
+          .lmp-bg-digit { font-size:280px; bottom:-80px; right:-30px; }
+          .lmp-bg-digit .lbl { font-size:18px; margin-top:8px; }
+          .lmp-card { max-width:400px; padding:24px 24px 22px; }
+        }
+        @media (max-width: 720px) {
+          .lmp { --bh:46px; --tw:36px; --dh:28px; }
+          .lmp-brand-pill { display:none; }
+          .lmp-nav-hint { display:none; }
+          .lmp-stage { padding:16px 18px; }
+          .lmp-card { max-width:380px; padding:22px 22px 20px; border-radius:16px; }
+          .lmp-bg-digit { font-size:220px; bottom:-65px; right:-25px; }
+          .lmp-bg-digit .lbl { font-size:16px; margin-top:6px; }
+        }
         @media (max-width: 540px) {
-          .lm-layout { grid-template-columns: 1fr; background: oklch(0.94 0.012 80); }
-          .lm-hero { padding: 12px 16px 0; background: transparent; overflow: visible; min-height: auto; }
-          .lm-heroMain { display: none; }
-          .lm-ticks { display: none; }
-          .lm-now { display: none; }
-          .lm-days { position: relative; top: auto; left: auto; right: auto; height: 26px; border-bottom: 0; margin-top: 10px; background: #fff; border: 1px solid rgba(20,23,28,0.10); border-radius: 8px; overflow: hidden; }
-          .lm-day { font-size: 9px; letter-spacing: 0.5px; border-right-color: rgba(20,23,28,0.10); }
-          .lm-digit { position: fixed; bottom: -40px; right: -20px; font-size: 200px; letter-spacing: -8px; -webkit-text-stroke-width: 1.5px; z-index: 0; pointer-events: none; }
-          .lm-digit-lbl { display: none; }
-          .lm-form { padding: 14px 16px 24px; background: transparent; position: relative; z-index: 1; }
-          .lm-form::before { display: none; }
-          .lm-formCard { display: flex; flex-direction: column; margin: 0 auto; max-width: 480px; }
-          .lm-formHello { order: 1; font-size: 10.5px; margin: 4px 0; letter-spacing: 0.8px; color: oklch(0.66 0.16 28) !important; font-weight: 600; }
-          .lm-formH1 { order: 2; font-size: 22px; margin: 0 0 14px; letter-spacing: -0.6px; }
-          .lm-formLede { display: none; }
-          .lm-tabs { order: 3; margin-bottom: 14px; }
-          .lm-loginForm { order: 4; }
-          .lm-divider { order: 5; margin: 14px 0 12px; font-size: 11.5px; }
-          .lm-socials { order: 6; gap: 8px; margin-bottom: 0; }
-          .lm-socialBtn { height: 44px; font-size: 13.5px; }
-          .lm-formFooter { display: none; }
+          .lmp { --bh:44px; --tw:0px; --dh:28px; grid-template-columns:1fr; }
+          .lmp-time-gutter { display:none; }
+          .lmp-bg-grid { left:0; }
+          .lmp-bg-now { left:0; }
+          .lmp-day-strip { grid-template-columns:repeat(7,1fr); }
+          .lmp-day-corner { display:none; }
+          .lmp-brand-bar { padding:0 14px; }
+          .lmp-stage { grid-column:1; padding:14px; }
+          .lmp-card { max-width:100%; padding:20px 18px 18px; border-radius:14px; }
+          .lmp-bg-digit { font-size:160px; bottom:-50px; right:-20px; }
+          .lmp-bg-digit .sm, .lmp-bg-digit .lbl { display:none; }
+          .lmp-footer { height:30px; padding:0 12px; font-size:10px; gap:8px; }
+          .lmp-hide-sm { display:none; }
         }
-        @media (max-width: 380px) {
-          .lm-hero { padding: 10px 14px 0; }
-          .lm-form { padding: 12px 14px 22px; }
-          .lm-formH1 { font-size: 20px; }
-          .lm-digit { font-size: 160px; }
+        @media (max-height: 620px) and (min-width: 541px) {
+          .lmp-stage { padding:10px 20px; }
+          .lmp-card { padding:16px 22px 14px; }
+          .lmp-card h2 { font-size:21px !important; margin-bottom:12px !important; }
         }
       `}</style>
 
-      <div className="lm-layout">
+      <div className="lmp">
+        {/* background layers */}
+        <div className="lmp-bg-grid" aria-hidden="true" />
+        <div className="lmp-bg-digit" aria-hidden="true">
+          {monthStr}<span className="sm">月</span>
+          <span className="lbl">{monthName} {yearNum}</span>
+        </div>
+        <div className="lmp-bg-now" aria-hidden="true" />
 
-        {/* ══════════ LEFT HERO — paper theme ══════════ */}
-        <section className="lm-hero">
-          {/* Layer 1: graph paper grid */}
-          <div className="lm-grid" />
-          {/* Layer 2: weekday strip */}
-          <div className="lm-days">
-            {DAY_LABELS.map((d, i) => {
-              const todayDow = new Date().getDay() // 0=sun,1=mon…
-              const isToday = (i + 1) % 7 === todayDow
-              return (
-                <div key={d} className={`lm-day${i === 5 ? ' sat' : i === 6 ? ' sun' : ''}${isToday ? ' today' : ''}`}>{d}</div>
-              )
-            })}
-          </div>
-          {/* Layer 3: time ticks */}
-          <div className="lm-ticks">
-            {TIME_TICKS.map(t => (
-              <div key={t} className="lm-tick">{t}</div>
-            ))}
-          </div>
-          {/* Layer 4: big outlined digit */}
-          <div className="lm-digit">
-            05<span style={{ fontSize: '0.30em', letterSpacing: 0, marginLeft: -10, WebkitTextStroke: '1.5px rgba(20,23,28,0.08)' }}>月</span>
-            <span className="lm-digit-lbl">2026</span>
-          </div>
-          {/* Layer 5: NOW indicator */}
-          <div className="lm-now" />
-          {/* Grain */}
-          <div className="lm-grain" />
-
-          {/* Brand mark */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, position: 'relative', zIndex: 1 }}>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="36" height="36" style={{ flexShrink: 0, borderRadius: 10, overflow: 'hidden' }}>
+        {/* Row 1 — brand bar */}
+        <header className="lmp-brand-bar">
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="32" height="32" style={{ flexShrink:0, borderRadius:8, overflow:'hidden' }}>
               <rect width="512" height="512" rx="112" fill="#FBF9F4"/>
               <rect x="64"     y="142.8" width="55.67" height="68.8" rx="16" fill="oklch(0.85 0.10 70)"/>
               <rect x="129.67" y="142.8" width="55.67" height="68.8" rx="16" fill="oklch(0.66 0.16 28)"/>
@@ -272,180 +302,127 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
               <rect x="326.67" y="379.2" width="55.67" height="68.8" rx="16" fill="oklch(0.72 0.10 290)"/>
               <rect x="392.33" y="379.2" width="55.67" height="68.8" rx="16" fill="oklch(0.85 0.10 70)"/>
             </svg>
-            <span style={{ fontSize: 16, fontWeight: 600, letterSpacing: -0.2, color: P.heroFg, whiteSpace: 'nowrap' }}>스케줄러</span>
-            <span style={{ marginLeft: 8, fontSize: 10, fontFamily: '"JetBrains Mono", monospace', padding: '3px 8px', borderRadius: 999, background: P.pillBg, border: `1px solid ${P.pillBorder}`, color: P.heroFgSoft, letterSpacing: 0.4, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>workspace</span>
+            <span style={{ fontSize:15, fontWeight:600, letterSpacing:-0.2, color:'#14171C', whiteSpace:'nowrap' }}>스케줄러</span>
+            <span className="lmp-brand-pill">WORKSPACE</span>
           </div>
-
-          {/* Hero main content */}
-          <div className="lm-heroMain" style={{ marginTop: 'auto', marginBottom: 0, position: 'relative', zIndex: 1 }}>
-            {/* Eyebrow */}
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 12, color: P.heroFgSoft, marginBottom: 16, letterSpacing: 0.4, textTransform: 'uppercase', fontWeight: 500, whiteSpace: 'nowrap' }}>
-              <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'oklch(0.75 0.18 145)', boxShadow: '0 0 0 4px oklch(0.75 0.18 145 / 0.25)', display: 'inline-block', animation: 'lmPulse 1.6s ease-in-out infinite' }} />
-              지금도 팀들이 스케줄을 짜고 있어요
-            </div>
-
-            {/* Title */}
-            <h1 style={{ fontSize: 46, lineHeight: 1.08, letterSpacing: -1.6, fontWeight: 700, margin: '0 0 20px', color: P.heroFg }}>
-              오늘의 일정을<br />
-              <span style={{ background: `linear-gradient(120deg, ${P.glowA}, ${P.glowB})`, WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>한 화면에서</span>.
-            </h1>
-            <p style={{ fontSize: 16, lineHeight: 1.55, color: P.heroFgSoft, maxWidth: 420, margin: '0 0 32px' }}>
-              아침부터 저녁까지, 우리 팀의 운영 일정을 한눈에. 멤버를 손쉽게 배정하고 변경하세요.
-            </p>
-
-            {/* Mini scheduler */}
-            <div style={{ background: 'rgba(255,255,255,0.97)', border: '1px solid rgba(20,23,28,0.08)', borderRadius: 18, padding: '14px 14px 12px', maxWidth: 500, boxShadow: '0 20px 60px -20px rgba(20,23,28,0.20)', color: '#14171C' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                  <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: -0.4 }}>05월</span>
-                  <span style={{ fontSize: 11, color: '#8A8F99', fontFamily: '"JetBrains Mono", monospace' }}>2026 · 1–2주</span>
-                </div>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '3px 9px 3px 7px', background: 'oklch(0.96 0.04 145)', borderRadius: 999, fontSize: 10.5, fontWeight: 600, color: 'oklch(0.40 0.13 145)', border: '1px solid oklch(0.85 0.08 145)', whiteSpace: 'nowrap' }}>
-                  <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'oklch(0.65 0.17 145)', display: 'inline-block' }} />
-                  실시간 배정
-                </span>
-              </div>
-              {/* Mini grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: '36px repeat(7, 1fr)', border: '1px solid rgba(20,23,28,0.08)', borderRadius: 10, overflow: 'hidden', fontSize: 9, background: '#fff' }}>
-                {['', '월', '화', '수', '목', '금', '토', '일'].map((d, i) => (
-                  <div key={i} style={{ padding: '5px 4px', background: '#FBF9F4', borderBottom: '1px solid rgba(20,23,28,0.08)', textAlign: 'center', fontFamily: '"JetBrains Mono", monospace', fontSize: 8.5, color: i === 6 ? 'oklch(0.55 0.13 240)' : i === 7 ? 'oklch(0.55 0.16 25)' : '#8A8F99', fontWeight: 600, letterSpacing: 0.4 }}>{d}</div>
-                ))}
-                {([
-                  [null,null,null,null,'1','2','3'],
-                  ['4','5','6','7','8','9','10'],
-                ] as (string|null)[][]).map((week, wi) => (
-                  [['10-12','sun'], ['13-14','sun'], ['14-16','plus'], ['16-18','sun']].map(([slot, tint], ri) => (
-                    <>
-                      <div key={`${wi}l${ri}`} style={{ padding: '4px 3px', background: '#fff', borderBottom: '1px solid rgba(20,23,28,0.08)', borderRight: '1px solid rgba(20,23,28,0.08)', fontFamily: '"JetBrains Mono", monospace', fontSize: 7.5, color: '#6B7280', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{slot}</div>
-                      {week.map((d, di) => {
-                        const isSun = di === 6
-                        const names = [['서연','성미'],['지훈','정훈'],[null,'혜원'],['우진',null],[null,null],[null,null],[null,null]]
-                        const [v, a] = d ? names[(di + ri + wi) % names.length] : [null, null]
-                        const tintMap: Record<string, {bg:string;c:string}> = {
-                          sun:  {bg:'oklch(0.93 0.06 70)', c:'oklch(0.40 0.12 60)'},
-                          plus: {bg:'oklch(0.93 0.05 20)', c:'oklch(0.42 0.12 20)'},
-                        }
-                        const t = tintMap[tint] ?? tintMap.sun
-                        return (
-                          <div key={`${wi}${ri}${di}`} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: '1px solid rgba(20,23,28,0.08)', borderRight: di === 6 ? 'none' : '1px solid rgba(20,23,28,0.08)', minHeight: 18, background: isSun || !d ? 'repeating-linear-gradient(135deg,oklch(0.98 0.02 25) 0 4px,oklch(0.94 0.03 25) 4px 8px)' : undefined }}>
-                            {d && !isSun && [v,a].map((nm, ni) => (
-                              <div key={ni} style={{ padding: 1.5, borderRight: ni===0 ? '1px dashed rgba(20,23,28,0.08)' : 'none', display: 'flex' }}>
-                                {nm && <div style={{ flex:1, borderRadius:3, fontSize:7.5, fontWeight:600, display:'flex', alignItems:'center', justifyContent:'center', background: t.bg, color: t.c, overflow:'hidden', whiteSpace:'nowrap', padding:'1px 2px' }}>{nm}</div>}
-                              </div>
-                            ))}
-                          </div>
-                        )
-                      })}
-                    </>
-                  ))
-                ))}
-              </div>
-              <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(20,23,28,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 10.5, color: '#6B7280' }}>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  {[['oklch(0.93 0.06 70)','오전'],['oklch(0.93 0.05 20)','50플러스'],['oklch(0.93 0.05 160)','주말']].map(([bg,lbl]) => (
-                    <span key={lbl} style={{ display:'inline-flex', alignItems:'center', gap:4, fontSize:10, color:'#353A44', fontWeight:500, whiteSpace:'nowrap' }}>
-                      <span style={{ width:7, height:7, borderRadius:2, background:bg, display:'inline-block' }} />{lbl}
-                    </span>
-                  ))}
-                </div>
-                <span style={{ fontFamily:'"JetBrains Mono",monospace', fontSize:10 }}>68 / 82 배정</span>
-              </div>
-            </div>
+          <div className="lmp-top-nav">
+            {mode === 'login' ? (
+              <>
+                <span className="lmp-nav-hint">처음이신가요?</span>
+                <button className="lmp-nav-btn" onClick={() => switchMode('signup')}>회원가입</button>
+              </>
+            ) : (
+              <>
+                <span className="lmp-nav-hint">이미 계정이 있나요?</span>
+                <button className="lmp-nav-btn" onClick={() => switchMode('login')}>로그인</button>
+              </>
+            )}
+            {!hideCancelButton && (
+              <button className="lmp-nav-btn" onClick={onClose}>닫기</button>
+            )}
           </div>
-        </section>
+        </header>
 
-        {/* ══════════ RIGHT FORM ══════════ */}
-        <section className="lm-form">
-          {/* Close button */}
-          {!hideCancelButton && (
-            <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'flex-end', marginBottom: 'auto' }}>
-              <button onClick={onClose} style={{ color: '#14171C', fontWeight: 600, padding: '6px 12px', borderRadius: 8, background: '#fff', border: '1px solid rgba(20,23,28,0.09)', cursor: 'pointer', font: 'inherit', fontSize: 13 }}>닫기</button>
-            </div>
-          )}
+        {/* Row 2 — day strip */}
+        <div className="lmp-day-strip" aria-hidden="true">
+          <div className="lmp-day-corner">W{String(weekNum).padStart(2,'0')}</div>
+          {DAY_LABELS.map((d, i) => {
+            const isToday = (i + 1) % 7 === todayDow
+            return (
+              <div key={d} className={`lmp-day-cell${i===5?' sat':i===6?' sun':''}${isToday?' today':''}`}>{d}</div>
+            )
+          })}
+        </div>
 
-          <div className="lm-formCard" style={{ width: '100%', maxWidth: 420, margin: 'auto', position: 'relative', zIndex: 1 }}>
+        {/* Col 1 — time gutter */}
+        <aside className="lmp-time-gutter" aria-hidden="true">
+          {TIME_TICKS.map((t, i) => (
+            <div key={i} className={`lmp-tick${t==='·'?' lunch':''}`}>{t}</div>
+          ))}
+        </aside>
+
+        {/* Col 2 — stage + form card */}
+        <main className="lmp-stage">
+          <div className="lmp-card">
             {success ? (
-              <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'oklch(0.96 0.04 145)', display: 'grid', placeItems: 'center', margin: '0 auto 16px', fontSize: 22 }}>✓</div>
-                <p style={{ color: '#6B7280', fontSize: 14, marginBottom: 20, lineHeight: 1.5 }}>{success}</p>
-                <button onClick={() => { setSuccess(null); switchMode('login') }} style={{ color: P.accent, fontSize: 14, fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', font: 'inherit' }}>로그인하러 가기 →</button>
+              <div style={{ textAlign:'center', padding:'40px 0' }}>
+                <div style={{ width:48, height:48, borderRadius:'50%', background:'oklch(0.96 0.04 145)', display:'grid', placeItems:'center', margin:'0 auto 16px', fontSize:22 }}>✓</div>
+                <p style={{ color:'#6B7280', fontSize:14, marginBottom:20, lineHeight:1.5 }}>{success}</p>
+                <button onClick={() => { setSuccess(null); switchMode('login') }} style={{ color:accent, fontSize:14, fontWeight:500, background:'none', border:'none', cursor:'pointer', font:'inherit' }}>로그인하러 가기 →</button>
               </div>
             ) : (
               <>
-                <div className="lm-formHello" style={{ fontSize: 13, color: '#6B7280', fontWeight: 500, marginBottom: 8 }}>WELCOME</div>
-                <h2 className="lm-formH1" style={{ fontSize: 34, lineHeight: 1.1, letterSpacing: -1.2, fontWeight: 700, margin: '0 0 10px', color: '#14171C' }}>
+                <div style={{ fontFamily:'"JetBrains Mono",monospace', fontSize:11, color:accent, fontWeight:700, marginBottom:6, letterSpacing:'1.2px', textTransform:'uppercase' as const }}>
+                  {mode === 'login' ? 'WELCOME BACK' : 'JOIN US'}
+                </div>
+                <h2 style={{ fontSize:26, lineHeight:1.18, letterSpacing:-0.8, fontWeight:700, margin:'0 0 18px', color:'#14171C' }}>
                   {mode === 'login' ? <>다시 만나서<br />반가워요 👋</> : <>새로 오셨나요?<br />반갑습니다 🙌</>}
                 </h2>
-                <p className="lm-formLede" style={{ fontSize: 14, color: '#6B7280', margin: '0 0 24px', lineHeight: 1.5 }}>
-                  {mode === 'login' ? '이메일 또는 소셜 계정으로 로그인해 주세요.' : '조직을 선택하고 활동을 시작해 보세요.'}
-                </p>
 
-                {/* Tabs */}
-                <div className="lm-tabs" style={{ display: 'inline-flex', background: 'rgba(20,23,28,0.06)', padding: 4, borderRadius: 12, marginBottom: 22, position: 'relative' }}>
-                  <div style={{ position: 'absolute', top: 4, height: 'calc(100% - 8px)', background: '#fff', borderRadius: 9, boxShadow: '0 1px 0 rgba(20,23,28,0.04),0 2px 8px -2px rgba(20,23,28,0.10)', transition: 'transform .25s cubic-bezier(.4,0,.2,1),width .25s cubic-bezier(.4,0,.2,1)', zIndex: 0, width: pillStyle.width, transform: `translateX(${pillStyle.left}px)` }} />
+                {/* tabs */}
+                <div style={{ display:'inline-flex', background:'rgba(20,23,28,0.06)', padding:3, borderRadius:10, marginBottom:18, position:'relative' }}>
+                  <div style={{ position:'absolute', top:3, height:'calc(100% - 6px)', background:'#fff', borderRadius:8, boxShadow:'0 1px 0 rgba(20,23,28,0.04),0 2px 6px -2px rgba(20,23,28,0.10)', transition:'transform .25s cubic-bezier(.4,0,.2,1),width .25s cubic-bezier(.4,0,.2,1)', zIndex:0, width:pillStyle.width, transform:`translateX(${pillStyle.left}px)` }} />
                   {(['login','signup'] as Mode[]).map(t => (
-                    <button key={t} ref={t==='login'?tabLoginRef:tabSignupRef} onClick={() => switchMode(t)}
-                      style={{ padding: '9px 18px', fontSize: 13.5, fontWeight: 600, color: mode===t ? '#14171C' : '#6B7280', border: 0, background: 'transparent', borderRadius: 9, position: 'relative', zIndex: 1, cursor: 'pointer', font: 'inherit', transition: 'color .15s', whiteSpace: 'nowrap' }}>
-                      {t==='login' ? '로그인' : '회원가입'}
+                    <button key={t} ref={t==='login' ? tabLoginRef : tabSignupRef} onClick={() => switchMode(t)}
+                      style={{ padding:'7px 14px', fontSize:12.5, fontWeight:600, color:mode===t?'#14171C':'#6B7280', border:0, background:'transparent', borderRadius:8, position:'relative', zIndex:1, cursor:'pointer', font:'inherit', transition:'color .15s', whiteSpace:'nowrap' }}>
+                      {t === 'login' ? '로그인' : '회원가입'}
                     </button>
                   ))}
                 </div>
 
-                {/* Social */}
-                <div className="lm-socials" style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 22 }}>
-                  <button onClick={handleGoogle} disabled={loading} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, width: '100%', height: 48, fontSize: 14, fontWeight: 600, borderRadius: 12, border: '1px solid rgba(20,23,28,0.09)', background: '#fff', color: '#14171C', cursor: 'pointer', font: 'inherit', whiteSpace: 'nowrap' }}>
-                    <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20.4H24v7.1h11.3c-1.5 4.1-5.4 7-11.3 7-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5-5C32.9 5.1 28.7 3.4 24 3.4 12.5 3.4 3.4 12.5 3.4 24S12.5 44.6 24 44.6c11 0 20-8 20-20 0-1.4-.1-2.7-.4-4.1z"/><path fill="#FF3D00" d="M5.3 13.6l5.8 4.3C12.8 14.1 18 11 24 11c3 0 5.8 1.1 7.9 3l5-5C32.9 5.1 28.7 3.4 24 3.4 16.4 3.4 9.8 7.6 5.3 13.6z"/><path fill="#4CAF50" d="M24 44.6c4.6 0 8.7-1.7 11.9-4.5l-5.5-4.6c-1.7 1.3-3.9 2.1-6.4 2.1-5.8 0-10.7-3.9-11.2-7H7v4.7C10.5 40.6 16.8 44.6 24 44.6z"/><path fill="#1976D2" d="M43.6 20.5H42V20.4H24v7.1h11.3c-.7 2-2 3.7-3.6 5l5.5 4.6c-.4.4 5.8-4.2 5.8-13.2 0-1.4-.1-2.7-.4-3.4z"/></svg>
+                {/* social */}
+                <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:14 }}>
+                  <button onClick={handleGoogle} disabled={loading} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, width:'100%', height:42, fontSize:13.5, fontWeight:600, borderRadius:10, border:'1px solid rgba(20,23,28,0.09)', background:'#fff', color:'#14171C', cursor:'pointer', font:'inherit', whiteSpace:'nowrap' }}>
+                    <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20.4H24v7.1h11.3c-1.5 4.1-5.4 7-11.3 7-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5-5C32.9 5.1 28.7 3.4 24 3.4 12.5 3.4 3.4 12.5 3.4 24S12.5 44.6 24 44.6c11 0 20-8 20-20 0-1.4-.1-2.7-.4-4.1z"/><path fill="#FF3D00" d="M5.3 13.6l5.8 4.3C12.8 14.1 18 11 24 11c3 0 5.8 1.1 7.9 3l5-5C32.9 5.1 28.7 3.4 24 3.4 16.4 3.4 9.8 7.6 5.3 13.6z"/><path fill="#4CAF50" d="M24 44.6c4.6 0 8.7-1.7 11.9-4.5l-5.5-4.6c-1.7 1.3-3.9 2.1-6.4 2.1-5.8 0-10.7-3.9-11.2-7H7v4.7C10.5 40.6 16.8 44.6 24 44.6z"/><path fill="#1976D2" d="M43.6 20.5H42V20.4H24v7.1h11.3c-.7 2-2 3.7-3.6 5l5.5 4.6c-.4.4 5.8-4.2 5.8-13.2 0-1.4-.1-2.7-.4-3.4z"/></svg>
                     Google로 계속하기
                   </button>
-                  <button onClick={handleKakao} disabled={loading} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, width: '100%', height: 48, fontSize: 14, fontWeight: 600, borderRadius: 12, border: 'none', background: '#FEE500', color: '#181600', cursor: 'pointer', font: 'inherit', whiteSpace: 'nowrap' }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.9 5.3 4.7 6.7-.2.7-.7 2.7-.8 3.1-.1.5.2.5.4.4.2-.1 2.6-1.7 3.6-2.4.7.1 1.4.2 2.1.2 5.5 0 10-3.6 10-8s-4.5-8-10-8Z"/></svg>
+                  <button onClick={handleKakao} disabled={loading} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, width:'100%', height:42, fontSize:13.5, fontWeight:600, borderRadius:10, border:'none', background:'#FEE500', color:'#181600', cursor:'pointer', font:'inherit', whiteSpace:'nowrap' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.9 5.3 4.7 6.7-.2.7-.7 2.7-.8 3.1-.1.5.2.5.4.4.2-.1 2.6-1.7 3.6-2.4.7.1 1.4.2 2.1.2 5.5 0 10-3.6 10-8s-4.5-8-10-8Z"/></svg>
                     카카오로 계속하기
                   </button>
                 </div>
 
-                <div className="lm-divider" style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0 18px', color: '#8A8F99', fontSize: 12, fontWeight: 500 }}>
-                  <div style={{ flex: 1, height: 1, background: 'rgba(20,23,28,0.14)' }} />또는 이메일로 계속<div style={{ flex: 1, height: 1, background: 'rgba(20,23,28,0.14)' }} />
+                <div style={{ display:'flex', alignItems:'center', gap:10, margin:'4px 0 12px', color:'#8A8F99', fontSize:11.5, fontWeight:500 }}>
+                  <div style={{ flex:1, height:1, background:'rgba(20,23,28,0.12)' }} />또는 이메일로 계속<div style={{ flex:1, height:1, background:'rgba(20,23,28,0.12)' }} />
                 </div>
 
-                <form className="lm-loginForm" onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit}>
                   {mode === 'signup' && (
                     <>
-                      {/* 조직 선택 */}
-                      <div style={{ marginBottom: 14 }}>
-                        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#353A44', marginBottom: 6 }}>가입할 조직 *</label>
-                        <select value={tenantId} onChange={e => setTenantId(e.target.value)} style={{ ...inputSt, padding: '0 14px', appearance: 'none' }}>
+                      <div style={{ marginBottom:10 }}>
+                        <label style={{ display:'block', fontSize:11.5, fontWeight:600, color:'#353A44', marginBottom:5 }}>가입할 조직 *</label>
+                        <select value={tenantId} onChange={e => setTenantId(e.target.value)} style={{ ...inputSt, padding:'0 14px', appearance:'none' as const }}>
                           <option value="">조직을 선택하세요</option>
                           {tenants.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                         </select>
                       </div>
-                      {/* 활동 유형 */}
                       {tenantId && (
-                        <div style={{ marginBottom: 14 }}>
-                          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#353A44', marginBottom: 6 }}>활동 유형 *</label>
-                          {tenantRoles === null ? <p style={{ fontSize: 12, color: '#8A8F99' }}>로딩 중...</p>
+                        <div style={{ marginBottom:10 }}>
+                          <label style={{ display:'block', fontSize:11.5, fontWeight:600, color:'#353A44', marginBottom:5 }}>활동 유형 *</label>
+                          {tenantRoles === null
+                            ? <p style={{ fontSize:12, color:'#8A8F99', margin:0 }}>로딩 중...</p>
                             : hasCustomRoles ? (
-                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
+                              <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:6 }}>
                                 {tenantRoles.map(tr => (
                                   <button key={tr.id} type="button" onClick={() => { setTenantRoleId(tr.id); setRole(null) }}
-                                    style={{ padding: '10px 12px', borderRadius: 12, fontSize: 13, fontWeight: 600, border: `2px solid ${tenantRoleId===tr.id ? P.accent : 'rgba(20,23,28,0.14)'}`, background: tenantRoleId===tr.id ? 'oklch(0.95 0.04 28)' : '#fff', color: tenantRoleId===tr.id ? 'oklch(0.38 0.13 28)' : '#6B7280', cursor: 'pointer', font: 'inherit', transition: 'all .15s' }}>{tr.name}</button>
+                                    style={{ padding:'8px 10px', borderRadius:10, fontSize:12.5, fontWeight:600, border:`2px solid ${tenantRoleId===tr.id?accent:'rgba(20,23,28,0.12)'}`, background:tenantRoleId===tr.id?accentSoft:'#fff', color:tenantRoleId===tr.id?accentInk:'#6B7280', cursor:'pointer', font:'inherit', transition:'all .15s' }}>{tr.name}</button>
                                 ))}
                               </div>
                             ) : (
-                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
-                                {[...DEFAULT_ROLES, { value: 'admin' as const, label: '관리자' }].map(opt => (
+                              <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:6 }}>
+                                {[...DEFAULT_ROLES, { value:'admin' as const, label:'관리자' }].map(opt => (
                                   <button key={opt.value} type="button" onClick={() => { setRole(opt.value); setTenantRoleId(null) }}
-                                    style={{ padding: '10px 12px', borderRadius: 12, fontSize: 13, fontWeight: 600, border: `2px solid ${role===opt.value ? P.accent : 'rgba(20,23,28,0.14)'}`, background: role===opt.value ? 'oklch(0.95 0.04 28)' : '#fff', color: role===opt.value ? 'oklch(0.38 0.13 28)' : '#6B7280', cursor: 'pointer', font: 'inherit', transition: 'all .15s' }}>{opt.label}</button>
+                                    style={{ padding:'8px 10px', borderRadius:10, fontSize:12.5, fontWeight:600, border:`2px solid ${role===opt.value?accent:'rgba(20,23,28,0.12)'}`, background:role===opt.value?accentSoft:'#fff', color:role===opt.value?accentInk:'#6B7280', cursor:'pointer', font:'inherit', transition:'all .15s' }}>{opt.label}</button>
                                 ))}
                               </div>
                             )}
                         </div>
                       )}
-                      {/* 이름 */}
-                      <div style={{ marginBottom: 14 }}>
-                        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#353A44', marginBottom: 6 }}>이름</label>
-                        <div style={{ position: 'relative' }}>
-                          <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#8A8F99', display: 'flex' }}>
-                            <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="10" cy="7" r="3"/><path d="M3 18c0-3.3 3.1-6 7-6s7 2.7 7 6"/></svg>
+                      <div style={{ marginBottom:10 }}>
+                        <label style={{ display:'block', fontSize:11.5, fontWeight:600, color:'#353A44', marginBottom:5 }}>이름</label>
+                        <div style={{ position:'relative' }}>
+                          <span style={{ position:'absolute', left:13, top:'50%', transform:'translateY(-50%)', color:'#8A8F99', display:'flex', pointerEvents:'none' }}>
+                            <svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="10" cy="7" r="3"/><path d="M3 18c0-3.3 3.1-6 7-6s7 2.7 7 6"/></svg>
                           </span>
                           <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="홍길동" style={inputSt} />
                         </div>
@@ -453,67 +430,71 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
                     </>
                   )}
 
-                  {/* 이메일 */}
-                  <div style={{ marginBottom: 14 }}>
-                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#353A44', marginBottom: 6 }}>이메일</label>
-                    <div style={{ position: 'relative' }}>
-                      <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#8A8F99', display: 'flex' }}>
-                        <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2.5" y="4.5" width="15" height="11" rx="2"/><path d="m3 6 7 5 7-5"/></svg>
+                  <div style={{ marginBottom:10 }}>
+                    <label style={{ display:'block', fontSize:11.5, fontWeight:600, color:'#353A44', marginBottom:5 }}>이메일</label>
+                    <div style={{ position:'relative' }}>
+                      <span style={{ position:'absolute', left:13, top:'50%', transform:'translateY(-50%)', color:'#8A8F99', display:'flex', pointerEvents:'none' }}>
+                        <svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2.5" y="4.5" width="15" height="11" rx="2"/><path d="m3 6 7 5 7-5"/></svg>
                       </span>
                       <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" required style={inputSt} />
                     </div>
                   </div>
 
-                  {/* 비밀번호 */}
-                  <div style={{ marginBottom: 14 }}>
-                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#353A44', marginBottom: 6 }}>비밀번호</label>
-                    <div style={{ position: 'relative' }}>
-                      <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#8A8F99', display: 'flex' }}>
-                        <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="9" width="12" height="8" rx="1.5"/><path d="M7 9V6.5a3 3 0 0 1 6 0V9"/></svg>
+                  <div style={{ marginBottom:10 }}>
+                    <label style={{ display:'block', fontSize:11.5, fontWeight:600, color:'#353A44', marginBottom:5 }}>비밀번호</label>
+                    <div style={{ position:'relative' }}>
+                      <span style={{ position:'absolute', left:13, top:'50%', transform:'translateY(-50%)', color:'#8A8F99', display:'flex', pointerEvents:'none' }}>
+                        <svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="9" width="12" height="8" rx="1.5"/><path d="M7 9V6.5a3 3 0 0 1 6 0V9"/></svg>
                       </span>
-                      <input type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="비밀번호" autoComplete={mode==='login' ? 'current-password' : 'new-password'} required style={inputSt} />
-                      <button type="button" onClick={() => setShowPw(p => !p)} style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', width: 36, height: 36, border: 0, background: 'transparent', borderRadius: 8, color: '#8A8F99', display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
-                        <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 10s3-5 8-5 8 5 8 5-3 5-8 5-8-5-8-5Z"/><circle cx="10" cy="10" r="2"/></svg>
+                      <input type={showPw?'text':'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="비밀번호" autoComplete={mode==='login'?'current-password':'new-password'} required style={inputSt} />
+                      <button type="button" onClick={() => setShowPw(p => !p)} style={{ position:'absolute', right:6, top:'50%', transform:'translateY(-50%)', width:32, height:32, border:0, background:'transparent', borderRadius:6, color:'#8A8F99', display:'grid', placeItems:'center', cursor:'pointer' }}>
+                        <svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 10s3-5 8-5 8 5 8 5-3 5-8 5-8-5-8-5Z"/><circle cx="10" cy="10" r="2"/></svg>
                       </button>
                     </div>
                   </div>
 
                   {mode === 'signup' && (
-                    <div style={{ marginBottom: 14 }}>
-                      <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#353A44', marginBottom: 6 }}>비밀번호 확인</label>
-                      <div style={{ position: 'relative' }}>
-                        <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#8A8F99', display: 'flex' }}>
-                          <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="9" width="12" height="8" rx="1.5"/><path d="M7 9V6.5a3 3 0 0 1 6 0V9"/></svg>
+                    <div style={{ marginBottom:10 }}>
+                      <label style={{ display:'block', fontSize:11.5, fontWeight:600, color:'#353A44', marginBottom:5 }}>비밀번호 확인</label>
+                      <div style={{ position:'relative' }}>
+                        <span style={{ position:'absolute', left:13, top:'50%', transform:'translateY(-50%)', color:'#8A8F99', display:'flex', pointerEvents:'none' }}>
+                          <svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="9" width="12" height="8" rx="1.5"/><path d="M7 9V6.5a3 3 0 0 1 6 0V9"/></svg>
                         </span>
-                        <input type={showPw ? 'text' : 'password'} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="비밀번호 확인" required style={inputSt} />
+                        <input type={showPw?'text':'password'} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="비밀번호 확인" required style={inputSt} />
                       </div>
                     </div>
                   )}
 
                   {mode === 'login' && (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '4px 0 16px', fontSize: 13 }}>
-                      <span style={{ color: '#353A44' }}>로그인 유지</span>
-                      <button type="button" style={{ color: '#6B7280', background: 'none', border: 'none', cursor: 'pointer', font: 'inherit', fontSize: 13, fontWeight: 500 }}>비밀번호를 잊으셨나요?</button>
+                    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', margin:'6px 0 14px', fontSize:12 }}>
+                      <span style={{ color:'#353A44' }}>로그인 유지</span>
+                      <button type="button" style={{ color:'#6B7280', background:'none', border:'none', cursor:'pointer', font:'inherit', fontSize:12, fontWeight:500 }}>비밀번호를 잊으셨나요?</button>
                     </div>
                   )}
 
                   {error && (
-                    <div style={{ margin: '10px 0', padding: '10px 14px', borderRadius: 10, background: 'oklch(0.97 0.02 25)', border: '1px solid oklch(0.88 0.06 25)', color: 'oklch(0.45 0.15 25)', fontSize: 13 }}>{error}</div>
+                    <div style={{ margin:'8px 0', padding:'10px 14px', borderRadius:10, background:'oklch(0.97 0.02 25)', border:'1px solid oklch(0.88 0.06 25)', color:'oklch(0.45 0.15 25)', fontSize:13 }}>{error}</div>
                   )}
 
-                  <button type="submit" disabled={loading} style={{ marginTop: mode==='signup' ? 14 : 0, width: '100%', height: 52, background: '#14171C', color: '#fff', border: 0, borderRadius: 14, fontSize: 15, fontWeight: 600, letterSpacing: -0.2, cursor: loading ? 'not-allowed' : 'pointer', font: 'inherit', opacity: loading ? 0.6 : 1, boxShadow: '0 1px 0 rgba(20,23,28,0.06),0 8px 22px -8px rgba(20,23,28,0.30)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'transform .12s' }}>
+                  <button type="submit" disabled={loading} style={{ marginTop:mode==='signup'?12:0, width:'100%', height:46, background:'#14171C', color:'#fff', border:0, borderRadius:12, fontSize:14, fontWeight:600, letterSpacing:-0.2, cursor:loading?'not-allowed':'pointer', font:'inherit', opacity:loading?0.6:1, boxShadow:'0 1px 0 rgba(20,23,28,0.06),0 8px 20px -8px rgba(20,23,28,0.30)', display:'flex', alignItems:'center', justifyContent:'center', gap:8, transition:'transform .12s' }}>
                     {loading ? '처리 중...' : mode==='login' ? '로그인' : '가입하기'}
-                    {!loading && <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 10h12M11 5l5 5-5 5"/></svg>}
+                    {!loading && <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 10h12M11 5l5 5-5 5"/></svg>}
                   </button>
                 </form>
               </>
             )}
           </div>
+        </main>
 
-          <div style={{ position: 'relative', zIndex: 1, marginTop: 'auto', paddingTop: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11.5, color: '#8A8F99' }}>
-            <span style={{ fontFamily: '"JetBrains Mono", monospace', whiteSpace: 'nowrap' }}>스케줄러 v1.0</span>
-          </div>
-        </section>
+        {/* Row 4 — footer */}
+        <footer className="lmp-footer">
+          <span>© {yearNum} 스케줄러</span>
+          <span className="lmp-foot-dot lmp-hide-sm" />
+          <span className="lmp-hide-sm" style={{ color:'#6B7280', cursor:'pointer' }}>서비스 약관</span>
+          <span className="lmp-foot-dot lmp-hide-sm" />
+          <span className="lmp-hide-sm" style={{ color:'#6B7280', cursor:'pointer' }}>개인정보</span>
+          <span style={{ marginLeft:'auto', fontFamily:'"JetBrains Mono",monospace' }}>v1.0</span>
+        </footer>
       </div>
     </div>
   )
