@@ -5,14 +5,12 @@ import { useTenant } from '../contexts/TenantContext'
 import { useAuth } from '../hooks/useAuth'
 import type { Tenant } from '../types'
 
-const TILE_GRADIENTS = [
-  'linear-gradient(135deg, oklch(0.72 0.14 28), oklch(0.58 0.16 18))',
-  'linear-gradient(135deg, oklch(0.70 0.13 265), oklch(0.50 0.16 260))',
-  'linear-gradient(135deg, oklch(0.72 0.11 160), oklch(0.52 0.10 175))',
-  'linear-gradient(135deg, oklch(0.78 0.13 75), oklch(0.62 0.13 50))',
+const TILE_COLORS = [
+  'oklch(0.62 0.16 28)',
+  'oklch(0.54 0.16 260)',
+  'oklch(0.56 0.11 160)',
+  'oklch(0.64 0.14 75)',
 ]
-
-const GRAIN_URL = `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.06 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>")`
 
 function getGreeting() {
   const h = new Date().getHours()
@@ -43,12 +41,11 @@ interface OrgCardProps {
   name: string
   role: string
   colorIdx: number
-  featured?: boolean
   chipLabel?: string
   onClick: () => void
 }
 
-function OrgCard({ name, role, colorIdx, featured, chipLabel, onClick }: OrgCardProps) {
+function OrgCard({ name, role, colorIdx, chipLabel, onClick }: OrgCardProps) {
   const [hovered, setHovered] = useState(false)
   const initial = name.charAt(0)
 
@@ -62,9 +59,7 @@ function OrgCard({ name, role, colorIdx, featured, chipLabel, onClick }: OrgCard
         width: '100%',
         textAlign: 'left',
         padding: '16px',
-        background: featured
-          ? 'linear-gradient(180deg, #fff 0%, #fff 60%, oklch(0.97 0.02 28) 100%)'
-          : '#fff',
+        background: '#fff',
         border: `1px solid ${hovered ? 'rgba(20,23,28,0.18)' : 'rgba(20,23,28,0.09)'}`,
         borderRadius: 20,
         display: 'flex',
@@ -80,32 +75,15 @@ function OrgCard({ name, role, colorIdx, featured, chipLabel, onClick }: OrgCard
         transition: 'transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease',
       }}
     >
-      {/* Featured gradient border */}
-      {featured && (
-        <div style={{
-          position: 'absolute', inset: 0,
-          borderRadius: 20,
-          padding: 1,
-          background: 'linear-gradient(180deg, oklch(0.85 0.10 28 / 0.6), transparent)',
-          WebkitMask: 'linear-gradient(#000,#000) content-box, linear-gradient(#000,#000)',
-          WebkitMaskComposite: 'xor',
-          pointerEvents: 'none',
-        }} />
-      )}
-
       {/* Avatar tile */}
       <div style={{
         width: 56, height: 56, borderRadius: 14, flexShrink: 0,
-        background: TILE_GRADIENTS[colorIdx % TILE_GRADIENTS.length],
+        background: TILE_COLORS[colorIdx % TILE_COLORS.length],
         display: 'grid', placeItems: 'center',
         fontSize: 22, fontWeight: 700, color: '#fff',
-        letterSpacing: -0.6, position: 'relative', overflow: 'hidden',
+        letterSpacing: -0.6,
       }}>
         {initial}
-        <div style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none',
-          background: 'radial-gradient(circle at 20% 0%, rgba(255,255,255,0.35), transparent 50%)',
-        }} />
       </div>
 
       {/* Body */}
@@ -178,24 +156,11 @@ export function TenantSelectPage() {
       fontFamily: '"Pretendard Variable", Pretendard, system-ui, sans-serif',
       WebkitFontSmoothing: 'antialiased',
     }}>
-      {/* Blobs */}
-      <div style={{ position: 'absolute', width: 480, height: 480, borderRadius: '50%', filter: 'blur(80px)', opacity: 0.55, background: 'oklch(0.88 0.10 28)', top: -120, left: -80, zIndex: 0, pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', width: 420, height: 420, borderRadius: '50%', filter: 'blur(80px)', opacity: 0.55, background: 'oklch(0.90 0.06 80)', top: '30%', right: -120, zIndex: 0, pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', width: 360, height: 360, borderRadius: '50%', filter: 'blur(80px)', opacity: 0.55, background: 'oklch(0.92 0.05 160)', bottom: -120, left: '30%', zIndex: 0, pointerEvents: 'none' }} />
-
       {/* Dot grid */}
       <div style={{
         position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
         backgroundImage: 'radial-gradient(circle, rgba(20,23,28,0.07) 1px, transparent 1px)',
         backgroundSize: '28px 28px',
-        maskImage: 'radial-gradient(ellipse at 50% 30%, black 0%, transparent 70%)',
-      }} />
-
-      {/* Grain */}
-      <div style={{
-        position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
-        opacity: 0.5, mixBlendMode: 'multiply',
-        backgroundImage: GRAIN_URL,
       }} />
 
       {/* Top bar */}
@@ -272,7 +237,7 @@ export function TenantSelectPage() {
         }}>
           <span style={{
             width: 22, height: 22, borderRadius: '50%',
-            background: 'linear-gradient(135deg, oklch(0.88 0.08 70), oklch(0.78 0.12 35))',
+            background: 'oklch(0.90 0.06 70)',
             display: 'grid', placeItems: 'center', fontSize: 12,
           }}>👋</span>
           <span><strong style={{ fontWeight: 600, color: '#14171C' }}>{displayName}</strong>님, {greeting}</span>
@@ -317,7 +282,6 @@ export function TenantSelectPage() {
                 name={item.name}
                 role={item.role}
                 colorIdx={idx}
-                featured={idx === 0}
                 chipLabel={item.role}
                 onClick={item.onClick}
               />
