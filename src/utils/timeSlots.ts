@@ -73,3 +73,22 @@ export const SLOT_TEMPLATES: { label: string; intervalMinutes: number; slots: st
 ];
 
 export const DEFAULT_TIME_SLOTS: TimeSlot[] = generateTimeSlots('10:00', '22:00', 120);
+
+export function formatTimeSub(ts: string | null): string {
+  if (!ts) return ''
+  if (ts.includes('~')) {
+    const [s, e] = ts.split('~').map(Number)
+    return `${s}~${e + 1}시`
+  }
+  return `${ts}시`
+}
+
+export function getTimeSubOptions(slot: string): { value: string; label: string }[] | null {
+  const [start, end] = slot.split('-').map(Number)
+  if (end - start !== 2) return null
+  return [
+    { value: `${start}`, label: `${start}시` },
+    { value: `${start + 1}`, label: `${start + 1}시` },
+    { value: `${start}~${start + 1}`, label: `${start}~${end}시` },
+  ]
+}
