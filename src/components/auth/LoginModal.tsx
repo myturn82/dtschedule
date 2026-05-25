@@ -367,7 +367,7 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
         .lmp-chip.plus  { background:oklch(0.93 0.05 20);  color:oklch(0.42 0.12 20); }
         .lmp-chip.moon  { background:oklch(0.93 0.05 290); color:oklch(0.40 0.11 290); }
         .lmp-chip.break { background:oklch(0.93 0.05 230); color:oklch(0.42 0.10 240); }
-        @media (max-width:540px) { .lmp-assign-grid { display:none; } }
+        @media (max-width:540px) { .lmp-assign-grid { opacity:0.55; } }
         /* form element classes — enables media query overrides on inline-styled nodes */
         .lmp-form-title { font-size:26px; line-height:1.18; letter-spacing:-0.8px; font-weight:700; margin:0 0 18px; color:#14171C; }
         .lmp-tabs-bar { display:inline-flex; background:rgba(20,23,28,0.06); padding:3px; border-radius:10px; margin-bottom:18px; position:relative; }

@@ -499,7 +499,7 @@ export function SuperAdminPage() {
           {tenants.map(t => (
             <li key={t.id} className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden">
               {/* Tenant row */}
-              <div className="px-4 py-3 flex items-center justify-between gap-2">
+              <div className="px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0 flex-1">
                   {editingNameId === t.id ? (
                     <div className="flex items-center gap-2">
@@ -534,35 +534,35 @@ export function SuperAdminPage() {
                     </p>
                   ) : null}
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-xs text-[var(--color-text-secondary)]">{t.business_type ?? '–'}</span>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {t.business_type && <span className="text-xs text-[var(--color-text-secondary)] hidden sm:inline">{t.business_type}</span>}
                   <button
                     disabled={modeSaving}
                     onClick={() => saveMode(t, t.settings?.tenant_mode === '직접입력' ? '회원선택' : '직접입력')}
-                    className={`px-3 py-1 text-xs font-medium rounded-lg border transition-colors ${
+                    className={`px-2.5 py-1 text-xs font-medium rounded-lg border transition-colors ${
                       t.settings?.tenant_mode === '직접입력'
                         ? 'border-orange-400 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20'
                         : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
                     }`}
                   >
-                    {t.settings?.tenant_mode === '직접입력' ? '직접입력모드' : '회원선택모드'}
+                    {t.settings?.tenant_mode === '직접입력' ? '직접입력' : '회원선택'}
                   </button>
                   <button
                     onClick={() => editingId === t.id ? setEditingId(null) : startEdit(t)}
-                    className="px-3 py-1 text-xs font-medium border border-[var(--color-border)] text-[var(--color-text-secondary)] rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors"
+                    className="px-2.5 py-1 text-xs font-medium border border-[var(--color-border)] text-[var(--color-text-secondary)] rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors"
                   >
-                    {editingId === t.id ? '닫기' : '슬롯 수정'}
+                    {editingId === t.id ? '닫기' : '슬롯'}
                   </button>
                   <button
                     onClick={() => navigate(`/admin?org=${t.id}`)}
-                    className="px-3 py-1 text-xs font-medium bg-[var(--color-brand-primary)] text-white rounded-lg hover:bg-[var(--color-brand-primary-hover)] transition-colors"
+                    className="px-2.5 py-1 text-xs font-medium bg-[var(--color-brand-primary)] text-white rounded-lg hover:bg-[var(--color-brand-primary-hover)] transition-colors"
                   >
                     관리
                   </button>
                   <button
                     disabled={deletingSaving}
                     onClick={() => deleteTenant(t)}
-                    className="px-3 py-1 text-xs font-medium border border-red-200 text-red-500 rounded-lg hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/20 transition-colors disabled:opacity-40"
+                    className="px-2.5 py-1 text-xs font-medium border border-red-200 text-red-500 rounded-lg hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/20 transition-colors disabled:opacity-40"
                   >
                     삭제
                   </button>
