@@ -10,7 +10,7 @@ import { SuperAdminPage } from './pages/SuperAdminPage'
 import { useDarkMode } from './hooks/useDarkMode'
 
 function AppRoutes() {
-  const { isDark, toggle } = useDarkMode()
+  useDarkMode()
   const { profile, loading: authLoading } = useAuth()
   const { tenant, memberships, loading: tenantLoading, tenantSelectedByUser } = useTenant()
 
@@ -59,7 +59,7 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/" element={<SchedulePage isDark={isDark} onToggleDark={toggle} />} />
+      <Route path="/" element={<SchedulePage />} />
       <Route path="/share" element={<SharePage />} />
       <Route path="/admin" element={<AdminPage />} />
       <Route path="/select-org" element={<TenantSelectPage />} />
