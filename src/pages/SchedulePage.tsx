@@ -26,12 +26,7 @@ import { computeAutoAssignments } from '../utils/autoAssign'
 import type { ProposedAssignment } from '../utils/autoAssign'
 import type { ModalTarget, ViewType } from '../types'
 
-interface Props {
-  isDark: boolean
-  onToggleDark: () => void
-}
-
-export function SchedulePage({ isDark, onToggleDark }: Props) {
+export function SchedulePage() {
   const today = new Date()
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth() + 1)
@@ -235,14 +230,6 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
 
           {/* Desktop button bar */}
           <div className="hidden sm:flex items-center gap-1.5 flex-wrap">
-            <button
-              onClick={onToggleDark}
-              aria-label="다크모드 토글"
-              className="w-8 h-8 flex items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-all duration-200 hover:scale-[1.05] active:scale-[0.95]"
-            >
-              <span className="text-sm leading-none">{isDark ? '☀️' : '🌙'}</span>
-            </button>
-
             <ExportButton year={year} month={month} />
 
             {profile ? (
@@ -325,15 +312,8 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
             )}
           </div>
 
-          {/* Mobile: dark toggle + login/hamburger */}
+          {/* Mobile: login/hamburger */}
           <div className="flex sm:hidden items-center gap-1.5">
-            <button
-              onClick={onToggleDark}
-              aria-label="다크모드 토글"
-              className="w-8 h-8 flex items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-all"
-            >
-              <span className="text-sm leading-none">{isDark ? '☀️' : '🌙'}</span>
-            </button>
             {profile ? (
               <button
                 onClick={() => setShowMenu(v => !v)}
