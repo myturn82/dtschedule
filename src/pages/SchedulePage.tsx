@@ -429,8 +429,8 @@ export function SchedulePage({ isDark, onToggleDark }: Props) {
           profile={profile}
           tenantRole={tenantRole}
           memberRoleId={memberRoleId}
-          splitRoles={assignableRoles}
-          isSplitMode={isAssignableMode}
+          splitRoles={splitRoles}
+          isSplitMode={isSplitMode}
           tenantMode={tenantMode}
           customFields={customFields}
           slotLabels={slotLabels}
