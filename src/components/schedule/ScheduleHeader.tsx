@@ -36,13 +36,6 @@ export function ScheduleHeader({ year, month, title, filledCount, openCount, ope
     <div className="flex items-end justify-between gap-4 flex-wrap">
       {/* Left: title + stats */}
       <div className="min-w-0">
-        <div className="flex items-center gap-2 mb-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-primary)] shrink-0" />
-          <span className="text-[11px] font-medium text-[var(--color-text-muted)] tracking-widest uppercase">
-            {title || '스케줄'}
-          </span>
-        </div>
-
         {/* Title based on viewType */}
         {viewType === 'month' && (
           <h1 className="flex items-baseline gap-3 m-0 leading-none">
