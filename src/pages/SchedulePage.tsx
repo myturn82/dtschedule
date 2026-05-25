@@ -75,8 +75,6 @@ export function SchedulePage() {
   const indicatorBarRoles = tenantRoles.filter(r => r.indicator_bar)
   const isSplitMode = splitRoles.length > 0
   // 역할 배정 모달용: split_cell 또는 indicator_bar가 true인 역할 모두 포함
-  const assignableRoles = tenantRoles.filter(r => r.split_cell || r.indicator_bar)
-  const isAssignableMode = assignableRoles.length > 0
   const memberTenantRoleName = tenantRoles.find(r => r.id === memberRoleId)?.name ?? null
 
   const filledCount = useMemo(

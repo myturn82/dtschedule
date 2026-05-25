@@ -29,7 +29,7 @@ function weekRangeLabel(weekDays: Date[]): string {
   return `${sm}월 ${start.getDate()}일 ~ ${em}월 ${end.getDate()}일`
 }
 
-export function ScheduleHeader({ year, month, title, filledCount, openCount, operatingDays, onPrev, onNext, viewType = 'month', onViewTypeChange, day, weekDays }: Props) {
+export function ScheduleHeader({ year, month, filledCount, openCount, operatingDays, onPrev, onNext, viewType = 'month', onViewTypeChange, day, weekDays }: Props) {
   const VIEW_LABELS: Record<ViewType, string> = { month: '월', week: '주', day: '일' }
 
   return (
