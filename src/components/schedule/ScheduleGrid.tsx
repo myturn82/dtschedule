@@ -171,12 +171,15 @@ export function ScheduleGrid({
   const isIndicatorBarMember = !isAdmin && indicatorBarRoles.some(r => r.id === memberRoleId)
   const weeks = getCalendarWeeks(year, month)
   const splitCount = splitRoles.length
+  // vol+plus 2-column split: only when indicator_bar roles exist (team leader bar shown in vol column)
+  const showVolPlusSplit = indicatorBarRoles.length > 0
 
   const thBase = 'border border-[var(--color-border-table)] px-0.5 sm:px-2 py-1 text-[9px] sm:text-xs font-semibold text-center'
   const thTime = `${thBase} bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] sticky left-0 z-10 w-10 sm:w-20 whitespace-nowrap`
 
   function getDayColSpan(dow: number): number {
     if (isSplitMode) return splitCount
+    if (!showVolPlusSplit) return 1
     return dow === 6 ? 1 : 2
   }
 
@@ -290,7 +293,7 @@ export function ScheduleGrid({
                         return (
                           <Fragment key={dowIdx}>
                             <td className="border border-[var(--color-border-table)] bg-[var(--color-surface-secondary)]" />
-                            {!isSat && <td className="border border-[var(--color-border-table)] bg-[var(--color-surface-secondary)]" />}
+                            {showVolPlusSplit && !isSat && <td className="border border-[var(--color-border-table)] bg-[var(--color-surface-secondary)]" />}
                           </Fragment>
                         )
                       }
@@ -307,7 +310,7 @@ export function ScheduleGrid({
                         return (
                           <td
                             key={dowIdx}
-                            colSpan={isSplitMode ? splitCount : (isSat ? 1 : 2)}
+                            colSpan={isSplitMode ? splitCount : (showVolPlusSplit && !isSat ? 2 : 1)}
                             rowSpan={blockMerge.rowspan}
                             className="border border-[var(--color-border-table)] p-0 bg-schedule-close text-center"
                             style={{ height: '1px' }}
@@ -417,7 +420,7 @@ export function ScheduleGrid({
                         return (
                           <td
                             key={dowIdx}
-                            colSpan={isSat ? 1 : 2}
+                            colSpan={showVolPlusSplit && !isSat ? 2 : 1}
                             className="border border-[var(--color-border-table)] p-0 bg-schedule-close text-center"
                           >
                             <div className="flex items-center justify-center min-h-[1.25rem] sm:min-h-[1.75rem]">
@@ -450,7 +453,7 @@ export function ScheduleGrid({
                               />
                             </td>
                           )}
-                          {!isSat && !plusMerge.skip && (
+                          {showVolPlusSplit && !isSat && !plusMerge.skip && (
                             <td
                               rowSpan={plusMerge.rowspan > 1 ? plusMerge.rowspan : undefined}
                               className="border border-[var(--color-border-table)] p-0"

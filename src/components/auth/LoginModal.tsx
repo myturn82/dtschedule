@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
 
 interface Props {
@@ -53,6 +53,7 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
   const tabLoginRef = useRef<HTMLButtonElement>(null)
   const tabSignupRef = useRef<HTMLButtonElement>(null)
   const [pillStyle, setPillStyle] = useState({ width: 0, left: 0 })
+  const assignGridRef = useRef<HTMLDivElement>(null)
 
   const now = new Date()
   const weekNum = getWeekNumber(now)
@@ -88,6 +89,74 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
     window.addEventListener('resize', fn)
     return () => window.removeEventListener('resize', fn)
   }, [mode])
+
+  const runAssignAnimation = useCallback(() => {
+    const grid = assignGridRef.current
+    if (!grid) return () => {}
+
+    const SHIFTS = [
+      { col:0,row:0, span:2,name:'서용혁',cls:'sun' },{ col:0,row:2, span:3,name:'민지우',cls:'plus' },
+      { col:0,row:5, span:1,name:'·',     cls:'break'},{ col:0,row:6, span:2,name:'이은서',cls:'sat' },
+      { col:0,row:8, span:3,name:'박지훈',cls:'moon' },{ col:1,row:0, span:3,name:'정민석',cls:'plus' },
+      { col:1,row:3, span:2,name:'김지움',cls:'sun' }, { col:1,row:5, span:1,name:'·',     cls:'break'},
+      { col:1,row:6, span:3,name:'한소윤',cls:'sat' }, { col:1,row:9, span:2,name:'조서윤',cls:'moon' },
+      { col:2,row:0, span:2,name:'이하랜',cls:'sat' }, { col:2,row:2, span:2,name:'박지훈',cls:'moon' },
+      { col:2,row:4, span:1,name:'서용혁',cls:'sun' }, { col:2,row:5, span:1,name:'·',     cls:'break'},
+      { col:2,row:6, span:2,name:'민지우',cls:'plus' },{ col:2,row:8, span:3,name:'이은서',cls:'sat' },
+      { col:3,row:0, span:3,name:'박지훈',cls:'moon' },{ col:3,row:3, span:2,name:'조서윤',cls:'sun' },
+      { col:3,row:5, span:1,name:'·',     cls:'break'},{ col:3,row:6, span:3,name:'정민석',cls:'plus' },
+      { col:3,row:9, span:2,name:'김지움',cls:'sat' }, { col:4,row:0, span:2,name:'한소윤',cls:'sat' },
+      { col:4,row:2, span:3,name:'민지우',cls:'plus' },{ col:4,row:5, span:1,name:'·',     cls:'break'},
+      { col:4,row:6, span:2,name:'서용혁',cls:'sun' }, { col:4,row:8, span:3,name:'박지훈',cls:'moon' },
+      { col:5,row:1, span:2,name:'이하랜',cls:'sat' }, { col:5,row:4, span:2,name:'조서윤',cls:'sun' },
+      { col:5,row:7, span:2,name:'김지움',cls:'plus' },{ col:6,row:2, span:3,name:'한소윤',cls:'moon' },
+      { col:6,row:6, span:2,name:'이은서',cls:'sat' },
+    ]
+
+    const nodes = SHIFTS.map(s => {
+      const el = document.createElement('div')
+      el.className = `lmp-chip ${s.cls}`
+      el.style.gridColumn = `${s.col + 1} / span 1`
+      el.style.gridRow = `${s.row + 1} / span ${s.span}`
+      el.textContent = s.name
+      grid.appendChild(el)
+      return el
+    })
+
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (prefersReduced) { nodes.forEach(n => n.classList.add('visible')); return () => nodes.forEach(n => n.remove()) }
+
+    let timers: ReturnType<typeof setTimeout>[] = []
+    const clearAll = () => { timers.forEach(clearTimeout); timers = [] }
+    const shuffle = <T,>(arr: T[]) => { const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}; return a }
+
+    function runCycle() {
+      nodes.forEach(n => n.classList.remove('visible','just-placed','fading'))
+      const order = shuffle(nodes.map((_,i)=>i))
+      let prev: HTMLElement|null = null
+      order.forEach((idx,i) => {
+        timers.push(setTimeout(()=>{
+          const n=nodes[idx]
+          if(prev) prev.classList.remove('just-placed')
+          n.classList.add('visible','just-placed')
+          prev=n
+          timers.push(setTimeout(()=>n.classList.remove('just-placed'),260))
+        },i*95))
+      })
+      const done = order.length*95+400
+      timers.push(setTimeout(()=>{
+        nodes.forEach((n,i)=>{ const s=SHIFTS[i]; timers.push(setTimeout(()=>n.classList.add('fading'),s.col*110+s.row*18)) })
+      },done+1800))
+      timers.push(setTimeout(runCycle,done+1800+1500))
+    }
+
+    timers.push(setTimeout(runCycle,400))
+    const onVis = () => { if(document.hidden){clearAll()}else{clearAll();timers.push(setTimeout(runCycle,200))} }
+    document.addEventListener('visibilitychange',onVis)
+    return () => { clearAll(); document.removeEventListener('visibilitychange',onVis); nodes.forEach(n=>n.remove()) }
+  }, [])
+
+  useEffect(() => { return runAssignAnimation() }, [runAssignAnimation])
 
   function switchMode(m: Mode) { setMode(m); setError(null); setSuccess(null) }
 
@@ -267,7 +336,64 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
         @media (max-height: 620px) and (min-width: 541px) {
           .lmp-stage { padding:10px 20px; }
           .lmp-card { padding:16px 22px 14px; }
-          .lmp-card h2 { font-size:21px !important; margin-bottom:12px !important; }
+          .lmp-form-title { font-size:21px; margin-bottom:12px; }
+        }
+        /* assign animation grid */
+        .lmp-assign-grid {
+          position:absolute;
+          top:calc(var(--bh,52px) + var(--dh,32px) + 4px);
+          left:calc(var(--tw,48px) + 4px);
+          right:4px; bottom:40px;
+          z-index:1; pointer-events:none;
+          display:grid;
+          grid-template-columns:repeat(7,1fr);
+          grid-template-rows:repeat(11,1fr);
+          gap:3px;
+        }
+        .lmp-chip {
+          border-radius:4px; font-size:10.5px; font-weight:600;
+          display:flex; align-items:center; justify-content:center;
+          letter-spacing:-0.2px; padding:1px 4px; min-width:0;
+          overflow:hidden; text-overflow:ellipsis; white-space:nowrap; line-height:1;
+          opacity:0; transform:scale(0.82) translateY(-4px);
+          transition:opacity .32s ease,transform .32s cubic-bezier(.34,1.56,.64,1),box-shadow .5s ease;
+          will-change:opacity,transform;
+        }
+        .lmp-chip.visible   { opacity:0.72; transform:scale(1) translateY(0); }
+        .lmp-chip.just-placed { opacity:1; box-shadow:0 0 0 1.5px oklch(0.66 0.16 28),0 4px 10px -3px oklch(0.66 0.16 28/0.35); }
+        .lmp-chip.fading    { opacity:0; transform:scale(0.94); transition:opacity .55s ease,transform .55s ease; }
+        .lmp-chip.sun   { background:oklch(0.93 0.06 70);  color:oklch(0.40 0.12 60); }
+        .lmp-chip.sat   { background:oklch(0.93 0.05 160); color:oklch(0.38 0.10 160); }
+        .lmp-chip.plus  { background:oklch(0.93 0.05 20);  color:oklch(0.42 0.12 20); }
+        .lmp-chip.moon  { background:oklch(0.93 0.05 290); color:oklch(0.40 0.11 290); }
+        .lmp-chip.break { background:oklch(0.93 0.05 230); color:oklch(0.42 0.10 240); }
+        @media (max-width:540px) { .lmp-assign-grid { display:none; } }
+        /* form element classes — enables media query overrides on inline-styled nodes */
+        .lmp-form-title { font-size:26px; line-height:1.18; letter-spacing:-0.8px; font-weight:700; margin:0 0 18px; color:#14171C; }
+        .lmp-tabs-bar { display:inline-flex; background:rgba(20,23,28,0.06); padding:3px; border-radius:10px; margin-bottom:18px; position:relative; }
+        .lmp-socials { display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
+        .lmp-social-btn { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; height:42px; font:inherit; font-size:13.5px; font-weight:600; letter-spacing:-0.2px; border-radius:10px; border:1px solid rgba(20,23,28,0.09); background:#fff; color:#14171C; cursor:pointer; white-space:nowrap; transition:background .12s,border-color .12s,transform .12s; }
+        .lmp-social-btn-kakao { background:#FEE500; color:#181600; border-color:transparent; }
+        .lmp-divider { display:flex; align-items:center; gap:10px; margin:4px 0 12px; color:#8A8F99; font-size:11.5px; font-weight:500; }
+        .lmp-field { margin-bottom:10px; }
+        .lmp-submit-btn { width:100%; height:46px; background:#14171C; color:#fff; border:0; border-radius:12px; font:inherit; font-size:14px; font-weight:600; letter-spacing:-0.2px; cursor:pointer; box-shadow:0 1px 0 rgba(20,23,28,0.06),0 8px 20px -8px rgba(20,23,28,0.30); display:flex; align-items:center; justify-content:center; gap:8px; transition:transform .12s; }
+        .lmp-submit-btn:disabled { opacity:0.6; cursor:not-allowed; }
+        @media (max-width:540px) {
+          .lmp-form-title { font-size:22px; margin-bottom:14px; }
+          .lmp-form-title br { display:none; }
+          .lmp-tabs-bar { margin-bottom:14px; }
+          .lmp-socials { gap:7px; margin-bottom:12px; }
+          .lmp-social-btn { height:40px; font-size:13px; }
+          .lmp-field { margin-bottom:9px; }
+          .lmp-submit-btn { height:44px; font-size:13.5px; }
+        }
+        @media (max-height:620px) and (min-width:541px) {
+          .lmp-form-title { font-size:22px; margin-bottom:14px; }
+          .lmp-socials { gap:7px; margin-bottom:10px; }
+          .lmp-social-btn { height:38px; font-size:13px; }
+          .lmp-divider { margin:2px 0 10px; }
+          .lmp-field { margin-bottom:8px; }
+          .lmp-submit-btn { height:42px; }
         }
       `}</style>
 
@@ -279,6 +405,7 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
           <span className="lbl">{monthName} {yearNum}</span>
         </div>
         <div className="lmp-bg-now" aria-hidden="true" />
+        <div className="lmp-assign-grid" ref={assignGridRef} aria-hidden="true" />
 
         {/* Row 1 — brand bar */}
         <header className="lmp-brand-bar">
@@ -355,12 +482,12 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
                 <div style={{ fontFamily:'"JetBrains Mono",monospace', fontSize:11, color:accent, fontWeight:700, marginBottom:6, letterSpacing:'1.2px', textTransform:'uppercase' as const }}>
                   {mode === 'login' ? 'WELCOME BACK' : 'JOIN US'}
                 </div>
-                <h2 style={{ fontSize:26, lineHeight:1.18, letterSpacing:-0.8, fontWeight:700, margin:'0 0 18px', color:'#14171C' }}>
+                <h2 className="lmp-form-title">
                   {mode === 'login' ? <>다시 만나서<br />반가워요 👋</> : <>새로 오셨나요?<br />반갑습니다 🙌</>}
                 </h2>
 
                 {/* tabs */}
-                <div style={{ display:'inline-flex', background:'rgba(20,23,28,0.06)', padding:3, borderRadius:10, marginBottom:18, position:'relative' }}>
+                <div className="lmp-tabs-bar">
                   <div style={{ position:'absolute', top:3, height:'calc(100% - 6px)', background:'#fff', borderRadius:8, boxShadow:'0 1px 0 rgba(20,23,28,0.04),0 2px 6px -2px rgba(20,23,28,0.10)', transition:'transform .25s cubic-bezier(.4,0,.2,1),width .25s cubic-bezier(.4,0,.2,1)', zIndex:0, width:pillStyle.width, transform:`translateX(${pillStyle.left}px)` }} />
                   {(['login','signup'] as Mode[]).map(t => (
                     <button key={t} ref={t==='login' ? tabLoginRef : tabSignupRef} onClick={() => switchMode(t)}
@@ -371,25 +498,25 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
                 </div>
 
                 {/* social */}
-                <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:14 }}>
-                  <button onClick={handleGoogle} disabled={loading} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, width:'100%', height:42, fontSize:13.5, fontWeight:600, borderRadius:10, border:'1px solid rgba(20,23,28,0.09)', background:'#fff', color:'#14171C', cursor:'pointer', font:'inherit', whiteSpace:'nowrap' }}>
+                <div className="lmp-socials">
+                  <button onClick={handleGoogle} disabled={loading} className="lmp-social-btn">
                     <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20.4H24v7.1h11.3c-1.5 4.1-5.4 7-11.3 7-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5-5C32.9 5.1 28.7 3.4 24 3.4 12.5 3.4 3.4 12.5 3.4 24S12.5 44.6 24 44.6c11 0 20-8 20-20 0-1.4-.1-2.7-.4-4.1z"/><path fill="#FF3D00" d="M5.3 13.6l5.8 4.3C12.8 14.1 18 11 24 11c3 0 5.8 1.1 7.9 3l5-5C32.9 5.1 28.7 3.4 24 3.4 16.4 3.4 9.8 7.6 5.3 13.6z"/><path fill="#4CAF50" d="M24 44.6c4.6 0 8.7-1.7 11.9-4.5l-5.5-4.6c-1.7 1.3-3.9 2.1-6.4 2.1-5.8 0-10.7-3.9-11.2-7H7v4.7C10.5 40.6 16.8 44.6 24 44.6z"/><path fill="#1976D2" d="M43.6 20.5H42V20.4H24v7.1h11.3c-.7 2-2 3.7-3.6 5l5.5 4.6c-.4.4 5.8-4.2 5.8-13.2 0-1.4-.1-2.7-.4-3.4z"/></svg>
                     Google로 계속하기
                   </button>
-                  <button onClick={handleKakao} disabled={loading} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, width:'100%', height:42, fontSize:13.5, fontWeight:600, borderRadius:10, border:'none', background:'#FEE500', color:'#181600', cursor:'pointer', font:'inherit', whiteSpace:'nowrap' }}>
+                  <button onClick={handleKakao} disabled={loading} className="lmp-social-btn lmp-social-btn-kakao">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.9 5.3 4.7 6.7-.2.7-.7 2.7-.8 3.1-.1.5.2.5.4.4.2-.1 2.6-1.7 3.6-2.4.7.1 1.4.2 2.1.2 5.5 0 10-3.6 10-8s-4.5-8-10-8Z"/></svg>
                     카카오로 계속하기
                   </button>
                 </div>
 
-                <div style={{ display:'flex', alignItems:'center', gap:10, margin:'4px 0 12px', color:'#8A8F99', fontSize:11.5, fontWeight:500 }}>
+                <div className="lmp-divider">
                   <div style={{ flex:1, height:1, background:'rgba(20,23,28,0.12)' }} />또는 이메일로 계속<div style={{ flex:1, height:1, background:'rgba(20,23,28,0.12)' }} />
                 </div>
 
                 <form onSubmit={handleSubmit}>
                   {mode === 'signup' && (
                     <>
-                      <div style={{ marginBottom:10 }}>
+                      <div className="lmp-field">
                         <label style={{ display:'block', fontSize:11.5, fontWeight:600, color:'#353A44', marginBottom:5 }}>가입할 조직 *</label>
                         <select value={tenantId} onChange={e => setTenantId(e.target.value)} style={{ ...inputSt, padding:'0 14px', appearance:'none' as const }}>
                           <option value="">조직을 선택하세요</option>
@@ -397,7 +524,7 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
                         </select>
                       </div>
                       {tenantId && (
-                        <div style={{ marginBottom:10 }}>
+                        <div className="lmp-field">
                           <label style={{ display:'block', fontSize:11.5, fontWeight:600, color:'#353A44', marginBottom:5 }}>활동 유형 *</label>
                           {tenantRoles === null
                             ? <p style={{ fontSize:12, color:'#8A8F99', margin:0 }}>로딩 중...</p>
@@ -418,7 +545,7 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
                             )}
                         </div>
                       )}
-                      <div style={{ marginBottom:10 }}>
+                      <div className="lmp-field">
                         <label style={{ display:'block', fontSize:11.5, fontWeight:600, color:'#353A44', marginBottom:5 }}>이름</label>
                         <div style={{ position:'relative' }}>
                           <span style={{ position:'absolute', left:13, top:'50%', transform:'translateY(-50%)', color:'#8A8F99', display:'flex', pointerEvents:'none' }}>
@@ -430,7 +557,7 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
                     </>
                   )}
 
-                  <div style={{ marginBottom:10 }}>
+                  <div className="lmp-field">
                     <label style={{ display:'block', fontSize:11.5, fontWeight:600, color:'#353A44', marginBottom:5 }}>이메일</label>
                     <div style={{ position:'relative' }}>
                       <span style={{ position:'absolute', left:13, top:'50%', transform:'translateY(-50%)', color:'#8A8F99', display:'flex', pointerEvents:'none' }}>
@@ -440,7 +567,7 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
                     </div>
                   </div>
 
-                  <div style={{ marginBottom:10 }}>
+                  <div className="lmp-field">
                     <label style={{ display:'block', fontSize:11.5, fontWeight:600, color:'#353A44', marginBottom:5 }}>비밀번호</label>
                     <div style={{ position:'relative' }}>
                       <span style={{ position:'absolute', left:13, top:'50%', transform:'translateY(-50%)', color:'#8A8F99', display:'flex', pointerEvents:'none' }}>
@@ -454,7 +581,7 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
                   </div>
 
                   {mode === 'signup' && (
-                    <div style={{ marginBottom:10 }}>
+                    <div className="lmp-field">
                       <label style={{ display:'block', fontSize:11.5, fontWeight:600, color:'#353A44', marginBottom:5 }}>비밀번호 확인</label>
                       <div style={{ position:'relative' }}>
                         <span style={{ position:'absolute', left:13, top:'50%', transform:'translateY(-50%)', color:'#8A8F99', display:'flex', pointerEvents:'none' }}>
@@ -476,7 +603,7 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
                     <div style={{ margin:'8px 0', padding:'10px 14px', borderRadius:10, background:'oklch(0.97 0.02 25)', border:'1px solid oklch(0.88 0.06 25)', color:'oklch(0.45 0.15 25)', fontSize:13 }}>{error}</div>
                   )}
 
-                  <button type="submit" disabled={loading} style={{ marginTop:mode==='signup'?12:0, width:'100%', height:46, background:'#14171C', color:'#fff', border:0, borderRadius:12, fontSize:14, fontWeight:600, letterSpacing:-0.2, cursor:loading?'not-allowed':'pointer', font:'inherit', opacity:loading?0.6:1, boxShadow:'0 1px 0 rgba(20,23,28,0.06),0 8px 20px -8px rgba(20,23,28,0.30)', display:'flex', alignItems:'center', justifyContent:'center', gap:8, transition:'transform .12s' }}>
+                  <button type="submit" disabled={loading} className="lmp-submit-btn" style={{ marginTop:mode==='signup'?12:0, opacity:loading?0.6:1, cursor:loading?'not-allowed':'pointer' }}>
                     {loading ? '처리 중...' : mode==='login' ? '로그인' : '가입하기'}
                     {!loading && <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 10h12M11 5l5 5-5 5"/></svg>}
                   </button>
