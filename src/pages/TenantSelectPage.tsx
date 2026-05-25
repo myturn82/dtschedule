@@ -186,12 +186,6 @@ export function TenantSelectPage() {
             <rect x="392.33" y="379.2" width="55.67" height="68.8" rx="16" fill="oklch(0.85 0.10 70)"/>
           </svg>
           <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: -0.2, whiteSpace: 'nowrap' }}>스케줄러</span>
-          <span style={{
-            marginLeft: 6, fontSize: 10, padding: '2px 6px', borderRadius: 4,
-            background: '#14171C', color: '#fff',
-            fontFamily: '"JetBrains Mono", monospace',
-            letterSpacing: 0.4, textTransform: 'uppercase', opacity: 0.8, whiteSpace: 'nowrap',
-          }}>workspace</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {profile?.is_super_admin && (
