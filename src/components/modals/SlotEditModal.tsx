@@ -13,6 +13,7 @@ interface Props {
   memberRoleId?: string | null
   splitRoles?: TenantRole[]
   isSplitMode?: boolean
+  tenantRoles?: TenantRole[]
   tenantMode?: '직접입력' | '회원선택'
   customFields?: CustomFieldDef[]
   slotLabels?: Record<string, string>
@@ -27,22 +28,16 @@ function isValidPhone(phone: string): boolean {
   return PHONE_RE.test(phone.replace(/\s/g, ''))
 }
 
-function getRoleLabel(role: string): string {
-  if (role === '50plus') return '50+'
-  if (role === 'team_leader') return '팀장'
-  return '봉사'
-}
-
 export function SlotEditModal({
   target, cellState, profile, tenantRole, memberRoleId,
-  splitRoles = [], isSplitMode = false,
+  splitRoles = [], isSplitMode = false, tenantRoles = [],
   tenantMode = '회원선택', customFields = [],
   slotLabels = {},
   onClose, onAdd, onUpdate, onDelete,
 }: Props) {
   const { day, month, timeSlot, volunteerType: defaultType, roleId: initialRoleId } = target
   const isAdmin = profile?.is_super_admin || tenantRole === 'admin'
-  const profileType: VolunteerType = profile?.role === '50plus' ? '50plus' : 'volunteer'
+  const profileType: VolunteerType = 'volunteer'
 
   const isFreeform = tenantMode === '직접입력'
   const useDynamicFields = isFreeform && customFields.length > 0
@@ -79,7 +74,7 @@ export function SlotEditModal({
     : profile
 
   const effectiveVolunteerType: VolunteerType = isAdmin
-    ? (selectedProfile?.role === '50plus' ? '50plus' : 'volunteer')
+    ? 'volunteer'
     : volunteerType
 
   const displayedAssignments = isSplitMode
@@ -335,7 +330,7 @@ export function SlotEditModal({
               <p className="text-sm font-semibold text-[var(--color-text-primary)]">{selectedRole.name}</p>
             </div>
           ) : null
-        ) : !isAdmin && !isFreeform && (
+        ) : !isAdmin && !isFreeform && tenantRoles.length === 0 && (  // 커스텀 역할 없는 조직만 표시
           <div className="flex border-b border-[var(--color-border)] px-2">
             {(['volunteer', '50plus'] as VolunteerType[]).map(t => {
               const isDisabled = !isAdmin && profileType !== t
@@ -519,7 +514,7 @@ export function SlotEditModal({
                           <option value="">-- 회원을 선택하세요 --</option>
                           {selectableProfiles.map(p => (
                             <option key={p.id} value={p.id}>
-                              {p.name} [{getRoleLabel(p.role)}]
+                              {p.name}
                             </option>
                           ))}
                         </select>

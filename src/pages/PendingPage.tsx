@@ -29,7 +29,7 @@ export function PendingPage() {
   const [error, setError] = useState<string | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
-  const [hasPending, setHasPending] = useState(false)
+  const [hasPending, setHasPending] = useState<boolean | null>(null)
   useEffect(() => {
     if (!profile) return
     supabase
@@ -40,6 +40,11 @@ export function PendingPage() {
         setHasPending((data ?? []).some(m => (m as { is_approved?: boolean }).is_approved === false))
       )
   }, [profile?.id])
+
+  // 멤버십이 없는 신규 사용자(로그인 탭 카카오 등)는 폼 자동 오픈
+  useEffect(() => {
+    if (hasPending === false && !submitted && !profile?.is_super_admin) setShowForm(true)
+  }, [hasPending, submitted, profile?.is_super_admin])
 
   useEffect(() => {
     if (showForm) {
@@ -64,7 +69,7 @@ export function PendingPage() {
       .then(({ data }) => setTenantRoles(data ?? []))
   }, [tenantId])
 
-  const isAdminRole = profile?.role === 'admin'
+  const isAdminRole = profile?.is_super_admin
   const hasCustomRoles = tenantRoles !== null && tenantRoles.length > 0
 
   const waitMessage = hasPending

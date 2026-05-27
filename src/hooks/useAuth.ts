@@ -9,6 +9,9 @@ interface AuthState {
   signUp: (email: string, password: string, name: string, role: 'volunteer' | '50plus' | 'team_leader' | 'admin', tenantId?: string, tenantRoleId?: string) => Promise<string | null>
   signInWithGoogle: () => Promise<string | null>
   signInWithKakao: () => Promise<string | null>
+  linkGoogle: () => Promise<string | null>
+  linkKakao: () => Promise<string | null>
+  getIdentities: () => Promise<{ provider: string }[]>
   signOut: () => Promise<void>
   deleteAccount: () => Promise<string | null>
 }
@@ -23,7 +26,8 @@ export function useAuth(): AuthState {
       else setLoading(false)
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('[DEBUG][useAuth] onAuthStateChange event=', event, 'user=', session?.user?.email, 'id=', session?.user?.id, 'identities=', session?.user?.identities?.map(i => i.provider))
       if (session?.user) fetchProfile(session.user.id)
       else { setProfile(null); setLoading(false) }
     })
@@ -74,14 +78,37 @@ export function useAuth(): AuthState {
   }, [])
 
   const signInWithKakao = useCallback(async (): Promise<string | null> => {
-    const { error } = await supabase.auth.signInWithOAuth({
+    console.log('[DEBUG][signInWithKakao] 호출됨, redirectTo=', window.location.origin)
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'kakao',
       options: {
         redirectTo: window.location.origin,
         scopes: 'profile_nickname profile_image',
       },
     })
+    console.log('[DEBUG][signInWithKakao] 결과 data=', data, 'error=', error)
     return error?.message ?? null
+  }, [])
+
+  const linkGoogle = useCallback(async (): Promise<string | null> => {
+    const { error } = await supabase.auth.linkIdentity({
+      provider: 'google',
+      options: { redirectTo: window.location.origin },
+    })
+    return error?.message ?? null
+  }, [])
+
+  const linkKakao = useCallback(async (): Promise<string | null> => {
+    const { error } = await supabase.auth.linkIdentity({
+      provider: 'kakao',
+      options: { redirectTo: window.location.origin, scopes: 'profile_nickname profile_image' },
+    })
+    return error?.message ?? null
+  }, [])
+
+  const getIdentities = useCallback(async (): Promise<{ provider: string }[]> => {
+    const { data: { user } } = await supabase.auth.getUser()
+    return (user?.identities ?? []).map(i => ({ provider: i.provider }))
   }, [])
 
   const signOut = useCallback(async () => {
@@ -99,5 +126,5 @@ export function useAuth(): AuthState {
     return null
   }, [])
 
-  return { profile, loading, signIn, signUp, signInWithGoogle, signInWithKakao, signOut, deleteAccount }
+  return { profile, loading, signIn, signUp, signInWithGoogle, signInWithKakao, linkGoogle, linkKakao, getIdentities, signOut, deleteAccount }
 }
