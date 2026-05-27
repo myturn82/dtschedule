@@ -176,7 +176,7 @@ export function SuperAdminPage() {
         .from('tenant_members')
         .select('*, profile:profiles!inner(*)')
         .eq('is_approved', false)
-        .eq('profiles.role', 'admin'),
+        .eq('profiles.is_super_admin', true),
     ]).then(([tenantsRes, pendingRes]) => {
       if (tenantsRes.error) setMessage(`테넌트 로드 오류: ${tenantsRes.error.message}`)
       setTenants(tenantsRes.data ?? [])

@@ -87,15 +87,7 @@ export interface TenantMemberWithRole extends TenantMember {
   tenant_role: TenantRole | null;
 }
 
-export type UserRole = 'admin' | 'team_leader' | 'volunteer' | '50plus';
 export type VolunteerType = 'volunteer' | '50plus' | 'admin_note';
-
-export const ROLE_LABELS: Record<UserRole, string> = {
-  admin: '관리자',
-  team_leader: '팀장',
-  volunteer: '자원봉사자',
-  '50plus': '50플러스활동가',
-};
 
 export const TYPE_LABELS: Record<VolunteerType, string> = {
   volunteer: '자원봉사자',
@@ -108,7 +100,6 @@ export interface Profile {
   name: string;
   email: string | null;
   avatar_url: string | null;
-  role: UserRole;
   is_super_admin: boolean;
   is_approved: boolean;
   created_at: string;

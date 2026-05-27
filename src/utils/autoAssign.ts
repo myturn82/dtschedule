@@ -127,8 +127,7 @@ export function computeAutoAssignments(params: AutoAssignParams): ProposedAssign
     }
   } else {
     for (const { members, volunteerType, roleName } of [
-      { members: profiles.filter(p => p.role !== '50plus'), volunteerType: 'volunteer' as VolunteerType, roleName: '자원봉사자' },
-      { members: profiles.filter(p => p.role === '50plus'), volunteerType: '50plus' as VolunteerType, roleName: '50플러스' },
+      { members: profiles, volunteerType: 'volunteer' as VolunteerType, roleName: '자원봉사자' },
     ]) {
       if (!members.length) continue
       const vt = volunteerType

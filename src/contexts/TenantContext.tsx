@@ -17,9 +17,11 @@ interface TenantContextValue {
   slotLabels: Record<string, string>
   legendItems: LegendItem[]
   customFields: CustomFieldDef[]
+  alreadyMemberNotice: string | null
   setTenant: (tenant: Tenant, role: TenantAccessRole) => void
   resetTenantSelection: () => void
   updateCurrentTenant: (tenant: Tenant) => void
+  clearAlreadyMemberNotice: () => void
 }
 
 const TenantContext = createContext<TenantContextValue | null>(null)
@@ -30,6 +32,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   const [memberships, setMemberships] = useState<MembershipWithTenant[]>([])
   const [loading, setLoading] = useState(true)
   const [tenantSelectedByUser, setTenantSelectedByUser] = useState(false)
+  const [alreadyMemberNotice, setAlreadyMemberNotice] = useState<string | null>(null)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -59,8 +62,48 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       .eq('user_id', userId)
 
     const list = (data ?? []) as MembershipWithTenant[]
+    console.log('[DEBUG][TenantContext] fetchMemberships', { userId, allMemberships: list })
+
+    // 소셜 가입 후 복귀 시 pending 조직/역할 처리
+    const pendingRaw = localStorage.getItem('vs_pending_social')
+    console.log('[DEBUG][TenantContext] vs_pending_social =', pendingRaw)
+    if (pendingRaw) {
+      try {
+        const { tenantId, tenantRoleId } = JSON.parse(pendingRaw)
+        const alreadyMember = list.some(m => m.tenant_id === tenantId)
+        console.log('[DEBUG][TenantContext] pending처리: tenantId=', tenantId, 'alreadyMember=', alreadyMember)
+        if (!alreadyMember && tenantId) {
+          const { error: insertError } = await supabase.from('tenant_members').insert({
+            tenant_id: tenantId,
+            user_id: userId,
+            role: 'member',
+            role_id: tenantRoleId ?? null,
+          })
+          console.log('[DEBUG][TenantContext] tenant_members insert error=', insertError)
+          localStorage.removeItem('vs_pending_social')
+          // 재조회
+          const { data: data2 } = await supabase
+            .from('tenant_members')
+            .select('*, tenant:tenants(*)')
+            .eq('user_id', userId)
+          const list2 = (data2 ?? []) as MembershipWithTenant[]
+          const approved2 = list2.filter(m => m.is_approved !== false)
+          console.log('[DEBUG][TenantContext] 재조회 후 approved=', approved2)
+          setMemberships(approved2)
+          if (approved2.length === 1) { setTenantState(approved2[0].tenant); setTenantRole(approved2[0].role) }
+          setLoading(false)
+          return
+        }
+        if (alreadyMember) {
+          localStorage.setItem('vs_notice_already_member', '이미 가입된 조직입니다.')
+        }
+      } catch { /* invalid JSON */ }
+      localStorage.removeItem('vs_pending_social')
+    }
+
     // 승인된 멤버십만 사용 (is_approved가 없으면 true로 간주 — 마이그레이션 전 호환)
     const approved = list.filter(m => m.is_approved !== false)
+    console.log('[DEBUG][TenantContext] 최종 approved memberships=', approved)
     setMemberships(approved)
 
     if (approved.length === 1) {
@@ -81,6 +124,10 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     setTenantState(null)
     setTenantRole(null)
     setTenantSelectedByUser(false)
+  }
+
+  function clearAlreadyMemberNotice() {
+    setAlreadyMemberNotice(null)
   }
 
   function updateCurrentTenant(updated: Tenant) {
@@ -121,6 +168,8 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       slotLabels,
       legendItems,
       customFields,
+      alreadyMemberNotice,
+      clearAlreadyMemberNotice,
       setTenant,
       resetTenantSelection,
       updateCurrentTenant,

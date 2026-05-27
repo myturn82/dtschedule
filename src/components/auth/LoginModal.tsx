@@ -49,6 +49,7 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [socialPending, setSocialPending] = useState<'google' | 'kakao' | null>(null)
 
   const tabLoginRef = useRef<HTMLButtonElement>(null)
   const tabSignupRef = useRef<HTMLButtonElement>(null)
@@ -158,7 +159,7 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
 
   useEffect(() => { return runAssignAnimation() }, [runAssignAnimation])
 
-  function switchMode(m: Mode) { setMode(m); setError(null); setSuccess(null) }
+  function switchMode(m: Mode) { setMode(m); setError(null); setSuccess(null); setSocialPending(null) }
 
   const hasCustomRoles = tenantRoles !== null && tenantRoles.length > 0
   const accent = 'oklch(0.66 0.16 28)'
@@ -191,8 +192,26 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
     }
   }
 
-  async function handleGoogle() { setLoading(true); setError(null); const err = await onGoogle(); setLoading(false); if (err) setError(err) }
-  async function handleKakao() { setLoading(true); setError(null); const err = await onKakao(); setLoading(false); if (err) setError(err) }
+  async function handleGoogle() {
+    if (mode === 'signup') { setSocialPending('google'); return }
+    setLoading(true); setError(null); const err = await onGoogle(); setLoading(false); if (err) setError(err)
+  }
+  async function handleKakao() {
+    console.log('[DEBUG][handleKakao] mode=', mode, 'socialPending=', socialPending)
+    if (mode === 'signup') { setSocialPending('kakao'); return }
+    setLoading(true); setError(null); const err = await onKakao(); setLoading(false); if (err) setError(err)
+  }
+  async function handleSocialConfirm() {
+    console.log('[DEBUG][handleSocialConfirm] socialPending=', socialPending, 'tenantId=', tenantId, 'tenantRoleId=', tenantRoleId, 'role=', role)
+    if (!tenantId) { setError('가입할 조직을 선택해주세요.'); return }
+    if (hasCustomRoles && !tenantRoleId) { setError('활동 유형을 선택해주세요.'); return }
+    if (!hasCustomRoles && !role) { setError('활동 유형을 선택해주세요.'); return }
+    localStorage.setItem('vs_pending_social', JSON.stringify({ tenantId, tenantRoleId }))
+    setLoading(true); setError(null)
+    const err = socialPending === 'google' ? await onGoogle() : await onKakao()
+    setLoading(false)
+    if (err) { setError(err); localStorage.removeItem('vs_pending_social') }
+  }
 
   const inputSt: React.CSSProperties = {
     width: '100%', height: 42, padding: '0 14px 0 40px',
@@ -433,12 +452,7 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
             <span className="lmp-brand-pill">WORKSPACE</span>
           </div>
           <div className="lmp-top-nav">
-            {mode === 'login' ? (
-              <>
-                <span className="lmp-nav-hint">처음이신가요?</span>
-                <button className="lmp-nav-btn" onClick={() => switchMode('signup')}>회원가입</button>
-              </>
-            ) : (
+            {mode === 'signup' && (
               <>
                 <span className="lmp-nav-hint">이미 계정이 있나요?</span>
                 <button className="lmp-nav-btn" onClick={() => switchMode('login')}>로그인</button>
@@ -497,23 +511,73 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
                   ))}
                 </div>
 
-                {/* social */}
-                <div className="lmp-socials">
-                  <button onClick={handleGoogle} disabled={loading} className="lmp-social-btn">
-                    <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20.4H24v7.1h11.3c-1.5 4.1-5.4 7-11.3 7-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5-5C32.9 5.1 28.7 3.4 24 3.4 12.5 3.4 3.4 12.5 3.4 24S12.5 44.6 24 44.6c11 0 20-8 20-20 0-1.4-.1-2.7-.4-4.1z"/><path fill="#FF3D00" d="M5.3 13.6l5.8 4.3C12.8 14.1 18 11 24 11c3 0 5.8 1.1 7.9 3l5-5C32.9 5.1 28.7 3.4 24 3.4 16.4 3.4 9.8 7.6 5.3 13.6z"/><path fill="#4CAF50" d="M24 44.6c4.6 0 8.7-1.7 11.9-4.5l-5.5-4.6c-1.7 1.3-3.9 2.1-6.4 2.1-5.8 0-10.7-3.9-11.2-7H7v4.7C10.5 40.6 16.8 44.6 24 44.6z"/><path fill="#1976D2" d="M43.6 20.5H42V20.4H24v7.1h11.3c-.7 2-2 3.7-3.6 5l5.5 4.6c-.4.4 5.8-4.2 5.8-13.2 0-1.4-.1-2.7-.4-3.4z"/></svg>
-                    Google로 계속하기
-                  </button>
-                  <button onClick={handleKakao} disabled={loading} className="lmp-social-btn lmp-social-btn-kakao">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.9 5.3 4.7 6.7-.2.7-.7 2.7-.8 3.1-.1.5.2.5.4.4.2-.1 2.6-1.7 3.6-2.4.7.1 1.4.2 2.1.2 5.5 0 10-3.6 10-8s-4.5-8-10-8Z"/></svg>
-                    카카오로 계속하기
-                  </button>
-                </div>
+                {socialPending ? (
+                  <div>
+                    <p style={{ fontSize:13, color:'#6B7280', marginBottom:14, lineHeight:1.5 }}>
+                      <strong style={{ color:'#353A44' }}>{socialPending === 'google' ? 'Google' : '카카오'}</strong> 계정으로 가입하기 전에 조직과 활동 유형을 선택해주세요.
+                    </p>
+                    <div className="lmp-field">
+                      <label style={{ display:'block', fontSize:11.5, fontWeight:600, color:'#353A44', marginBottom:5 }}>가입할 조직 *</label>
+                      <select value={tenantId} onChange={e => setTenantId(e.target.value)} style={{ ...inputSt, padding:'0 14px', appearance:'none' as const }}>
+                        <option value="">조직을 선택하세요</option>
+                        {tenants.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                      </select>
+                    </div>
+                    {tenantId && (
+                      <div className="lmp-field">
+                        <label style={{ display:'block', fontSize:11.5, fontWeight:600, color:'#353A44', marginBottom:5 }}>활동 유형 *</label>
+                        {tenantRoles === null
+                          ? <p style={{ fontSize:12, color:'#8A8F99', margin:0 }}>로딩 중...</p>
+                          : hasCustomRoles ? (
+                            <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:6 }}>
+                              {tenantRoles.map(tr => (
+                                <button key={tr.id} type="button" onClick={() => { setTenantRoleId(tr.id); setRole(null) }}
+                                  style={{ padding:'8px 10px', borderRadius:10, fontSize:12.5, fontWeight:600, border:`2px solid ${tenantRoleId===tr.id?accent:'rgba(20,23,28,0.12)'}`, background:tenantRoleId===tr.id?accentSoft:'#fff', color:tenantRoleId===tr.id?accentInk:'#6B7280', cursor:'pointer', font:'inherit', transition:'all .15s' }}>{tr.name}</button>
+                              ))}
+                            </div>
+                          ) : (
+                            <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:6 }}>
+                              {[...DEFAULT_ROLES, { value:'admin' as const, label:'관리자' }].map(opt => (
+                                <button key={opt.value} type="button" onClick={() => { setRole(opt.value); setTenantRoleId(null) }}
+                                  style={{ padding:'8px 10px', borderRadius:10, fontSize:12.5, fontWeight:600, border:`2px solid ${role===opt.value?accent:'rgba(20,23,28,0.12)'}`, background:role===opt.value?accentSoft:'#fff', color:role===opt.value?accentInk:'#6B7280', cursor:'pointer', font:'inherit', transition:'all .15s' }}>{opt.label}</button>
+                              ))}
+                            </div>
+                          )}
+                      </div>
+                    )}
+                    {error && (
+                      <div style={{ margin:'8px 0', padding:'10px 14px', borderRadius:10, background:'oklch(0.97 0.02 25)', border:'1px solid oklch(0.88 0.06 25)', color:'oklch(0.45 0.15 25)', fontSize:13 }}>{error}</div>
+                    )}
+                    <div style={{ display:'flex', gap:8, marginTop:14 }}>
+                      <button type="button" onClick={() => { setSocialPending(null); setError(null); setTenantId(''); setRole(null); setTenantRoleId(null) }}
+                        style={{ flex:1, height:44, background:'#F4F1EA', border:'1px solid rgba(20,23,28,0.09)', borderRadius:12, font:'inherit', fontSize:13.5, fontWeight:600, color:'#6B7280', cursor:'pointer' }}>
+                        취소
+                      </button>
+                      <button type="button" disabled={loading} onClick={handleSocialConfirm} className="lmp-submit-btn" style={{ flex:2, marginTop:0, opacity:loading?0.6:1, cursor:loading?'not-allowed':'pointer' }}>
+                        {loading ? '처리 중...' : `${socialPending === 'google' ? 'Google' : '카카오'}로 계속`}
+                        {!loading && <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 10h12M11 5l5 5-5 5"/></svg>}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {/* social */}
+                    <div className="lmp-socials">
+                      <button onClick={handleGoogle} disabled={loading} className="lmp-social-btn">
+                        <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20.4H24v7.1h11.3c-1.5 4.1-5.4 7-11.3 7-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5-5C32.9 5.1 28.7 3.4 24 3.4 12.5 3.4 3.4 12.5 3.4 24S12.5 44.6 24 44.6c11 0 20-8 20-20 0-1.4-.1-2.7-.4-4.1z"/><path fill="#FF3D00" d="M5.3 13.6l5.8 4.3C12.8 14.1 18 11 24 11c3 0 5.8 1.1 7.9 3l5-5C32.9 5.1 28.7 3.4 24 3.4 16.4 3.4 9.8 7.6 5.3 13.6z"/><path fill="#4CAF50" d="M24 44.6c4.6 0 8.7-1.7 11.9-4.5l-5.5-4.6c-1.7 1.3-3.9 2.1-6.4 2.1-5.8 0-10.7-3.9-11.2-7H7v4.7C10.5 40.6 16.8 44.6 24 44.6z"/><path fill="#1976D2" d="M43.6 20.5H42V20.4H24v7.1h11.3c-.7 2-2 3.7-3.6 5l5.5 4.6c-.4.4 5.8-4.2 5.8-13.2 0-1.4-.1-2.7-.4-3.4z"/></svg>
+                        Google로 계속하기
+                      </button>
+                      <button onClick={handleKakao} disabled={loading} className="lmp-social-btn lmp-social-btn-kakao">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.9 5.3 4.7 6.7-.2.7-.7 2.7-.8 3.1-.1.5.2.5.4.4.2-.1 2.6-1.7 3.6-2.4.7.1 1.4.2 2.1.2 5.5 0 10-3.6 10-8s-4.5-8-10-8Z"/></svg>
+                        카카오로 계속하기
+                      </button>
+                    </div>
 
-                <div className="lmp-divider">
-                  <div style={{ flex:1, height:1, background:'rgba(20,23,28,0.12)' }} />또는 이메일로 계속<div style={{ flex:1, height:1, background:'rgba(20,23,28,0.12)' }} />
-                </div>
+                    <div className="lmp-divider">
+                      <div style={{ flex:1, height:1, background:'rgba(20,23,28,0.12)' }} />또는 이메일로 계속<div style={{ flex:1, height:1, background:'rgba(20,23,28,0.12)' }} />
+                    </div>
 
-                <form onSubmit={handleSubmit}>
+                    <form onSubmit={handleSubmit}>
                   {mode === 'signup' && (
                     <>
                       <div className="lmp-field">
@@ -608,6 +672,8 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
                     {!loading && <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 10h12M11 5l5 5-5 5"/></svg>}
                   </button>
                 </form>
+                  </>
+                )}
               </>
             )}
           </div>
