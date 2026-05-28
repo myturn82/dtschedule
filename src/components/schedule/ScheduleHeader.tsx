@@ -29,13 +29,16 @@ function weekRangeLabel(weekDays: Date[]): string {
   return `${sm}월 ${start.getDate()}일 ~ ${em}월 ${end.getDate()}일`
 }
 
-export function ScheduleHeader({ year, month, filledCount, openCount, operatingDays, onPrev, onNext, viewType = 'month', onViewTypeChange, day, weekDays }: Props) {
+export function ScheduleHeader({ year, month, title, filledCount, openCount, operatingDays, onPrev, onNext, viewType = 'month', onViewTypeChange, day, weekDays }: Props) {
   const VIEW_LABELS: Record<ViewType, string> = { month: '월', week: '주', day: '일' }
 
   return (
     <div className="flex items-end justify-between gap-4 flex-wrap">
       {/* Left: title + stats */}
       <div className="min-w-0">
+        {title && (
+          <p className="text-[11px] font-semibold text-[var(--color-text-muted)] tracking-wide uppercase mb-1.5">{title}</p>
+        )}
         {/* Title based on viewType */}
         {viewType === 'month' && (
           <h1 className="flex items-baseline gap-3 m-0 leading-none">
