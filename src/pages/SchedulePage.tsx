@@ -13,6 +13,7 @@ import { ScheduleGrid } from '../components/schedule/ScheduleGrid'
 import { WeekGrid } from '../components/schedule/WeekGrid'
 import { DayView } from '../components/schedule/DayView'
 import { Legend } from '../components/schedule/Legend'
+import { DashboardNav } from '../components/DashboardNav'
 import { FilterBar } from '../components/shared/FilterBar'
 import { ExportButton } from '../components/shared/ExportButton'
 import { LoginModal } from '../components/auth/LoginModal'
@@ -236,6 +237,7 @@ export function SchedulePage() {
 
   return (
     <div className="min-h-[100dvh] bg-[var(--color-bg)]">
+      {tenantRole === 'admin' && <DashboardNav />}
       {/* Main content */}
       <main className="px-2 py-2 sm:px-4 sm:py-3">
         <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-[var(--shadow-lg)] overflow-hidden animate-fade-up">
@@ -311,32 +313,49 @@ export function SchedulePage() {
                   <div className="p-2">
                     {profile?.is_super_admin && (
                       <>
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] px-3 pt-2 pb-0.5">시스템</p>
-                        <button onClick={() => { navigate('/superadmin'); setShowFuncMenu(false) }} className="w-full text-left px-3 py-2 text-sm font-medium rounded-xl text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/20 transition-colors">
-                          슈퍼어드민
+                        <button onClick={() => { navigate('/superadmin'); setShowFuncMenu(false) }} className="w-full text-left px-3 py-2 text-sm rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors">
+                          <span className="flex items-center gap-2.5">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                            슈퍼어드민
+                          </span>
                         </button>
                         {tenant && (
                           <button onClick={() => { resetTenantSelection(); setShowFuncMenu(false) }} className="w-full text-left px-3 py-2 text-sm rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors">
-                            {tenant.name} · 조직 변경
+                            <span className="flex items-center gap-2.5">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M3 22h18M9 22V8l3-5 3 5v14"/><path d="M3 10l9-8 9 8"/></svg>
+                              {tenant.name} · 조직 변경
+                            </span>
                           </button>
                         )}
                         <div className="h-px bg-[var(--color-border)] mx-1 my-1" />
                       </>
                     )}
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] px-3 pt-1 pb-0.5">스케줄 관리</p>
-                    <button onClick={() => { navigate('/admin'); setShowFuncMenu(false) }} className="w-full text-left px-3 py-2 text-sm font-medium rounded-xl text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-colors">
-                      관리자 설정
+                    <button onClick={() => { navigate('/admin'); setShowFuncMenu(false) }} className="w-full text-left px-3 py-2 text-sm rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors">
+                      <span className="flex items-center gap-2.5">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+                        관리자대시보드
+                      </span>
                     </button>
                     <button onClick={() => { setShowCapacity(true); setShowFuncMenu(false) }} className="w-full text-left px-3 py-2 text-sm rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors">
-                      인원 설정
+                      <span className="flex items-center gap-2.5">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        인원 설정
+                      </span>
                     </button>
                     {tenantMode === '회원선택' && (
-                      <button onClick={() => { handleAutoAssign(); setShowFuncMenu(false) }} className="w-full text-left px-3 py-2 text-sm rounded-xl text-blue-500 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-colors">
-                        자동배정
+                      <button onClick={() => { handleAutoAssign(); setShowFuncMenu(false) }} className="w-full text-left px-3 py-2 text-sm rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors">
+                        <span className="flex items-center gap-2.5">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8 19 13M17.8 6.2 19 5M12.2 6.2 11 5M12.2 11.8 11 13"/><path d="M3 21l9-9"/><path d="M12.2 6.2 3 15l3 3 9.2-9.2"/></svg>
+                          자동배정
+                        </span>
                       </button>
                     )}
-                    <button onClick={() => { handleClearClick(); setShowFuncMenu(false) }} className="w-full text-left px-3 py-2 text-sm rounded-xl text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors">
-                      초기화
+                    <div className="h-px bg-[var(--color-border)] mx-1 my-1" />
+                    <button onClick={() => { handleClearClick(); setShowFuncMenu(false) }} className="w-full text-left px-3 py-2 text-sm rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors">
+                      <span className="flex items-center gap-2.5">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                        초기화
+                      </span>
                     </button>
                   </div>
                 </div>
@@ -352,20 +371,41 @@ export function SchedulePage() {
                     <p className="text-sm font-semibold text-[var(--color-text-primary)] truncate">{profile.name}</p>
                   </div>
                   <div className="p-2">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] px-3 pt-2 pb-0.5">내 계정</p>
                     <button onClick={() => { setShowProfile(true); setShowUserMenu(false) }} className="w-full text-left px-3 py-2 text-sm rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors">
-                      계정 연동
-                    </button>
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] px-3 pt-2 pb-0.5">조직</p>
-                    <button onClick={() => { setShowJoinOrg(true); setShowUserMenu(false) }} className="w-full text-left px-3 py-2 text-sm rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors">
-                      다른 조직 가입
+                      <span className="flex items-center gap-2.5">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                        계정 연동
+                      </span>
                     </button>
                     <div className="h-px bg-[var(--color-border)] mx-1 my-1" />
-                    <button onClick={() => { signOut(); setShowUserMenu(false) }} className="w-full text-left px-3 py-2 text-sm rounded-xl text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)] transition-colors">
-                      로그아웃
+                    {(memberships.length > 1 || profile?.is_super_admin) && (
+                      <button onClick={() => { resetTenantSelection(); setShowUserMenu(false) }} className="w-full text-left px-3 py-2 text-sm rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors">
+                        <span className="flex items-center gap-2.5">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+                          조직 변경
+                        </span>
+                      </button>
+                    )}
+                    {!profile?.is_super_admin && (
+                      <button onClick={() => { setShowJoinOrg(true); setShowUserMenu(false) }} className="w-full text-left px-3 py-2 text-sm rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors">
+                        <span className="flex items-center gap-2.5">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>
+                          다른 조직 가입
+                        </span>
+                      </button>
+                    )}
+                    <div className="h-px bg-[var(--color-border)] mx-1 my-1" />
+                    <button onClick={() => { signOut(); setShowUserMenu(false) }} className="w-full text-left px-3 py-2 text-sm rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors">
+                      <span className="flex items-center gap-2.5">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                        로그아웃
+                      </span>
                     </button>
-                    <button onClick={() => { setShowDeleteConfirm(true); setShowUserMenu(false) }} className="w-full text-left px-3 py-2 text-sm rounded-xl text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors">
-                      회원탈퇴
+                    <button onClick={() => { setShowDeleteConfirm(true); setShowUserMenu(false) }} className="w-full text-left px-3 py-2 text-sm rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors">
+                      <span className="flex items-center gap-2.5">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="8" x2="23" y2="14"/><line x1="23" y1="8" x2="17" y2="14"/></svg>
+                        회원탈퇴
+                      </span>
                     </button>
                   </div>
                 </div>
@@ -373,7 +413,7 @@ export function SchedulePage() {
             )}
             <ScheduleHeader
               year={year} month={month} day={day}
-              title={tenant?.settings?.title}
+              title={tenant?.name}
               filledCount={filledCount}
               operatingDays={operatingDays}
               viewType={viewType}

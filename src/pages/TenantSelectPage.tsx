@@ -5,12 +5,6 @@ import { useTenant } from '../contexts/TenantContext'
 import { useAuth } from '../hooks/useAuth'
 import type { Tenant } from '../types'
 
-const TILE_COLORS = [
-  'oklch(0.62 0.16 28)',
-  'oklch(0.54 0.16 260)',
-  'oklch(0.56 0.11 160)',
-  'oklch(0.64 0.14 75)',
-]
 
 function getGreeting() {
   const h = new Date().getHours()
@@ -40,12 +34,14 @@ function LogoutIcon() {
 interface OrgCardProps {
   name: string
   role: string
-  colorIdx: number
-  chipLabel?: string
+  themeColor?: string
+  pendingCount?: number
+  memberCount?: number
+  assignmentCount?: number
   onClick: () => void
 }
 
-function OrgCard({ name, role, colorIdx, chipLabel, onClick }: OrgCardProps) {
+function OrgCard({ name, role, themeColor, pendingCount, memberCount, assignmentCount, onClick }: OrgCardProps) {
   const [hovered, setHovered] = useState(false)
   const initial = name.charAt(0)
 
@@ -78,9 +74,11 @@ function OrgCard({ name, role, colorIdx, chipLabel, onClick }: OrgCardProps) {
       {/* Avatar tile */}
       <div style={{
         width: 56, height: 56, borderRadius: 14, flexShrink: 0,
-        background: TILE_COLORS[colorIdx % TILE_COLORS.length],
+        background: themeColor ?? 'rgba(20,23,28,0.07)',
+        border: themeColor ? 'none' : '1.5px solid rgba(20,23,28,0.10)',
         display: 'grid', placeItems: 'center',
-        fontSize: 22, fontWeight: 700, color: '#fff',
+        fontSize: 22, fontWeight: 700,
+        color: themeColor ? '#fff' : '#353A44',
         letterSpacing: -0.6,
       }}>
         {initial}
@@ -92,23 +90,37 @@ function OrgCard({ name, role, colorIdx, chipLabel, onClick }: OrgCardProps) {
           <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: -0.4, color: '#14171C', whiteSpace: 'nowrap' }}>
             {name}
           </span>
-          {chipLabel && (
+          {!!pendingCount && (
             <span style={{
-              display: 'inline-flex', alignItems: 'center', gap: 5,
+              display: 'inline-flex', alignItems: 'center', gap: 4,
               padding: '2px 8px', borderRadius: 999,
-              fontSize: 11, fontWeight: 500, letterSpacing: 0.2,
-              background: role === '관리자' ? 'oklch(0.94 0.04 240)' : 'oklch(0.94 0.04 160)',
-              color: role === '관리자' ? 'oklch(0.38 0.12 240)' : 'oklch(0.36 0.10 160)',
+              fontSize: 11, fontWeight: 600, letterSpacing: 0.1,
+              background: 'oklch(0.96 0.06 40)',
+              color: 'oklch(0.50 0.18 35)',
               whiteSpace: 'nowrap',
             }}>
               <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'currentColor' }} />
-              {chipLabel}
+              승인대기 {pendingCount}건
             </span>
           )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 500, color: '#6B7280', flexWrap: 'wrap' }}>
           <span style={{ fontWeight: 600, color: '#353A44', whiteSpace: 'nowrap' }}>{role}</span>
         </div>
+        {(memberCount !== undefined || assignmentCount !== undefined) && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 2, flexWrap: 'wrap' }}>
+            {memberCount !== undefined && (
+              <span style={{ fontSize: 11, color: '#8A8F99' }}>
+                멤버 <strong style={{ color: '#353A44', fontWeight: 600 }}>{memberCount}명</strong>
+              </span>
+            )}
+            {assignmentCount !== undefined && (
+              <span style={{ fontSize: 11, color: '#8A8F99' }}>
+                이번 달 <strong style={{ color: '#353A44', fontWeight: 600 }}>{assignmentCount}건</strong>
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Arrow */}
@@ -132,13 +144,50 @@ export function TenantSelectPage() {
   const { profile, signOut } = useAuth()
   const navigate = useNavigate()
   const [allTenants, setAllTenants] = useState<Tenant[]>([])
+  const [pendingCounts, setPendingCounts] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(false)
+  const [memberNotice, setMemberNotice] = useState<string | null>(null)
+  const [memberCounts, setMemberCounts] = useState<Record<string, number>>({})
+  const [assignmentCounts, setAssignmentCounts] = useState<Record<string, number>>({})
+
+  useEffect(() => {
+    if (!profile) return
+    const notice = localStorage.getItem('vs_notice_already_member')
+    if (notice) {
+      localStorage.removeItem('vs_notice_already_member')
+      setMemberNotice(notice)
+    }
+  }, [profile?.id])
 
   useEffect(() => {
     if (!profile?.is_super_admin) return
     setLoading(true)
-    supabase.from('tenants').select('*').order('name').then(({ data }) => {
-      setAllTenants(data ?? [])
+    const now = new Date()
+    Promise.all([
+      supabase.from('tenants').select('*').order('name'),
+      supabase.from('tenant_members').select('tenant_id, is_approved'),
+      supabase.from('assignments').select('tenant_id')
+        .eq('year', now.getFullYear())
+        .eq('month', now.getMonth() + 1)
+        .neq('volunteer_type', 'admin_note'),
+    ]).then(([{ data: tenants }, { data: members }, { data: assignments }]) => {
+      setAllTenants(tenants ?? [])
+      const pending: Record<string, number> = {}
+      const memberC: Record<string, number> = {}
+      for (const m of members ?? []) {
+        if (m.is_approved === false) {
+          pending[m.tenant_id] = (pending[m.tenant_id] ?? 0) + 1
+        } else {
+          memberC[m.tenant_id] = (memberC[m.tenant_id] ?? 0) + 1
+        }
+      }
+      const assignmentC: Record<string, number> = {}
+      for (const a of assignments ?? []) {
+        assignmentC[a.tenant_id] = (assignmentC[a.tenant_id] ?? 0) + 1
+      }
+      setPendingCounts(pending)
+      setMemberCounts(memberC)
+      setAssignmentCounts(assignmentC)
       setLoading(false)
     })
   }, [profile?.is_super_admin])
@@ -147,7 +196,7 @@ export function TenantSelectPage() {
   const displayName = profile?.name ?? ''
   const displayEmail = profile?.email ?? ''
 
-  const pageContent = (items: { id: string; name: string; role: string; onClick: () => void }[]) => (
+  const pageContent = (items: { id: string; name: string; role: string; themeColor?: string; pendingCount?: number; memberCount?: number; assignmentCount?: number; onClick: () => void }[]) => (
     <div style={{
       position: 'relative',
       minHeight: '100dvh',
@@ -156,6 +205,17 @@ export function TenantSelectPage() {
       fontFamily: '"Pretendard Variable", Pretendard, system-ui, sans-serif',
       WebkitFontSmoothing: 'antialiased',
     }}>
+      <style>{`
+        @media (max-width: 639px) {
+          .tsp-header { padding: 10px 16px !important; }
+          .tsp-main { margin: 8px auto 24px !important; padding: 0 16px !important; }
+          .tsp-greeting { margin-bottom: 8px !important; }
+          .tsp-title { font-size: 24px !important; margin-bottom: 4px !important; }
+          .tsp-subtitle { display: none !important; }
+          .tsp-section { margin-bottom: 6px !important; }
+          .tsp-orglist { gap: 6px !important; }
+        }
+      `}</style>
       {/* Dot grid */}
       <div style={{
         position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
@@ -164,7 +224,7 @@ export function TenantSelectPage() {
       }} />
 
       {/* Top bar */}
-      <header style={{ position: 'relative', zIndex: 5, padding: '22px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <header className="tsp-header" style={{ position: 'relative', zIndex: 5, padding: '22px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="30" height="30" style={{ flexShrink: 0, borderRadius: 9, overflow: 'hidden' }}>
             <rect width="512" height="512" rx="112" fill="#FBF9F4"/>
@@ -203,8 +263,8 @@ export function TenantSelectPage() {
           <button
             onClick={signOut}
             style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              fontSize: 13, fontWeight: 500, padding: '8px 14px',
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              fontSize: 12, fontWeight: 500, padding: '5px 10px',
               background: '#fff', color: '#353A44',
               border: '1px solid rgba(20,23,28,0.09)', borderRadius: 9,
               cursor: 'pointer', font: 'inherit', whiteSpace: 'nowrap',
@@ -218,9 +278,9 @@ export function TenantSelectPage() {
       </header>
 
       {/* Main content */}
-      <main style={{ position: 'relative', zIndex: 4, maxWidth: 560, margin: '32px auto 80px', padding: '0 24px' }}>
+      <main className="tsp-main" style={{ position: 'relative', zIndex: 4, maxWidth: 560, margin: '32px auto 80px', padding: '0 24px' }}>
         {/* Greeting pill */}
-        <div style={{
+        <div className="tsp-greeting" style={{
           display: 'inline-flex', alignItems: 'center', gap: 8,
           padding: '6px 12px 6px 8px',
           background: '#fff', border: '1px solid rgba(20,23,28,0.09)',
@@ -237,24 +297,66 @@ export function TenantSelectPage() {
           <span><strong style={{ fontWeight: 600, color: '#14171C' }}>{displayName}</strong>님, {greeting}</span>
         </div>
 
+        {/* 이미 가입된 조직 알림 배너 */}
+        {memberNotice && (
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+            marginBottom: 20, padding: '10px 14px', borderRadius: 12,
+            background: '#eff6ff', border: '1px solid #bfdbfe',
+            fontSize: 13, color: '#1d4ed8',
+          }}>
+            <span>{memberNotice}</span>
+            <button onClick={() => setMemberNotice(null)} style={{
+              flexShrink: 0, background: 'none', border: 'none', cursor: 'pointer',
+              color: '#93c5fd', padding: 0, display: 'grid', placeItems: 'center',
+            }}>
+              <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M5 5l10 10M15 5L5 15"/>
+              </svg>
+            </button>
+          </div>
+        )}
+
         {/* Title */}
-        <h1 style={{ margin: '0 0 10px', fontSize: 38, lineHeight: 1.1, letterSpacing: -1.4, fontWeight: 700, color: '#14171C' }}>
+        <h1 className="tsp-title" style={{ margin: '0 0 10px', fontSize: 38, lineHeight: 1.1, letterSpacing: -1.4, fontWeight: 700, color: '#14171C' }}>
           오늘은 어디로<br />가볼까요<span style={{ color: 'oklch(0.66 0.16 28)' }}>?</span>
         </h1>
-        <p style={{ margin: '0 0 32px', fontSize: 15, lineHeight: 1.55, color: '#6B7280', maxWidth: 440 }}>
+        <p className="tsp-subtitle" style={{ margin: '0 0 24px', fontSize: 15, lineHeight: 1.55, color: '#6B7280', maxWidth: 440 }}>
           내가 속한 조직을 선택해서 들어가세요. 역할에 따라 다른 화면이 열려요.
         </p>
 
+        {/* 슈퍼관리자 전체 통계 */}
+        {profile?.is_super_admin && !loading && (
+          <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+            {([
+              { label: '전체 조직', value: `${allTenants.length}개`, highlight: false },
+              { label: '총 멤버', value: `${Object.values(memberCounts).reduce((s, v) => s + v, 0)}명`, highlight: false },
+              { label: '승인 대기', value: `${Object.values(pendingCounts).reduce((s, v) => s + v, 0)}건`, highlight: Object.values(pendingCounts).some(v => v > 0) },
+            ] as { label: string; value: string; highlight: boolean }[]).map(({ label, value, highlight }) => (
+              <div key={label} style={{
+                flex: '1 1 90px', padding: '10px 14px',
+                background: '#fff',
+                border: `1px solid ${highlight ? 'oklch(0.88 0.07 50)' : 'rgba(20,23,28,0.09)'}`,
+                borderRadius: 14,
+                boxShadow: '0 1px 0 rgba(20,23,28,0.04)',
+              }}>
+                <div style={{ fontSize: 10.5, color: '#8A8F99', fontWeight: 600, letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
+                <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.5, color: highlight ? 'oklch(0.50 0.18 35)' : '#14171C' }}>{value}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Section label */}
-        <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div className="tsp-section" style={{ marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{
             fontSize: 11, fontWeight: 600, letterSpacing: 0.6, textTransform: 'uppercase',
-            color: '#8A8F99', fontFamily: '"JetBrains Mono", monospace',
+            color: '#8A8F99',
             display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap',
           }}>
             내 조직
           </span>
-          <span style={{ fontSize: 11, color: '#8A8F99', fontFamily: '"JetBrains Mono", monospace', letterSpacing: 0.4, whiteSpace: 'nowrap' }}>
+          <span style={{ fontSize: 11, color: '#8A8F99', letterSpacing: 0.4, whiteSpace: 'nowrap' }}>
             {items.length}개
           </span>
         </div>
@@ -269,14 +371,16 @@ export function TenantSelectPage() {
             소속된 조직이 없습니다.
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div className="tsp-orglist" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {items.map((item, idx) => (
               <OrgCard
                 key={item.id}
                 name={item.name}
                 role={item.role}
-                colorIdx={idx}
-                chipLabel={item.role}
+                themeColor={item.themeColor}
+                pendingCount={item.pendingCount}
+                memberCount={item.memberCount}
+                assignmentCount={item.assignmentCount}
                 onClick={item.onClick}
               />
             ))}
@@ -293,7 +397,7 @@ export function TenantSelectPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ whiteSpace: 'nowrap' }}>{displayName}</span>
             <span>·</span>
-            <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, whiteSpace: 'nowrap' }}>{displayEmail}</span>
+            <span style={{ fontSize: 11, whiteSpace: 'nowrap' }}>{displayEmail}</span>
           </div>
         </div>
       </main>
@@ -306,6 +410,10 @@ export function TenantSelectPage() {
       id: t.id,
       name: t.name,
       role: '슈퍼어드민',
+      themeColor: t.settings?.theme_color,
+      pendingCount: pendingCounts[t.id] ?? 0,
+      memberCount: memberCounts[t.id] ?? 0,
+      assignmentCount: assignmentCounts[t.id] ?? 0,
       onClick: () => { setTenant(t, 'admin'); navigate('/') },
     }))
     return pageContent(items)
@@ -315,7 +423,8 @@ export function TenantSelectPage() {
   const items = memberships.map(m => ({
     id: m.id,
     name: m.tenant.name,
-    role: m.role === 'admin' ? '관리자' : '멤버',
+    role: [m.role === 'admin' ? '관리자' : '멤버', m.tenant_role?.name].filter(Boolean).join(' · '),
+    themeColor: m.tenant.settings?.theme_color,
     onClick: () => { setTenant(m.tenant, m.role); navigate('/') },
   }))
   return pageContent(items)

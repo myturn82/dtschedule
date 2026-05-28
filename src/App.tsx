@@ -4,6 +4,7 @@ import { useAuth } from './hooks/useAuth'
 import { SchedulePage } from './pages/SchedulePage'
 import { SharePage } from './pages/SharePage'
 import { AdminPage } from './pages/AdminPage'
+import { DashboardPage } from './pages/DashboardPage'
 import { TenantSelectPage } from './pages/TenantSelectPage'
 import { PendingPage } from './pages/PendingPage'
 import { SuperAdminPage } from './pages/SuperAdminPage'
@@ -12,7 +13,7 @@ import { useDarkMode } from './hooks/useDarkMode'
 function AppRoutes() {
   useDarkMode()
   const { profile, loading: authLoading } = useAuth()
-  const { tenant, memberships, loading: tenantLoading, tenantSelectedByUser } = useTenant()
+  const { tenant, tenantRole, memberships, loading: tenantLoading, tenantSelectedByUser } = useTenant()
 
   if (authLoading || tenantLoading) {
     return (
@@ -59,7 +60,15 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/" element={<SchedulePage />} />
+      <Route path="/" element={
+        tenantRole === 'admin' ? <Navigate to="/dashboard" replace /> : <SchedulePage />
+      } />
+      <Route path="/schedule" element={<SchedulePage />} />
+      <Route path="/dashboard" element={
+        tenantRole === 'admin' || profile?.is_super_admin
+          ? <DashboardPage />
+          : <Navigate to="/" replace />
+      } />
       <Route path="/share" element={<SharePage />} />
       <Route path="/admin" element={<AdminPage />} />
       <Route path="/select-org" element={<TenantSelectPage />} />
