@@ -43,7 +43,7 @@ export function SchedulePage() {
   const [memberNotice, setMemberNotice] = useState<string | null>(null)
 
   const { profile, loading: authLoading, signIn, signUp, signInWithGoogle, signInWithKakao } = useAuth()
-  const { tenant, tenantRole, memberships, timeSlots, slotLabels, legendItems, resetTenantSelection, customFields } = useTenant()
+  const { tenant, tenantRole, memberships, timeSlots, slotLabels, legendItems, customFields } = useTenant()
   const memberRoleId = memberships.find(m => m.tenant_id === tenant?.id)?.role_id ?? null
   const isPrivileged = profile?.is_super_admin || tenantRole === 'admin'
   const tenantMode = tenant?.settings?.tenant_mode ?? '회원선택'
