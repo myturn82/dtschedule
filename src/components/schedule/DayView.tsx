@@ -40,6 +40,14 @@ export function DayView({
         {month}월 {day}일 ({DAY_KR[dow]}요일)
       </div>
 
+      {timeSlots.every(slot => {
+        const cs = getCellState(day, slot, year, month, scheduleRules, slotSettings, dateOverrides, assignments)
+        const vis = isSplitMode ? cs.assignments : cs.assignments.filter(a => a.volunteer_type !== 'admin_note')
+        return cs.isBreaktime || cs.isClosed || cs.isHoliday || vis.length === 0
+      }) && (
+        <div className="text-sm text-[var(--color-text-muted)] text-center py-10">이날 등록된 스케줄이 없습니다.</div>
+      )}
+
       {timeSlots.map(slot => {
         const cs = getCellState(day, slot, year, month, scheduleRules, slotSettings, dateOverrides, assignments)
         const slotLabel = slotLabels[slot] ? `${slotLabels[slot]} (${parseSlotLabel(slot)})` : parseSlotLabel(slot)
@@ -68,6 +76,8 @@ export function DayView({
             </div>
           )
         }
+
+        if (visible.length === 0) return null
 
         return (
           <button

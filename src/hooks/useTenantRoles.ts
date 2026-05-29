@@ -8,6 +8,7 @@ interface TenantRolesState {
   addRole: (name: string, splitCell?: boolean, requiresCustomerInfo?: boolean, indicatorBar?: boolean) => Promise<string | null>
   deleteRole: (id: string) => Promise<string | null>
   updateRole: (id: string, fields: Partial<Pick<TenantRole, 'name' | 'display_order' | 'split_cell' | 'indicator_bar' | 'requires_customer_info'>>) => Promise<string | null>
+  moveRole: (id: string, dir: -1 | 1) => void
 }
 
 export function useTenantRoles(tenantId: string): TenantRolesState {
@@ -52,5 +53,23 @@ export function useTenantRoles(tenantId: string): TenantRolesState {
     return error?.message ?? null
   }, [])
 
-  return { roles, loading, addRole, deleteRole, updateRole }
+  function moveRole(id: string, dir: -1 | 1) {
+    const sorted = [...roles].sort((a, b) => a.display_order - b.display_order)
+    const idx = sorted.findIndex(r => r.id === id)
+    const target = idx + dir
+    if (idx < 0 || target < 0 || target >= sorted.length) return
+    const a = sorted[idx], b = sorted[target]
+    const [orderA, orderB] = [a.display_order, b.display_order]
+    setRoles(prev => prev.map(r =>
+      r.id === a.id ? { ...r, display_order: orderB }
+      : r.id === b.id ? { ...r, display_order: orderA }
+      : r
+    ))
+    Promise.all([
+      supabase.from('tenant_roles').update({ display_order: orderB }).eq('id', a.id),
+      supabase.from('tenant_roles').update({ display_order: orderA }).eq('id', b.id),
+    ])
+  }
+
+  return { roles, loading, addRole, deleteRole, updateRole, moveRole }
 }

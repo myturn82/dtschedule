@@ -65,7 +65,7 @@ export function useSchedule(tenantId: string, year: number, month: number): Sche
       supabase.from('date_overrides').select('*')
         .eq('tenant_id', tenantId)
         .gte('date', `${year}-${String(month).padStart(2, '0')}-01`)
-        .lte('date', `${year}-${String(month).padStart(2, '0')}-31`),
+        .lte('date', `${year}-${String(month).padStart(2, '0')}-${new Date(year, month, 0).getDate()}`),
     ]).then(([a, ss, sr, dov]) => {
       if (a.data) setAssignments(a.data)
       if (ss.data) setSlotSettings(ss.data)

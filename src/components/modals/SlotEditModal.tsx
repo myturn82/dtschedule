@@ -445,7 +445,7 @@ export function SlotEditModal({
                         >
                           <option value="">{field.placeholder || `-- ${field.label} 선택 --`}</option>
                           {field.options!.map(opt => (
-                            <option key={opt} value={opt}>{opt}</option>
+                            <option key={opt.value} value={opt.value}>{opt.name}</option>
                           ))}
                         </select>
                       ) : (

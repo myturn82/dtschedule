@@ -5,7 +5,6 @@ import { useTenant } from '../contexts/TenantContext'
 import { useAuth } from '../hooks/useAuth'
 import type { Tenant } from '../types'
 
-
 function getGreeting() {
   const h = new Date().getHours()
   if (h >= 6 && h < 12) return '좋은 아침이에요'
@@ -24,26 +23,36 @@ function ChevronRight() {
 
 function LogoutIcon() {
   return (
-    <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 4h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-3" />
       <path d="M9 7 6 10l3 3M6 10h7" />
     </svg>
   )
 }
 
+const TINTS = [
+  { bg: 'oklch(0.93 0.06 28)',  ink: 'oklch(0.45 0.13 28)' },
+  { bg: 'oklch(0.92 0.05 265)', ink: 'oklch(0.44 0.12 265)' },
+  { bg: 'oklch(0.92 0.05 160)', ink: 'oklch(0.40 0.10 160)' },
+  { bg: 'oklch(0.93 0.07 75)',  ink: 'oklch(0.44 0.11 60)' },
+]
+
 interface OrgCardProps {
   name: string
-  role: string
-  themeColor?: string
+  roleLabel: string
+  isAdmin: boolean
+  position?: string
   pendingCount?: number
   memberCount?: number
   assignmentCount?: number
+  tintIdx: number
   onClick: () => void
 }
 
-function OrgCard({ name, role, themeColor, pendingCount, memberCount, assignmentCount, onClick }: OrgCardProps) {
+function OrgCard({ name, roleLabel, isAdmin, position, pendingCount, memberCount, assignmentCount, tintIdx, onClick }: OrgCardProps) {
   const [hovered, setHovered] = useState(false)
   const initial = name.charAt(0)
+  const tint = TINTS[tintIdx % TINTS.length]
 
   return (
     <button
@@ -54,9 +63,9 @@ function OrgCard({ name, role, themeColor, pendingCount, memberCount, assignment
         position: 'relative',
         width: '100%',
         textAlign: 'left',
-        padding: '16px',
-        background: '#fff',
-        border: `1px solid ${hovered ? 'rgba(20,23,28,0.18)' : 'rgba(20,23,28,0.09)'}`,
+        padding: '14px 16px',
+        background: '#FFFFFF',
+        border: `1px solid ${hovered ? 'rgba(20,23,28,0.12)' : 'rgba(20,23,28,0.07)'}`,
         borderRadius: 20,
         display: 'flex',
         alignItems: 'center',
@@ -65,50 +74,60 @@ function OrgCard({ name, role, themeColor, pendingCount, memberCount, assignment
         font: 'inherit',
         color: 'inherit',
         boxShadow: hovered
-          ? '0 1px 0 rgba(20,23,28,0.04), 0 12px 28px -12px rgba(20,23,28,0.14)'
-          : '0 1px 0 rgba(20,23,28,0.04), 0 1px 2px rgba(20,23,28,0.03)',
-        transform: hovered ? 'translateY(-1px)' : 'none',
+          ? '0 1px 0 rgba(20,23,28,0.04), 0 16px 30px -16px rgba(20,23,28,0.18)'
+          : '0 1px 0 rgba(20,23,28,0.03), 0 1px 2px rgba(20,23,28,0.03)',
+        transform: hovered ? 'translateY(-2px)' : 'none',
         transition: 'transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease',
       }}
     >
       {/* Avatar tile */}
-      <div style={{
-        width: 56, height: 56, borderRadius: 14, flexShrink: 0,
-        background: themeColor ?? 'rgba(20,23,28,0.07)',
-        border: themeColor ? 'none' : '1.5px solid rgba(20,23,28,0.10)',
+      <div className="tsp-avatar" style={{
+        width: 52, height: 52, borderRadius: 14, flexShrink: 0,
+        background: tint.bg,
         display: 'grid', placeItems: 'center',
-        fontSize: 22, fontWeight: 700,
-        color: themeColor ? '#fff' : '#353A44',
+        fontSize: 21, fontWeight: 700,
+        color: tint.ink,
         letterSpacing: -0.6,
       }}>
         {initial}
       </div>
 
       {/* Body */}
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: -0.4, color: '#14171C', whiteSpace: 'nowrap' }}>
-            {name}
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 5 }}>
+        <div className="tsp-orgname" style={{
+          fontSize: 16.5, fontWeight: 700, letterSpacing: -0.4, color: '#14171C',
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+        }}>
+          {name}
+        </div>
+        <div className="tsp-orgmeta" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, fontWeight: 500, flexWrap: 'wrap' }}>
+          {/* Role pill */}
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: 5,
+            padding: '2px 9px 2px 7px', borderRadius: 999,
+            fontSize: 11.5, fontWeight: 600, letterSpacing: -0.1,
+            background: isAdmin ? 'oklch(0.95 0.04 28)' : 'rgba(20,23,28,0.05)',
+            color: isAdmin ? 'oklch(0.38 0.13 28)' : '#353A44',
+            whiteSpace: 'nowrap',
+          }}>
+            <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'currentColor', flexShrink: 0 }} />
+            {roleLabel}
           </span>
+          {position && <span style={{ color: '#6B7280', whiteSpace: 'nowrap' }}>{position}</span>}
           {!!pendingCount && (
             <span style={{
               display: 'inline-flex', alignItems: 'center', gap: 4,
               padding: '2px 8px', borderRadius: 999,
-              fontSize: 11, fontWeight: 600, letterSpacing: 0.1,
-              background: 'oklch(0.96 0.06 40)',
-              color: 'oklch(0.50 0.18 35)',
+              fontSize: 11, fontWeight: 600,
+              background: 'oklch(0.96 0.06 40)', color: 'oklch(0.50 0.18 35)',
               whiteSpace: 'nowrap',
             }}>
-              <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'currentColor' }} />
               승인대기 {pendingCount}건
             </span>
           )}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 500, color: '#6B7280', flexWrap: 'wrap' }}>
-          <span style={{ fontWeight: 600, color: '#353A44', whiteSpace: 'nowrap' }}>{role}</span>
-        </div>
         {(memberCount !== undefined || assignmentCount !== undefined) && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 2, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             {memberCount !== undefined && (
               <span style={{ fontSize: 11, color: '#8A8F99' }}>
                 멤버 <strong style={{ color: '#353A44', fontWeight: 600 }}>{memberCount}명</strong>
@@ -125,8 +144,7 @@ function OrgCard({ name, role, themeColor, pendingCount, memberCount, assignment
 
       {/* Arrow */}
       <div style={{
-        flexShrink: 0,
-        width: 28, height: 28, borderRadius: 8,
+        flexShrink: 0, width: 30, height: 30, borderRadius: 9,
         display: 'grid', placeItems: 'center',
         background: hovered ? '#14171C' : 'transparent',
         color: hovered ? '#fff' : '#8A8F99',
@@ -192,40 +210,85 @@ export function TenantSelectPage() {
     })
   }, [profile?.is_super_admin])
 
+  const now = new Date()
+  const monthStr = String(now.getMonth() + 1).padStart(2, '0')
   const greeting = getGreeting()
   const displayName = profile?.name ?? ''
   const displayEmail = profile?.email ?? ''
 
-  const pageContent = (items: { id: string; name: string; role: string; themeColor?: string; pendingCount?: number; memberCount?: number; assignmentCount?: number; onClick: () => void }[]) => (
+  interface ItemData {
+    id: string
+    name: string
+    roleLabel: string
+    isAdmin: boolean
+    position?: string
+    pendingCount?: number
+    memberCount?: number
+    assignmentCount?: number
+    onClick: () => void
+  }
+
+  const pageContent = (items: ItemData[]) => (
     <div style={{
       position: 'relative',
       minHeight: '100dvh',
+      display: 'flex',
+      flexDirection: 'column',
       overflow: 'hidden',
       background: '#F4F1EA',
-      fontFamily: '"Pretendard Variable", Pretendard, system-ui, sans-serif',
+      fontFamily: '"Pretendard Variable", Pretendard, system-ui, -apple-system, sans-serif',
       WebkitFontSmoothing: 'antialiased',
+      color: '#14171C',
     }}>
       <style>{`
-        @media (max-width: 639px) {
-          .tsp-header { padding: 10px 16px !important; }
-          .tsp-main { margin: 8px auto 24px !important; padding: 0 16px !important; }
-          .tsp-greeting { margin-bottom: 8px !important; }
-          .tsp-title { font-size: 24px !important; margin-bottom: 4px !important; }
-          .tsp-subtitle { display: none !important; }
-          .tsp-section { margin-bottom: 6px !important; }
-          .tsp-orglist { gap: 6px !important; }
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+        @media (max-width: 540px) {
+          .tsp-topbar { padding: 16px 18px !important; }
+          .tsp-wrap { padding: 8px 18px 22px !important; align-items: flex-start !important; padding-top: 10px !important; }
+          .tsp-h1 { font-size: 30px !important; letter-spacing: -1.2px !important; }
+          .tsp-lede { display: none !important; }
+          .tsp-greeting { margin-bottom: 14px !important; }
+          .tsp-orglist { gap: 8px !important; }
+          .tsp-avatar { width: 48px !important; height: 48px !important; font-size: 19px !important; border-radius: 12px !important; }
+          .tsp-orgname { font-size: 15.5px !important; }
+          .tsp-digit { font-size: 200px !important; bottom: -60px !important; right: -24px !important; }
+          .tsp-foot { padding: 12px 16px !important; font-size: 11px !important; }
+          .tsp-foot-mail { display: none !important; }
+          .tsp-foot-dot2 { display: none !important; }
+        }
+        @media (max-width: 380px) {
+          .tsp-orgmeta { gap: 6px !important; }
         }
       `}</style>
-      {/* Dot grid */}
-      <div style={{
+
+      {/* Graph-paper grid background */}
+      <div aria-hidden="true" style={{
         position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
-        backgroundImage: 'radial-gradient(circle, rgba(20,23,28,0.07) 1px, transparent 1px)',
-        backgroundSize: '28px 28px',
+        backgroundImage: 'linear-gradient(to right, rgba(20,23,28,0.07) 1px, transparent 1px), linear-gradient(to bottom, rgba(20,23,28,0.07) 1px, transparent 1px)',
+        backgroundSize: '56px 56px',
+        maskImage: 'radial-gradient(ellipse 80% 70% at 50% 38%, #000 0%, transparent 78%)',
+        WebkitMaskImage: 'radial-gradient(ellipse 80% 70% at 50% 38%, #000 0%, transparent 78%)',
       }} />
 
+      {/* Month watermark */}
+      <div aria-hidden="true" className="tsp-digit" style={{
+        position: 'absolute', bottom: -90, right: -40, zIndex: 0,
+        fontSize: 320, lineHeight: 0.85, fontWeight: 800, letterSpacing: -8,
+        color: 'transparent',
+        WebkitTextStroke: '1.5px rgba(20,23,28,0.06)',
+        userSelect: 'none', pointerEvents: 'none',
+        fontFamily: '"JetBrains Mono", monospace',
+      }}>
+        {monthStr}<span style={{ fontSize: '0.30em', marginLeft: -8 }}>月</span>
+      </div>
+
       {/* Top bar */}
-      <header className="tsp-header" style={{ position: 'relative', zIndex: 5, padding: '22px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <header className="tsp-topbar" style={{
+        position: 'relative', zIndex: 5,
+        padding: '20px 28px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="30" height="30" style={{ flexShrink: 0, borderRadius: 9, overflow: 'hidden' }}>
             <rect width="512" height="512" rx="112" fill="#FBF9F4"/>
             <rect x="64"     y="142.8" width="55.67" height="68.8" rx="16" fill="oklch(0.85 0.10 70)"/>
@@ -245,30 +308,39 @@ export function TenantSelectPage() {
             <rect x="326.67" y="379.2" width="55.67" height="68.8" rx="16" fill="oklch(0.72 0.10 290)"/>
             <rect x="392.33" y="379.2" width="55.67" height="68.8" rx="16" fill="oklch(0.85 0.10 70)"/>
           </svg>
-          <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: -0.2, whiteSpace: 'nowrap' }}>스케줄러</span>
+          <span style={{ fontSize: 16, fontWeight: 700, letterSpacing: -0.4, whiteSpace: 'nowrap' }}>스케줄러</span>
         </div>
+
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {profile?.is_super_admin && (
             <button
               onClick={() => navigate('/superadmin')}
               style={{
-                fontSize: 13, color: '#6B7280', textDecoration: 'none',
-                padding: '8px 12px', borderRadius: 9, border: 'none',
-                background: 'transparent', cursor: 'pointer', whiteSpace: 'nowrap', font: 'inherit',
+                display: 'inline-flex', alignItems: 'center', gap: 5,
+                fontSize: 12, fontWeight: 500, fontFamily: 'inherit', color: '#6B7280',
+                padding: '5px 10px', borderRadius: 9,
+                border: '1px solid rgba(20,23,28,0.07)',
+                background: '#FFFFFF', cursor: 'pointer', whiteSpace: 'nowrap',
+                boxShadow: '0 1px 0 rgba(20,23,28,0.03)',
               }}
             >
-              슈퍼어드민 →
+              <svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                <rect x="2" y="7" width="7" height="11" rx="1.5"/>
+                <rect x="11" y="2" width="7" height="16" rx="1.5"/>
+              </svg>
+              조직관리
             </button>
           )}
           <button
             onClick={signOut}
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 5,
-              fontSize: 12, fontWeight: 500, padding: '5px 10px',
-              background: '#fff', color: '#353A44',
-              border: '1px solid rgba(20,23,28,0.09)', borderRadius: 9,
-              cursor: 'pointer', font: 'inherit', whiteSpace: 'nowrap',
-              transition: 'background 0.12s',
+              fontSize: 12, fontWeight: 500, fontFamily: 'inherit', padding: '5px 10px',
+              background: '#FFFFFF', color: '#353A44',
+              border: '1px solid rgba(20,23,28,0.07)', borderRadius: 9,
+              cursor: 'pointer', whiteSpace: 'nowrap',
+              boxShadow: '0 1px 0 rgba(20,23,28,0.03)',
+              transition: 'background 0.12s, border-color 0.12s',
             }}
           >
             <LogoutIcon />
@@ -278,139 +350,142 @@ export function TenantSelectPage() {
       </header>
 
       {/* Main content */}
-      <main className="tsp-main" style={{ position: 'relative', zIndex: 4, maxWidth: 560, margin: '32px auto 80px', padding: '0 24px' }}>
-        {/* Greeting pill */}
-        <div className="tsp-greeting" style={{
-          display: 'inline-flex', alignItems: 'center', gap: 8,
-          padding: '6px 12px 6px 8px',
-          background: '#fff', border: '1px solid rgba(20,23,28,0.09)',
-          borderRadius: 999, fontSize: 12, color: '#353A44', fontWeight: 500,
-          marginBottom: 18,
-          boxShadow: '0 1px 0 rgba(20,23,28,0.04), 0 8px 24px -12px rgba(20,23,28,0.10)',
-          whiteSpace: 'nowrap',
-        }}>
-          <span style={{
-            width: 22, height: 22, borderRadius: '50%',
-            background: 'oklch(0.90 0.06 70)',
-            display: 'grid', placeItems: 'center', fontSize: 12,
-          }}>👋</span>
-          <span><strong style={{ fontWeight: 600, color: '#14171C' }}>{displayName}</strong>님, {greeting}</span>
-        </div>
+      <main className="tsp-wrap" style={{
+        position: 'relative', zIndex: 4,
+        flex: 1,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '12px 24px 28px',
+        minHeight: 0,
+      }}>
+        <div style={{ width: '100%', maxWidth: 540 }}>
 
-        {/* 이미 가입된 조직 알림 배너 */}
-        {memberNotice && (
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
-            marginBottom: 20, padding: '10px 14px', borderRadius: 12,
-            background: '#eff6ff', border: '1px solid #bfdbfe',
-            fontSize: 13, color: '#1d4ed8',
+          {/* Greeting pill */}
+          <div className="tsp-greeting" style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            padding: '6px 13px 6px 8px',
+            background: '#FFFFFF', border: '1px solid rgba(20,23,28,0.07)',
+            borderRadius: 999, fontSize: 12.5, color: '#353A44', fontWeight: 500,
+            marginBottom: 16,
+            boxShadow: '0 1px 0 rgba(20,23,28,0.03), 0 8px 22px -14px rgba(20,23,28,0.18)',
+            whiteSpace: 'nowrap',
           }}>
-            <span>{memberNotice}</span>
-            <button onClick={() => setMemberNotice(null)} style={{
-              flexShrink: 0, background: 'none', border: 'none', cursor: 'pointer',
-              color: '#93c5fd', padding: 0, display: 'grid', placeItems: 'center',
+            <span style={{
+              width: 22, height: 22, borderRadius: '50%',
+              background: 'oklch(0.95 0.04 28)',
+              display: 'grid', placeItems: 'center', fontSize: 12,
+            }}>👋</span>
+            <span><strong style={{ fontWeight: 700, color: '#14171C' }}>{displayName}</strong>님, {greeting}</span>
+          </div>
+
+          {/* Already-member notice */}
+          {memberNotice && (
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+              marginBottom: 16, padding: '10px 14px', borderRadius: 12,
+              background: '#eff6ff', border: '1px solid #bfdbfe',
+              fontSize: 13, color: '#1d4ed8',
             }}>
-              <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <path d="M5 5l10 10M15 5L5 15"/>
-              </svg>
-            </button>
-          </div>
-        )}
-
-        {/* Title */}
-        <h1 className="tsp-title" style={{ margin: '0 0 10px', fontSize: 38, lineHeight: 1.1, letterSpacing: -1.4, fontWeight: 700, color: '#14171C' }}>
-          오늘은 어디로<br />가볼까요<span style={{ color: 'oklch(0.66 0.16 28)' }}>?</span>
-        </h1>
-        <p className="tsp-subtitle" style={{ margin: '0 0 24px', fontSize: 15, lineHeight: 1.55, color: '#6B7280', maxWidth: 440 }}>
-          내가 속한 조직을 선택해서 들어가세요. 역할에 따라 다른 화면이 열려요.
-        </p>
-
-        {/* 슈퍼관리자 전체 통계 */}
-        {profile?.is_super_admin && !loading && (
-          <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-            {([
-              { label: '전체 조직', value: `${allTenants.length}개`, highlight: false },
-              { label: '총 멤버', value: `${Object.values(memberCounts).reduce((s, v) => s + v, 0)}명`, highlight: false },
-              { label: '승인 대기', value: `${Object.values(pendingCounts).reduce((s, v) => s + v, 0)}건`, highlight: Object.values(pendingCounts).some(v => v > 0) },
-            ] as { label: string; value: string; highlight: boolean }[]).map(({ label, value, highlight }) => (
-              <div key={label} style={{
-                flex: '1 1 90px', padding: '10px 14px',
-                background: '#fff',
-                border: `1px solid ${highlight ? 'oklch(0.88 0.07 50)' : 'rgba(20,23,28,0.09)'}`,
-                borderRadius: 14,
-                boxShadow: '0 1px 0 rgba(20,23,28,0.04)',
+              <span>{memberNotice}</span>
+              <button onClick={() => setMemberNotice(null)} style={{
+                flexShrink: 0, background: 'none', border: 'none', cursor: 'pointer',
+                color: '#93c5fd', padding: 0, display: 'grid', placeItems: 'center',
               }}>
-                <div style={{ fontSize: 10.5, color: '#8A8F99', fontWeight: 600, letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
-                <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.5, color: highlight ? 'oklch(0.50 0.18 35)' : '#14171C' }}>{value}</div>
-              </div>
-            ))}
-          </div>
-        )}
+                <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M5 5l10 10M15 5L5 15"/>
+                </svg>
+              </button>
+            </div>
+          )}
 
-        {/* Section label */}
-        <div className="tsp-section" style={{ marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{
-            fontSize: 11, fontWeight: 600, letterSpacing: 0.6, textTransform: 'uppercase',
-            color: '#8A8F99',
-            display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap',
-          }}>
-            내 조직
-          </span>
-          <span style={{ fontSize: 11, color: '#8A8F99', letterSpacing: 0.4, whiteSpace: 'nowrap' }}>
-            {items.length}개
-          </span>
-        </div>
+          {/* Headline */}
+          <h1 className="tsp-h1" style={{ margin: '0 0 12px', fontSize: 38, lineHeight: 1.12, letterSpacing: -1.6, fontWeight: 700, color: '#14171C' }}>
+            오늘은 어디로<br />가볼까요<span style={{ color: 'oklch(0.66 0.16 28)' }}>?</span>
+          </h1>
+          <p className="tsp-lede" style={{ margin: '0 0 26px', fontSize: 15, lineHeight: 1.55, color: '#6B7280', maxWidth: 430 }}>
+            내가 속한 조직을 선택해서 들어가세요. 역할에 따라 다른 화면이 열려요.
+          </p>
 
-        {/* Org list */}
-        {loading ? (
-          <div style={{ padding: '40px 0', textAlign: 'center', color: '#8A8F99', fontSize: 14 }}>
-            로딩 중...
-          </div>
-        ) : items.length === 0 ? (
-          <div style={{ padding: '40px 0', textAlign: 'center', color: '#8A8F99', fontSize: 14 }}>
-            소속된 조직이 없습니다.
-          </div>
-        ) : (
-          <div className="tsp-orglist" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {items.map((item, idx) => (
-              <OrgCard
-                key={item.id}
-                name={item.name}
-                role={item.role}
-                themeColor={item.themeColor}
-                pendingCount={item.pendingCount}
-                memberCount={item.memberCount}
-                assignmentCount={item.assignmentCount}
-                onClick={item.onClick}
-              />
-            ))}
-          </div>
-        )}
+          {/* Super-admin summary stats */}
+          {profile?.is_super_admin && !loading && (
+            <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+              {([
+                { label: '전체 조직', value: `${allTenants.length}개`, highlight: false },
+                { label: '총 멤버', value: `${Object.values(memberCounts).reduce((s, v) => s + v, 0)}명`, highlight: false },
+                { label: '승인 대기', value: `${Object.values(pendingCounts).reduce((s, v) => s + v, 0)}건`, highlight: Object.values(pendingCounts).some(v => v > 0) },
+              ] as { label: string; value: string; highlight: boolean }[]).map(({ label, value, highlight }) => (
+                <div key={label} style={{
+                  flex: '1 1 90px', padding: '10px 14px',
+                  background: '#FFFFFF',
+                  border: `1px solid ${highlight ? 'oklch(0.88 0.07 50)' : 'rgba(20,23,28,0.07)'}`,
+                  borderRadius: 14,
+                  boxShadow: '0 1px 0 rgba(20,23,28,0.03)',
+                }}>
+                  <div style={{ fontSize: 10.5, color: '#8A8F99', fontWeight: 600, letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
+                  <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.5, color: highlight ? 'oklch(0.50 0.18 35)' : '#14171C' }}>{value}</div>
+                </div>
+              ))}
+            </div>
+          )}
 
-        {/* Footer */}
-        <div style={{
-          marginTop: 28, paddingTop: 16,
-          borderTop: '1px solid rgba(20,23,28,0.09)',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          fontSize: 12, color: '#8A8F99', gap: 12, flexWrap: 'wrap',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ whiteSpace: 'nowrap' }}>{displayName}</span>
-            <span>·</span>
-            <span style={{ fontSize: 11, whiteSpace: 'nowrap' }}>{displayEmail}</span>
+          {/* List header */}
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10 }}>
+            <span style={{
+              fontSize: 11, fontWeight: 600, letterSpacing: 0.8, textTransform: 'uppercase',
+              color: '#8A8F99', fontFamily: '"JetBrains Mono", monospace',
+            }}>내 조직</span>
+            <span style={{ fontSize: 11, color: '#8A8F99', fontFamily: '"JetBrains Mono", monospace', letterSpacing: 0.4 }}>
+              {items.length}개
+            </span>
           </div>
+
+          {/* Org list */}
+          {loading ? (
+            <div style={{ padding: '40px 0', textAlign: 'center', color: '#8A8F99', fontSize: 14 }}>로딩 중...</div>
+          ) : items.length === 0 ? (
+            <div style={{ padding: '40px 0', textAlign: 'center', color: '#8A8F99', fontSize: 14 }}>소속된 조직이 없습니다.</div>
+          ) : (
+            <div className="tsp-orglist" style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+              {items.map((item, idx) => (
+                <OrgCard
+                  key={item.id}
+                  name={item.name}
+                  roleLabel={item.roleLabel}
+                  isAdmin={item.isAdmin}
+                  position={item.position}
+                  pendingCount={item.pendingCount}
+                  memberCount={item.memberCount}
+                  assignmentCount={item.assignmentCount}
+                  tintIdx={idx}
+                  onClick={item.onClick}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </main>
+
+      {/* Footer */}
+      <footer className="tsp-foot" style={{
+        position: 'relative', zIndex: 5,
+        borderTop: '1px solid rgba(20,23,28,0.07)',
+        padding: '14px 28px',
+        display: 'flex', alignItems: 'center', gap: 10,
+        fontSize: 12, color: '#8A8F99',
+      }}>
+        <span style={{ color: '#353A44', fontWeight: 600 }}>{displayName}</span>
+        <span style={{ width: 3, height: 3, borderRadius: '50%', background: '#B8BBC2', flexShrink: 0 }} />
+        <span className="tsp-foot-mail" style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11.5 }}>{displayEmail}</span>
+      </footer>
     </div>
   )
 
-  // Super admin: all tenants
+  // Super admin: show all tenants
   if (profile?.is_super_admin) {
     const items = allTenants.map(t => ({
       id: t.id,
       name: t.name,
-      role: '슈퍼어드민',
-      themeColor: t.settings?.theme_color,
+      roleLabel: '슈퍼관리자',
+      isAdmin: true,
       pendingCount: pendingCounts[t.id] ?? 0,
       memberCount: memberCounts[t.id] ?? 0,
       assignmentCount: assignmentCounts[t.id] ?? 0,
@@ -423,8 +498,9 @@ export function TenantSelectPage() {
   const items = memberships.map(m => ({
     id: m.id,
     name: m.tenant.name,
-    role: [m.role === 'admin' ? '관리자' : '멤버', m.tenant_role?.name].filter(Boolean).join(' · '),
-    themeColor: m.tenant.settings?.theme_color,
+    roleLabel: m.role === 'admin' ? '관리자' : '멤버',
+    isAdmin: m.role === 'admin',
+    position: m.tenant_role?.name,
     onClick: () => { setTenant(m.tenant, m.role); navigate('/') },
   }))
   return pageContent(items)

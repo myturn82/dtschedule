@@ -343,7 +343,7 @@ export function SuperAdminPage() {
     <div className="min-h-screen bg-[var(--color-bg)] p-4 sm:p-8">
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">슈퍼어드민</h1>
+          <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">슈퍼관리자</h1>
           <button onClick={() => navigate('/')} className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]">
             ← 돌아가기
           </button>

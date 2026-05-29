@@ -8,6 +8,8 @@ export interface AssignmentSummary {
   time_slot: string
   day: number
   role_id: string | null
+  volunteer_type?: string
+  extra_data?: Record<string, string>
 }
 
 interface DashboardState {
@@ -43,7 +45,7 @@ export function useDashboard(tenantId: string): DashboardState {
           .eq('tenant_id', tenantId),
         supabase
           .from('assignments')
-          .select('user_id, volunteer_name, time_slot, day, role_id')
+          .select('user_id, volunteer_name, time_slot, day, role_id, volunteer_type, extra_data')
           .eq('tenant_id', tenantId)
           .eq('year', year)
           .eq('month', month)

@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useTenant } from '../contexts/TenantContext'
 import { useSchedule } from '../hooks/useSchedule'
@@ -8,22 +7,20 @@ import type { ProfileWithRole } from '../hooks/useProfiles'
 import { useTenantRoles } from '../hooks/useTenantRoles'
 import { getCellState } from '../utils/cellState'
 import { getTimeSubOptions } from '../utils/timeSlots'
+import { AppHeader } from '../components/AppHeader'
 import { ScheduleHeader } from '../components/schedule/ScheduleHeader'
 import { ScheduleGrid } from '../components/schedule/ScheduleGrid'
 import { WeekGrid } from '../components/schedule/WeekGrid'
 import { DayView } from '../components/schedule/DayView'
 import { Legend } from '../components/schedule/Legend'
-import { DashboardNav } from '../components/DashboardNav'
 import { FilterBar } from '../components/shared/FilterBar'
 import { ExportButton } from '../components/shared/ExportButton'
 import { LoginModal } from '../components/auth/LoginModal'
-import { ProfileModal } from '../components/auth/ProfileModal'
 import { SlotEditModal } from '../components/modals/SlotEditModal'
 import { CapacityModal } from '../components/modals/CapacityModal'
 import { HolidayNoteModal } from '../components/modals/HolidayNoteModal'
 import { ConfirmDialog } from '../components/shared/ConfirmDialog'
 import { AutoAssignPreviewModal } from '../components/modals/AutoAssignPreviewModal'
-import { JoinOrgModal } from '../components/modals/JoinOrgModal'
 import { computeAutoAssignments } from '../utils/autoAssign'
 import type { ProposedAssignment } from '../utils/autoAssign'
 import type { ModalTarget, ViewType } from '../types'
@@ -37,21 +34,15 @@ export function SchedulePage() {
   const [highlightName, setHighlightName] = useState('')
   const [showLogin, setShowLogin] = useState(false)
   const [showCapacity, setShowCapacity] = useState(false)
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [showNoClearTarget, setShowNoClearTarget] = useState(false)
   const [autoProposals, setAutoProposals] = useState<ProposedAssignment[] | null>(null)
   const [modalTarget, setModalTarget] = useState<ModalTarget | null>(null)
   const [directRegMsg, setDirectRegMsg] = useState<string | null>(null)
-  const [showFuncMenu, setShowFuncMenu] = useState(false)
-  const [showUserMenu, setShowUserMenu] = useState(false)
   const [holidayTarget, setHolidayTarget] = useState<{ day: number; startHour: number; endHour: number } | null>(null)
-  const [showProfile, setShowProfile] = useState(false)
-  const [showJoinOrg, setShowJoinOrg] = useState(false)
   const [memberNotice, setMemberNotice] = useState<string | null>(null)
 
-  const navigate = useNavigate()
-  const { profile, loading: authLoading, signIn, signUp, signInWithGoogle, signInWithKakao, linkGoogle, linkKakao, getIdentities, signOut, deleteAccount } = useAuth()
+  const { profile, loading: authLoading, signIn, signUp, signInWithGoogle, signInWithKakao } = useAuth()
   const { tenant, tenantRole, memberships, timeSlots, slotLabels, legendItems, resetTenantSelection, customFields } = useTenant()
   const memberRoleId = memberships.find(m => m.tenant_id === tenant?.id)?.role_id ?? null
   const isPrivileged = profile?.is_super_admin || tenantRole === 'admin'
@@ -235,182 +226,53 @@ export function SchedulePage() {
     ? getCellState(modalTarget.day, modalTarget.timeSlot, modalTarget.year, modalTarget.month, scheduleRules, slotSettings, dateOverrides, assignments)
     : null
 
+  const menuItemCls = 'w-full text-left px-3 py-2 text-sm rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors'
+
   return (
     <div className="min-h-[100dvh] bg-[var(--color-bg)]">
-      {tenantRole === 'admin' && <DashboardNav />}
+      <AppHeader
+        leftSlot={<FilterBar value={highlightName} onChange={setHighlightName} />}
+        rightSlot={<ExportButton year={year} month={month} />}
+        roleLabel={memberTenantRoleName ?? undefined}
+        funcMenuItems={(close) => (
+          <>
+            <button onClick={() => { setShowCapacity(true); close() }} className={menuItemCls}>
+              <span className="flex items-center gap-2.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                인원 설정
+              </span>
+            </button>
+            {tenantMode === '회원선택' && (
+              <button onClick={() => { handleAutoAssign(); close() }} className={menuItemCls}>
+                <span className="flex items-center gap-2.5">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8 19 13M17.8 6.2 19 5M12.2 6.2 11 5M12.2 11.8 11 13"/><path d="M3 21l9-9"/><path d="M12.2 6.2 3 15l3 3 9.2-9.2"/></svg>
+                  자동배정
+                </span>
+              </button>
+            )}
+            <div className="h-px bg-[var(--color-border)] mx-1 my-1" />
+            <button onClick={() => { handleClearClick(); close() }} className={menuItemCls}>
+              <span className="flex items-center gap-2.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                초기화
+              </span>
+            </button>
+          </>
+        )}
+        onShowLogin={() => setShowLogin(true)}
+      />
+      {memberNotice && (
+        <div className="flex items-center justify-between gap-2 mx-3 mt-2 sm:mx-5 px-3 py-2 rounded-xl bg-blue-50 border border-blue-200 text-sm text-blue-700">
+          <span>{memberNotice}</span>
+          <button onClick={() => setMemberNotice(null)} className="shrink-0 text-blue-400 hover:text-blue-600 transition-colors">
+            <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 5l10 10M15 5L5 15"/></svg>
+          </button>
+        </div>
+      )}
       {/* Main content */}
       <main className="px-2 py-2 sm:px-4 sm:py-3">
         <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-[var(--shadow-lg)] overflow-hidden animate-fade-up">
-          <div className="relative px-3 py-3 sm:px-5 sm:py-4 border-b border-[var(--color-border)]">
-            {/* 이미 가입된 조직으로 소셜 로그인된 경우 안내 배너 */}
-            {memberNotice && (
-              <div className="flex items-center justify-between gap-2 mb-3 px-3 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/40 text-sm text-blue-700 dark:text-blue-300">
-                <span>{memberNotice}</span>
-                <button onClick={() => setMemberNotice(null)} className="shrink-0 text-blue-400 hover:text-blue-600 dark:hover:text-blue-200 transition-colors">
-                  <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 5l10 10M15 5L5 15"/></svg>
-                </button>
-              </div>
-            )}
-            {/* Toolbar */}
-            <div className="flex items-center justify-between gap-2 mb-3">
-              {/* 좌측: 기능 햄버거 + 필터 */}
-              <div className="flex items-center gap-1.5">
-                {isPrivileged && (
-                  <button
-                    onClick={() => setShowFuncMenu(v => !v)}
-                    aria-label="기능 메뉴"
-                    className="w-8 h-8 flex items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-all"
-                  >
-                    {showFuncMenu
-                      ? <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 5l10 10M15 5L5 15"/></svg>
-                      : <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 5h14M3 10h14M3 15h14"/></svg>
-                    }
-                  </button>
-                )}
-                <FilterBar value={highlightName} onChange={setHighlightName} />
-              </div>
-
-              {/* 우측: 내보내기 + 이름/뱃지 + 유저 아이콘 */}
-              <div className="flex items-center gap-1.5">
-                <ExportButton year={year} month={month} />
-                {profile && (
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-semibold text-[var(--color-text-primary)] max-w-[80px] truncate">{profile.name}</span>
-                    {memberTenantRoleName && (
-                      <span className="text-xs text-[var(--color-text-muted)] bg-[var(--color-surface-secondary)] px-2 py-0.5 rounded-lg border border-[var(--color-border)] whitespace-nowrap hidden sm:block">
-                        {memberTenantRoleName}
-                      </span>
-                    )}
-                  </div>
-                )}
-                {profile ? (
-                  <button
-                    onClick={() => setShowUserMenu(v => !v)}
-                    aria-label="사용자 메뉴"
-                    className="w-8 h-8 flex items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-all"
-                  >
-                    {showUserMenu
-                      ? <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 5l10 10M15 5L5 15"/></svg>
-                      : <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="10" cy="7" r="3" strokeWidth="2"/><path d="M4 17c0-3.314 2.686-6 6-6s6 2.686 6 6" strokeWidth="2" strokeLinecap="round"/></svg>
-                    }
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setShowLogin(true)}
-                    className="px-3 py-1.5 text-sm font-semibold rounded-xl bg-[var(--color-brand-primary)] text-white hover:bg-[var(--color-brand-primary-hover)] transition-all"
-                  >
-                    로그인
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* 좌측 기능 메뉴 드롭다운 */}
-            {showFuncMenu && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setShowFuncMenu(false)} />
-                <div className="absolute top-14 left-3 sm:left-5 w-52 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-lg z-50 overflow-hidden">
-                  <div className="p-2">
-                    {profile?.is_super_admin && (
-                      <>
-                        <button onClick={() => { navigate('/superadmin'); setShowFuncMenu(false) }} className="w-full text-left px-3 py-2 text-sm rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors">
-                          <span className="flex items-center gap-2.5">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                            슈퍼어드민
-                          </span>
-                        </button>
-                        {tenant && (
-                          <button onClick={() => { resetTenantSelection(); setShowFuncMenu(false) }} className="w-full text-left px-3 py-2 text-sm rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors">
-                            <span className="flex items-center gap-2.5">
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M3 22h18M9 22V8l3-5 3 5v14"/><path d="M3 10l9-8 9 8"/></svg>
-                              {tenant.name} · 조직 변경
-                            </span>
-                          </button>
-                        )}
-                        <div className="h-px bg-[var(--color-border)] mx-1 my-1" />
-                      </>
-                    )}
-                    <button onClick={() => { navigate('/admin'); setShowFuncMenu(false) }} className="w-full text-left px-3 py-2 text-sm rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors">
-                      <span className="flex items-center gap-2.5">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
-                        관리자대시보드
-                      </span>
-                    </button>
-                    <button onClick={() => { setShowCapacity(true); setShowFuncMenu(false) }} className="w-full text-left px-3 py-2 text-sm rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors">
-                      <span className="flex items-center gap-2.5">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                        인원 설정
-                      </span>
-                    </button>
-                    {tenantMode === '회원선택' && (
-                      <button onClick={() => { handleAutoAssign(); setShowFuncMenu(false) }} className="w-full text-left px-3 py-2 text-sm rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors">
-                        <span className="flex items-center gap-2.5">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8 19 13M17.8 6.2 19 5M12.2 6.2 11 5M12.2 11.8 11 13"/><path d="M3 21l9-9"/><path d="M12.2 6.2 3 15l3 3 9.2-9.2"/></svg>
-                          자동배정
-                        </span>
-                      </button>
-                    )}
-                    <div className="h-px bg-[var(--color-border)] mx-1 my-1" />
-                    <button onClick={() => { handleClearClick(); setShowFuncMenu(false) }} className="w-full text-left px-3 py-2 text-sm rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors">
-                      <span className="flex items-center gap-2.5">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                        초기화
-                      </span>
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
-
-            {/* 우측 사용자 메뉴 드롭다운 */}
-            {showUserMenu && profile && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setShowUserMenu(false)} />
-                <div className="absolute top-14 right-3 sm:right-5 w-52 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-lg z-50 overflow-hidden">
-                  <div className="px-3 py-2.5 border-b border-[var(--color-border)]">
-                    <p className="text-sm font-semibold text-[var(--color-text-primary)] truncate">{profile.name}</p>
-                  </div>
-                  <div className="p-2">
-                    <button onClick={() => { setShowProfile(true); setShowUserMenu(false) }} className="w-full text-left px-3 py-2 text-sm rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors">
-                      <span className="flex items-center gap-2.5">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                        계정 연동
-                      </span>
-                    </button>
-                    <div className="h-px bg-[var(--color-border)] mx-1 my-1" />
-                    {(memberships.length > 1 || profile?.is_super_admin) && (
-                      <button onClick={() => { resetTenantSelection(); setShowUserMenu(false) }} className="w-full text-left px-3 py-2 text-sm rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors">
-                        <span className="flex items-center gap-2.5">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
-                          조직 변경
-                        </span>
-                      </button>
-                    )}
-                    {!profile?.is_super_admin && (
-                      <button onClick={() => { setShowJoinOrg(true); setShowUserMenu(false) }} className="w-full text-left px-3 py-2 text-sm rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors">
-                        <span className="flex items-center gap-2.5">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>
-                          다른 조직 가입
-                        </span>
-                      </button>
-                    )}
-                    <div className="h-px bg-[var(--color-border)] mx-1 my-1" />
-                    <button onClick={() => { signOut(); setShowUserMenu(false) }} className="w-full text-left px-3 py-2 text-sm rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors">
-                      <span className="flex items-center gap-2.5">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                        로그아웃
-                      </span>
-                    </button>
-                    <button onClick={() => { setShowDeleteConfirm(true); setShowUserMenu(false) }} className="w-full text-left px-3 py-2 text-sm rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors">
-                      <span className="flex items-center gap-2.5">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="8" x2="23" y2="14"/><line x1="23" y1="8" x2="17" y2="14"/></svg>
-                        회원탈퇴
-                      </span>
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
+          <div className="px-3 py-3 sm:px-5 sm:py-4 border-b border-[var(--color-border)]">
             <ScheduleHeader
               year={year} month={month} day={day}
               title={tenant?.name}
@@ -503,32 +365,14 @@ export function SchedulePage() {
         />
       )}
 
-      {showJoinOrg && profile && (
-        <JoinOrgModal
-          userId={profile.id}
-          onClose={() => setShowJoinOrg(false)}
-          onSuccess={() => setShowJoinOrg(false)}
-        />
-      )}
-
-      {showProfile && profile && (
-        <ProfileModal
-          profile={profile}
-          onClose={() => setShowProfile(false)}
-          linkGoogle={linkGoogle}
-          linkKakao={linkKakao}
-          getIdentities={getIdentities}
-        />
-      )}
-
-{modalTarget && selectedCellState && (
+      {modalTarget && selectedCellState && (
         <SlotEditModal
           target={modalTarget}
           cellState={selectedCellState}
           profile={profile}
           tenantRole={tenantRole}
           memberRoleId={memberRoleId}
-          splitRoles={splitRoles}
+          splitRoles={[...splitRoles, ...indicatorBarRoles]}
           isSplitMode={isSplitMode}
           tenantRoles={tenantRoles}
           tenantMode={tenantMode}
@@ -562,22 +406,6 @@ export function SchedulePage() {
             extra_data: extraData,
           })}
           onDelete={deleteAssignment}
-        />
-      )}
-
-      {showDeleteConfirm && (
-        <ConfirmDialog
-          title="회원탈퇴"
-          message={`정말 탈퇴하시겠습니까?\n탈퇴 후 모든 데이터가 삭제되며\n동일한 이메일로 재가입이 가능합니다.`}
-          confirmLabel="탈퇴하기"
-          cancelLabel="취소"
-          danger
-          onCancel={() => setShowDeleteConfirm(false)}
-          onConfirm={async () => {
-            setShowDeleteConfirm(false)
-            const err = await deleteAccount()
-            if (err) alert(err)
-          }}
         />
       )}
 
