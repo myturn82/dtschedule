@@ -187,7 +187,7 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
       setLoading(false)
       if (err) setError(err)
       else setSuccess(effectiveRole === 'admin'
-        ? '가입이 완료됐습니다. 슈퍼어드민이 승인하면 로그인하실 수 있습니다.'
+        ? '가입이 완료됐습니다. 슈퍼관리자가 승인하면 로그인하실 수 있습니다.'
         : '가입이 완료됐습니다. 조직 관리자가 승인하면 로그인하실 수 있습니다.')
     }
   }
@@ -197,12 +197,10 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
     setLoading(true); setError(null); const err = await onGoogle(); setLoading(false); if (err) setError(err)
   }
   async function handleKakao() {
-    console.log('[DEBUG][handleKakao] mode=', mode, 'socialPending=', socialPending)
     if (mode === 'signup') { setSocialPending('kakao'); return }
     setLoading(true); setError(null); const err = await onKakao(); setLoading(false); if (err) setError(err)
   }
   async function handleSocialConfirm() {
-    console.log('[DEBUG][handleSocialConfirm] socialPending=', socialPending, 'tenantId=', tenantId, 'tenantRoleId=', tenantRoleId, 'role=', role)
     if (!tenantId) { setError('가입할 조직을 선택해주세요.'); return }
     if (hasCustomRoles && !tenantRoleId) { setError('활동 유형을 선택해주세요.'); return }
     if (!hasCustomRoles && !role) { setError('활동 유형을 선택해주세요.'); return }

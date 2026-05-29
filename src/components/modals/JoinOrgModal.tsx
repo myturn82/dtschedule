@@ -17,7 +17,7 @@ interface Props {
 }
 
 export function JoinOrgModal({ userId, onClose, onSuccess }: Props) {
-  const [tenants, setTenants] = useState<Tenant[]>([])
+  const [tenants, setTenants] = useState<Tenant[] | null>(null)
   const [tenantId, setTenantId] = useState('')
   const [tenantRoles, setTenantRoles] = useState<TenantRole[] | null>(null)
   const [tenantRoleId, setTenantRoleId] = useState<string | null>(null)
@@ -27,10 +27,14 @@ export function JoinOrgModal({ userId, onClose, onSuccess }: Props) {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    supabase.from('tenants').select('id, name').order('name').then(({ data }) => {
-      setTenants(data ?? [])
+    Promise.all([
+      supabase.from('tenants').select('id, name').order('name'),
+      supabase.from('tenant_members').select('tenant_id').eq('user_id', userId),
+    ]).then(([{ data: allTenants }, { data: myMemberships }]) => {
+      const mine = new Set((myMemberships ?? []).map(m => m.tenant_id))
+      setTenants((allTenants ?? []).filter(t => !mine.has(t.id)))
     })
-  }, [])
+  }, [userId])
 
   useEffect(() => {
     setTenantRoles(null)
@@ -116,14 +120,22 @@ export function JoinOrgModal({ userId, onClose, onSuccess }: Props) {
               <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">
                 조직 <span className="text-red-500">*</span>
               </label>
-              <select
-                value={tenantId}
-                onChange={e => setTenantId(e.target.value)}
-                className="w-full border border-[var(--color-border-strong)] rounded-xl px-3 py-2 text-sm bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] focus:outline-none"
-              >
-                <option value="">조직을 선택하세요</option>
-                {tenants.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-              </select>
+              {tenants === null ? (
+                <p className="text-xs text-[var(--color-text-muted)] py-2">로딩 중...</p>
+              ) : tenants.length === 0 ? (
+                <p className="text-xs text-[var(--color-text-muted)] py-2">
+                  신청 가능한 조직이 없습니다. 이미 모든 조직에 가입했거나 신청 중입니다.
+                </p>
+              ) : (
+                <select
+                  value={tenantId}
+                  onChange={e => setTenantId(e.target.value)}
+                  className="w-full border border-[var(--color-border-strong)] rounded-xl px-3 py-2 text-sm bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] focus:outline-none"
+                >
+                  <option value="">조직을 선택하세요</option>
+                  {tenants.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                </select>
+              )}
             </div>
 
             {tenantId && (

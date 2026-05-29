@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { LegendItem, LegendColor } from '../../types'
 
 export const DEFAULT_LEGEND_ITEMS: LegendItem[] = []
@@ -32,28 +33,44 @@ interface Props {
 }
 
 export function Legend({ legendItems }: Props) {
+  const [expanded, setExpanded] = useState(false)
   const items = legendItems ?? []
 
   if (!items.length) return null
 
   return (
-    <div className="flex flex-wrap items-center gap-2 mt-3 mb-0.5">
-      <span className="text-[11px] font-medium text-[var(--color-text-muted)] mr-1 whitespace-nowrap">
-        범례
-      </span>
-      {items.map(({ id, label, color }) => {
-        const s = LEGEND_COLOR_STYLES[color]
-        const dot = DOT_COLORS[color]
-        return (
-          <span
-            key={id}
-            className={`inline-flex items-center gap-1.5 px-2.5 py-[6px] rounded-full text-[12px] font-medium whitespace-nowrap ${s.bg} border ${s.border} ${s.icon}`}
-          >
-            <span className="w-2 h-2 rounded-full shrink-0 flex-none" style={{ background: dot }} />
-            <span>{label}</span>
-          </span>
-        )
-      })}
+    <div className="mt-3 mb-0.5">
+      {/* 모바일: 토글 버튼 / 데스크탑: 레이블 */}
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => setExpanded(p => !p)}
+          className="sm:hidden flex items-center gap-1 text-[11px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+        >
+          범례 {items.length}개
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <path d={expanded ? 'M18 15l-6-6-6 6' : 'M6 9l6 6 6-6'} />
+          </svg>
+        </button>
+        <span className="hidden sm:inline text-[11px] font-medium text-[var(--color-text-muted)] whitespace-nowrap">
+          범례
+        </span>
+      </div>
+      {/* 항목: 모바일 토글, 데스크탑 항상 표시 */}
+      <div className={`flex-wrap items-center gap-2 mt-1.5 ${expanded ? 'flex' : 'hidden'} sm:flex`}>
+        {items.map(({ id, label, color }) => {
+          const s = LEGEND_COLOR_STYLES[color]
+          const dot = DOT_COLORS[color]
+          return (
+            <span
+              key={id}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-[6px] rounded-full text-[12px] font-medium whitespace-nowrap ${s.bg} border ${s.border} ${s.icon}`}
+            >
+              <span className="w-2 h-2 rounded-full shrink-0 flex-none" style={{ background: dot }} />
+              <span>{label}</span>
+            </span>
+          )
+        })}
+      </div>
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import type { Assignment, SlotSetting, ScheduleRule, DateOverride, ModalTarget, Profile, TenantRole, TimeSlot, TenantAccessRole } from '../../types'
 import { getCellState } from '../../utils/cellState'
-import { parseSlotLabel, formatTimeSub } from '../../utils/timeSlots'
+import { shortSlotLabel, formatTimeSub } from '../../utils/timeSlots'
 
 const DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일']
 const INDICATOR_BAR_COLOR = 'oklch(0.65 0.15 60)'
@@ -57,7 +57,7 @@ export function WeekGrid({
       a.getDate() === b.getDate()
   }
 
-  const timeColW = 68
+  const timeColW = 72
   const dayColMinW = activeRoles.length > 1 ? activeRoles.length * 52 : 64
   const minTotalW = timeColW + 7 * dayColMinW
 
@@ -71,7 +71,7 @@ export function WeekGrid({
           style={{ gridTemplateColumns: `${timeColW}px repeat(7, 1fr)` }}
         >
           {/* Corner */}
-          <div className="px-2 py-2 text-[9px] font-medium text-[var(--color-text-muted)] uppercase tracking-wide border-r border-[var(--color-border)] flex items-end">
+          <div className="px-2 py-2 text-[9px] font-medium text-[var(--color-text-muted)] uppercase tracking-wide border-r border-[var(--color-border)] flex items-center justify-center">
             시간
           </div>
 
@@ -86,16 +86,16 @@ export function WeekGrid({
               <button
                 key={i}
                 onClick={() => onDateHeaderClick?.(d)}
-                className={`border-l border-[var(--color-border)] px-1.5 pt-2 pb-1 text-left transition-colors hover:bg-[var(--color-surface-hover)] ${
+                className={`border-l border-[var(--color-border)] px-1 pt-2 pb-1 text-center transition-colors hover:bg-[var(--color-surface-hover)] ${
                   isSelected ? 'bg-[var(--color-brand-primary)]/8' : ''
                 }`}
               >
-                <div className={`text-[10px] font-semibold leading-none mb-0.5 ${
+                <div className={`text-[10px] font-semibold leading-none mb-0.5 text-center ${
                   isSun ? 'text-red-400' : isSat ? 'text-blue-400' : 'text-[var(--color-text-muted)]'
                 }`}>
                   {DAY_LABELS[i]}
                 </div>
-                <div className={`text-base font-bold leading-none ${
+                <div className={`text-base font-bold leading-none text-center ${
                   isToday ? 'text-[var(--color-brand-primary)]' :
                   isSun ? 'text-red-400' : isSat ? 'text-blue-400' : 'text-[var(--color-text-primary)]'
                 }`}>
@@ -126,7 +126,7 @@ export function WeekGrid({
         {timeSlots.map(slot => {
           const [slotStartNum] = slot.split('-').map(Number)
           const isMoon = slotStartNum >= 20
-          const slotLabel = slotLabels[slot] || parseSlotLabel(slot)
+          const slotLabel = slotLabels[slot] || shortSlotLabel(slot)
 
           return (
             <div
@@ -135,8 +135,8 @@ export function WeekGrid({
               style={{ gridTemplateColumns: `${timeColW}px repeat(7, 1fr)`, minHeight: 52 }}
             >
               {/* Time label */}
-              <div className="px-2 py-1.5 flex flex-col justify-center border-r border-[var(--color-border)]">
-                <span className="text-[10px] font-medium text-[var(--color-text-secondary)] leading-snug whitespace-nowrap">
+              <div className="px-1.5 py-1.5 flex flex-col justify-center items-center text-center border-r border-[var(--color-border)]">
+                <span className="text-[9px] font-medium text-[var(--color-text-secondary)] leading-snug break-all">
                   {slotLabel}
                 </span>
               </div>

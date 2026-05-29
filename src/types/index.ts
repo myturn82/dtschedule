@@ -14,13 +14,19 @@ export const DEFAULT_MAX_CAPACITY = 2;
 
 // ─── Tenant types ─────────────────────────────────────────────────────────────
 
+export interface CustomFieldOption {
+  name: string;   // dropdown display label
+  value: string;  // stored in extra_data, used for stats aggregation
+}
+
 export interface CustomFieldDef {
   id: string;
   label: string;
   type: 'text' | 'select';
   required: boolean;
-  options?: string[];
+  options?: CustomFieldOption[];
   placeholder?: string;
+  show_in_dashboard?: boolean;
 }
 
 export interface TenantSettings {

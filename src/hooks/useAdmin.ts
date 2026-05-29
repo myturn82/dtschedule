@@ -72,7 +72,7 @@ export function useAdmin(tenantId: string): AdminState {
       .eq('email', email)
       .single()
     if (findErr || !user) return '해당 이메일로 가입된 사용자가 없습니다.'
-    if (user.is_super_admin) return '슈퍼어드민 계정은 조직에 추가할 수 없습니다.'
+    if (user.is_super_admin) return '슈퍼관리자 계정은 조직에 추가할 수 없습니다.'
 
     const { data, error } = await supabase
       .from('tenant_members')

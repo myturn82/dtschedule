@@ -3,6 +3,7 @@
 @variant dark (&:where(.dark, .dark *));
 
 @theme {
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
   --color-schedule-night: var(--color-schedule-night);
   --color-schedule-night-hover: var(--color-schedule-night-hover);
   --color-schedule-saturday: var(--color-schedule-saturday);

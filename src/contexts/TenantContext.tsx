@@ -1,10 +1,11 @@
 import { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
-import type { Tenant, TenantMember, TenantAccessRole, LegendItem, CustomFieldDef } from '../types'
+import type { Tenant, TenantMember, TenantAccessRole, LegendItem, CustomFieldDef, CustomFieldOption } from '../types'
 import { generateTimeSlots, DEFAULT_TIME_SLOTS } from '../utils/timeSlots'
 
 interface MembershipWithTenant extends TenantMember {
   tenant: Tenant
+  tenant_role: { name: string } | null
 }
 
 interface TenantContextValue {
@@ -58,37 +59,33 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   async function fetchMemberships(userId: string) {
     const { data } = await supabase
       .from('tenant_members')
-      .select('*, tenant:tenants(*)')
+      .select('*, tenant:tenants(*), tenant_role:tenant_roles(name)')
       .eq('user_id', userId)
 
     const list = (data ?? []) as MembershipWithTenant[]
-    console.log('[DEBUG][TenantContext] fetchMemberships', { userId, allMemberships: list })
 
     // 소셜 가입 후 복귀 시 pending 조직/역할 처리
+    // 동시에 두 번 호출될 수 있으므로 키를 즉시(동기적으로) 제거해 경쟁 조건 방지
     const pendingRaw = localStorage.getItem('vs_pending_social')
-    console.log('[DEBUG][TenantContext] vs_pending_social =', pendingRaw)
+    if (pendingRaw) localStorage.removeItem('vs_pending_social')
     if (pendingRaw) {
       try {
         const { tenantId, tenantRoleId } = JSON.parse(pendingRaw)
-        const alreadyMember = list.some(m => m.tenant_id === tenantId)
-        console.log('[DEBUG][TenantContext] pending처리: tenantId=', tenantId, 'alreadyMember=', alreadyMember)
+        const alreadyMember = list.some(m => m.tenant_id === tenantId && m.is_approved !== false)
         if (!alreadyMember && tenantId) {
-          const { error: insertError } = await supabase.from('tenant_members').insert({
+          await supabase.from('tenant_members').insert({
             tenant_id: tenantId,
             user_id: userId,
             role: 'member',
             role_id: tenantRoleId ?? null,
           })
-          console.log('[DEBUG][TenantContext] tenant_members insert error=', insertError)
-          localStorage.removeItem('vs_pending_social')
           // 재조회
           const { data: data2 } = await supabase
             .from('tenant_members')
-            .select('*, tenant:tenants(*)')
+            .select('*, tenant:tenants(*), tenant_role:tenant_roles(name)')
             .eq('user_id', userId)
           const list2 = (data2 ?? []) as MembershipWithTenant[]
           const approved2 = list2.filter(m => m.is_approved !== false)
-          console.log('[DEBUG][TenantContext] 재조회 후 approved=', approved2)
           setMemberships(approved2)
           if (approved2.length === 1) { setTenantState(approved2[0].tenant); setTenantRole(approved2[0].role) }
           setLoading(false)
@@ -98,12 +95,10 @@ export function TenantProvider({ children }: { children: ReactNode }) {
           localStorage.setItem('vs_notice_already_member', '이미 가입된 조직입니다.')
         }
       } catch { /* invalid JSON */ }
-      localStorage.removeItem('vs_pending_social')
     }
 
     // 승인된 멤버십만 사용 (is_approved가 없으면 true로 간주 — 마이그레이션 전 호환)
     const approved = list.filter(m => m.is_approved !== false)
-    console.log('[DEBUG][TenantContext] 최종 approved memberships=', approved)
     setMemberships(approved)
 
     if (approved.length === 1) {
@@ -153,7 +148,12 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   )
 
   const customFields = useMemo<CustomFieldDef[]>(
-    () => tenant?.settings?.custom_fields ?? [],
+    () => (tenant?.settings?.custom_fields ?? []).map(f => ({
+      ...f,
+      options: f.options?.map((opt): CustomFieldOption =>
+        typeof opt === 'string' ? { name: opt, value: opt } : opt
+      ),
+    })),
     [tenant]
   )
 

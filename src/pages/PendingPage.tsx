@@ -29,30 +29,34 @@ export function PendingPage() {
   const [error, setError] = useState<string | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
-  const [hasPending, setHasPending] = useState<boolean | null>(null)
+  interface MyMembership { tenant_id: string; is_approved: boolean; tenant: { name: string } | null }
+  const [memberships, setMemberships] = useState<MyMembership[] | null>(null)
+
   useEffect(() => {
     if (!profile) return
     supabase
       .from('tenant_members')
-      .select('*')
+      .select('tenant_id, is_approved, tenant:tenants(name)')
       .eq('user_id', profile.id)
-      .then(({ data }) =>
-        setHasPending((data ?? []).some(m => (m as { is_approved?: boolean }).is_approved === false))
-      )
+      .then(({ data }) => setMemberships((data ?? []) as MyMembership[]))
   }, [profile?.id])
+
+  const pendingOrgs = (memberships ?? []).filter(m => m.is_approved === false)
+  const hasPending = pendingOrgs.length > 0
+  const existingTenantIds = new Set((memberships ?? []).map(m => m.tenant_id))
 
   // 멤버십이 없는 신규 사용자(로그인 탭 카카오 등)는 폼 자동 오픈
   useEffect(() => {
-    if (hasPending === false && !submitted && !profile?.is_super_admin) setShowForm(true)
-  }, [hasPending, submitted, profile?.is_super_admin])
+    if (memberships !== null && memberships.length === 0 && !submitted && !profile?.is_super_admin) setShowForm(true)
+  }, [memberships, submitted, profile?.is_super_admin])
 
   useEffect(() => {
-    if (showForm) {
-      supabase.from('tenants').select('id, name').order('name').then(({ data }) => {
-        setTenants(data ?? [])
-      })
-    }
-  }, [showForm])
+    if (!showForm || memberships === null) return
+    const mine = new Set(memberships.map(m => m.tenant_id))
+    supabase.from('tenants').select('id, name').order('name').then(({ data }) => {
+      setTenants((data ?? []).filter(t => !mine.has(t.id)))
+    })
+  }, [showForm, memberships])
 
   // 조직 변경 시 역할 완전 초기화
   useEffect(() => {
@@ -74,7 +78,7 @@ export function PendingPage() {
 
   const waitMessage = hasPending
     ? isAdminRole
-      ? '관리자 계정은 슈퍼어드민의 승인 후 활성화됩니다.'
+      ? '관리자 계정은 슈퍼관리자의 승인 후 활성화됩니다.'
       : '조직 관리자의 승인을 기다리고 있습니다.'
     : '신청할 조직을 선택해 주세요.'
 
@@ -134,13 +138,23 @@ export function PendingPage() {
         <h1 className="text-xl font-bold text-[var(--color-text)] mb-2">
           {submitted ? '신청 완료' : '승인 대기 중'}
         </h1>
-        <p className="text-sm text-[var(--color-text-secondary)] mb-6">
+        <p className="text-sm text-[var(--color-text-secondary)] mb-3">
           {profile?.name ? `${profile.name}님, ` : ''}
           {submitted
             ? '신청이 완료됐습니다. 관리자의 승인을 기다려 주세요.'
             : waitMessage
           }
         </p>
+        {!submitted && hasPending && pendingOrgs.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 justify-center mb-5">
+            {pendingOrgs.map(m => (
+              <span key={m.tenant_id} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/40">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 dark:bg-amber-500" />
+                {m.tenant?.name ?? '알 수 없는 조직'} 대기 중
+              </span>
+            ))}
+          </div>
+        )}
 
         {/* 재신청 버튼 (관리자 역할 제외) */}
         {!isAdminRole && !submitted && (
@@ -161,14 +175,20 @@ export function PendingPage() {
                   <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">
                     조직 <span className="text-red-500">*</span>
                   </label>
-                  <select
-                    value={tenantId}
-                    onChange={e => setTenantId(e.target.value)}
-                    className="w-full border border-[var(--color-border-strong)] rounded-xl px-3 py-2 text-sm bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] focus:outline-none"
-                  >
-                    <option value="">조직을 선택하세요</option>
-                    {tenants.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                  </select>
+                  {tenants.length === 0 ? (
+                    <p className="text-xs text-[var(--color-text-muted)] py-1">
+                      신청 가능한 조직이 없습니다. 이미 모든 조직에 신청했거나 가입된 상태입니다.
+                    </p>
+                  ) : (
+                    <select
+                      value={tenantId}
+                      onChange={e => setTenantId(e.target.value)}
+                      className="w-full border border-[var(--color-border-strong)] rounded-xl px-3 py-2 text-sm bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] focus:outline-none"
+                    >
+                      <option value="">조직을 선택하세요</option>
+                      {tenants.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                    </select>
+                  )}
                 </div>
 
                 {/* 활동 유형 (통합) */}
