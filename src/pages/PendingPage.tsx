@@ -38,12 +38,12 @@ export function PendingPage() {
       .from('tenant_members')
       .select('tenant_id, is_approved, tenant:tenants(name)')
       .eq('user_id', profile.id)
-      .then(({ data }) => setMemberships((data ?? []) as MyMembership[]))
+      .then(({ data }) => setMemberships((data ?? []) as unknown as MyMembership[]))
   }, [profile?.id])
 
   const pendingOrgs = (memberships ?? []).filter(m => m.is_approved === false)
   const hasPending = pendingOrgs.length > 0
-  const existingTenantIds = new Set((memberships ?? []).map(m => m.tenant_id))
+
 
   // 멤버십이 없는 신규 사용자(로그인 탭 카카오 등)는 폼 자동 오픈
   useEffect(() => {

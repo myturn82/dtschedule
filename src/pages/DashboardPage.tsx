@@ -28,7 +28,7 @@ const AVATAR_TINTS = [
 ]
 
 export function DashboardPage() {
-  const { profile } = useAuth()
+  useAuth()
   const { tenant, slotLabels, customFields } = useTenant()
   const { pendingMembers, members, assignments, slotSettings, tenantRoles, loading, approveUser, rejectUser } =
     useDashboard(tenant?.id ?? '')
@@ -460,7 +460,7 @@ export function DashboardPage() {
                                           <div key={stat.fieldId}>
                                             <p className="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-[0.6px] mb-1.5 font-mono-num">{stat.label}</p>
                                             <div className="rounded-[10px] border border-[var(--color-border)] overflow-hidden">
-                                              {stat.rows.map((row, ri) => {
+                                              {stat.rows.map((row) => {
                                                 const fmtValue = isNaN(Number(row.value)) ? row.value : Number(row.value).toLocaleString('ko-KR')
                                                 return (
                                                   <div
