@@ -101,6 +101,8 @@ export function AdminPage() {
   const [settingsVolunteerLabel, setSettingsVolunteerLabel] = useState('')
   const [settingsPlusLabel, setSettingsPlusLabel] = useState('')
   const [slotLabels, setSlotLabels] = useState<Record<string, string>>({})
+  const [roleRatios, setRoleRatios] = useState<Record<string, number>>({})
+  const [ratioSaving, setRatioSaving] = useState(false)
   const [legendItems, setLegendItems] = useState<LegendItem[]>([])
   const [newLegendIcon, setNewLegendIcon] = useState('')
   const [newLegendLabel, setNewLegendLabel] = useState('')
@@ -132,6 +134,7 @@ export function AdminPage() {
     setSettingsVolunteerLabel(s.volunteer_label ?? '')
     setSettingsPlusLabel(s.plus_label ?? '')
     setSlotLabels(s.slot_labels ?? {})
+    setRoleRatios(s.role_ratios ?? {})
     setLegendItems(s.legend_items ?? [])
     setCustomFields(s.custom_fields ?? [])
   }, [adminTenant?.id])
@@ -461,6 +464,24 @@ export function AdminPage() {
     setSlotList(newList)
     const err = await upsertScheduleRulesForSlots([slot])
     if (err) msg(`슬롯이 추가됐으나 규칙 생성에 실패했습니다: ${err}`, true)
+  }
+
+  async function handleRatioSave() {
+    const total = Object.values(roleRatios).reduce((s, v) => s + v, 0)
+    if (Object.keys(roleRatios).length > 0 && total !== 100) {
+      msg('역할 비율의 합계는 100%이어야 합니다.', true)
+      return
+    }
+    setRatioSaving(true)
+    const currentSettings = adminTenant?.settings ?? {}
+    const merged = { ...currentSettings, role_ratios: roleRatios }
+    const { error } = await supabase
+      .from('tenants')
+      .update({ settings: merged })
+      .eq('id', adminTenantId)
+    if (!error) msg('역할 비율이 저장됐습니다.')
+    else msg(`오류: ${error.message}`, true)
+    setRatioSaving(false)
   }
 
   async function handleSettingsSave(e: React.FormEvent) {
@@ -1278,6 +1299,44 @@ export function AdminPage() {
                     </ul>
                   )}
                 </div>
+
+                {roles.length > 0 && (
+                  <div className="bg-[var(--color-surface)] rounded-xl shadow p-5">
+                    <div className="pt-0 border-t-0">
+                      <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-semibold mb-3">
+                        자동배정 역할 비율 (합계 100%)
+                      </p>
+                      <div className="space-y-2">
+                        {roles.map(role => (
+                          <div key={role.id} className="flex items-center gap-3">
+                            <span className="text-sm text-[var(--color-text-secondary)] w-32 shrink-0">{role.name}</span>
+                            <input
+                              type="number" min={0} max={100}
+                              value={roleRatios[role.id] ?? 0}
+                              onChange={e => setRoleRatios(prev => ({ ...prev, [role.id]: parseInt(e.target.value, 10) || 0 }))}
+                              className="w-16 border border-[var(--color-border-strong)] rounded-lg px-2 py-1 text-sm text-center bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none"
+                            />
+                            <span className="text-xs text-[var(--color-text-muted)]">%</span>
+                          </div>
+                        ))}
+                        <p className="text-xs text-[var(--color-text-muted)]">
+                          합계: {Object.values(roleRatios).reduce((s, v) => s + v, 0)}%
+                          {Object.keys(roleRatios).length > 0 && Object.values(roleRatios).reduce((s, v) => s + v, 0) !== 100
+                            ? <span className="text-red-500 ml-1">(100%이 아닙니다)</span>
+                            : null}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleRatioSave}
+                        disabled={ratioSaving}
+                        className="mt-3 px-4 py-2 text-sm font-semibold rounded-xl bg-[var(--color-brand-primary)] text-white hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50"
+                      >
+                        {ratioSaving ? '저장 중...' : '비율 저장'}
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 <button type="submit" disabled={saving}
                   className="px-5 py-2 bg-[var(--color-brand-primary)] text-white text-sm rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50">
