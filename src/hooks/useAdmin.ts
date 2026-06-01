@@ -20,6 +20,8 @@ interface AdminState {
   updateTenantSettings: (tenantId: string, settings: Partial<TenantSettings>) => Promise<string | null>
   updateTenantName: (tenantId: string, name: string) => Promise<string | null>
   approveUser: (userId: string) => Promise<string | null>
+  approveWithdrawal: (userId: string) => Promise<string | null>
+  rejectWithdrawal: (userId: string) => Promise<string | null>
 }
 
 export function useAdmin(tenantId: string): AdminState {
@@ -193,6 +195,42 @@ export function useAdmin(tenantId: string): AdminState {
     return error?.message ?? null
   }, [tenantId])
 
+  const approveWithdrawal = useCallback(async (userId: string): Promise<string | null> => {
+    const { error } = await supabase
+      .from('tenant_members')
+      .update({
+        withdrawal_status: 'approved',
+        withdrawal_approved_at: new Date().toISOString(),
+        is_approved: false,
+      })
+      .eq('tenant_id', tenantId)
+      .eq('user_id', userId)
+    if (!error) {
+      setMembers(prev => prev.map(m =>
+        m.user_id === userId
+          ? { ...m, withdrawal_status: 'approved' as const, is_approved: false }
+          : m
+      ))
+    }
+    return error?.message ?? null
+  }, [tenantId])
+
+  const rejectWithdrawal = useCallback(async (userId: string): Promise<string | null> => {
+    const { error } = await supabase
+      .from('tenant_members')
+      .update({ withdrawal_status: 'none', withdrawal_requested_at: null })
+      .eq('tenant_id', tenantId)
+      .eq('user_id', userId)
+    if (!error) {
+      setMembers(prev => prev.map(m =>
+        m.user_id === userId
+          ? { ...m, withdrawal_status: 'none' as const, withdrawal_requested_at: null }
+          : m
+      ))
+    }
+    return error?.message ?? null
+  }, [tenantId])
+
   return {
     members, profiles, scheduleRules, dateOverrides, loading,
     reloadMembers,
@@ -200,5 +238,6 @@ export function useAdmin(tenantId: string): AdminState {
     toggleScheduleRule, upsertScheduleRulesForSlots,
     addDateOverride, deleteDateOverride,
     updateTenantSettings, updateTenantName, approveUser,
+    approveWithdrawal, rejectWithdrawal,
   }
 }
