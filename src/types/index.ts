@@ -29,6 +29,8 @@ export interface CustomFieldDef {
   show_in_dashboard?: boolean;
 }
 
+export type TenantMode = '회원공유' | '회원개별' | '비회원';
+
 export interface TenantSettings {
   open_from: string;               // 'HH:MM'
   open_to: string;                 // 'HH:MM'
@@ -38,10 +40,12 @@ export interface TenantSettings {
   theme_color?: string;            // '#RRGGBB'
   timezone: string;                // IANA tz, e.g. 'Asia/Seoul'
   locale: string;                  // e.g. 'ko-KR'
-  tenant_mode?: '직접입력' | '회원선택';
+  tenant_mode?: TenantMode | '직접입력' | '회원선택';
   slot_labels?: Record<string, string>;
   legend_items?: LegendItem[];
   custom_fields?: CustomFieldDef[];
+  volunteer_label?: string;
+  plus_label?: string;
 }
 
 export type LegendColor = 'amber' | 'pink' | 'slate' | 'yellow' | 'blue' | 'green' | 'purple' | 'red' | 'indigo'
