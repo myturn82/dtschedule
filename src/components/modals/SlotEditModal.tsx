@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
-import type { Assignment, CellState, ModalTarget, Profile, TenantRole, VolunteerType, CustomFieldDef } from '../../types'
-import { TYPE_LABELS } from '../../types'
+import type { Assignment, CellState, ModalTarget, Profile, TenantRole, VolunteerType, CustomFieldDef, TenantMode } from '../../types'
 import { parseSlotLabel, getTimeSubOptions, formatTimeSub } from '../../utils/timeSlots'
 import { useProfiles } from '../../hooks/useProfiles'
 import type { ProfileWithRole } from '../../hooks/useProfiles'
@@ -14,9 +13,10 @@ interface Props {
   splitRoles?: TenantRole[]
   isSplitMode?: boolean
   tenantRoles?: TenantRole[]
-  tenantMode?: '직접입력' | '회원선택'
+  tenantMode?: TenantMode | '직접입력' | '회원선택'
   customFields?: CustomFieldDef[]
   slotLabels?: Record<string, string>
+  typeLabels?: { volunteer: string; '50plus': string }
   onClose: () => void
   onAdd: (name: string, note: string, volunteerType: VolunteerType, timeSub: string | null, color?: string, userId?: string, roleId?: string | null, customerName?: string | null, customerPhone?: string | null, extraData?: Record<string, string>) => Promise<string | null>
   onUpdate: (id: string, name: string, note: string, volunteerType: VolunteerType, timeSub: string | null, color?: string, roleId?: string | null, customerName?: string | null, customerPhone?: string | null, extraData?: Record<string, string>) => Promise<string | null>
@@ -27,19 +27,33 @@ const PHONE_RE = /^[0-9]{2,4}-[0-9]{3,4}-[0-9]{4}$|^[0-9]{9,11}$/
 function isValidPhone(phone: string): boolean {
   return PHONE_RE.test(phone.replace(/\s/g, ''))
 }
+function formatPhone(value: string): string {
+  const d = value.replace(/\D/g, '')
+  if (d.startsWith('02')) {
+    if (d.length <= 2) return d
+    if (d.length <= 5) return `${d.slice(0, 2)}-${d.slice(2)}`
+    if (d.length <= 9) return `${d.slice(0, 2)}-${d.slice(2, 5)}-${d.slice(5)}`
+    return `${d.slice(0, 2)}-${d.slice(2, 6)}-${d.slice(6, 10)}`
+  }
+  if (d.length <= 3) return d
+  if (d.length <= 6) return `${d.slice(0, 3)}-${d.slice(3)}`
+  if (d.length <= 10) return `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}`
+  return `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7, 11)}`
+}
 
 export function SlotEditModal({
   target, cellState, profile, tenantRole, memberRoleId,
   splitRoles = [], isSplitMode = false, tenantRoles = [],
   tenantMode = '회원선택', customFields = [],
   slotLabels = {},
+  typeLabels = { volunteer: '자원봉사자', '50plus': '50플러스활동가' },
   onClose, onAdd, onUpdate, onDelete,
 }: Props) {
   const { day, month, timeSlot, volunteerType: defaultType, roleId: initialRoleId } = target
   const isAdmin = profile?.is_super_admin || tenantRole === 'admin'
   const profileType: VolunteerType = 'volunteer'
 
-  const isFreeform = tenantMode === '직접입력'
+  const isFreeform = tenantMode === '비회원' || tenantMode === '직접입력'
   const useDynamicFields = isFreeform && customFields.length > 0
 
   const [volunteerType, setVolunteerType] = useState<VolunteerType>(
@@ -52,6 +66,7 @@ export function SlotEditModal({
   const [note, setNote] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [phoneError, setPhoneError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(
@@ -137,6 +152,7 @@ export function SlotEditModal({
     setFieldValues({})
     setFreeformName('')
     setFreeformPhone('')
+    setPhoneError(null)
     setSelectedUserId(isAdmin ? '' : (profile?.id ?? ''))
   }
 
@@ -292,7 +308,7 @@ export function SlotEditModal({
               {slotLabels[timeSlot]
                 ? `${slotLabels[timeSlot]} (${parseSlotLabel(timeSlot)})`
                 : parseSlotLabel(timeSlot)}
-              {isSplitMode && selectedRole ? ` · ${selectedRole.name}` : !isSplitMode && isAdmin ? ` · ${defaultType === '50plus' ? '50플러스활동가' : '자원봉사자'}` : ''}
+              {isSplitMode && selectedRole ? ` · ${selectedRole.name}` : !isSplitMode && isAdmin && !isFreeform ? ` · ${defaultType === '50plus' ? typeLabels['50plus'] : typeLabels.volunteer}` : ''}
             </p>
           </div>
           <button
@@ -350,7 +366,7 @@ export function SlotEditModal({
                       : 'border-transparent text-[var(--color-text-muted)]'}
                     ${isDisabled ? 'opacity-40 cursor-not-allowed' : 'hover:text-[var(--color-text-secondary)]'}`}
                 >
-                  {TYPE_LABELS[t]}
+                  {t === '50plus' ? typeLabels['50plus'] : typeLabels.volunteer}
                 </button>
               )
             })}
@@ -480,11 +496,20 @@ export function SlotEditModal({
                   />
                   <input
                     value={freeformPhone}
-                    onChange={e => setFreeformPhone(e.target.value)}
+                    onChange={e => {
+                      const formatted = formatPhone(e.target.value)
+                      setFreeformPhone(formatted)
+                      if (!formatted) setPhoneError(null)
+                      else if (!isValidPhone(formatted)) setPhoneError('연락처 형식이 올바르지 않습니다. (예: 010-1234-5678)')
+                      else setPhoneError(null)
+                    }}
                     placeholder="연락처 (필수)"
                     maxLength={20}
                     className={inputClass}
                   />
+                  {phoneError && (
+                    <p className="text-red-500 text-xs px-1">{phoneError}</p>
+                  )}
                   <input
                     value={note}
                     onChange={e => setNote(e.target.value)}
