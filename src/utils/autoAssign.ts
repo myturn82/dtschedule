@@ -229,8 +229,6 @@ export function computeAutoAssignments(params: AutoAssignParams): ProposedAssign
 
         let slotIndex = 0
         for (const s of emptySlots) {
-          const dayOfWeek = new Date(s.year, s.month - 1, s.day).getDay()
-
           // 아직 한도가 남은 역할 중에서 후보 멤버를 찾는다(라운드로빈 우선순위:
           // 배정 비율 대비 가장 덜 채워진 역할).
           const eligibleRoles = roleIds
