@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useTenant } from '../contexts/TenantContext'
+import { supabase } from '../lib/supabase'
 import { useDashboard } from '../hooks/useDashboard'
 import { AppHeader } from '../components/AppHeader'
 import { shortSlotLabel } from '../utils/timeSlots'
@@ -28,8 +30,9 @@ const AVATAR_TINTS = [
 ]
 
 export function DashboardPage() {
-  useAuth()
-  const { tenant, slotLabels, customFields } = useTenant()
+  const { profile } = useAuth()
+  const navigate = useNavigate()
+  const { tenant, memberships, slotLabels, customFields } = useTenant()
   const { pendingMembers, members, assignments, slotSettings, tenantRoles, loading, approveUser, rejectUser } =
     useDashboard(tenant?.id ?? '')
   const [confirmReject, setConfirmReject] = useState<string | null>(null)
@@ -149,6 +152,23 @@ export function DashboardPage() {
     return Math.round(totalBooked / effectiveCap * 100)
   }, [slotStats, effectiveCap])
 
+  const currentMembership = memberships.find(m => m.tenant_id === tenant?.id)
+
+  async function handleWithdrawalRequest() {
+    if (!confirm('정말 이 조직에서 탈퇴를 신청하시겠습니까?\n관리자 승인 후 처리됩니다.')) return
+    const { error } = await supabase
+      .from('tenant_members')
+      .update({
+        withdrawal_status: 'pending',
+        withdrawal_requested_at: new Date().toISOString(),
+      })
+      .eq('tenant_id', tenant!.id)
+      .eq('user_id', profile!.id)
+    if (!error) {
+      window.location.reload()
+    }
+  }
+
   const panelShadow = '0 1px 0 rgba(20,23,28,0.03), 0 24px 60px -40px rgba(20,23,28,0.22)'
 
   return (
@@ -241,7 +261,11 @@ export function DashboardPage() {
                   </div>
 
                   {/* 승인 대기 */}
-                  <div className="bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-[14px] px-4 py-3.5">
+                  <div
+                    className="bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-[14px] px-4 py-3.5"
+                    style={{ cursor: pendingMembers.length > 0 ? 'pointer' : 'default' }}
+                    onClick={pendingMembers.length > 0 ? () => navigate('/admin?tab=pending') : undefined}
+                  >
                     <div className="flex items-center gap-1.5 text-[12px] text-[var(--color-text-muted)] font-semibold mb-2.5">
                       <span
                         className="w-[22px] h-[22px] rounded-[7px] flex items-center justify-center shrink-0"
@@ -262,7 +286,7 @@ export function DashboardPage() {
                       <span className="text-[14px] font-semibold text-[var(--color-text-muted)] tracking-normal">명</span>
                     </div>
                     <div className="mt-2 text-[11.5px] font-medium" style={{ color: pendingMembers.length > 0 ? 'oklch(0.52 0.14 65)' : 'var(--color-text-muted)' }}>
-                      {pendingMembers.length > 0 ? '승인이 필요합니다' : '대기 없음'}
+                      {pendingMembers.length > 0 ? '승인이 필요합니다 →' : '대기 없음'}
                     </div>
                   </div>
 
@@ -588,6 +612,22 @@ export function DashboardPage() {
                     </div>
                   </section>
                 ))}
+
+                {currentMembership && currentMembership.withdrawal_status === 'none' && (
+                  <div className="mt-8 pt-4 border-t border-[var(--color-border)]">
+                    <button
+                      onClick={handleWithdrawalRequest}
+                      className="text-xs text-[var(--color-text-muted)] hover:text-red-500 underline transition-colors"
+                    >
+                      조직 탈퇴 신청
+                    </button>
+                  </div>
+                )}
+                {currentMembership?.withdrawal_status === 'pending' && (
+                  <div className="mt-8 pt-4 border-t border-[var(--color-border)]">
+                    <p className="text-xs text-amber-600">탈퇴 신청이 처리 중입니다. 관리자 승인을 기다려주세요.</p>
+                  </div>
+                )}
 
               </>
             )}
