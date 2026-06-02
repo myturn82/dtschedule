@@ -38,12 +38,12 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
         <div className="flex items-center justify-between gap-2 px-3 py-3 sm:px-5">
 
           {/* Left: hamburger + leftSlot + memberSelectSlot */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 min-w-0">
             {showHamburger && (
               <button
                 onClick={() => setShowFuncMenu(v => !v)}
                 aria-label="기능 메뉴"
-                className="w-8 h-8 flex items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-all"
+                className="w-8 h-8 flex items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-all shrink-0"
               >
                 {showFuncMenu
                   ? <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 5l10 10M15 5L5 15"/></svg>
@@ -51,12 +51,14 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
                 }
               </button>
             )}
-            {leftSlot}
+            {leftSlot && memberSelectSlot ? (
+              <div className="hidden sm:flex">{leftSlot}</div>
+            ) : leftSlot}
             {memberSelectSlot}
           </div>
 
           {/* Right: rightSlot + name/badge + avatar */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 shrink-0">
             {rightSlot}
             {profile && (
               <div className="flex items-center gap-1.5">

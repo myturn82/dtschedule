@@ -113,7 +113,7 @@ export function SchedulePage() {
     <select
       value={filterMemberId ?? ''}
       onChange={e => setFilterMemberId(e.target.value || null)}
-      className="px-2 py-1 text-xs border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] text-[var(--color-text-secondary)]"
+      className="max-w-[130px] sm:max-w-none px-2 py-1 text-xs border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] text-[var(--color-text-secondary)]"
     >
       <option value="">전체 회원</option>
       {profiles.map(p => (
