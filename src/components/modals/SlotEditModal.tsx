@@ -314,7 +314,7 @@ export function SlotEditModal({
               {slotLabels[timeSlot]
                 ? `${slotLabels[timeSlot]} (${parseSlotLabel(timeSlot)})`
                 : parseSlotLabel(timeSlot)}
-              {isSplitMode && selectedRole ? ` · ${selectedRole.name}` : !isSplitMode && isAdmin && !isFreeform ? ` · ${defaultType === '50plus' ? typeLabels['50plus'] : typeLabels.volunteer}` : ''}
+              {isSplitMode && selectedRole ? ` · ${selectedRole.name}` : !isSplitMode && isAdmin && !isFreeform && tenantRoles.length === 0 ? ` · ${defaultType === '50plus' ? typeLabels['50plus'] : typeLabels.volunteer}` : ''}
             </p>
           </div>
           <button
