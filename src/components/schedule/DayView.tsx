@@ -126,7 +126,7 @@ export function DayView({
                           {!isW && a.note && <span className="text-[var(--color-text-muted)]">· {a.note}</span>}
                         </div>
                         )})
-                      )) : (
+                      : (
                         <div className="text-[10px] text-[var(--color-text-muted)] ml-2">(비어있음)</div>
                       )}
                     </div>
