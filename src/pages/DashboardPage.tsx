@@ -65,7 +65,7 @@ export function DashboardPage() {
     }
     const countById = new Map<string, number>()
     for (const a of assignments) {
-      const roleId = userRoleMap.get(a.user_id)
+      const roleId = a.user_id ? userRoleMap.get(a.user_id) : undefined
       if (roleId) countById.set(roleId, (countById.get(roleId) ?? 0) + 1)
     }
     return tenantRoles.map(r => ({ ...r, count: countById.get(r.id) ?? 0 }))
