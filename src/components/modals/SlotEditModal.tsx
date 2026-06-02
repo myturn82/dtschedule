@@ -17,6 +17,7 @@ interface Props {
   customFields?: CustomFieldDef[]
   slotLabels?: Record<string, string>
   typeLabels?: { volunteer: string; '50plus': string }
+  lockedUserId?: string
   onClose: () => void
   onAdd: (name: string, note: string, volunteerType: VolunteerType, timeSub: string | null, color?: string, userId?: string, roleId?: string | null, customerName?: string | null, customerPhone?: string | null, extraData?: Record<string, string>) => Promise<string | null>
   onUpdate: (id: string, name: string, note: string, volunteerType: VolunteerType, timeSub: string | null, color?: string, roleId?: string | null, customerName?: string | null, customerPhone?: string | null, extraData?: Record<string, string>) => Promise<string | null>
@@ -47,10 +48,12 @@ export function SlotEditModal({
   tenantMode = '회원선택', customFields = [],
   slotLabels = {},
   typeLabels = { volunteer: '자원봉사자', '50plus': '50플러스활동가' },
+  lockedUserId,
   onClose, onAdd, onUpdate, onDelete,
 }: Props) {
   const { day, month, timeSlot, volunteerType: defaultType, roleId: initialRoleId } = target
   const isAdmin = profile?.is_super_admin || tenantRole === 'admin'
+  const isReadOnly = !isAdmin && tenantMode === '회원개별'
   const profileType: VolunteerType = 'volunteer'
 
   const isFreeform = tenantMode === '비회원' || tenantMode === '직접입력'
@@ -62,7 +65,9 @@ export function SlotEditModal({
   const timeSubOptions = getTimeSubOptions(timeSlot)
   const defaultTimeSub = timeSubOptions ? timeSubOptions[timeSubOptions.length - 1].value : null
   const [timeSub, setTimeSub] = useState<string | null>(defaultTimeSub)
-  const [selectedUserId, setSelectedUserId] = useState<string>(isAdmin ? '' : (profile?.id ?? ''))
+  const [selectedUserId, setSelectedUserId] = useState<string>(
+    isAdmin ? (lockedUserId ?? '') : (profile?.id ?? '')
+  )
   const [note, setNote] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -378,7 +383,7 @@ export function SlotEditModal({
           {displayedAssignments.length > 0 && (
             <div className="space-y-1.5">
               {displayedAssignments.map(a => {
-                const canEdit = isAdmin || a.user_id === profile?.id
+                const canEdit = isAdmin || (a.user_id === profile?.id && !isReadOnly)
                 const isOwnEntry = !isAdmin && a.user_id === profile?.id && a.volunteer_name === profile?.name
                 return (
                   <div
@@ -421,7 +426,7 @@ export function SlotEditModal({
             </div>
           )}
 
-          {profile ? (
+          {profile && !isReadOnly ? (
             <>
               {/* Time slot selector */}
               {timeSubOptions && (
@@ -524,7 +529,11 @@ export function SlotEditModal({
                   {isAdmin ? (
                     <div>
                       <p className="text-xs font-medium text-[var(--color-text-muted)] mb-2">회원 선택</p>
-                      {selectableProfiles.length === 0 ? (
+                      {lockedUserId ? (
+                        <div className="px-3 py-2.5 rounded-xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)] text-sm text-[var(--color-text-primary)] font-medium">
+                          {profiles.find(p => p.id === lockedUserId)?.name ?? '알 수 없음'}
+                        </div>
+                      ) : selectableProfiles.length === 0 ? (
                         <p className="text-xs text-[var(--color-text-muted)] py-2 text-center">
                           {totalTypeProfiles.length === 0
                             ? '해당 유형으로 가입된 회원이 없습니다'
@@ -584,6 +593,10 @@ export function SlotEditModal({
                 )}
               </div>
             </>
+          ) : profile && isReadOnly ? (
+            <p className="text-sm text-[var(--color-text-muted)] text-center py-3">
+              스케줄 조회 전용입니다. 배정은 관리자에게 문의하세요.
+            </p>
           ) : (
             <p className="text-sm text-[var(--color-text-muted)] text-center py-3">
               로그인 후 스케줄을 입력할 수 있습니다.
