@@ -3,7 +3,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 function getCorsHeaders(req: Request) {
   const origin = req.headers.get('origin') ?? ''
   const allowed = (Deno.env.get('ALLOWED_ORIGINS') ?? '').split(',').map(s => s.trim()).filter(Boolean)
-  const isAllowed = allowed.length === 0 || allowed.includes(origin)
+  const isLocalhost = /^https?:\/\/localhost(:\d+)?$/.test(origin)
+  const isAllowed = allowed.length === 0 || allowed.includes(origin) || isLocalhost
   return {
     'Access-Control-Allow-Origin': isAllowed ? origin : 'null',
     'Vary': 'Origin',
@@ -28,7 +29,7 @@ Deno.serve(async (req) => {
 
   try {
     const authHeader = req.headers.get('Authorization')
-    if (!authHeader) return json({ error: '인증 필요' }, 401, corsHeaders)
+    if (!authHeader) return json({ error: '인증 필요' }, 200, corsHeaders)
 
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -36,23 +37,18 @@ Deno.serve(async (req) => {
       { auth: { autoRefreshToken: false, persistSession: false } }
     )
 
-    // JWT 검증 — getUser()는 Supabase Auth에서 직접 검증
-    const supabaseUser = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: authHeader } } }
-    )
-    const { data: { user: caller }, error: userErr } = await supabaseUser.auth.getUser()
-    if (userErr || !caller) return json({ error: '인증 실패' }, 401, corsHeaders)
+    // JWT 검증 — admin 클라이언트로 토큰 직접 검증
+    const token = authHeader.replace(/^Bearer\s+/i, '')
+    const { data: { user: caller }, error: userErr } = await supabaseAdmin.auth.getUser(token)
+    if (userErr || !caller) return json({ error: '인증 실패' }, 200, corsHeaders)
 
     const { email, password, name, role_id, tenant_id } = await req.json()
 
     if (!email || !password || !name || !tenant_id) {
-      return json({ error: '필수 항목 누락' }, 400, corsHeaders)
+      return json({ error: '필수 항목 누락' }, 200, corsHeaders)
     }
 
     // 권한 확인: super_admin 또는 해당 테넌트의 승인된 admin만 허용
-    // global profiles.role은 사용자가 조작 가능하므로 사용하지 않음
     const { data: callerProfile } = await supabaseAdmin
       .from('profiles').select('is_super_admin').eq('id', caller.id).single()
     const { data: callerMember } = await supabaseAdmin
@@ -60,7 +56,7 @@ Deno.serve(async (req) => {
       .eq('tenant_id', tenant_id).eq('user_id', caller.id).eq('is_approved', true).single()
 
     const isAuthorized = callerProfile?.is_super_admin === true || callerMember?.role === 'admin'
-    if (!isAuthorized) return json({ error: '권한 없음' }, 403, corsHeaders)
+    if (!isAuthorized) return json({ error: '권한 없음' }, 200, corsHeaders)
 
     // 신규 유저 생성
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
@@ -71,21 +67,20 @@ Deno.serve(async (req) => {
     })
 
     if (createError) {
-      const msg = createError.message.includes('already registered')
+      const errMsg = createError.message.includes('already registered')
         ? '이미 사용 중인 이메일입니다.'
         : '계정 생성에 실패했습니다.'
-      return json({ error: msg }, 400, corsHeaders)
+      return json({ error: errMsg }, 200, corsHeaders)
     }
 
     const { error: profileErr } = await supabaseAdmin.from('profiles').upsert({
       id: newUser.user.id,
       name,
       email,
-      role: 'volunteer',
       is_approved: false,
       is_super_admin: false,
     })
-    if (profileErr) return json({ error: '프로필 생성 오류' }, 500, corsHeaders)
+    if (profileErr) return json({ error: '프로필 생성 오류: ' + profileErr.message }, 200, corsHeaders)
 
     const { error: memberErr } = await supabaseAdmin.from('tenant_members').upsert({
       tenant_id,
@@ -94,10 +89,10 @@ Deno.serve(async (req) => {
       role_id: role_id ?? null,
       is_approved: true,
     }, { onConflict: 'tenant_id,user_id' })
-    if (memberErr) return json({ error: '조직 등록 오류' }, 500, corsHeaders)
+    if (memberErr) return json({ error: '조직 등록 오류: ' + memberErr.message }, 200, corsHeaders)
 
     return json({ success: true }, 200, corsHeaders)
-  } catch (_err) {
-    return json({ error: '서버 오류가 발생했습니다.' }, 500, corsHeaders)
+  } catch (err) {
+    return json({ error: '서버 오류: ' + (err instanceof Error ? err.message : String(err)) }, 200, corsHeaders)
   }
 })
