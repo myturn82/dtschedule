@@ -426,7 +426,6 @@ export function SchedulePage() {
           slotLabels={slotLabels}
           typeLabels={typeLabels}
           onClose={() => setModalTarget(null)}
-          // @ts-expect-error lockedUserId prop will be added to SlotEditModal
           lockedUserId={tenantMode === '회원개별' && isPrivileged ? (filterMemberId ?? undefined) : undefined}
           onAdd={(name, note, volunteerType, timeSub, color, userId, roleId, customerName, customerPhone, extraData) => addAssignment({
             tenant_id: tenant!.id,
