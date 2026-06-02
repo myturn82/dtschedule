@@ -58,33 +58,43 @@ Deno.serve(async (req) => {
     const isAuthorized = callerProfile?.is_super_admin === true || callerMember?.role === 'admin'
     if (!isAuthorized) return json({ error: '권한 없음' }, 200, corsHeaders)
 
-    // 신규 유저 생성
-    const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: { name },
-    })
+    // 이메일로 기존 유저 조회 (삭제 후 재등록 케이스 처리)
+    const { data: existingProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .eq('email', email)
+      .maybeSingle()
 
-    if (createError) {
-      const errMsg = createError.message.includes('already registered')
-        ? '이미 사용 중인 이메일입니다.'
-        : '계정 생성에 실패했습니다.'
-      return json({ error: errMsg }, 200, corsHeaders)
+    let userId: string
+
+    if (existingProfile) {
+      // 기존 유저 — Auth 재생성 없이 tenant_members에만 추가
+      userId = existingProfile.id
+    } else {
+      // 신규 유저 생성
+      const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { name },
+      })
+      if (createError) return json({ error: '계정 생성에 실패했습니다.' }, 200, corsHeaders)
+
+      userId = newUser.user.id
+
+      const { error: profileErr } = await supabaseAdmin.from('profiles').upsert({
+        id: userId,
+        name,
+        email,
+        is_approved: false,
+        is_super_admin: false,
+      })
+      if (profileErr) return json({ error: '프로필 생성 오류: ' + profileErr.message }, 200, corsHeaders)
     }
-
-    const { error: profileErr } = await supabaseAdmin.from('profiles').upsert({
-      id: newUser.user.id,
-      name,
-      email,
-      is_approved: false,
-      is_super_admin: false,
-    })
-    if (profileErr) return json({ error: '프로필 생성 오류: ' + profileErr.message }, 200, corsHeaders)
 
     const { error: memberErr } = await supabaseAdmin.from('tenant_members').upsert({
       tenant_id,
-      user_id: newUser.user.id,
+      user_id: userId,
       role: 'member',
       role_id: role_id ?? null,
       is_approved: true,
