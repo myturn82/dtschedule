@@ -1,13 +1,21 @@
 import { useState } from 'react'
-import type { ProposedAssignment } from '../../utils/autoAssign'
+import type { ProposedAssignment, MemberPreference } from '../../utils/autoAssign'
+import type { TenantRole } from '../../types'
+import type { ProfileWithRole } from '../../hooks/useProfiles'
+
+const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
 
 interface Props {
   proposals: ProposedAssignment[]
   onConfirm: (selected: ProposedAssignment[]) => Promise<void>
   onClose: () => void
+  memberPreferences?: Map<string, MemberPreference>
+  roleRatios?: Record<string, number>
+  tenantRoles?: TenantRole[]
+  profiles?: ProfileWithRole[]
 }
 
-export function AutoAssignPreviewModal({ proposals, onConfirm, onClose }: Props) {
+export function AutoAssignPreviewModal({ proposals, onConfirm, onClose, memberPreferences, roleRatios, tenantRoles, profiles }: Props) {
   const [excluded, setExcluded] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(false)
 
@@ -54,6 +62,68 @@ export function AutoAssignPreviewModal({ proposals, onConfirm, onClose }: Props)
             ×
           </button>
         </div>
+
+        {/* 설정 요약 */}
+        {(() => {
+          const ratioEntries = roleRatios && tenantRoles
+            ? Object.entries(roleRatios).map(([id, pct]) => {
+                const name = tenantRoles.find(r => r.id === id)?.name ?? id
+                return `${name} ${pct}%`
+              })
+            : []
+
+          const memberRows = profiles?.map(p => {
+            const pref = memberPreferences?.get(p.id)
+            return { name: p.name, pref }
+          }).filter(r => r.pref?.availableDays?.length || r.pref?.monthlyLimit != null) ?? []
+
+          const hasAnySetting = ratioEntries.length > 0 || memberRows.length > 0
+          if (!hasAnySetting) return null
+
+          return (
+            <div className="px-5 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-secondary)] space-y-2">
+              <p className="text-[10px] font-semibold text-[var(--color-text-muted)]">적용된 설정</p>
+
+              {ratioEntries.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  <span className="text-[10px] text-[var(--color-text-muted)] mr-1">역할 비율</span>
+                  {ratioEntries.map(e => (
+                    <span key={e} className="px-2 py-0.5 rounded-full text-[10px] bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{e}</span>
+                  ))}
+                </div>
+              )}
+
+              {memberRows.length > 0 && (
+                <table className="w-full text-[10px] border-collapse">
+                  <thead>
+                    <tr className="text-[var(--color-text-muted)]">
+                      <th className="text-left pb-1 font-semibold w-24">회원</th>
+                      <th className="text-left pb-1 font-semibold">가능 요일</th>
+                      <th className="text-right pb-1 font-semibold w-20">월 최대</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {memberRows.map(r => (
+                      <tr key={r.name} className="border-t border-[var(--color-border-table)]">
+                        <td className="py-0.5 pr-2 font-medium text-[var(--color-text-primary)] truncate max-w-[6rem]">{r.name}</td>
+                        <td className="py-0.5 text-[var(--color-text-secondary)]">
+                          {r.pref?.availableDays?.length
+                            ? r.pref.availableDays.map(d => DAY_LABELS[d]).join('·')
+                            : <span className="text-[var(--color-text-muted)]">제한없음</span>}
+                        </td>
+                        <td className="py-0.5 text-right text-[var(--color-text-secondary)]">
+                          {r.pref?.monthlyLimit != null
+                            ? `${r.pref.monthlyLimit}회`
+                            : <span className="text-[var(--color-text-muted)]">—</span>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          )
+        })()}
 
         {/* Table */}
         {proposals.length === 0 ? (

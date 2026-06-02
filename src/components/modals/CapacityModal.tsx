@@ -14,6 +14,24 @@ interface Props {
 export function CapacityModal({ slotSettings, timeSlots, slotLabels = {}, onClose, onUpdate }: Props) {
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [bulkValue, setBulkValue] = useState('')
+  const [bulkApplying, setBulkApplying] = useState(false)
+  const [bulkDone, setBulkDone] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  async function handleBulkApply() {
+    const n = parseInt(bulkValue, 10)
+    if (isNaN(n) || n < 1) { setError('최소 인원은 1명 이상이어야 합니다.'); return }
+    setError(null)
+    setBulkApplying(true)
+    for (const slot of timeSlots) {
+      await onUpdate(slot as TimeSlot, n)
+    }
+    setBulkApplying(false)
+    setBulkDone(true)
+    setRefreshKey(k => k + 1)
+    setTimeout(() => setBulkDone(false), 2000)
+  }
 
   async function handleChange(timeSlot: TimeSlot, value: string) {
     const n = parseInt(value, 10)
@@ -48,12 +66,31 @@ export function CapacityModal({ slotSettings, timeSlots, slotLabels = {}, onClos
 
         {/* Scrollable slot grid */}
         <div className="px-5 py-4 overflow-y-auto">
+          {/* Bulk apply */}
+          <div className="flex items-center gap-2 mb-4 p-3 rounded-xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)]">
+            <span className="text-xs font-medium text-[var(--color-text-muted)] shrink-0">일괄 적용</span>
+            <input
+              type="number" min={1} max={99}
+              value={bulkValue}
+              onChange={e => setBulkValue(e.target.value)}
+              placeholder="인원"
+              className="w-16 border border-[var(--color-border-strong)] rounded-lg px-2 py-1 text-sm text-center bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500/60"
+            />
+            <span className="text-xs text-[var(--color-text-muted)] shrink-0">명</span>
+            <button
+              onClick={handleBulkApply}
+              disabled={bulkApplying || !bulkValue}
+              className="px-3 py-1 text-xs font-semibold rounded-lg bg-[var(--color-brand-primary)] text-white hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40 transition-colors"
+            >
+              {bulkApplying ? '적용 중...' : bulkDone ? '완료 ✓' : '전체 적용'}
+            </button>
+          </div>
           {error && (
             <p className="text-red-500 text-xs bg-red-50 dark:bg-red-950/30 px-3 py-2 rounded-lg border border-red-200 dark:border-red-900/50 mb-3">
               {error}
             </p>
           )}
-          <div className="grid grid-cols-2 gap-2">
+          <div key={refreshKey} className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {timeSlots.map(slot => {
               const setting = slotSettings.find(s => s.time_slot === slot)
               return (
@@ -74,7 +111,7 @@ export function CapacityModal({ slotSettings, timeSlots, slotLabels = {}, onClos
                       defaultValue={setting?.max_capacity ?? DEFAULT_MAX_CAPACITY}
                       disabled={loading === slot}
                       onBlur={e => handleChange(slot as TimeSlot, e.target.value)}
-                      className="w-12 border border-[var(--color-border-strong)] rounded-lg px-1 py-1 text-sm text-center bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500/60 transition-all duration-200 disabled:opacity-40"
+                      className="w-16 border border-[var(--color-border-strong)] rounded-lg px-1 py-1 text-sm text-center bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500/60 transition-all duration-200 disabled:opacity-40"
                     />
                     <span className="text-xs text-[var(--color-text-muted)]">명</span>
                   </div>
