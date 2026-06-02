@@ -146,7 +146,7 @@ export function SlotEditModal({
       setFreeformName(a.volunteer_name)
       setFreeformPhone(a.customer_phone ?? '')
     } else {
-      setSelectedUserId(a.user_id)
+      setSelectedUserId(a.user_id ?? '')
       setVolunteerType(a.volunteer_type ?? 'volunteer')
     }
   }
