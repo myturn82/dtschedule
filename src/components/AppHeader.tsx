@@ -17,7 +17,7 @@ interface AppHeaderProps {
 
 export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot, roleLabel, onShowLogin }: AppHeaderProps) {
   const navigate = useNavigate()
-  const { profile, signOut, deleteAccount, linkGoogle, linkKakao, getIdentities } = useAuth()
+  const { profile, loading: authLoading, signOut, deleteAccount, linkGoogle, linkKakao, getIdentities } = useAuth()
   const { tenant, tenantRole, memberships, resetTenantSelection, reloadMemberships } = useTenant()
   const [showFuncMenu, setShowFuncMenu] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
@@ -68,7 +68,9 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
                 )}
               </div>
             )}
-            {profile ? (
+            {authLoading ? (
+              <div className="w-8 h-8" />
+            ) : profile ? (
               <button
                 onClick={() => setShowUserMenu(v => !v)}
                 aria-label="사용자 메뉴"

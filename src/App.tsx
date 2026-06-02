@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { AuthProvider } from './contexts/AuthContext'
 import { TenantProvider, useTenant } from './contexts/TenantContext'
 import { useAuth } from './hooks/useAuth'
 import { SchedulePage } from './pages/SchedulePage'
@@ -83,9 +84,11 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
-      <TenantProvider>
-        <AppRoutes />
-      </TenantProvider>
+      <AuthProvider>
+        <TenantProvider>
+          <AppRoutes />
+        </TenantProvider>
+      </AuthProvider>
     </BrowserRouter>
   )
 }
