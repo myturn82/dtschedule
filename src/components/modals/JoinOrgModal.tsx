@@ -4,12 +4,6 @@ import { supabase } from '../../lib/supabase'
 interface TenantRole { id: string; name: string; display_order: number }
 interface Tenant { id: string; name: string }
 
-const DEFAULT_ROLES = [
-  { value: 'volunteer',   label: '자원봉사자' },
-  { value: '50plus',      label: '50플러스' },
-  { value: 'team_leader', label: '팀장' },
-]
-
 interface Props {
   userId: string
   onClose: () => void
@@ -22,6 +16,7 @@ export function JoinOrgModal({ userId, onClose, onSuccess }: Props) {
   const [tenantRoles, setTenantRoles] = useState<TenantRole[] | null>(null)
   const [tenantRoleId, setTenantRoleId] = useState<string | null>(null)
   const [defaultRole, setDefaultRole] = useState<string | null>(null)
+  const [tenantTypeLabels, setTenantTypeLabels] = useState<{ volunteer: string; '50plus': string } | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -40,20 +35,33 @@ export function JoinOrgModal({ userId, onClose, onSuccess }: Props) {
     setTenantRoles(null)
     setTenantRoleId(null)
     setDefaultRole(null)
+    setTenantTypeLabels(null)
     setError(null)
     if (!tenantId) return
-    supabase
-      .from('tenant_roles')
-      .select('id, name, display_order')
-      .eq('tenant_id', tenantId)
-      .order('display_order')
-      .then(({ data }) => setTenantRoles(data ?? []))
+    Promise.all([
+      supabase.from('tenant_roles').select('id, name, display_order').eq('tenant_id', tenantId).order('display_order'),
+      supabase.from('tenants').select('settings').eq('id', tenantId).single(),
+    ]).then(([{ data: roles }, { data: tenantData }]) => {
+      setTenantRoles(roles ?? [])
+      const s = (tenantData as { settings?: { volunteer_label?: string; plus_label?: string } } | null)?.settings
+      setTenantTypeLabels({
+        volunteer: s?.volunteer_label ?? '자원봉사자',
+        '50plus': s?.plus_label ?? '50플러스',
+      })
+    })
   }, [tenantId])
 
   const hasCustomRoles = tenantRoles !== null && tenantRoles.length > 0
+  const hasNoRoles = tenantRoles !== null && tenantRoles.length === 0
+  const effectiveDefaultRoles = [
+    { value: 'volunteer', label: tenantTypeLabels?.volunteer ?? '자원봉사자' },
+    { value: '50plus', label: tenantTypeLabels?.['50plus'] ?? '50플러스' },
+    { value: 'team_leader', label: '팀장' },
+  ]
 
   async function handleSubmit() {
     if (!tenantId) { setError('조직을 선택해주세요.'); return }
+    if (hasNoRoles) { setError('이 조직은 활동 유형이 설정되어 있지 않아 가입할 수 없습니다.'); return }
     if (hasCustomRoles && !tenantRoleId) { setError('활동 유형을 선택해주세요.'); return }
     if (!hasCustomRoles && !defaultRole) { setError('활동 유형을 선택해주세요.'); return }
     if (tenantRoleId && tenantRoles && !tenantRoles.some(r => r.id === tenantRoleId)) {
@@ -145,6 +153,8 @@ export function JoinOrgModal({ userId, onClose, onSuccess }: Props) {
                 </label>
                 {tenantRoles === null ? (
                   <p className="text-xs text-[var(--color-text-muted)]">로딩 중...</p>
+                ) : hasNoRoles ? (
+                  <p className="text-xs text-[var(--color-text-muted)] py-1">이 조직은 활동 유형이 설정되어 있지 않습니다.</p>
                 ) : hasCustomRoles ? (
                   <div className="grid grid-cols-2 gap-1.5">
                     {tenantRoles.map(tr => (
@@ -157,7 +167,7 @@ export function JoinOrgModal({ userId, onClose, onSuccess }: Props) {
                   </div>
                 ) : (
                   <div className="grid grid-cols-3 gap-1.5">
-                    {DEFAULT_ROLES.map(r => (
+                    {effectiveDefaultRoles.map(r => (
                       <button key={r.value} type="button"
                         onClick={() => { setDefaultRole(r.value); setTenantRoleId(null) }}
                         className={roleBtn(defaultRole === r.value)}>
@@ -176,7 +186,7 @@ export function JoinOrgModal({ userId, onClose, onSuccess }: Props) {
             <div className="flex gap-2">
               <button
                 onClick={handleSubmit}
-                disabled={submitting}
+                disabled={submitting || !!hasNoRoles}
                 className="flex-1 py-2 text-sm font-semibold rounded-xl bg-[var(--color-brand-primary)] text-white hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50 transition-colors"
               >
                 {submitting ? '신청 중...' : '신청하기'}

@@ -47,9 +47,10 @@ interface OrgCardProps {
   assignmentCount?: number
   tintIdx: number
   onClick: () => void
+  onPendingClick?: () => void
 }
 
-function OrgCard({ name, roleLabel, isAdmin, position, pendingCount, memberCount, assignmentCount, tintIdx, onClick }: OrgCardProps) {
+function OrgCard({ name, roleLabel, isAdmin, position, pendingCount, memberCount, assignmentCount, tintIdx, onClick, onPendingClick }: OrgCardProps) {
   const [hovered, setHovered] = useState(false)
   const initial = name.charAt(0)
   const tint = TINTS[tintIdx % TINTS.length]
@@ -115,13 +116,18 @@ function OrgCard({ name, roleLabel, isAdmin, position, pendingCount, memberCount
           </span>
           {position && <span style={{ color: '#6B7280', whiteSpace: 'nowrap' }}>{position}</span>}
           {!!pendingCount && (
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', gap: 4,
-              padding: '2px 8px', borderRadius: 999,
-              fontSize: 11, fontWeight: 600,
-              background: 'oklch(0.96 0.06 40)', color: 'oklch(0.50 0.18 35)',
-              whiteSpace: 'nowrap',
-            }}>
+            <span
+              onClick={onPendingClick ? e => { e.stopPropagation(); onPendingClick() } : undefined}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+                padding: '2px 8px', borderRadius: 999,
+                fontSize: 11, fontWeight: 600,
+                background: 'oklch(0.96 0.06 40)', color: 'oklch(0.50 0.18 35)',
+                whiteSpace: 'nowrap',
+                cursor: onPendingClick ? 'pointer' : 'default',
+                textDecoration: onPendingClick ? 'underline' : 'none',
+              }}
+            >
               승인대기 {pendingCount}건
             </span>
           )}
@@ -457,6 +463,7 @@ export function TenantSelectPage() {
                   assignmentCount={item.assignmentCount}
                   tintIdx={idx}
                   onClick={item.onClick}
+                  onPendingClick={(item as { onPendingClick?: () => void }).onPendingClick}
                 />
               ))}
             </div>
@@ -490,6 +497,9 @@ export function TenantSelectPage() {
       memberCount: memberCounts[t.id] ?? 0,
       assignmentCount: assignmentCounts[t.id] ?? 0,
       onClick: () => { setTenant(t, 'admin'); navigate('/') },
+      onPendingClick: (pendingCounts[t.id] ?? 0) > 0
+        ? () => { setTenant(t, 'admin'); navigate(`/admin?org=${t.id}&tab=pending`) }
+        : undefined,
     }))
     return pageContent(items)
   }

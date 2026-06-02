@@ -14,12 +14,6 @@ type Mode = 'login' | 'signup'
 interface TenantRole { id: string; name: string; display_order: number }
 interface Tenant { id: string; name: string }
 
-const DEFAULT_ROLES = [
-  { value: 'volunteer' as const, label: '자원봉사자' },
-  { value: '50plus' as const, label: '50플러스' },
-  { value: 'team_leader' as const, label: '팀장' },
-]
-
 const DAY_LABELS = ['MON','TUE','WED','THU','FRI','SAT','SUN']
 const TIME_TICKS = ['09','10','11','12','·','13','14','15','16','17','18']
 const MONTH_NAMES = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
@@ -44,6 +38,7 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
   const [tenantId, setTenantId] = useState('')
   const [tenantRoles, setTenantRoles] = useState<TenantRole[] | null>(null)
   const [tenantRoleId, setTenantRoleId] = useState<string | null>(null)
+  const [tenantTypeLabels, setTenantTypeLabels] = useState<{ volunteer: string; '50plus': string } | null>(null)
   const [role, setRole] = useState<'volunteer' | '50plus' | 'team_leader' | 'admin' | null>(null)
 
   const [error, setError] = useState<string | null>(null)
@@ -70,10 +65,19 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
   }, [])
 
   useEffect(() => {
-    if (!tenantId) { setTenantRoles(null); setTenantRoleId(null); setRole(null); return }
-    setTenantRoles(null); setTenantRoleId(null); setRole(null)
-    supabase.from('tenant_roles').select('id, name, display_order').eq('tenant_id', tenantId).order('display_order')
-      .then(({ data }) => setTenantRoles(data ?? []))
+    if (!tenantId) { setTenantRoles(null); setTenantRoleId(null); setRole(null); setTenantTypeLabels(null); return }
+    setTenantRoles(null); setTenantRoleId(null); setRole(null); setTenantTypeLabels(null)
+    Promise.all([
+      supabase.from('tenant_roles').select('id, name, display_order').eq('tenant_id', tenantId).order('display_order'),
+      supabase.from('tenants').select('settings').eq('id', tenantId).single(),
+    ]).then(([{ data: roles }, { data: tenantData }]) => {
+      setTenantRoles(roles ?? [])
+      const s = (tenantData as { settings?: { volunteer_label?: string; plus_label?: string } } | null)?.settings
+      setTenantTypeLabels({
+        volunteer: s?.volunteer_label ?? '자원봉사자',
+        '50plus': s?.plus_label ?? '50플러스',
+      })
+    })
   }, [tenantId])
 
   function updatePill(tab: Mode) {
@@ -162,6 +166,11 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
   function switchMode(m: Mode) { setMode(m); setError(null); setSuccess(null); setSocialPending(null) }
 
   const hasCustomRoles = tenantRoles !== null && tenantRoles.length > 0
+  const effectiveDefaultRoles = [
+    { value: 'volunteer' as const, label: tenantTypeLabels?.volunteer ?? '자원봉사자' },
+    { value: '50plus' as const, label: tenantTypeLabels?.['50plus'] ?? '50플러스' },
+    { value: 'team_leader' as const, label: '팀장' },
+  ]
   const accent = 'oklch(0.66 0.16 28)'
   const accentSoft = 'oklch(0.95 0.04 28)'
   const accentInk = 'oklch(0.38 0.13 28)'
@@ -535,7 +544,7 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
                             </div>
                           ) : (
                             <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:6 }}>
-                              {[...DEFAULT_ROLES, { value:'admin' as const, label:'관리자' }].map(opt => (
+                              {[...effectiveDefaultRoles, { value:'admin' as const, label:'관리자' }].map(opt => (
                                 <button key={opt.value} type="button" onClick={() => { setRole(opt.value); setTenantRoleId(null) }}
                                   style={{ padding:'8px 10px', borderRadius:10, fontSize:12.5, fontWeight:600, border:`2px solid ${role===opt.value?accent:'rgba(20,23,28,0.12)'}`, background:role===opt.value?accentSoft:'#fff', color:role===opt.value?accentInk:'#6B7280', cursor:'pointer', font:'inherit', transition:'all .15s' }}>{opt.label}</button>
                               ))}
@@ -599,7 +608,7 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
                               </div>
                             ) : (
                               <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:6 }}>
-                                {[...DEFAULT_ROLES, { value:'admin' as const, label:'관리자' }].map(opt => (
+                                {[...effectiveDefaultRoles, { value:'admin' as const, label:'관리자' }].map(opt => (
                                   <button key={opt.value} type="button" onClick={() => { setRole(opt.value); setTenantRoleId(null) }}
                                     style={{ padding:'8px 10px', borderRadius:10, fontSize:12.5, fontWeight:600, border:`2px solid ${role===opt.value?accent:'rgba(20,23,28,0.12)'}`, background:role===opt.value?accentSoft:'#fff', color:role===opt.value?accentInk:'#6B7280', cursor:'pointer', font:'inherit', transition:'all .15s' }}>{opt.label}</button>
                                 ))}
