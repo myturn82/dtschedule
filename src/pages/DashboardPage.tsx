@@ -34,14 +34,28 @@ export function DashboardPage() {
   const navigate = useNavigate()
   const { tenant, memberships, slotLabels, customFields } = useTenant()
   const { pendingMembers, members, assignments, slotSettings, tenantRoles, loading, approveUser, rejectUser } =
-    useDashboard(tenant?.id ?? '')
+    useDashboard(tenant?.id ?? '', viewYear, viewMonth)
   const [confirmReject, setConfirmReject] = useState<string | null>(null)
   const [participationTab, setParticipationTab] = useState<'역할별' | '사용자별'>('역할별')
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
 
   const now = new Date()
-  const year = now.getFullYear()
-  const month = now.getMonth() + 1
+  const thisYear = now.getFullYear()
+  const thisMonth = now.getMonth() + 1
+  const [viewYear, setViewYear] = useState(thisYear)
+  const [viewMonth, setViewMonth] = useState(thisMonth)
+
+  const isCurrentMonth = viewYear === thisYear && viewMonth === thisMonth
+
+  function prevMonth() {
+    if (viewMonth === 1) { setViewYear(y => y - 1); setViewMonth(12) }
+    else setViewMonth(m => m - 1)
+  }
+  function nextMonth() {
+    if (isCurrentMonth) return
+    if (viewMonth === 12) { setViewYear(y => y + 1); setViewMonth(1) }
+    else setViewMonth(m => m + 1)
+  }
 
   const roleStats = useMemo(() => {
     const userRoleMap = new Map<string, string>()
@@ -204,16 +218,46 @@ export function DashboardPage() {
             ) : (
               <>
 
+                {/* Month navigator */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={prevMonth}
+                      className="w-7 h-7 flex items-center justify-center rounded-lg border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)] transition-colors"
+                    >
+                      <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="m12 5-5 5 5 5"/></svg>
+                    </button>
+                    <span className="text-[14px] font-bold text-[var(--color-text-primary)] tabular-nums w-[90px] text-center">
+                      {viewYear}년 {viewMonth}월
+                    </span>
+                    <button
+                      onClick={nextMonth}
+                      disabled={isCurrentMonth}
+                      className="w-7 h-7 flex items-center justify-center rounded-lg border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="m8 5 5 5-5 5"/></svg>
+                    </button>
+                  </div>
+                  {!isCurrentMonth && (
+                    <button
+                      onClick={() => { setViewYear(thisYear); setViewMonth(thisMonth) }}
+                      className="text-[11px] font-medium text-[var(--color-brand-primary)] hover:underline"
+                    >
+                      이번 달
+                    </button>
+                  )}
+                </div>
+
                 {/* KPI Row */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
 
-                  {/* 이번 달 배정 */}
+                  {/* 배정 */}
                   <div className="bg-[var(--color-surface-secondary)] border border-[var(--color-border)] rounded-[14px] px-4 py-3.5">
                     <div className="flex items-center gap-1.5 text-[12px] text-[var(--color-text-muted)] font-semibold mb-2.5">
                       <span className="w-[22px] h-[22px] rounded-[7px] flex items-center justify-center shrink-0" style={{ background: 'var(--tint-plus)', color: 'var(--tint-plus-ink)' }}>
                         <svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"><path d="M4 5h12M4 10h12M4 15h8"/></svg>
                       </span>
-                      이번 달 배정
+                      {viewMonth}월 배정
                     </div>
                     <div className="flex items-baseline gap-1 text-[26px] font-bold tracking-tight leading-none font-mono-num">
                       {totalAssignments}
@@ -333,8 +377,7 @@ export function DashboardPage() {
                 {/* ── Participation ── */}
                 <section>
                   <div className="flex items-baseline justify-between mb-3">
-                    <h2 className="text-[15px] font-bold tracking-tight text-[var(--color-text-primary)]">이번 달 참여 현황</h2>
-                    <span className="text-[12px] text-[var(--color-text-muted)] font-medium">{year}년 {month}월</span>
+                    <h2 className="text-[15px] font-bold tracking-tight text-[var(--color-text-primary)]">참여 현황</h2>
                   </div>
 
                   {/* Animated toggle pill */}
@@ -543,7 +586,7 @@ export function DashboardPage() {
                 {slotStats.length > 0 && (
                   <section>
                     <div className="flex items-baseline justify-between mb-3">
-                      <h2 className="text-[15px] font-bold tracking-tight text-[var(--color-text-primary)]">이번 달 슬롯 현황</h2>
+                      <h2 className="text-[15px] font-bold tracking-tight text-[var(--color-text-primary)]">슬롯 현황</h2>
                       <span className="text-[12px] text-[var(--color-text-muted)] font-medium font-mono-num">
                         총 {slotStats.reduce((acc, x) => acc + x.count, 0)}건
                       </span>
