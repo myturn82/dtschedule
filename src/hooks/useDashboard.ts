@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import type { TenantMemberWithRole, SlotSetting, TenantRole } from '../types'
 
 export interface AssignmentSummary {
-  user_id: string
+  user_id: string | null
   volunteer_name: string
   time_slot: string
   day: number
@@ -23,7 +23,7 @@ interface DashboardState {
   rejectUser: (userId: string) => Promise<string | null>
 }
 
-export function useDashboard(tenantId: string): DashboardState {
+export function useDashboard(tenantId: string, year: number, month: number): DashboardState {
   const [pendingMembers, setPendingMembers] = useState<TenantMemberWithRole[]>([])
   const [members, setMembers] = useState<TenantMemberWithRole[]>([])
   const [assignments, setAssignments] = useState<AssignmentSummary[]>([])
@@ -31,25 +31,15 @@ export function useDashboard(tenantId: string): DashboardState {
   const [tenantRoles, setTenantRoles] = useState<TenantRole[]>([])
   const [loading, setLoading] = useState(true)
 
+  // 멤버/설정: tenantId 변경 시만 재조회
   useEffect(() => {
     if (!tenantId) return
-    const now = new Date()
-    const year = now.getFullYear()
-    const month = now.getMonth() + 1
-
-    async function loadAll() {
-      const [membersRes, assignmentsRes, slotSettingsRes, rolesRes] = await Promise.all([
+    async function loadMeta() {
+      const [membersRes, slotSettingsRes, rolesRes] = await Promise.all([
         supabase
           .from('tenant_members')
           .select('*, profile:profiles(*), tenant_role:tenant_roles(*)')
           .eq('tenant_id', tenantId),
-        supabase
-          .from('assignments')
-          .select('user_id, volunteer_name, time_slot, day, role_id, volunteer_type, extra_data')
-          .eq('tenant_id', tenantId)
-          .eq('year', year)
-          .eq('month', month)
-          .or('volunteer_type.neq.admin_note,volunteer_type.is.null'),
         supabase
           .from('slot_settings')
           .select('*')
@@ -60,17 +50,31 @@ export function useDashboard(tenantId: string): DashboardState {
           .eq('tenant_id', tenantId)
           .order('display_order'),
       ])
-
       const allMembers = (membersRes.data ?? []) as unknown as TenantMemberWithRole[]
       setPendingMembers(allMembers.filter(m => m.is_approved === false))
       setMembers(allMembers.filter(m => m.is_approved !== false && !m.profile?.is_super_admin))
-      setAssignments(assignmentsRes.data ?? [])
       setSlotSettings(slotSettingsRes.data ?? [])
       setTenantRoles((rolesRes.data ?? []) as TenantRole[])
-      setLoading(false)
     }
-    loadAll()
+    loadMeta()
   }, [tenantId])
+
+  // 배정: tenantId + year + month 변경 시 재조회
+  useEffect(() => {
+    if (!tenantId) return
+    setLoading(true)
+    supabase
+      .from('assignments')
+      .select('user_id, volunteer_name, time_slot, day, role_id, volunteer_type, extra_data')
+      .eq('tenant_id', tenantId)
+      .eq('year', year)
+      .eq('month', month)
+      .or('volunteer_type.neq.admin_note,volunteer_type.is.null')
+      .then(({ data }) => {
+        setAssignments(data ?? [])
+        setLoading(false)
+      })
+  }, [tenantId, year, month])
 
   const approveUser = useCallback(async (userId: string): Promise<string | null> => {
     const { error } = await supabase
