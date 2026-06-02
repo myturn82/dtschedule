@@ -116,12 +116,16 @@ export function DayView({
                   return (
                     <div key={role.id}>
                       <div className="text-[10px] text-[var(--color-text-muted)] font-medium mb-0.5">{role.name}</div>
-                      {roleAssigns.length > 0 ? roleAssigns.map(a => (
-                        <div key={a.id} className={`flex items-center gap-2 text-xs text-[var(--color-text-primary)] ml-2${withdrawnUserIds?.has(a.user_id) ? ' line-through opacity-50' : ''}`}>
-                          <span className="font-medium">{a.volunteer_name}</span>
-                          {a.customer_phone && <span className="text-[var(--color-text-muted)]">· {a.customer_phone}</span>}
-                          {a.note && <span className="text-[var(--color-text-muted)]">· {a.note}</span>}
+                      {roleAssigns.length > 0 ? roleAssigns.map(a => {
+                        const isW = withdrawnUserIds?.has(a.user_id)
+                        return (
+                        <div key={a.id} className="flex items-center gap-2 text-xs ml-2" style={isW ? { color: 'oklch(0.55 0.16 25)', opacity: 0.85 } : { color: 'var(--color-text-primary)' }}>
+                          <span className="font-medium" style={isW ? { textDecoration: 'line-through' } : undefined}>{a.volunteer_name}</span>
+                          {isW && <span className="text-[10px] px-1 rounded" style={{ background: 'oklch(0.97 0.02 25)' }}>삭제됨</span>}
+                          {!isW && a.customer_phone && <span className="text-[var(--color-text-muted)]">· {a.customer_phone}</span>}
+                          {!isW && a.note && <span className="text-[var(--color-text-muted)]">· {a.note}</span>}
                         </div>
+                        )})
                       )) : (
                         <div className="text-[10px] text-[var(--color-text-muted)] ml-2">(비어있음)</div>
                       )}
@@ -131,13 +135,16 @@ export function DayView({
               </div>
             ) : visible.length > 0 ? (
               <div className="flex flex-col gap-1">
-                {visible.map(a => (
-                  <div key={a.id} className={`flex items-center gap-2 text-xs text-[var(--color-text-primary)]${withdrawnUserIds?.has(a.user_id) ? ' line-through opacity-50' : ''}`}>
-                    <span className="w-1 h-1 rounded-full bg-[var(--color-brand-primary)] shrink-0 mt-px" />
-                    <span className="font-medium">{a.volunteer_name}</span>
-                    {a.note && <span className="text-[var(--color-text-muted)]">· {a.note}</span>}
+                {visible.map(a => {
+                  const isW = withdrawnUserIds?.has(a.user_id)
+                  return (
+                  <div key={a.id} className="flex items-center gap-2 text-xs" style={isW ? { color: 'oklch(0.55 0.16 25)', opacity: 0.85 } : { color: 'var(--color-text-primary)' }}>
+                    <span className="w-1 h-1 rounded-full shrink-0 mt-px" style={{ background: isW ? 'oklch(0.55 0.16 25)' : 'var(--color-brand-primary)' }} />
+                    <span className="font-medium" style={isW ? { textDecoration: 'line-through' } : undefined}>{a.volunteer_name}</span>
+                    {isW && <span className="text-[10px] px-1 rounded" style={{ background: 'oklch(0.97 0.02 25)' }}>삭제됨</span>}
+                    {!isW && a.note && <span className="text-[var(--color-text-muted)]">· {a.note}</span>}
                   </div>
-                ))}
+                )})}
               </div>
             ) : (
               <div className="text-xs text-[var(--color-text-muted)]">(비어있음)</div>

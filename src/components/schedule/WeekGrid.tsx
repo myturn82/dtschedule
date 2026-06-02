@@ -213,12 +213,15 @@ export function WeekGrid({
                                 return (
                                   <div
                                     key={a.id}
-                                    className={`w-full rounded-md px-1 py-0.5 text-[8px] sm:text-[10px] font-semibold text-center${isWithdrawn ? ' line-through opacity-50' : ''}`}
+                                    className="w-full rounded-md px-1 py-0.5 text-[8px] sm:text-[10px] font-semibold text-center"
                                     style={isHighlighted
                                       ? { background: '#fef08a', color: '#92400e' }
-                                      : { background: tint.bg, color: tint.ink }}
+                                      : isWithdrawn
+                                        ? { background: 'oklch(0.97 0.02 25)', color: 'oklch(0.55 0.16 25)', opacity: 0.85 }
+                                        : { background: tint.bg, color: tint.ink }}
                                   >
-                                    <span className="truncate block">{a.volunteer_name}</span>
+                                    <span className="truncate block" style={isWithdrawn ? { textDecoration: 'line-through' } : undefined}>{a.volunteer_name}</span>
+                                    {isWithdrawn && <span className="block text-[6px] sm:text-[8px] font-normal">삭제됨</span>}
                                     {timeLbl && <span className="block text-[6px] sm:text-[8px] font-normal opacity-60">{timeLbl}</span>}
                                   </div>
                                 )
@@ -260,12 +263,15 @@ export function WeekGrid({
                         return (
                           <div
                             key={a.id}
-                            className={`w-full rounded-md px-1 py-0.5 text-[8px] sm:text-[10px] font-semibold text-center${isWithdrawn ? ' line-through opacity-50' : ''}`}
+                            className="w-full rounded-md px-1 py-0.5 text-[8px] sm:text-[10px] font-semibold text-center"
                             style={isHighlighted
                               ? { background: '#fef08a', color: '#92400e' }
-                              : { background: tint.bg, color: tint.ink }}
+                              : isWithdrawn
+                                ? { background: 'oklch(0.97 0.02 25)', color: 'oklch(0.55 0.16 25)', opacity: 0.85 }
+                                : { background: tint.bg, color: tint.ink }}
                           >
-                            <span className="truncate block">{a.volunteer_name}</span>
+                            <span className="truncate block" style={isWithdrawn ? { textDecoration: 'line-through' } : undefined}>{a.volunteer_name}</span>
+                            {isWithdrawn && <span className="block text-[6px] sm:text-[8px] font-normal">삭제됨</span>}
                             {timeLbl && <span className="block text-[6px] sm:text-[8px] font-normal opacity-60">{timeLbl}</span>}
                           </div>
                         )
