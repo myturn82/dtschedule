@@ -536,54 +536,88 @@ export function AdminPage() {
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
       {/* Sticky header */}
-      <div className="bg-[var(--color-surface)] shadow-sm sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-3 flex-wrap">
-            <button onClick={() => navigate('/')} className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] text-sm shrink-0">← 뒤로</button>
-            <h1 className="text-base font-bold text-[var(--color-text-primary)] shrink-0">관리자 대시보드</h1>
-            {/* Org selector */}
-            {availableTenants.length > 1 ? (
-              <select
-                value={adminTenant?.id ?? ''}
-                onChange={e => {
-                  const t = availableTenants.find(t => t.id === e.target.value)
-                  if (t) setAdminTenant(t)
-                }}
-                className="text-sm border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30"
-              >
-                {availableTenants.map(t => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
-                ))}
-              </select>
-            ) : (
-              <span className="text-sm text-[var(--color-text-muted)]">· {adminTenant?.name}</span>
-            )}
-          </div>
-          <span className="text-sm text-[var(--color-text-muted)]">{profile.name}</span>
-        </div>
-        <div className="max-w-5xl mx-auto px-4 border-t border-[var(--color-border)] flex overflow-x-auto whitespace-nowrap [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
-          {(Object.keys(TAB_LABELS) as Tab[]).map(t => {
-            const pendingCount = t === 'pending'
-              ? members.filter(m => !m.is_approved).length
-              : 0
-            return (
-              <button key={t} onClick={() => setTab(t)}
-                className={`shrink-0 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px flex items-center gap-1.5 ${
-                  tab === t ? 'border-[var(--color-brand-primary)] text-[var(--color-brand-primary)]' : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
-                }`}>
-                {TAB_LABELS[t]}
-                {pendingCount > 0 && (
-                  <span className="inline-flex items-center justify-center w-4 h-4 text-[9px] font-bold rounded-full bg-red-500 text-white">
-                    {pendingCount}
-                  </span>
+      <div className="sticky top-0 z-10 bg-[var(--color-surface)] border-b border-[var(--color-border)]">
+
+        {/* Top bar: brand + user */}
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <button
+              onClick={() => navigate('/')}
+              className="shrink-0 w-8 h-8 flex items-center justify-center rounded-xl border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)] transition-all"
+            >
+              <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M13 16l-5-6 5-6"/></svg>
+            </button>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-xl bg-[var(--color-brand-primary)] text-white flex items-center justify-center text-[13px] font-bold shrink-0 shadow-[0_4px_12px_-4px_var(--color-brand-primary)]">
+                {adminTenant?.name?.[0] ?? '관'}
+              </div>
+              <div className="min-w-0">
+                {availableTenants.length > 1 ? (
+                  <select
+                    value={adminTenant?.id ?? ''}
+                    onChange={e => {
+                      const t = availableTenants.find(t => t.id === e.target.value)
+                      if (t) setAdminTenant(t)
+                    }}
+                    className="bg-transparent border-0 outline-none text-[15px] font-bold text-[var(--color-text-primary)] cursor-pointer max-w-[180px] leading-tight"
+                  >
+                    {availableTenants.map(t => (
+                      <option key={t.id} value={t.id}>{t.name}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="text-[15px] font-bold text-[var(--color-text-primary)] truncate leading-tight">{adminTenant?.name ?? '관리자'}</div>
                 )}
-              </button>
-            )
-          })}
+                <div className="text-[11.5px] text-[var(--color-text-muted)] font-medium leading-tight">관리자 콘솔</div>
+              </div>
+            </div>
+          </div>
+          <span className="shrink-0 text-sm font-semibold text-[var(--color-text-secondary)]">{profile.name}</span>
+        </div>
+
+        {/* Tab strip with edge fades */}
+        <div className="relative">
+          <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-[var(--color-surface)] to-transparent z-10" />
+          <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-[var(--color-surface)] to-transparent z-10" />
+          <nav className="max-w-5xl mx-auto flex gap-0.5 px-4 sm:px-6 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {(Object.keys(TAB_LABELS) as Tab[]).map(t => {
+              const count = t === 'members'
+                ? members.filter(m => m.is_approved !== false).length
+                : t === 'pending'
+                ? members.filter(m => m.is_approved === false).length
+                : 0
+              const isActive = tab === t
+              return (
+                <button
+                  key={t}
+                  onClick={() => setTab(t)}
+                  className={`relative shrink-0 flex items-center gap-1.5 px-3.5 pt-3 pb-3.5 text-[14px] font-semibold transition-colors duration-[120ms] whitespace-nowrap ${
+                    isActive
+                      ? 'text-[var(--color-text-primary)]'
+                      : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
+                  }`}
+                >
+                  {TAB_LABELS[t]}
+                  {count > 0 && (
+                    <span className={`text-[11px] font-bold px-[7px] py-px rounded-full ${
+                      isActive
+                        ? 'bg-[var(--color-brand-primary)]/15 text-[var(--color-brand-primary)]'
+                        : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)]'
+                    }`}>
+                      {count}
+                    </span>
+                  )}
+                  {isActive && (
+                    <span className="absolute left-2.5 right-2.5 bottom-0 h-[2.5px] rounded-t-full bg-[var(--color-brand-primary)]" />
+                  )}
+                </button>
+              )
+            })}
+          </nav>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-6">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
         {message && (
           <div className={`mb-4 p-3 rounded-lg text-sm flex justify-between items-center ${
             message.isError ? 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300' : 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300'
@@ -743,7 +777,7 @@ export function AdminPage() {
                               )}
                             </td>
                             <td className="px-4 py-3">
-                              <div className="flex gap-2 items-center flex-wrap">
+                              <div className="flex gap-1.5 items-center">
                                 {/* 자동배정 설정 버튼 */}
                                 <button
                                   onClick={() => {
@@ -755,9 +789,9 @@ export function AdminPage() {
                                     setPrefDays(m.available_days ?? [])
                                     setPrefLimit(m.monthly_limit?.toString() ?? '')
                                   }}
-                                  className="px-2 py-1 text-[10px] border border-[var(--color-border)] rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)]"
+                                  className="px-2 py-1 text-[10px] border border-[var(--color-border)] rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)] whitespace-nowrap"
                                 >
-                                  자동배정 설정
+                                  자동배정
                                 </button>
                                 {m.user_id !== profile.id && (
                                   <button
@@ -766,7 +800,7 @@ export function AdminPage() {
                                       const err = await removeMember(m.user_id)
                                       if (err) msg(err, true)
                                     }}
-                                    className="px-2 py-1 text-xs text-red-600 border border-red-200 rounded hover:bg-red-50"
+                                    className="px-2 py-1 text-[10px] text-red-600 border border-red-200 rounded-lg hover:bg-red-50 whitespace-nowrap"
                                   >
                                     삭제
                                   </button>
@@ -1276,8 +1310,8 @@ export function AdminPage() {
                   ) : (
                     <ul className="space-y-1.5">
                       {slotList.map(slot => (
-                        <li key={slot} className="flex items-center gap-2 px-3 py-2 bg-[var(--color-surface-secondary)] rounded-lg">
-                          <span className="text-sm text-[var(--color-text-secondary)] w-32 shrink-0">{parseSlotLabel(slot)}</span>
+                        <li key={slot} className="grid grid-cols-[auto_1fr_auto] items-center gap-2 px-3 py-2 bg-[var(--color-surface-secondary)] rounded-lg">
+                          <span className="text-sm text-[var(--color-text-secondary)] whitespace-nowrap shrink-0">{parseSlotLabel(slot)}</span>
                           <input
                             type="text"
                             placeholder="레이블 (예: 햇님타임)"
@@ -1288,7 +1322,7 @@ export function AdminPage() {
                               else delete next[slot]
                               return next
                             })}
-                            className="flex-1 text-sm border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]"
+                            className="min-w-0 text-sm border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]"
                           />
                           <button type="button" onClick={() => {
                             setSlotList(prev => prev.filter(s => s !== slot))
