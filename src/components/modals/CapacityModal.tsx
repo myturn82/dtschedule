@@ -12,12 +12,41 @@ interface Props {
 }
 
 export function CapacityModal({ slotSettings, timeSlots, slotLabels = {}, onClose, onUpdate }: Props) {
-  const [loading, setLoading] = useState<string | null>(null)
+  const initialValues = () => Object.fromEntries(
+    timeSlots.map(slot => [slot, slotSettings.find(s => s.time_slot === slot)?.max_capacity ?? DEFAULT_MAX_CAPACITY])
+  )
+
+  const [values, setValues] = useState<Record<string, number>>(initialValues)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [bulkValue, setBulkValue] = useState('')
   const [bulkApplying, setBulkApplying] = useState(false)
   const [bulkDone, setBulkDone] = useState(false)
-  const [refreshKey, setRefreshKey] = useState(0)
+
+  function handleInputChange(slot: TimeSlot, raw: string) {
+    const n = parseInt(raw, 10)
+    if (!isNaN(n) && n >= 1) {
+      setValues(prev => ({ ...prev, [slot]: n }))
+      setError(null)
+    }
+  }
+
+  async function handleSave() {
+    for (const slot of timeSlots) {
+      const n = values[slot]
+      if (isNaN(n) || n < 1) { setError('최소 인원은 1명 이상이어야 합니다.'); return }
+    }
+    setError(null)
+    setSaving(true)
+    for (const slot of timeSlots) {
+      const err = await onUpdate(slot as TimeSlot, values[slot])
+      if (err) { setError(err); setSaving(false); return }
+    }
+    setSaving(false)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }
 
   async function handleBulkApply() {
     const n = parseInt(bulkValue, 10)
@@ -27,23 +56,10 @@ export function CapacityModal({ slotSettings, timeSlots, slotLabels = {}, onClos
     for (const slot of timeSlots) {
       await onUpdate(slot as TimeSlot, n)
     }
+    setValues(Object.fromEntries(timeSlots.map(slot => [slot, n])))
     setBulkApplying(false)
     setBulkDone(true)
-    setRefreshKey(k => k + 1)
     setTimeout(() => setBulkDone(false), 2000)
-  }
-
-  async function handleChange(timeSlot: TimeSlot, value: string) {
-    const n = parseInt(value, 10)
-    if (isNaN(n) || n < 1) {
-      setError('최소 인원은 1명 이상이어야 합니다.')
-      return
-    }
-    setError(null)
-    setLoading(timeSlot)
-    const err = await onUpdate(timeSlot, n)
-    setLoading(null)
-    if (err) setError(err)
   }
 
   return (
@@ -90,44 +106,47 @@ export function CapacityModal({ slotSettings, timeSlots, slotLabels = {}, onClos
               {error}
             </p>
           )}
-          <div key={refreshKey} className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {timeSlots.map(slot => {
-              const setting = slotSettings.find(s => s.time_slot === slot)
-              return (
-                <div
-                  key={slot}
-                  className="flex items-center justify-between px-3 py-2 rounded-xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)]"
-                >
-                  <span className="text-xs font-medium text-[var(--color-text-primary)] shrink-0">
-                    {slotLabels[slot]
-                      ? <>{slotLabels[slot]} <span className="text-[10px] text-[var(--color-text-muted)] font-normal">{shortSlotLabel(slot)}</span></>
-                      : shortSlotLabel(slot)}
-                  </span>
-                  <div className="flex items-center gap-1 ml-2">
-                    <input
-                      type="number"
-                      min={1}
-                      max={99}
-                      defaultValue={setting?.max_capacity ?? DEFAULT_MAX_CAPACITY}
-                      disabled={loading === slot}
-                      onBlur={e => handleChange(slot as TimeSlot, e.target.value)}
-                      className="w-16 border border-[var(--color-border-strong)] rounded-lg px-1 py-1 text-sm text-center bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500/60 transition-all duration-200 disabled:opacity-40"
-                    />
-                    <span className="text-xs text-[var(--color-text-muted)]">명</span>
-                  </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {timeSlots.map(slot => (
+              <div
+                key={slot}
+                className="flex items-center justify-between px-3 py-2 rounded-xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)]"
+              >
+                <span className="text-xs font-medium text-[var(--color-text-primary)] shrink-0">
+                  {slotLabels[slot]
+                    ? <>{slotLabels[slot]} <span className="text-[10px] text-[var(--color-text-muted)] font-normal">{shortSlotLabel(slot)}</span></>
+                    : shortSlotLabel(slot)}
+                </span>
+                <div className="flex items-center gap-1 ml-2">
+                  <input
+                    type="number"
+                    min={1}
+                    max={99}
+                    value={values[slot] ?? DEFAULT_MAX_CAPACITY}
+                    onChange={e => handleInputChange(slot as TimeSlot, e.target.value)}
+                    className="w-16 border border-[var(--color-border-strong)] rounded-lg px-1 py-1 text-sm text-center bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500/60 transition-all duration-200"
+                  />
+                  <span className="text-xs text-[var(--color-text-muted)]">명</span>
                 </div>
-              )
-            })}
+              </div>
+            ))}
           </div>
         </div>
 
         {/* Footer */}
-        <div className="px-5 pb-5 shrink-0">
+        <div className="px-5 pb-5 pt-3 border-t border-[var(--color-border)] shrink-0 flex gap-2">
           <button
             onClick={onClose}
-            className="w-full border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] rounded-xl py-2.5 text-sm font-medium hover:bg-[var(--color-surface-hover)] transition-all duration-200"
+            className="flex-1 border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] rounded-xl py-2.5 text-sm font-medium hover:bg-[var(--color-surface-hover)] transition-all duration-200"
           >
             닫기
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex-1 bg-[var(--color-brand-primary)] text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50 transition-all duration-200"
+          >
+            {saving ? '저장 중...' : saved ? '저장 완료 ✓' : '저장'}
           </button>
         </div>
 
