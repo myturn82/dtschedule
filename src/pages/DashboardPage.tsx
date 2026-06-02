@@ -33,17 +33,18 @@ export function DashboardPage() {
   const { profile } = useAuth()
   const navigate = useNavigate()
   const { tenant, memberships, slotLabels, customFields } = useTenant()
-  const { pendingMembers, members, assignments, slotSettings, tenantRoles, loading, approveUser, rejectUser } =
-    useDashboard(tenant?.id ?? '', viewYear, viewMonth)
-  const [confirmReject, setConfirmReject] = useState<string | null>(null)
-  const [participationTab, setParticipationTab] = useState<'역할별' | '사용자별'>('역할별')
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
 
   const now = new Date()
   const thisYear = now.getFullYear()
   const thisMonth = now.getMonth() + 1
   const [viewYear, setViewYear] = useState(thisYear)
   const [viewMonth, setViewMonth] = useState(thisMonth)
+
+  const { pendingMembers, members, assignments, slotSettings, tenantRoles, loading, approveUser, rejectUser } =
+    useDashboard(tenant?.id ?? '', viewYear, viewMonth)
+  const [confirmReject, setConfirmReject] = useState<string | null>(null)
+  const [participationTab, setParticipationTab] = useState<'역할별' | '사용자별'>('역할별')
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
 
   const isCurrentMonth = viewYear === thisYear && viewMonth === thisMonth
 
