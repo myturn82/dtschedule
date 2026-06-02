@@ -302,10 +302,10 @@ export function SlotEditModal({
   const inputClass = 'w-full border border-[var(--color-border-strong)] rounded-xl px-3 py-2.5 text-sm bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500/60 transition-all duration-200'
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-2xl shadow-[var(--shadow-xl)] w-full max-w-md animate-scale-in">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-hidden">
+      <div className="bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-2xl shadow-[var(--shadow-xl)] w-full max-w-md animate-scale-in overflow-hidden flex flex-col max-h-[calc(100dvh-2rem)]">
         {/* Header */}
-        <div className="flex justify-between items-center px-5 pt-5 pb-3 border-b border-[var(--color-border)]">
+        <div className="flex justify-between items-center px-5 pt-5 pb-3 border-b border-[var(--color-border)] shrink-0">
           <div>
             <h2 className="text-base font-bold text-[var(--color-text-primary)]">
               {month}월 {day}일
@@ -328,7 +328,7 @@ export function SlotEditModal({
         {/* Role selector (split mode) OR type tabs (회원선택 모드) */}
         {isSplitMode ? (
           isAdmin && splitRoles.length > 1 ? (
-            <div className="flex border-b border-[var(--color-border)] px-4 py-2 gap-2 items-center">
+            <div className="flex border-b border-[var(--color-border)] px-4 py-2 gap-2 items-center shrink-0">
               <p className="text-xs font-medium text-[var(--color-text-muted)] shrink-0">역할</p>
               <select
                 value={selectedRoleId ?? ''}
@@ -347,13 +347,13 @@ export function SlotEditModal({
               </select>
             </div>
           ) : !isAdmin && selectedRole ? (
-            <div className="flex border-b border-[var(--color-border)] px-4 py-2 gap-2 items-center">
+            <div className="flex border-b border-[var(--color-border)] px-4 py-2 gap-2 items-center shrink-0">
               <p className="text-xs font-medium text-[var(--color-text-muted)] shrink-0">역할</p>
               <p className="text-sm font-semibold text-[var(--color-text-primary)]">{selectedRole.name}</p>
             </div>
           ) : null
         ) : !isAdmin && !isFreeform && tenantRoles.length === 0 && (  // 커스텀 역할 없는 조직만 표시
-          <div className="flex border-b border-[var(--color-border)] px-2">
+          <div className="flex border-b border-[var(--color-border)] px-2 shrink-0">
             {(['volunteer', '50plus'] as VolunteerType[]).map(t => {
               const isDisabled = !isAdmin && profileType !== t
               return (
@@ -379,7 +379,7 @@ export function SlotEditModal({
           </div>
         )}
 
-        <div className="px-5 py-4 space-y-3">
+        <div className="px-5 py-4 space-y-3 overflow-y-auto flex-1">
           {/* Existing assignments */}
           {displayedAssignments.length > 0 && (
             <div className="space-y-1.5">
