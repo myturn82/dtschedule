@@ -26,7 +26,7 @@ interface AddParams {
   volunteer_type: string
   time_sub?: string
   color?: string
-  user_id: string
+  user_id: string | null
   role_id?: string | null
   customer_name?: string | null
   customer_phone?: string | null
