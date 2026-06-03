@@ -65,7 +65,7 @@ function NameChips({ assignments, highlightName, tintBg, tintInk, teamLeaderUser
     <div className="flex flex-col gap-0.5 w-full px-0.5">
       {visible.map(a => {
         const isHighlighted = !!(highlightName && a.volunteer_name.includes(highlightName))
-        const isWithdrawn = !a.user_id || withdrawnUserIds?.has(a.user_id)
+        const isWithdrawn = !!(a.user_id && withdrawnUserIds?.has(a.user_id))
         const displayText = a.note ? `${a.volunteer_name}(${a.note})` : a.volunteer_name
         const timeLabel = showTimeSub && a.time_sub ? formatTimeSub(a.time_sub) : null
         return (

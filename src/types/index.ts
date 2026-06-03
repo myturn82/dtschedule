@@ -64,6 +64,7 @@ export interface Tenant {
   name: string;
   business_type: string | null;
   settings: TenantSettings;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }

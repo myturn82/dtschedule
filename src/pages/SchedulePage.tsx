@@ -17,6 +17,7 @@ import { FilterBar } from '../components/shared/FilterBar'
 import { ExportButton } from '../components/shared/ExportButton'
 import { LoginModal } from '../components/auth/LoginModal'
 import { SlotEditModal } from '../components/modals/SlotEditModal'
+import { RecurringModal } from '../components/modals/RecurringModal'
 import { CapacityModal } from '../components/modals/CapacityModal'
 import { HolidayNoteModal } from '../components/modals/HolidayNoteModal'
 import { ConfirmDialog } from '../components/shared/ConfirmDialog'
@@ -39,6 +40,7 @@ export function SchedulePage() {
   const [autoProposals, setAutoProposals] = useState<ProposedAssignment[] | null>(null)
   const [modalTarget, setModalTarget] = useState<ModalTarget | null>(null)
   const [directRegMsg, setDirectRegMsg] = useState<string | null>(null)
+  const [showRecurring, setShowRecurring] = useState(false)
   const [holidayTarget, setHolidayTarget] = useState<{ day: number; startHour: number; endHour: number } | null>(null)
   const [memberNotice, setMemberNotice] = useState<string | null>(null)
 
@@ -57,6 +59,7 @@ export function SchedulePage() {
   const displayAssignmentFilter = useMemo<((a: Assignment) => boolean) | undefined>(() => {
     if (tenantMode !== '회원개별') return undefined
     if (isPrivileged) {
+      if (filterMemberId === '__unassigned__') return (a: Assignment) => a.user_id === null
       return filterMemberId ? (a: Assignment) => a.user_id === filterMemberId : undefined
     }
     return (a: Assignment) => a.user_id === (profile?.id ?? '')
@@ -119,6 +122,7 @@ export function SchedulePage() {
       {profiles.map(p => (
         <option key={p.id} value={p.id}>{p.name}</option>
       ))}
+      <option value="__unassigned__">미귀속 배정</option>
     </select>
   ) : null
 
@@ -294,6 +298,14 @@ export function SchedulePage() {
                 </span>
               </button>
             )}
+            {profile && (tenantMode !== '비회원' || isPrivileged) && (
+              <button onClick={() => { setShowRecurring(true); close() }} className={menuItemCls}>
+                <span className="flex items-center gap-2.5">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg>
+                  반복 등록
+                </span>
+              </button>
+            )}
             <div className="h-px bg-[var(--color-border)] mx-1 my-1" />
             <button onClick={() => { handleClearClick(); close() }} className={menuItemCls}>
               <span className="flex items-center gap-2.5">
@@ -440,7 +452,7 @@ export function SchedulePage() {
             volunteer_type: volunteerType,
             time_sub: timeSub || undefined,
             color: color || undefined,
-            user_id: userId ?? profile!.id,
+            user_id: userId ?? (tenantMode === '비회원' ? null : profile!.id),
             role_id: roleId ?? null,
             customer_name: customerName ?? null,
             customer_phone: customerPhone ?? null,
@@ -489,6 +501,32 @@ export function SchedulePage() {
             if (errors.length) {
               alert(`${selected.length - errors.length}건 저장 완료, ${errors.length}건 실패`)
             }
+          }}
+        />
+      )}
+
+      {showRecurring && tenant && (
+        <RecurringModal
+          tenantId={tenant.id}
+          tenantMode={rawMode}
+          timeSlots={timeSlots}
+          slotLabels={slotLabels}
+          scheduleRules={scheduleRules}
+          dateOverrides={dateOverrides}
+          profile={profile}
+          tenantRole={tenantRole}
+          profiles={profiles}
+          splitRoles={splitRoles}
+          isSplitMode={isSplitMode}
+          initialYear={year}
+          initialMonth={month}
+          onClose={() => setShowRecurring(false)}
+          onSuccess={(inserted, skipped) => {
+            setShowRecurring(false)
+            setDirectRegMsg(
+              `${inserted}건 등록 완료${skipped > 0 ? ` (${skipped}건 중복 건너뜀)` : ''}`
+            )
+            setTimeout(() => setDirectRegMsg(null), 3000)
           }}
         />
       )}

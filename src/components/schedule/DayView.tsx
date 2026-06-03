@@ -4,12 +4,13 @@ import { parseSlotLabel } from '../../utils/timeSlots'
 
 const DAY_KR = ['일', '월', '화', '수', '목', '금', '토']
 
-const STRIPE_STYLE = {
-  background: 'repeating-linear-gradient(135deg, transparent 0 6px, rgba(20,23,28,0.03) 6px 12px)',
+const BREAK_STRIPE = {
+  background: 'repeating-linear-gradient(135deg, var(--color-surface-secondary) 0 7px, var(--color-surface-hover) 7px 14px)',
 } as const
 
-const HOLIDAY_STRIPE_STYLE = {
-  background: 'repeating-linear-gradient(135deg, transparent 0 8px, oklch(0.96 0.02 25 / 0.6) 8px 16px)',
+const HOLIDAY_STRIPE = {
+  background: 'repeating-linear-gradient(135deg, transparent 0 8px, oklch(0.96 0.02 25 / 0.5) 8px 16px)',
+  borderColor: 'oklch(0.88 0.04 25)',
 } as const
 
 interface Props {
@@ -30,128 +31,193 @@ interface Props {
   withdrawnUserIds?: Set<string>
 }
 
+function PersonChip({ a, withdrawnUserIds }: { a: Assignment; withdrawnUserIds?: Set<string> }) {
+  const isW = !!(a.user_id && withdrawnUserIds?.has(a.user_id))
+  const initial = a.volunteer_name?.charAt(0) ?? '?'
+  return (
+    <div className="inline-flex items-center gap-2 px-3 py-2 rounded-[10px] self-start max-w-full bg-[var(--color-surface-secondary)] border border-[var(--color-border)]">
+      <span
+        className="w-[26px] h-[26px] rounded-full flex-shrink-0 flex items-center justify-center text-[11.5px] font-bold"
+        style={isW
+          ? { background: 'oklch(0.97 0.02 25)', color: 'oklch(0.55 0.16 25)' }
+          : { background: 'oklch(0.95 0.045 28)', color: 'oklch(0.45 0.14 28)' }
+        }
+      >
+        {initial}
+      </span>
+      <span className={`text-sm font-semibold tracking-tight ${isW ? 'line-through text-[var(--color-text-muted)]' : 'text-[var(--color-text-primary)]'}`}>
+        {a.volunteer_name}
+      </span>
+      {isW && (
+        <span className="text-[10px] px-1.5 rounded" style={{ background: 'oklch(0.97 0.02 25)', color: 'oklch(0.55 0.16 25)' }}>
+          삭제됨
+        </span>
+      )}
+      {!isW && a.customer_phone && (
+        <span className="text-xs text-[var(--color-text-muted)] truncate">· {a.customer_phone}</span>
+      )}
+      {!isW && a.note && (
+        <span className="text-xs text-[var(--color-text-muted)] truncate">· {a.note}</span>
+      )}
+    </div>
+  )
+}
+
+function AssignButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-[10px] w-full text-[13px] font-semibold border border-dashed border-[var(--color-border-strong)] text-[var(--color-text-muted)] hover:border-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary)] transition-colors"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" width="15" height="15">
+        <path d="M12 5v14M5 12h14" />
+      </svg>
+      배정하기
+    </button>
+  )
+}
+
 export function DayView({
   year, month, day, timeSlots, assignments, slotSettings, scheduleRules, dateOverrides,
-  profile: _profile, splitRoles = [], isSplitMode = false, slotLabels = {}, onCellClick, displayAssignmentFilter, withdrawnUserIds,
+  profile: _profile, splitRoles = [], isSplitMode = false, slotLabels = {},
+  onCellClick, displayAssignmentFilter, withdrawnUserIds,
 }: Props) {
   const dow = new Date(year, month - 1, day).getDay()
 
+  let totalAssigned = 0
+  let totalOpen = 0
+  timeSlots.forEach(slot => {
+    const cs = getCellState(day, slot, year, month, scheduleRules, slotSettings, dateOverrides, assignments)
+    if (cs.isBreaktime || cs.isClosed || cs.isHoliday) return
+    const displayCs = displayAssignmentFilter
+      ? { ...cs, assignments: cs.assignments.filter(displayAssignmentFilter) }
+      : cs
+    const vis = isSplitMode ? displayCs.assignments : displayCs.assignments.filter(a => a.volunteer_type !== 'admin_note')
+    totalAssigned += vis.length
+    totalOpen += Math.max(0, cs.maxCapacity - vis.length)
+  })
+
+  const allClosed = timeSlots.every(slot => {
+    const cs = getCellState(day, slot, year, month, scheduleRules, slotSettings, dateOverrides, assignments)
+    return cs.isBreaktime || cs.isClosed || cs.isHoliday
+  })
+
   return (
-    <div className="space-y-2">
-      <div className="text-sm font-semibold text-[var(--color-text-muted)] px-1 mb-3">
-        {month}월 {day}일 ({DAY_KR[dow]}요일)
+    <div className="space-y-3">
+      {/* Section header */}
+      <div className="flex items-baseline justify-between px-1 pb-1 flex-wrap gap-2">
+        <h2 className="text-[15px] font-bold text-[var(--color-text-secondary)] tracking-tight">
+          {month}월 {day}일 ({DAY_KR[dow]}요일)
+        </h2>
+        <span className="text-xs font-semibold text-[var(--color-text-muted)] flex items-center gap-1 shrink-0">
+          배정 <b style={{ color: 'oklch(0.45 0.14 28)' }}>{totalAssigned}</b> · 빈자리 {totalOpen}
+        </span>
       </div>
 
-      {timeSlots.every(slot => {
-        const cs = getCellState(day, slot, year, month, scheduleRules, slotSettings, dateOverrides, assignments)
-        const displayCs = displayAssignmentFilter
-          ? { ...cs, assignments: cs.assignments.filter(displayAssignmentFilter) }
-          : cs
-        const vis = isSplitMode ? displayCs.assignments : displayCs.assignments.filter(a => a.volunteer_type !== 'admin_note')
-        return cs.isBreaktime || cs.isClosed || cs.isHoliday || vis.length === 0
-      }) && (
-        <div className="text-sm text-[var(--color-text-muted)] text-center py-10">이날 등록된 스케줄이 없습니다.</div>
+      {allClosed && (
+        <p className="text-sm text-[var(--color-text-muted)] text-center py-10">이날 운영하는 시간대가 없습니다.</p>
       )}
 
-      {timeSlots.map(slot => {
-        const cs = getCellState(day, slot, year, month, scheduleRules, slotSettings, dateOverrides, assignments)
-        const displayCs = displayAssignmentFilter
-          ? { ...cs, assignments: cs.assignments.filter(displayAssignmentFilter) }
-          : cs
-        const slotLabel = slotLabels[slot] ? `${slotLabels[slot]} (${parseSlotLabel(slot)})` : parseSlotLabel(slot)
-        const visible = isSplitMode
-          ? displayCs.assignments
-          : displayCs.assignments.filter(a => a.volunteer_type !== 'admin_note')
+      <div className="flex flex-col gap-3">
+        {timeSlots.map(slot => {
+          const cs = getCellState(day, slot, year, month, scheduleRules, slotSettings, dateOverrides, assignments)
+          const displayCs = displayAssignmentFilter
+            ? { ...cs, assignments: cs.assignments.filter(displayAssignmentFilter) }
+            : cs
+          const timeLabel = parseSlotLabel(slot)
+          const customLabel = slotLabels[slot] ?? null
+          const visible = isSplitMode
+            ? displayCs.assignments
+            : displayCs.assignments.filter(a => a.volunteer_type !== 'admin_note')
 
-        if (cs.isBreaktime || cs.isClosed) {
-          return (
-            <div key={slot} className="rounded-xl border border-[var(--color-border)] px-4 py-3" style={STRIPE_STYLE}>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-[var(--color-text-muted)]">{slotLabel}</span>
-                <span className="text-[10px] text-[var(--color-text-muted)]">휴게</span>
-              </div>
-            </div>
-          )
-        }
-
-        if (cs.isHoliday) {
-          return (
-            <div key={slot} className="rounded-xl border px-4 py-3" style={{ ...HOLIDAY_STRIPE_STYLE, borderColor: 'oklch(0.88 0.04 25)' }}>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-[var(--color-text-muted)]">{slotLabel}</span>
-                <span className="text-[10px] font-medium" style={{ color: 'oklch(0.55 0.16 25)' }}>휴관</span>
-              </div>
-            </div>
-          )
-        }
-
-        if (visible.length === 0) return null
-
-        return (
-          <button
-            key={slot}
-            onClick={() => onCellClick({ year, month, day, timeSlot: slot, volunteerType: 'volunteer' })}
-            className="w-full text-left rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-hover)] hover:border-[var(--color-brand-primary)]/40 transition-all px-4 py-3 group"
-          >
-            {/* Slot header */}
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-[var(--color-text-secondary)]">{slotLabel}</span>
-              <div className="flex items-center gap-1.5">
-                {cs.isFull ? (
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'oklch(0.97 0.02 25)', color: 'oklch(0.55 0.16 25)' }}>
-                    마감 {visible.length}/{cs.maxCapacity}
+          if (cs.isBreaktime || cs.isClosed) {
+            return (
+              <div key={slot} className="rounded-[18px] border border-[var(--color-border)] overflow-hidden" style={BREAK_STRIPE}>
+                <div className="flex items-center gap-3 px-4 py-3.5">
+                  <span className="text-sm font-bold font-mono text-[var(--color-text-muted)]">{timeLabel}</span>
+                  {customLabel && <span className="text-xs text-[var(--color-text-muted)]">{customLabel}</span>}
+                  <span className="text-[10px] font-bold bg-[var(--color-surface)] border border-[var(--color-border)] px-2.5 py-0.5 rounded-full text-[var(--color-text-muted)]">
+                    휴게
                   </span>
-                ) : visible.length > 0 ? (
-                  <span className="text-[10px] text-[var(--color-text-muted)]">{visible.length}/{cs.maxCapacity}명</span>
-                ) : null}
-                <span className="text-[10px] text-[var(--color-brand-primary)] opacity-0 group-hover:opacity-100 transition-opacity">+ 추가</span>
+                </div>
               </div>
-            </div>
+            )
+          }
 
-            {/* Assignments */}
-            {isSplitMode ? (
-              <div className="space-y-1.5">
-                {splitRoles.map(role => {
-                  const roleAssigns = visible.filter(a => a.role_id === role.id)
-                  return (
-                    <div key={role.id}>
-                      <div className="text-[10px] text-[var(--color-text-muted)] font-medium mb-0.5">{role.name}</div>
-                      {roleAssigns.length > 0 ? roleAssigns.map(a => {
-                        const isW = !a.user_id || withdrawnUserIds?.has(a.user_id)
-                        return (
-                        <div key={a.id} className="flex items-center gap-2 text-xs ml-2" style={isW ? { color: 'oklch(0.55 0.16 25)', opacity: 0.85 } : { color: 'var(--color-text-primary)' }}>
-                          <span className="font-medium" style={isW ? { textDecoration: 'line-through' } : undefined}>{a.volunteer_name}</span>
-                          {isW && <span className="text-[10px] px-1 rounded" style={{ background: 'oklch(0.97 0.02 25)' }}>삭제됨</span>}
-                          {!isW && a.customer_phone && <span className="text-[var(--color-text-muted)]">· {a.customer_phone}</span>}
-                          {!isW && a.note && <span className="text-[var(--color-text-muted)]">· {a.note}</span>}
-                        </div>
-                        )})
-                      : (
-                        <div className="text-[10px] text-[var(--color-text-muted)] ml-2">(비어있음)</div>
-                      )}
-                    </div>
-                  )
-                })}
+          if (cs.isHoliday) {
+            return (
+              <div key={slot} className="rounded-[18px] overflow-hidden border" style={HOLIDAY_STRIPE}>
+                <div className="flex items-center gap-3 px-4 py-3.5">
+                  <span className="text-sm font-bold font-mono" style={{ color: 'oklch(0.65 0.12 25)' }}>{timeLabel}</span>
+                  {customLabel && <span className="text-xs" style={{ color: 'oklch(0.65 0.12 25)' }}>{customLabel}</span>}
+                  <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full" style={{ background: 'oklch(0.97 0.02 25)', color: 'oklch(0.55 0.16 25)' }}>
+                    휴관
+                  </span>
+                </div>
               </div>
-            ) : visible.length > 0 ? (
-              <div className="flex flex-col gap-1">
-                {visible.map(a => {
-                  const isW = !a.user_id || withdrawnUserIds?.has(a.user_id)
-                  return (
-                  <div key={a.id} className="flex items-center gap-2 text-xs" style={isW ? { color: 'oklch(0.55 0.16 25)', opacity: 0.85 } : { color: 'var(--color-text-primary)' }}>
-                    <span className="w-1 h-1 rounded-full shrink-0 mt-px" style={{ background: isW ? 'oklch(0.55 0.16 25)' : 'var(--color-brand-primary)' }} />
-                    <span className="font-medium" style={isW ? { textDecoration: 'line-through' } : undefined}>{a.volunteer_name}</span>
-                    {isW && <span className="text-[10px] px-1 rounded" style={{ background: 'oklch(0.97 0.02 25)' }}>삭제됨</span>}
-                    {!isW && a.note && <span className="text-[var(--color-text-muted)]">· {a.note}</span>}
-                  </div>
-                )})}
+            )
+          }
+
+          const isFull = cs.isFull
+          const capacityCount = visible.length
+
+          return (
+            <div key={slot} className="rounded-[18px] border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden" style={{ boxShadow: '0 1px 0 rgba(20,23,28,0.02), 0 6px 16px -12px rgba(20,23,28,0.18)' }}>
+              {/* Slot header */}
+              <div className="flex items-center gap-3 px-4 py-3.5">
+                <span className="text-[15.5px] font-bold tracking-tight font-mono text-[var(--color-text-primary)]">
+                  {timeLabel}
+                </span>
+                {customLabel && (
+                  <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] border border-[var(--color-border)] whitespace-nowrap">
+                    {customLabel}
+                  </span>
+                )}
+                <span className="ml-auto flex-shrink-0 text-xs font-bold px-3 py-1 rounded-full bg-[var(--color-surface-secondary)] border border-[var(--color-border)] whitespace-nowrap">
+                  <b style={isFull ? { color: 'oklch(0.56 0.11 150)' } : { color: 'var(--color-text-primary)' }}>
+                    {capacityCount}
+                  </b>
+                  <span className="text-[var(--color-text-secondary)]">/{cs.maxCapacity}명</span>
+                </span>
               </div>
-            ) : (
-              <div className="text-xs text-[var(--color-text-muted)]">(비어있음)</div>
-            )}
-          </button>
-        )
-      })}
+
+              {/* Slot body */}
+              {isSplitMode && splitRoles.length > 0 ? (
+                <div
+                  className="border-t border-[var(--color-border)] grid"
+                  style={{
+                    gridTemplateColumns: `repeat(${Math.min(splitRoles.length, 2)}, 1fr)`,
+                    gap: '1px',
+                    background: 'var(--color-border)',
+                  }}
+                >
+                  {splitRoles.map(role => {
+                    const roleAssigns = visible.filter(a => a.role_id === role.id)
+                    return (
+                      <div key={role.id} className="p-4 flex flex-col gap-2 min-w-0 bg-[var(--color-surface)]">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-muted)]">
+                          {role.name}
+                        </span>
+                        {roleAssigns.map(a => (
+                          <PersonChip key={a.id} a={a} withdrawnUserIds={withdrawnUserIds} />
+                        ))}
+                        <AssignButton onClick={() => onCellClick({ year, month, day, timeSlot: slot, volunteerType: 'volunteer', roleId: role.id })} />
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div className="border-t border-[var(--color-border)] p-4 flex flex-col gap-2">
+                  {visible.map(a => (
+                    <PersonChip key={a.id} a={a} withdrawnUserIds={withdrawnUserIds} />
+                  ))}
+                  <AssignButton onClick={() => onCellClick({ year, month, day, timeSlot: slot, volunteerType: 'volunteer' })} />
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }

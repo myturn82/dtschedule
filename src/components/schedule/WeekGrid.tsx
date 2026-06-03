@@ -209,7 +209,7 @@ export function WeekGrid({
                               roleAssigns.map(a => {
                                 const isHighlighted = !!(highlightName && a.volunteer_name.includes(highlightName))
                                 const timeLbl = a.time_sub ? formatTimeSub(a.time_sub) : null
-                                const isWithdrawn = !a.user_id || withdrawnUserIds?.has(a.user_id)
+                                const isWithdrawn = !!(a.user_id && withdrawnUserIds?.has(a.user_id))
                                 return (
                                   <div
                                     key={a.id}
@@ -259,7 +259,7 @@ export function WeekGrid({
                       visibleAssigns.map(a => {
                         const isHighlighted = !!(highlightName && a.volunteer_name.includes(highlightName))
                         const timeLbl = a.time_sub ? formatTimeSub(a.time_sub) : null
-                        const isWithdrawn = !a.user_id || withdrawnUserIds?.has(a.user_id)
+                        const isWithdrawn = !!(a.user_id && withdrawnUserIds?.has(a.user_id))
                         return (
                           <div
                             key={a.id}

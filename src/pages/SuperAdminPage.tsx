@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { useTenant } from '../contexts/TenantContext'
 import { buildSlot, parseSlotLabel, SLOT_TEMPLATES } from '../utils/timeSlots'
 import type { Tenant, TenantMode } from '../types'
 
@@ -140,6 +141,7 @@ function displayMode(raw: string | undefined): TenantMode {
 
 export function SuperAdminPage() {
   const { profile, loading: authLoading } = useAuth()
+  const { setTenant } = useTenant()
   const navigate = useNavigate()
 
   const [tenants, setTenants]       = useState<Tenant[]>([])
@@ -168,6 +170,13 @@ export function SuperAdminPage() {
   const [editingSlugId, setEditingSlugId] = useState<string | null>(null)
   const [editSlug, setEditSlug]           = useState('')
   const [slugSaving, setSlugSaving]       = useState(false)
+
+  // Delete confirmation modal
+  const [deleteConfirm, setDeleteConfirm] = useState<{ tenant: Tenant; assignCount: number; memberCount: number } | null>(null)
+  const [deleteNameInput, setDeleteNameInput] = useState('')
+
+  // Mode change warning modal
+  const [pendingModeChange, setPendingModeChange] = useState<{ tenant: Tenant; from: TenantMode; to: TenantMode; unassignedCount?: number } | null>(null)
 
   // Pending admin approvals
   const [pendingAdmins, setPendingAdmins] = useState<import('../types').Profile[]>([])
@@ -209,6 +218,17 @@ export function SuperAdminPage() {
 
   async function saveEdit(tenant: Tenant) {
     if (editSlots.length === 0) { setMessage('슬롯을 하나 이상 등록해야 합니다.'); return }
+    const currentSlots = tenant.settings?.time_slots ?? []
+    const removedSlots = currentSlots.filter(s => !editSlots.includes(s))
+    if (removedSlots.length > 0) {
+      const { count } = await supabase.from('assignments')
+        .select('*', { count: 'exact', head: true })
+        .eq('tenant_id', tenant.id)
+        .in('time_slot', removedSlots)
+      if ((count ?? 0) > 0) {
+        if (!window.confirm(`삭제될 슬롯(${removedSlots.length}개)에 기존 배정 ${count}건이 있습니다.\n해당 배정은 DB에 남지만 스케줄 화면에서 보이지 않게 됩니다.\n계속하시겠습니까?`)) return
+      }
+    }
     setEditSaving(true)
     setMessage('')
     const hasHalf = editSlots.some(s => s.includes('.'))
@@ -276,16 +296,73 @@ export function SuperAdminPage() {
   }
 
   async function deleteTenant(tenant: Tenant) {
-    if (!window.confirm(`"${tenant.name}" 조직을 삭제하시겠습니까?\n\n모든 데이터(배정·규칙·멤버)가 함께 삭제됩니다.`)) return
     setDeletingSaving(true)
-    const { error } = await supabase.from('tenants').delete().eq('id', tenant.id)
+    const [assignRes, memberRes] = await Promise.all([
+      supabase.from('assignments').select('*', { count: 'exact', head: true }).eq('tenant_id', tenant.id),
+      supabase.from('tenant_members').select('*', { count: 'exact', head: true }).eq('tenant_id', tenant.id),
+    ])
+    setDeleteConfirm({ tenant, assignCount: assignRes.count ?? 0, memberCount: memberRes.count ?? 0 })
+    setDeleteNameInput('')
+    setDeletingSaving(false)
+  }
+
+  async function deactivateTenant() {
+    if (!deleteConfirm) return
+    setDeletingSaving(true)
+    const { data, error } = await supabase
+      .from('tenants')
+      .update({ is_active: false, updated_at: new Date().toISOString() })
+      .eq('id', deleteConfirm.tenant.id)
+      .select().single()
+    if (error) {
+      setMessage(`오류: ${error.message}`)
+    } else if (data) {
+      setTenants(prev => prev.map(t => t.id === deleteConfirm.tenant.id ? data : t))
+      setMessage('조직이 비활성화됐습니다.')
+    }
+    setDeleteConfirm(null)
+    setDeletingSaving(false)
+  }
+
+  async function reactivateTenant(tenant: Tenant) {
+    const { data, error } = await supabase
+      .from('tenants')
+      .update({ is_active: true, updated_at: new Date().toISOString() })
+      .eq('id', tenant.id)
+      .select().single()
+    if (error) {
+      setMessage(`오류: ${error.message}`)
+    } else if (data) {
+      setTenants(prev => prev.map(t => t.id === tenant.id ? data : t))
+      setMessage('조직이 복구됐습니다.')
+    }
+  }
+
+  async function confirmDeleteTenant() {
+    if (!deleteConfirm) return
+    setDeletingSaving(true)
+    const { error } = await supabase.from('tenants').delete().eq('id', deleteConfirm.tenant.id)
     if (error) {
       setMessage(`오류: ${error.message}`)
     } else {
-      setTenants(prev => prev.filter(t => t.id !== tenant.id))
-      setMessage('조직이 삭제됐습니다.')
+      setTenants(prev => prev.filter(t => t.id !== deleteConfirm.tenant.id))
+      setMessage('조직이 영구 삭제됐습니다.')
     }
+    setDeleteConfirm(null)
     setDeletingSaving(false)
+  }
+
+  async function confirmModeChange() {
+    if (!pendingModeChange) return
+    setModeSaving(true)
+    const { data, error } = await supabase
+      .from('tenants')
+      .update({ settings: { ...pendingModeChange.tenant.settings, tenant_mode: pendingModeChange.to } })
+      .eq('id', pendingModeChange.tenant.id)
+      .select().single()
+    if (!error && data) setTenants(prev => prev.map(x => x.id === pendingModeChange.tenant.id ? data : x))
+    setPendingModeChange(null)
+    setModeSaving(false)
   }
 
   const createTenant = useCallback(async (e: React.FormEvent) => {
@@ -510,10 +587,108 @@ export function SuperAdminPage() {
           </form>
         )}
 
+        {/* Delete confirmation modal */}
+        {deleteConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] p-6 w-full max-w-sm space-y-4 shadow-xl">
+              <h3 className="font-bold text-[var(--color-text-primary)] text-lg">조직 삭제</h3>
+              <div className="text-sm text-[var(--color-text-secondary)] space-y-0.5">
+                <p>조직명: <span className="font-semibold text-[var(--color-text-primary)]">{deleteConfirm.tenant.name}</span></p>
+                <p>회원 <span className="font-semibold">{deleteConfirm.memberCount}명</span> · 배정 <span className="font-semibold">{deleteConfirm.assignCount}건</span></p>
+              </div>
+
+              {/* Option 1: 비활성화 */}
+              <div className="p-3 rounded-xl border border-amber-200 dark:border-amber-800 space-y-2">
+                <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">비활성화 (권장)</p>
+                <p className="text-xs text-[var(--color-text-secondary)]">데이터를 보존하고 조직을 숨깁니다. 나중에 복구할 수 있습니다.</p>
+                <button
+                  disabled={deletingSaving}
+                  onClick={deactivateTenant}
+                  className="w-full px-4 py-2 rounded-xl bg-amber-500 text-white text-sm font-medium hover:bg-amber-600 disabled:opacity-40 transition-colors"
+                >
+                  {deletingSaving ? '처리 중...' : '비활성화'}
+                </button>
+              </div>
+
+              {/* Option 2: 영구 삭제 */}
+              <div className="p-3 rounded-xl border border-red-200 dark:border-red-800 space-y-2">
+                <p className="text-sm font-semibold text-red-600 dark:text-red-400">영구 삭제</p>
+                <p className="text-xs text-red-500">모든 데이터가 완전히 삭제되며 복구 불가능합니다.</p>
+                <input
+                  value={deleteNameInput}
+                  onChange={e => setDeleteNameInput(e.target.value)}
+                  placeholder={`조직명 "${deleteConfirm.tenant.name}" 입력`}
+                  className="w-full px-3 py-2 rounded-xl border border-red-200 dark:border-red-700 bg-[var(--color-surface)] text-sm focus:outline-none focus:ring-2 focus:ring-red-400/30 focus:border-red-400"
+                />
+                <button
+                  disabled={deleteNameInput !== deleteConfirm.tenant.name || deletingSaving}
+                  onClick={confirmDeleteTenant}
+                  className="w-full px-4 py-2 rounded-xl bg-red-500 text-white text-sm font-medium hover:bg-red-600 disabled:opacity-40 transition-colors"
+                >
+                  {deletingSaving ? '삭제 중...' : '영구 삭제'}
+                </button>
+              </div>
+
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="w-full px-4 py-2 rounded-xl border border-[var(--color-border)] text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]"
+              >
+                취소
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Mode change warning modal */}
+        {pendingModeChange && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] p-6 w-full max-w-sm space-y-4 shadow-xl">
+              <h3 className="font-bold text-[var(--color-text-primary)] text-lg">운영 모드 변경</h3>
+              <p className="text-sm text-[var(--color-text-secondary)]">
+                <span className="font-semibold text-[var(--color-text-primary)]">{pendingModeChange.tenant.name}</span>의 모드를{' '}
+                <span className="font-semibold">{pendingModeChange.from}</span> →{' '}
+                <span className="font-semibold text-[var(--color-brand-primary)]">{pendingModeChange.to}</span>으로 변경합니다.
+              </p>
+              <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-xs text-amber-700 dark:text-amber-400 space-y-1">
+                {pendingModeChange.to === '비회원' && (
+                  <p>기존 회원 배정이 화면에 남아 비회원 직접입력 데이터와 혼재될 수 있습니다.</p>
+                )}
+                {pendingModeChange.from === '비회원' && pendingModeChange.to === '회원개별' && (
+                  <p>기존 비회원 배정 <strong>{pendingModeChange.unassignedCount ?? 0}건</strong>은 일반 회원 화면에서 숨겨집니다. 관리자는 계속 볼 수 있습니다.</p>
+                )}
+                {pendingModeChange.from === '비회원' && pendingModeChange.to === '회원공유' && (
+                  <p>기존 비회원 배정 <strong>{pendingModeChange.unassignedCount ?? 0}건</strong>이 공개 스케줄에 표시됩니다.</p>
+                )}
+                {pendingModeChange.from !== '비회원' && pendingModeChange.to === '회원개별' && (
+                  <p>각 회원은 자신의 배정만 볼 수 있습니다. 기존 배정은 그대로 유지됩니다.</p>
+                )}
+                {pendingModeChange.from !== '비회원' && pendingModeChange.to === '회원공유' && (
+                  <p>기존 배정 데이터는 그대로 유지됩니다.</p>
+                )}
+              </div>
+              <div className="flex gap-2 pt-1">
+                <button
+                  disabled={modeSaving}
+                  onClick={confirmModeChange}
+                  className="flex-1 px-4 py-2 rounded-xl bg-[var(--color-brand-primary)] text-white text-sm font-medium hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40"
+                >
+                  {modeSaving ? '저장 중...' : '변경 적용'}
+                </button>
+                <button
+                  onClick={() => setPendingModeChange(null)}
+                  className="flex-1 px-4 py-2 rounded-xl border border-[var(--color-border)] text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]"
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Tenant list */}
         <ul className="space-y-2">
           {tenants.map(t => (
-            <li key={t.id} className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden">
+            <li key={t.id} className={`rounded-2xl border overflow-hidden ${t.is_active === false ? 'border-[var(--color-border)] bg-[var(--color-surface-secondary)] opacity-60' : 'border-[var(--color-border)] bg-[var(--color-surface)]'}`}>
               {/* Tenant row */}
               <div className="px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0 flex-1">
@@ -567,11 +742,14 @@ export function SuperAdminPage() {
                       {t.slug}
                     </button>
                   )}
-                  {t.settings?.time_slots?.length ? (
-                    <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">
-                      슬롯 {t.settings.time_slots.length}개
-                    </p>
-                  ) : null}
+                  <div className="flex items-center gap-2 mt-0.5">
+                    {t.settings?.time_slots?.length ? (
+                      <p className="text-xs text-[var(--color-text-secondary)]">슬롯 {t.settings.time_slots.length}개</p>
+                    ) : null}
+                    {t.is_active === false && (
+                      <span className="text-xs font-medium px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">비활성</span>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {t.business_type && <span className="text-xs text-[var(--color-text-secondary)] hidden sm:inline">{t.business_type}</span>}
@@ -579,16 +757,17 @@ export function SuperAdminPage() {
                     value={displayMode(t.settings?.tenant_mode)}
                     disabled={modeSaving}
                     onChange={async e => {
-                      setModeSaving(true)
                       const newMode = e.target.value as TenantMode
-                      const { data, error } = await supabase
-                        .from('tenants')
-                        .update({ settings: { ...t.settings, tenant_mode: newMode } })
-                        .eq('id', t.id)
-                        .select()
-                        .single()
-                      if (!error && data) setTenants(prev => prev.map(x => x.id === t.id ? data : x))
-                      setModeSaving(false)
+                      const fromMode = displayMode(t.settings?.tenant_mode)
+                      if (newMode === fromMode) return
+                      let unassignedCount: number | undefined
+                      if (fromMode === '비회원' && (newMode === '회원개별' || newMode === '회원공유')) {
+                        const { count } = await supabase.from('assignments')
+                          .select('*', { count: 'exact', head: true })
+                          .eq('tenant_id', t.id).is('user_id', null)
+                        unassignedCount = count ?? 0
+                      }
+                      setPendingModeChange({ tenant: t, from: fromMode, to: newMode, unassignedCount })
                     }}
                     className="px-2 py-1 text-xs border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] text-[var(--color-text-secondary)] disabled:opacity-40"
                   >
@@ -603,18 +782,33 @@ export function SuperAdminPage() {
                     {editingId === t.id ? '닫기' : '슬롯'}
                   </button>
                   <button
+                    onClick={() => { setTenant(t, 'admin'); navigate('/') }}
+                    className="px-2.5 py-1 text-xs font-medium border border-[var(--color-border)] text-[var(--color-text-secondary)] rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors"
+                  >
+                    스케줄
+                  </button>
+                  <button
                     onClick={() => navigate(`/admin?org=${t.id}`)}
                     className="px-2.5 py-1 text-xs font-medium bg-[var(--color-brand-primary)] text-white rounded-lg hover:bg-[var(--color-brand-primary-hover)] transition-colors"
                   >
                     관리
                   </button>
-                  <button
-                    disabled={deletingSaving}
-                    onClick={() => deleteTenant(t)}
-                    className="px-2.5 py-1 text-xs font-medium border border-red-200 text-red-500 rounded-lg hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/20 transition-colors disabled:opacity-40"
-                  >
-                    삭제
-                  </button>
+                  {t.is_active === false ? (
+                    <button
+                      onClick={() => reactivateTenant(t)}
+                      className="px-2.5 py-1 text-xs font-medium border border-green-200 text-green-600 rounded-lg hover:bg-green-50 dark:border-green-800 dark:text-green-400 dark:hover:bg-green-950/20 transition-colors"
+                    >
+                      복구
+                    </button>
+                  ) : (
+                    <button
+                      disabled={deletingSaving}
+                      onClick={() => deleteTenant(t)}
+                      className="px-2.5 py-1 text-xs font-medium border border-red-200 text-red-500 rounded-lg hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/20 transition-colors disabled:opacity-40"
+                    >
+                      삭제
+                    </button>
+                  )}
                 </div>
               </div>
 

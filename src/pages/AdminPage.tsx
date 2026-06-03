@@ -490,6 +490,17 @@ export function AdminPage() {
       msg('테마 색상은 #RRGGBB 형식으로 입력해주세요. (예: #2563eb)', true)
       return
     }
+    const currentSlots = adminTenant.settings?.time_slots ?? []
+    const removedSlots = currentSlots.filter(s => !slotList.includes(s))
+    if (removedSlots.length > 0) {
+      const { count } = await supabase.from('assignments')
+        .select('*', { count: 'exact', head: true })
+        .eq('tenant_id', adminTenant.id)
+        .in('time_slot', removedSlots)
+      if ((count ?? 0) > 0) {
+        if (!window.confirm(`삭제될 슬롯(${removedSlots.length}개)에 기존 배정 ${count}건이 있습니다.\n해당 배정은 DB에 남지만 스케줄 화면에서 보이지 않게 됩니다.\n계속하시겠습니까?`)) return
+      }
+    }
     setSaving(true)
     const hasHalf = slotList.some(s => s.includes('.'))
     const [nameErr, settingsErr, rulesErr] = await Promise.all([
@@ -1061,7 +1072,13 @@ export function AdminPage() {
                                   className="px-1.5 py-1 text-xs border border-[var(--color-border)] rounded hover:bg-[var(--color-surface-hover)] disabled:opacity-30">↓</button>
                                 <button
                                   onClick={async () => {
-                                    if (!confirm(`"${r.name}" 역할을 삭제할까요?`)) return
+                                    const { count } = await supabase.from('assignments')
+                                      .select('*', { count: 'exact', head: true })
+                                      .eq('tenant_id', adminTenantId).eq('role_id', r.id)
+                                    const warningMsg = (count ?? 0) > 0
+                                      ? `"${r.name}" 역할을 삭제할까요?\n\n이 역할로 등록된 배정 ${count}건의 역할 정보가 사라집니다. 배정 데이터는 보존됩니다.`
+                                      : `"${r.name}" 역할을 삭제할까요?`
+                                    if (!confirm(warningMsg)) return
                                     const err = await deleteRole(r.id)
                                     if (err) msg(err, true)
                                   }}
