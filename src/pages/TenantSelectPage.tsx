@@ -37,10 +37,17 @@ const TINTS = [
   { bg: 'oklch(0.93 0.07 75)',  ink: 'oklch(0.44 0.11 60)' },
 ]
 
+const MODE_LABELS: Record<string, string> = {
+  '회원공유': '회원공유', '회원선택': '회원공유',
+  '회원개별': '회원개별',
+  '비회원': '비회원', '직접입력': '비회원',
+}
+
 interface OrgCardProps {
   name: string
   roleLabel: string
   isAdmin: boolean
+  mode?: string
   position?: string
   pendingCount?: number
   memberCount?: number
@@ -50,7 +57,7 @@ interface OrgCardProps {
   onPendingClick?: () => void
 }
 
-function OrgCard({ name, roleLabel, isAdmin, position, pendingCount, memberCount, assignmentCount, tintIdx, onClick, onPendingClick }: OrgCardProps) {
+function OrgCard({ name, roleLabel, isAdmin, mode, position, pendingCount, memberCount, assignmentCount, tintIdx, onClick, onPendingClick }: OrgCardProps) {
   const [hovered, setHovered] = useState(false)
   const initial = name.charAt(0)
   const tint = TINTS[tintIdx % TINTS.length]
@@ -114,6 +121,17 @@ function OrgCard({ name, roleLabel, isAdmin, position, pendingCount, memberCount
             <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'currentColor', flexShrink: 0 }} />
             {roleLabel}
           </span>
+          {mode && MODE_LABELS[mode] && (
+            <span style={{
+              display: 'inline-flex', alignItems: 'center',
+              padding: '1px 7px', borderRadius: 999,
+              fontSize: 11, fontWeight: 500,
+              background: 'rgba(20,23,28,0.05)', color: '#6B7280',
+              whiteSpace: 'nowrap',
+            }}>
+              {MODE_LABELS[mode]}
+            </span>
+          )}
           {position && <span style={{ color: '#6B7280', whiteSpace: 'nowrap' }}>{position}</span>}
           {!!pendingCount && (
             <span
@@ -227,6 +245,7 @@ export function TenantSelectPage() {
     name: string
     roleLabel: string
     isAdmin: boolean
+    mode?: string
     position?: string
     pendingCount?: number
     memberCount?: number
@@ -457,6 +476,7 @@ export function TenantSelectPage() {
                   name={item.name}
                   roleLabel={item.roleLabel}
                   isAdmin={item.isAdmin}
+                  mode={item.mode}
                   position={item.position}
                   pendingCount={item.pendingCount}
                   memberCount={item.memberCount}
@@ -493,6 +513,7 @@ export function TenantSelectPage() {
       name: t.name,
       roleLabel: '슈퍼관리자',
       isAdmin: true,
+      mode: t.settings?.tenant_mode ?? '회원선택',
       pendingCount: pendingCounts[t.id] ?? 0,
       memberCount: memberCounts[t.id] ?? 0,
       assignmentCount: assignmentCounts[t.id] ?? 0,
@@ -510,6 +531,7 @@ export function TenantSelectPage() {
     name: m.tenant.name,
     roleLabel: m.role === 'admin' ? '관리자' : '멤버',
     isAdmin: m.role === 'admin',
+    mode: m.tenant.settings?.tenant_mode ?? '회원선택',
     position: m.tenant_role?.name,
     onClick: () => { setTenant(m.tenant, m.role); navigate('/') },
   }))

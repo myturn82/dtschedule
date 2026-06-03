@@ -218,16 +218,7 @@ export function SlotEditModal({
     )
     setLoading(false)
     if (err) { setError(err); return }
-    setNote('')
-    setTimeSub(defaultTimeSub)
-    if (useDynamicFields) {
-      setFieldValues({})
-    } else if (isFreeform) {
-      setFreeformName('')
-      setFreeformPhone('')
-    } else {
-      setSelectedUserId(isAdmin ? '' : (profile?.id ?? ''))
-    }
+    onClose()
   }
 
   async function handleUpdate() {
@@ -581,7 +572,7 @@ export function SlotEditModal({
                   disabled={isAddDisabled}
                   className="flex-1 bg-[var(--color-brand-primary)] text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50 transition-all duration-200 shadow-[0_2px_8px_rgba(37,99,235,0.25)]"
                 >
-                  {loading ? '저장 중...' : editingId ? '수정 완료' : '추가'}
+                  {loading ? '저장 중...' : editingId ? '수정 완료' : '저장'}
                 </button>
                 {editingId ? (
                   <button onClick={cancelEdit} className="flex-1 border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] rounded-xl py-2.5 text-sm font-medium hover:bg-[var(--color-surface-hover)] transition-all duration-200">

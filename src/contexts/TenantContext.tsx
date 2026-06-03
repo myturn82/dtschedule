@@ -87,7 +87,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
             .select('*, tenant:tenants(*), tenant_role:tenant_roles(name)')
             .eq('user_id', userId)
           const list2 = (data2 ?? []) as MembershipWithTenant[]
-          const approved2 = list2.filter(m => m.is_approved !== false)
+          const approved2 = list2.filter(m => m.is_approved !== false && m.tenant?.is_active !== false)
           setMemberships(approved2)
           if (approved2.length === 1) { setTenantState(approved2[0].tenant); setTenantRole(approved2[0].role) }
           setLoading(false)
@@ -100,7 +100,8 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     }
 
     // 승인된 멤버십만 사용 (is_approved가 없으면 true로 간주 — 마이그레이션 전 호환)
-    const approved = list.filter(m => m.is_approved !== false)
+    // 비활성 조직(is_active=false)은 제외
+    const approved = list.filter(m => m.is_approved !== false && m.tenant?.is_active !== false)
     setMemberships(approved)
 
     if (approved.length === 1) {
