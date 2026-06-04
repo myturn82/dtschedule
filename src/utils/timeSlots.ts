@@ -61,18 +61,18 @@ export function buildSlot(start: number, end: number): string {
 
 export const SLOT_TEMPLATES: { label: string; intervalMinutes: number; slots: string[] }[] = [
   {
-    label: '10-22시 (1시간 단위)',
+    label: '09-22시 (1시간 단위)',
     intervalMinutes: 60,
-    slots: generateTimeSlots('10:00', '22:00', 60),
+    slots: generateTimeSlots('09:00', '22:00', 60),
   },
   {
-    label: '10-22시 (30분 단위)',
+    label: '09-22시 (30분 단위)',
     intervalMinutes: 30,
-    slots: generateTimeSlots('10:00', '22:00', 30),
+    slots: generateTimeSlots('09:00', '22:00', 30),
   },
 ];
 
-export const DEFAULT_TIME_SLOTS: TimeSlot[] = generateTimeSlots('10:00', '22:00', 120);
+export const DEFAULT_TIME_SLOTS: TimeSlot[] = generateTimeSlots('09:00', '22:00', 120);
 
 export function formatTimeSub(ts: string | null): string {
   if (!ts) return ''
