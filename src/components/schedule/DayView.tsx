@@ -31,11 +31,14 @@ interface Props {
   withdrawnUserIds?: Set<string>
 }
 
-function PersonChip({ a, withdrawnUserIds }: { a: Assignment; withdrawnUserIds?: Set<string> }) {
+function PersonChip({ a, withdrawnUserIds, onClick }: { a: Assignment; withdrawnUserIds?: Set<string>; onClick?: () => void }) {
   const isW = !!(a.user_id && withdrawnUserIds?.has(a.user_id))
   const initial = a.volunteer_name?.charAt(0) ?? '?'
   return (
-    <div className="inline-flex items-center gap-2 px-3 py-2 rounded-[10px] self-start max-w-full bg-[var(--color-surface-secondary)] border border-[var(--color-border)]">
+    <div
+      className={`inline-flex items-center gap-2 px-3 py-2 rounded-[10px] self-start max-w-full bg-[var(--color-surface-secondary)] border border-[var(--color-border)] ${onClick ? 'cursor-pointer hover:border-[var(--color-brand-primary)] hover:bg-[var(--color-surface-hover)] transition-colors' : ''}`}
+      onClick={onClick}
+    >
       <span
         className="w-[26px] h-[26px] rounded-full flex-shrink-0 flex items-center justify-center text-[11.5px] font-bold"
         style={isW
@@ -72,7 +75,7 @@ function AssignButton({ onClick }: { onClick: () => void }) {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" width="15" height="15">
         <path d="M12 5v14M5 12h14" />
       </svg>
-      배정하기
+      등록
     </button>
   )
 }
@@ -199,7 +202,7 @@ export function DayView({
                           {role.name}
                         </span>
                         {roleAssigns.map(a => (
-                          <PersonChip key={a.id} a={a} withdrawnUserIds={withdrawnUserIds} />
+                          <PersonChip key={a.id} a={a} withdrawnUserIds={withdrawnUserIds} onClick={() => onCellClick({ year, month, day, timeSlot: slot, volunteerType: 'volunteer', roleId: role.id })} />
                         ))}
                         <AssignButton onClick={() => onCellClick({ year, month, day, timeSlot: slot, volunteerType: 'volunteer', roleId: role.id })} />
                       </div>
@@ -209,7 +212,7 @@ export function DayView({
               ) : (
                 <div className="border-t border-[var(--color-border)] p-4 flex flex-col gap-2">
                   {visible.map(a => (
-                    <PersonChip key={a.id} a={a} withdrawnUserIds={withdrawnUserIds} />
+                    <PersonChip key={a.id} a={a} withdrawnUserIds={withdrawnUserIds} onClick={() => onCellClick({ year, month, day, timeSlot: slot, volunteerType: 'volunteer' })} />
                   ))}
                   <AssignButton onClick={() => onCellClick({ year, month, day, timeSlot: slot, volunteerType: 'volunteer' })} />
                 </div>
