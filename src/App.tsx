@@ -54,6 +54,7 @@ function AppRoutes() {
       <Routes>
         <Route path="/share" element={<SharePage />} />
         <Route path="/superadmin" element={<SuperAdminPage />} />
+        <Route path="/admin" element={<AdminPage />} />
         <Route path="*" element={<TenantSelectPage />} />
       </Routes>
     )
