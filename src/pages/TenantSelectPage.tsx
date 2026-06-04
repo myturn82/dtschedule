@@ -211,7 +211,7 @@ export function TenantSelectPage() {
       supabase.from('assignments').select('tenant_id')
         .eq('year', now.getFullYear())
         .eq('month', now.getMonth() + 1)
-        .neq('volunteer_type', 'admin_note'),
+        .neq('member_type', 'admin_note'),
     ]).then(([{ data: tenants }, { data: members }, { data: assignments }]) => {
       setAllTenants(tenants ?? [])
       const pending: Record<string, number> = {}

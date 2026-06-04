@@ -306,7 +306,7 @@ export function ScheduleGrid({
                       if (blockMerge) {
                         if (blockMerge.skip) return null
                         const isSat = dow === 6
-                        const dayNotes = assignments.filter(a => a.day === day && a.volunteer_type === 'admin_note')
+                        const dayNotes = assignments.filter(a => a.day === day && a.member_type === 'admin_note')
                         const coveredSlots = timeSlots.slice(slotIdx, slotIdx + blockMerge.rowspan)
                         const slotGroups = computeSlotGroups(dayNotes, coveredSlots)
                         return (
@@ -324,7 +324,7 @@ export function ScheduleGrid({
                                   style={{
                                     flex: group.count,
                                     minHeight: `${group.count * 2}rem`,
-                                    backgroundColor: group.note?.volunteer_name || (group.note ? 'rgba(255,255,255,0.55)' : undefined),
+                                    backgroundColor: group.note?.member_name || (group.note ? 'rgba(255,255,255,0.55)' : undefined),
                                   }}
                                   onClick={isAdmin && onHolidayCellClick
                                     ? (e) => { e.stopPropagation(); onHolidayCellClick(day, group.startHour, group.endHour) }
@@ -402,13 +402,13 @@ export function ScheduleGrid({
                                   timeSlot={slot}
                                   colType="role"
                                   roleId={role.id}
-                                  onClick={() => onCellClick({ year, month, day, timeSlot: slot, volunteerType: 'volunteer', roleId: role.id })}
+                                  onClick={() => onCellClick({ year, month, day, timeSlot: slot, memberType: 'member', roleId: role.id })}
                                   highlightName={highlightName}
                                   teamLeaderUserIds={teamLeaderUserIds}
                                   indicatorBarRoles={roleIdx === 0 ? indicatorBarRoles : []}
                                   canInteract={isAdmin || memberRoleId === role.id}
                                   onIndicatorBarClick={isIndicatorBarMember && roleIdx === 0
-                                    ? () => onCellClick({ year, month, day, timeSlot: slot, volunteerType: 'volunteer', roleId: memberRoleId! })
+                                    ? () => onCellClick({ year, month, day, timeSlot: slot, memberType: 'member', roleId: memberRoleId! })
                                     : undefined}
                                   withdrawnUserIds={withdrawnUserIds}
                                 />
@@ -452,7 +452,7 @@ export function ScheduleGrid({
                                 cellState={displayCellState}
                                 timeSlot={slot}
                                 colType="vol"
-                                onClick={() => onCellClick({ year, month, day, timeSlot: slot, volunteerType: 'volunteer' })}
+                                onClick={() => onCellClick({ year, month, day, timeSlot: slot, memberType: 'member' })}
                                 highlightName={highlightName}
                                 teamLeaderUserIds={teamLeaderUserIds}
                                 indicatorBarRoles={indicatorBarRoles}
@@ -470,7 +470,7 @@ export function ScheduleGrid({
                                 cellState={displayCellState}
                                 timeSlot={slot}
                                 colType="plus"
-                                onClick={() => onCellClick({ year, month, day, timeSlot: slot, volunteerType: '50plus' })}
+                                onClick={() => onCellClick({ year, month, day, timeSlot: slot, memberType: '50plus' })}
                                 highlightName={highlightName}
                                 teamLeaderUserIds={teamLeaderUserIds}
                                 withdrawnUserIds={withdrawnUserIds}

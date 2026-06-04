@@ -18,7 +18,7 @@ interface TenantContextValue {
   slotLabels: Record<string, string>
   legendItems: LegendItem[]
   customFields: CustomFieldDef[]
-  typeLabels: { volunteer: string; '50plus': string }
+  typeLabels: { member: string; '50plus': string }
   alreadyMemberNotice: string | null
   setTenant: (tenant: Tenant, role: TenantAccessRole) => void
   resetTenantSelection: () => void
@@ -171,7 +171,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   )
 
   const typeLabels = useMemo(() => ({
-    volunteer: tenant?.settings?.volunteer_label ?? '팀원',
+    member: tenant?.settings?.volunteer_label ?? '팀원',
     '50plus': tenant?.settings?.plus_label ?? '50플러스활동가',
   }), [tenant])
 

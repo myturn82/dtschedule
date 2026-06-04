@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
-import type { Assignment, SlotSetting, ScheduleRule, DateOverride, TimeSlot, VolunteerType } from '../types'
+import type { Assignment, SlotSetting, ScheduleRule, DateOverride, TimeSlot, MemberType } from '../types'
 
 interface ScheduleData {
   assignments: Assignment[]
@@ -21,9 +21,9 @@ interface AddParams {
   month: number
   day: number
   time_slot: TimeSlot
-  volunteer_name: string
+  member_name: string
   note?: string
-  volunteer_type: string
+  member_type: string
   time_sub?: string
   color?: string
   user_id: string | null
@@ -34,9 +34,9 @@ interface AddParams {
 }
 
 interface UpdateParams {
-  volunteer_name?: string
+  member_name?: string
   note?: string
-  volunteer_type?: VolunteerType
+  member_type?: MemberType
   time_sub?: string
   color?: string
   role_id?: string | null
@@ -102,11 +102,11 @@ export function useSchedule(tenantId: string, year: number, month: number): Sche
   }, [tenantId, year, month])
 
   const addAssignment = useCallback(async (params: AddParams): Promise<string | null> => {
-    if (params.volunteer_type !== 'admin_note') {
+    if (params.member_type !== 'admin_note') {
       const isDuplicate = assignments.some(
         a => a.year === params.year && a.month === params.month &&
              a.day === params.day && a.time_slot === params.time_slot &&
-             a.volunteer_name === params.volunteer_name
+             a.member_name === params.member_name
       )
       if (isDuplicate) return '이미 같은 회원이 배정되어 있습니다'
     }

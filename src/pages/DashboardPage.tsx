@@ -94,7 +94,7 @@ export function DashboardPage() {
     const slotCount = new Map<string, number>()
     const closeBySlot = new Map<string, number>()
     for (const a of assignments) {
-      if (a.volunteer_type === 'close') {
+      if (a.member_type === 'close') {
         closeBySlot.set(a.time_slot, (closeBySlot.get(a.time_slot) ?? 0) + 1)
         continue
       }
@@ -157,7 +157,7 @@ export function DashboardPage() {
 
   const effectiveCap = useMemo(() => {
     const totalCap = slotSettings.reduce((acc, s) => acc + s.max_capacity, 0)
-    const closedCount = assignments.filter(a => a.volunteer_type === 'close').length
+    const closedCount = assignments.filter(a => a.member_type === 'close').length
     return Math.max(0, totalCap - closedCount)
   }, [slotSettings, assignments])
 

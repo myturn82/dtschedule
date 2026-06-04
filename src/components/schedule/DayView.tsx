@@ -33,7 +33,7 @@ interface Props {
 
 function PersonChip({ a, withdrawnUserIds, onClick }: { a: Assignment; withdrawnUserIds?: Set<string>; onClick?: () => void }) {
   const isW = !!(a.user_id && withdrawnUserIds?.has(a.user_id))
-  const initial = a.volunteer_name?.charAt(0) ?? '?'
+  const initial = a.member_name?.charAt(0) ?? '?'
   return (
     <div
       className={`inline-flex items-center gap-2 px-3 py-2 rounded-[10px] self-start max-w-full bg-[var(--color-surface-secondary)] border border-[var(--color-border)] ${onClick ? 'cursor-pointer hover:border-[var(--color-brand-primary)] hover:bg-[var(--color-surface-hover)] transition-colors' : ''}`}
@@ -49,7 +49,7 @@ function PersonChip({ a, withdrawnUserIds, onClick }: { a: Assignment; withdrawn
         {initial}
       </span>
       <span className={`text-sm font-semibold tracking-tight ${isW ? 'line-through text-[var(--color-text-muted)]' : 'text-[var(--color-text-primary)]'}`}>
-        {a.volunteer_name}
+        {a.member_name}
       </span>
       {isW && (
         <span className="text-[10px] px-1.5 rounded" style={{ background: 'oklch(0.97 0.02 25)', color: 'oklch(0.55 0.16 25)' }}>
@@ -95,7 +95,7 @@ export function DayView({
     const displayCs = displayAssignmentFilter
       ? { ...cs, assignments: cs.assignments.filter(displayAssignmentFilter) }
       : cs
-    const vis = isSplitMode ? displayCs.assignments : displayCs.assignments.filter(a => a.volunteer_type !== 'admin_note')
+    const vis = isSplitMode ? displayCs.assignments : displayCs.assignments.filter(a => a.member_type !== 'admin_note')
     totalAssigned += vis.length
     totalOpen += Math.max(0, cs.maxCapacity - vis.length)
   })
@@ -131,7 +131,7 @@ export function DayView({
           const customLabel = slotLabels[slot] ?? null
           const visible = isSplitMode
             ? displayCs.assignments
-            : displayCs.assignments.filter(a => a.volunteer_type !== 'admin_note')
+            : displayCs.assignments.filter(a => a.member_type !== 'admin_note')
 
           if (cs.isBreaktime || cs.isClosed) {
             return (
@@ -202,9 +202,9 @@ export function DayView({
                           {role.name}
                         </span>
                         {roleAssigns.map(a => (
-                          <PersonChip key={a.id} a={a} withdrawnUserIds={withdrawnUserIds} onClick={() => onCellClick({ year, month, day, timeSlot: slot, volunteerType: 'volunteer', roleId: role.id })} />
+                          <PersonChip key={a.id} a={a} withdrawnUserIds={withdrawnUserIds} onClick={() => onCellClick({ year, month, day, timeSlot: slot, memberType: 'member', roleId: role.id })} />
                         ))}
-                        <AssignButton onClick={() => onCellClick({ year, month, day, timeSlot: slot, volunteerType: 'volunteer', roleId: role.id })} />
+                        <AssignButton onClick={() => onCellClick({ year, month, day, timeSlot: slot, memberType: 'member', roleId: role.id })} />
                       </div>
                     )
                   })}
@@ -212,9 +212,9 @@ export function DayView({
               ) : (
                 <div className="border-t border-[var(--color-border)] p-4 flex flex-col gap-2">
                   {visible.map(a => (
-                    <PersonChip key={a.id} a={a} withdrawnUserIds={withdrawnUserIds} onClick={() => onCellClick({ year, month, day, timeSlot: slot, volunteerType: 'volunteer' })} />
+                    <PersonChip key={a.id} a={a} withdrawnUserIds={withdrawnUserIds} onClick={() => onCellClick({ year, month, day, timeSlot: slot, memberType: 'member' })} />
                   ))}
-                  <AssignButton onClick={() => onCellClick({ year, month, day, timeSlot: slot, volunteerType: 'volunteer' })} />
+                  <AssignButton onClick={() => onCellClick({ year, month, day, timeSlot: slot, memberType: 'member' })} />
                 </div>
               )}
             </div>

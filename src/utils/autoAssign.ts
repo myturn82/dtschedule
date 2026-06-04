@@ -1,5 +1,5 @@
 import { getCellState } from './cellState'
-import type { Assignment, SlotSetting, ScheduleRule, DateOverride, TenantRole, VolunteerType } from '../types'
+import type { Assignment, SlotSetting, ScheduleRule, DateOverride, TenantRole, MemberType } from '../types'
 import type { ProfileWithRole } from '../hooks/useProfiles'
 
 export interface ProposedAssignment {
@@ -8,7 +8,7 @@ export interface ProposedAssignment {
   month: number
   day: number
   timeSlot: string
-  volunteerType: VolunteerType
+  memberType: MemberType
   roleId: string | null
   userId: string
   userName: string
@@ -79,7 +79,7 @@ function roundRobin(
   emptySlots: { year: number; month: number; day: number; slot: string }[],
   existingAssignments: Assignment[],
   countMatchFn: (a: Assignment) => boolean,
-  volunteerType: VolunteerType,
+  memberType: MemberType,
   roleId: string | null,
   roleName: string,
   memberPreferences: Map<string, MemberPreference> | undefined,
@@ -132,12 +132,12 @@ function roundRobin(
     assignCountThisMonth[chosen.id] = (assignCountThisMonth[chosen.id] ?? 0) + 1
 
     proposals.push({
-      id: `${s.year}-${s.month}-${s.day}-${s.slot}-${roleId ?? volunteerType}-${i}`,
+      id: `${s.year}-${s.month}-${s.day}-${s.slot}-${roleId ?? memberType}-${i}`,
       year: s.year,
       month: s.month,
       day: s.day,
       timeSlot: s.slot,
-      volunteerType,
+      memberType,
       roleId,
       userId: chosen.id,
       userName: chosen.name,
@@ -183,7 +183,7 @@ export function computeAutoAssignments(params: AutoAssignParams): ProposedAssign
       proposals.push(...roundRobin(
         members, emptySlots, assignments,
         (a) => a.role_id === role.id,
-        'volunteer',
+        'member',
         role.id,
         role.name,
         memberPreferences,
@@ -191,17 +191,17 @@ export function computeAutoAssignments(params: AutoAssignParams): ProposedAssign
       ))
     }
   } else {
-    for (const { members, volunteerType, roleName } of [
-      { members: profiles, volunteerType: 'volunteer' as VolunteerType, roleName: volunteerLabel ?? '팀원' },
+    for (const { members, memberType, roleName } of [
+      { members: profiles, memberType: 'member' as MemberType, roleName: volunteerLabel ?? '팀원' },
     ]) {
       if (!members.length) continue
-      const vt = volunteerType
+      const vt = memberType
 
       const emptySlots = getEmptySlots(
         days, timeSlots, assignments, scheduleRules, slotSettings, dateOverrides,
         (y, m, d, slot) => assignments.some(a =>
           a.year === y && a.month === m && a.day === d &&
-          a.time_slot === slot && (a.volunteer_type ?? 'volunteer') === vt && !a.role_id
+          a.time_slot === slot && (a.member_type ?? 'member') === vt && !a.role_id
         )
       )
 
@@ -243,7 +243,7 @@ export function computeAutoAssignments(params: AutoAssignParams): ProposedAssign
           for (const rid of eligibleRoles) {
             const result = roundRobin(
               membersByRole[rid], [s], assignments,
-              (a) => (a.volunteer_type ?? 'volunteer') === vt,
+              (a) => (a.member_type ?? 'member') === vt,
               vt, null, roleName,
               memberPreferences,
               assignCountThisMonth,
@@ -263,7 +263,7 @@ export function computeAutoAssignments(params: AutoAssignParams): ProposedAssign
       } else {
         proposals.push(...roundRobin(
           members, emptySlots, assignments,
-          (a) => (a.volunteer_type ?? 'volunteer') === vt,
+          (a) => (a.member_type ?? 'member') === vt,
           vt, null, roleName,
           memberPreferences,
           assignCountThisMonth,

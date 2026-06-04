@@ -128,7 +128,7 @@ export function RecurringModal({
         .from('assignments')
         .select('year, month, day, time_slot')
         .eq('tenant_id', tenantId)
-        .eq('volunteer_name', volunteerName.trim())
+        .eq('member_name', volunteerName.trim())
         .gte('year', Math.min(...years))
         .lte('year', Math.max(...years))
 
@@ -144,8 +144,8 @@ export function RecurringModal({
           month: d.month,
           day: d.day,
           time_slot: d.time_slot,
-          volunteer_name: volunteerName.trim(),
-          volunteer_type: 'volunteer',
+          member_name: volunteerName.trim(),
+          member_type: 'member',
           user_id: isFreeform ? null : (isAdmin ? selectedUserId : (profile?.id ?? null)),
           role_id: isSplitMode ? roleId : null,
           note: note.trim() || null,
