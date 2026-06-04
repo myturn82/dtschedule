@@ -386,12 +386,20 @@ export function SuperAdminPage() {
   const inputCls = 'w-full px-3 py-2 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]'
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)] p-4 sm:p-8">
-      <div className="max-w-3xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">슈퍼관리자</h1>
-          <button onClick={() => navigate('/')} className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]">
-            ← 돌아가기
+    <div className="min-h-screen bg-[var(--color-bg)]">
+      <div className="max-w-[880px] mx-auto" style={{ padding: 'clamp(16px,3vw,30px) clamp(14px,4vw,26px) 90px' }}>
+
+        {/* ── Topbar ── */}
+        <div className="flex items-center gap-[14px] mb-[clamp(18px,3vw,26px)]">
+          <h1 className="m-0 text-[clamp(22px,5vw,28px)] font-extrabold tracking-[-0.8px] flex items-center gap-[10px] whitespace-nowrap">
+            <span className="w-[30px] h-[30px] rounded-[9px] flex-shrink-0 grid place-items-center" style={{ background: 'oklch(0.95 0.045 28)', color: 'oklch(0.45 0.14 28)' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M3 17l2-9 4.5 5L12 6l2.5 7L19 8l2 9z"/><path d="M3 20h18"/></svg>
+            </span>
+            슈퍼관리자
+          </h1>
+          <button onClick={() => navigate('/')} className="ml-auto inline-flex items-center gap-[6px] whitespace-nowrap text-[13.5px] font-semibold text-[var(--color-text-muted)] px-3 py-2 rounded-[10px] hover:bg-[var(--color-surface)] hover:text-[var(--color-text-primary)] transition-colors">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            돌아가기
           </button>
         </div>
 
@@ -401,15 +409,14 @@ export function SuperAdminPage() {
           </div>
         )}
 
-        {/* Create button */}
         {/* ── 관리자 승인 대기 ── */}
         {pendingAdmins.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">
+            <h2 className="m-0 text-[16px] font-bold tracking-[-0.3px] text-[var(--color-text-secondary)] mb-4 flex items-center gap-2 whitespace-nowrap">
               관리자 승인 대기
-              <span className="ml-2 inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-full bg-red-500 text-white">{pendingAdmins.length}</span>
+              <span className="inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-full bg-red-500 text-white">{pendingAdmins.length}</span>
             </h2>
-            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl overflow-hidden">
+            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[22px] overflow-hidden shadow-[var(--shadow-sm)]">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
@@ -462,11 +469,18 @@ export function SuperAdminPage() {
           </div>
         )}
 
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">조직 목록 ({tenants.length})</h2>
+        {/* ── List header ── */}
+        <div className="flex items-center gap-[14px] flex-wrap mb-[14px]">
+          <h2 className="m-0 text-[16px] font-bold tracking-[-0.3px] text-[var(--color-text-secondary)] flex items-baseline gap-[7px] whitespace-nowrap">
+            조직 목록
+            <span className="text-[12.5px] font-bold px-[9px] py-[2px] rounded-full" style={{ color: 'oklch(0.45 0.14 28)', background: 'oklch(0.95 0.045 28)' }}>
+              {tenants.length}
+            </span>
+          </h2>
           <button
             onClick={() => setShowCreate(v => !v)}
-            className="px-4 py-2 rounded-xl bg-[var(--color-brand-primary)] text-white text-sm font-medium hover:bg-[var(--color-brand-primary-hover)]"
+            className="ml-auto inline-flex items-center justify-center gap-[6px] h-[40px] px-[17px] rounded-[11px] text-[13.5px] font-bold tracking-[-0.2px] whitespace-nowrap text-white transition-colors hover:opacity-90 active:translate-y-px"
+            style={{ background: 'var(--color-brand-primary)', boxShadow: '0 6px 14px -8px var(--color-brand-primary)' }}
           >
             + 새 조직
           </button>
@@ -638,127 +652,143 @@ export function SuperAdminPage() {
           </div>
         )}
 
-        {/* Tenant list */}
-        <ul className="space-y-2">
+        {/* ── Org list ── */}
+        <ul className="flex flex-col gap-3">
           {tenants.map(t => (
-            <li key={t.id} className={`rounded-2xl border overflow-hidden ${t.is_active === false ? 'border-[var(--color-border)] bg-[var(--color-surface-secondary)] opacity-60' : 'border-[var(--color-border)] bg-[var(--color-surface)]'}`}>
-              {/* Tenant row */}
-              <div className="px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0 flex-1">
-                  {editingNameId === t.id ? (
-                    <div className="flex items-center gap-2">
-                      <input
-                        value={editName}
-                        onChange={e => setEditName(e.target.value)}
-                        className="text-sm font-semibold px-2 py-1 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] w-48 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]"
-                        onKeyDown={e => { if (e.key === 'Enter') saveName(t); if (e.key === 'Escape') setEditingNameId(null) }}
-                        autoFocus
-                      />
-                      <button onClick={() => saveName(t)} disabled={nameSaving}
-                        className="px-2 py-1 text-xs bg-[var(--color-brand-primary)] text-white rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40">
-                        {nameSaving ? '...' : '저장'}
-                      </button>
-                      <button onClick={() => setEditingNameId(null)}
-                        className="px-2 py-1 text-xs border border-[var(--color-border)] text-[var(--color-text-secondary)] rounded-lg hover:bg-[var(--color-surface-hover)]">
-                        취소
-                      </button>
-                    </div>
-                  ) : (
+            <li
+              key={t.id}
+              className={`grid [grid-template-columns:1fr_auto] items-start md:[grid-template-columns:minmax(0,1fr)_auto_auto_auto] md:items-center gap-x-[14px] gap-y-[13px] md:gap-[18px] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[22px] shadow-[var(--shadow-sm)] transition-all duration-150 hover:-translate-y-px hover:shadow-[var(--shadow-md)] hover:border-[var(--color-border-strong)] ${t.is_active === false ? 'opacity-60' : ''}`}
+              style={{ padding: '16px clamp(16px,3vw,22px)' }}
+            >
+              {/* orgMain */}
+              <div className="min-w-0">
+                {editingNameId === t.id ? (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <input
+                      value={editName}
+                      onChange={e => setEditName(e.target.value)}
+                      className="text-sm font-semibold px-2 py-1 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] w-40 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]"
+                      onKeyDown={e => { if (e.key === 'Enter') saveName(t); if (e.key === 'Escape') setEditingNameId(null) }}
+                      autoFocus
+                    />
+                    <button onClick={() => saveName(t)} disabled={nameSaving}
+                      className="px-2 py-1 text-xs bg-[var(--color-brand-primary)] text-white rounded-lg disabled:opacity-40">
+                      {nameSaving ? '...' : '저장'}
+                    </button>
+                    <button onClick={() => setEditingNameId(null)}
+                      className="px-2 py-1 text-xs border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] rounded-lg hover:bg-[var(--color-surface-secondary)]">
+                      취소
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-baseline gap-[9px] flex-wrap">
                     <button
                       onClick={() => { setEditingNameId(t.id); setEditName(t.name); setEditingSlugId(null) }}
-                      className="font-semibold text-[var(--color-text-primary)] hover:text-[var(--color-brand-primary)] text-left"
+                      className="text-[16.5px] font-bold tracking-[-0.4px] whitespace-nowrap text-left hover:text-[var(--color-brand-primary)] transition-colors"
                     >
                       {t.name}
                     </button>
-                  )}
-                  {editingSlugId === t.id ? (
-                    <span className="ml-2 inline-flex items-center gap-1">
-                      <input
-                        value={editSlug}
-                        onChange={e => setEditSlug(e.target.value)}
-                        className="text-xs font-mono px-2 py-0.5 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] w-32 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]"
-                        onKeyDown={e => { if (e.key === 'Enter') saveSlug(t); if (e.key === 'Escape') setEditingSlugId(null) }}
-                        autoFocus
-                      />
-                      <button onClick={() => saveSlug(t)} disabled={slugSaving}
-                        className="px-1.5 py-0.5 text-xs bg-[var(--color-brand-primary)] text-white rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40">
-                        {slugSaving ? '...' : '저장'}
+                    {editingSlugId === t.id ? (
+                      <span className="inline-flex items-center gap-1">
+                        <input
+                          value={editSlug}
+                          onChange={e => setEditSlug(e.target.value)}
+                          className="text-xs font-mono px-2 py-0.5 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] w-28 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]"
+                          onKeyDown={e => { if (e.key === 'Enter') saveSlug(t); if (e.key === 'Escape') setEditingSlugId(null) }}
+                          autoFocus
+                        />
+                        <button onClick={() => saveSlug(t)} disabled={slugSaving}
+                          className="px-1.5 py-0.5 text-xs bg-[var(--color-brand-primary)] text-white rounded-lg disabled:opacity-40">
+                          {slugSaving ? '...' : '저장'}
+                        </button>
+                        <button onClick={() => setEditingSlugId(null)}
+                          className="px-1.5 py-0.5 text-xs border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] rounded-lg">취소</button>
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => { setEditingSlugId(t.id); setEditSlug(t.slug); setEditingNameId(null) }}
+                        className="text-[12.5px] font-medium font-mono text-[var(--color-text-muted)] hover:text-[var(--color-brand-primary)] transition-colors"
+                      >
+                        {t.slug}
                       </button>
-                      <button onClick={() => setEditingSlugId(null)}
-                        className="px-1.5 py-0.5 text-xs border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] rounded-lg hover:bg-[var(--color-surface-hover)]">취소</button>
-                    </span>
-                  ) : (
-                    <button
-                      onClick={() => { setEditingSlugId(t.id); setEditSlug(t.slug); setEditingNameId(null) }}
-                      className="ml-2 text-xs text-[var(--color-text-secondary)] font-mono hover:text-[var(--color-brand-primary)] transition-colors"
-                    >
-                      {t.slug}
-                    </button>
-                  )}
-                  <div className="flex items-center gap-2 mt-0.5">
-                    {t.settings?.time_slots?.length ? (
-                      <p className="text-xs text-[var(--color-text-secondary)]">슬롯 {t.settings.time_slots.length}개</p>
-                    ) : null}
-                    {t.is_active === false && (
-                      <span className="text-xs font-medium px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">비활성</span>
                     )}
                   </div>
-                </div>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {t.business_type && <span className="text-xs text-[var(--color-text-secondary)] hidden sm:inline">{t.business_type}</span>}
-                  <select
-                    value={displayMode(t.settings?.tenant_mode)}
-                    disabled={modeSaving}
-                    onChange={async e => {
-                      const newMode = e.target.value as TenantMode
-                      const fromMode = displayMode(t.settings?.tenant_mode)
-                      if (newMode === fromMode) return
-                      let unassignedCount: number | undefined
-                      if (fromMode === '비회원' && (newMode === '회원개별' || newMode === '회원공유')) {
-                        const { count } = await supabase.from('assignments')
-                          .select('*', { count: 'exact', head: true })
-                          .eq('tenant_id', t.id).is('user_id', null)
-                        unassignedCount = count ?? 0
-                      }
-                      setPendingModeChange({ tenant: t, from: fromMode, to: newMode, unassignedCount })
-                    }}
-                    className="px-2 py-1 text-xs border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)] text-[var(--color-text-secondary)] disabled:opacity-40"
-                  >
-                    <option value="회원공유">회원공유</option>
-                    <option value="회원개별">회원개별</option>
-                    <option value="비회원">비회원</option>
-                  </select>
-                  <button
-                    onClick={() => { setTenant(t, 'admin'); navigate('/') }}
-                    className="px-2.5 py-1 text-xs font-medium border border-[var(--color-border)] text-[var(--color-text-secondary)] rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors"
-                  >
-                    스케줄
-                  </button>
-                  <button
-                    onClick={() => navigate(`/admin?org=${t.id}`)}
-                    className="px-2.5 py-1 text-xs font-medium bg-[var(--color-brand-primary)] text-white rounded-lg hover:bg-[var(--color-brand-primary-hover)] transition-colors"
-                  >
-                    관리
-                  </button>
-                  {t.is_active === false ? (
-                    <button
-                      onClick={() => reactivateTenant(t)}
-                      className="px-2.5 py-1 text-xs font-medium border border-green-200 text-green-600 rounded-lg hover:bg-green-50 dark:border-green-800 dark:text-green-400 dark:hover:bg-green-950/20 transition-colors"
-                    >
-                      복구
-                    </button>
-                  ) : (
-                    <button
-                      disabled={deletingSaving}
-                      onClick={() => deleteTenant(t)}
-                      className="px-2.5 py-1 text-xs font-medium border border-red-200 text-red-500 rounded-lg hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/20 transition-colors disabled:opacity-40"
-                    >
-                      삭제
-                    </button>
+                )}
+                <div className="mt-[5px] inline-flex items-center gap-[7px] whitespace-nowrap text-[12.5px] font-semibold text-[var(--color-text-muted)]">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.7, flexShrink: 0 }}><rect x="3" y="4" width="18" height="17" rx="2.5"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/></svg>
+                  슬롯 {t.settings?.time_slots?.length ?? 0}개
+                  {t.is_active === false && (
+                    <span className="text-[11px] font-semibold px-[7px] py-[2px] rounded-md bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">비활성</span>
                   )}
                 </div>
               </div>
 
+              {/* orgCat */}
+              <span className="self-start md:self-auto text-[12px] font-bold text-[var(--color-text-secondary)] px-[11px] py-[5px] rounded-full whitespace-nowrap" style={{ background: 'var(--color-surface-hover)', justifySelf: 'end' }}>
+                {t.business_type || '-'}
+              </span>
+
+              {/* shareSel */}
+              <div className="[grid-column:1/-1] md:[grid-column:auto] flex flex-col gap-1">
+                <span className="block md:hidden text-[11px] font-bold text-[var(--color-text-muted)]">공유 모드</span>
+                <select
+                  value={displayMode(t.settings?.tenant_mode)}
+                  disabled={modeSaving}
+                  onChange={async e => {
+                    const newMode = e.target.value as TenantMode
+                    const fromMode = displayMode(t.settings?.tenant_mode)
+                    if (newMode === fromMode) return
+                    let unassignedCount: number | undefined
+                    if (fromMode === '비회원' && (newMode === '회원개별' || newMode === '회원공유')) {
+                      const { count } = await supabase.from('assignments')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('tenant_id', t.id).is('user_id', null)
+                      unassignedCount = count ?? 0
+                    }
+                    setPendingModeChange({ tenant: t, from: fromMode, to: newMode, unassignedCount })
+                  }}
+                  className="h-[40px] md:h-[36px] w-full md:w-auto pl-3 pr-8 bg-[var(--color-surface-secondary)] border border-[var(--color-border-strong)] rounded-[9px] text-[13px] font-semibold text-[var(--color-text-secondary)] outline-none appearance-none cursor-pointer disabled:opacity-40 focus:border-[var(--color-brand-primary)]"
+                  style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238A8F99' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")", backgroundRepeat: 'no-repeat', backgroundPosition: 'right 9px center' }}
+                >
+                  <option value="회원공유">회원공유</option>
+                  <option value="회원개별">회원개별</option>
+                  <option value="비회원">비회원</option>
+                </select>
+              </div>
+
+              {/* orgActions */}
+              <div className="[grid-column:1/-1] md:[grid-column:auto] grid grid-cols-3 md:flex md:items-center gap-2 md:gap-[7px] pt-2 border-t border-[var(--color-border)] md:pt-0 md:border-none">
+                <button
+                  onClick={() => { setTenant(t, 'admin'); navigate('/') }}
+                  className="inline-flex items-center justify-center h-[40px] md:h-[36px] px-3 md:px-[13px] rounded-[9px] text-[12.5px] font-semibold border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-secondary)] shadow-[var(--shadow-xs)] hover:bg-[var(--color-surface-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+                >
+                  스케줄
+                </button>
+                <button
+                  onClick={() => navigate(`/admin?org=${t.id}`)}
+                  className="inline-flex items-center justify-center h-[40px] md:h-[36px] px-3 md:px-[13px] rounded-[9px] text-[12.5px] font-semibold text-white transition-colors hover:opacity-90"
+                  style={{ background: 'var(--color-brand-primary)' }}
+                >
+                  관리
+                </button>
+                {t.is_active === false ? (
+                  <button
+                    onClick={() => reactivateTenant(t)}
+                    className="inline-flex items-center justify-center h-[40px] md:h-[36px] px-3 md:px-[13px] rounded-[9px] text-[12.5px] font-semibold border border-green-200 text-green-600 hover:bg-green-50 dark:border-green-800 dark:text-green-400 transition-colors"
+                  >
+                    복구
+                  </button>
+                ) : (
+                  <button
+                    disabled={deletingSaving}
+                    onClick={() => deleteTenant(t)}
+                    className="inline-flex items-center justify-center h-[40px] md:h-[36px] px-3 md:px-[13px] rounded-[9px] text-[12.5px] font-semibold bg-[var(--color-surface)] border transition-colors disabled:opacity-40 hover:bg-[var(--color-surface-secondary)]"
+                    style={{ borderColor: 'color-mix(in srgb, var(--color-brand-primary) 30%, var(--color-border))', color: 'oklch(0.45 0.14 28)' }}
+                  >
+                    삭제
+                  </button>
+                )}
+              </div>
             </li>
           ))}
         </ul>
