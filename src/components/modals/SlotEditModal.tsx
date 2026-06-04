@@ -380,38 +380,45 @@ export function SlotEditModal({
                 return (
                   <div
                     key={a.id}
-                    className="flex items-center justify-between rounded-xl px-3 py-2 border border-[var(--color-border)]"
+                    className="rounded-xl px-3 py-2.5 border border-[var(--color-border)]"
                     style={{ backgroundColor: isOwnEntry ? '#FEF9C3' : (a.color || undefined) }}
                   >
-                    <span className="text-sm text-[var(--color-text-primary)] font-medium flex items-center flex-wrap gap-1">
-                      {a.volunteer_name}
-                      {a.time_sub && <span className="text-xs text-[var(--color-text-muted)] font-normal">({formatTimeSub(a.time_sub)})</span>}
-                      {isFreeform ? (
-                        <>
-                          {a.customer_phone && <span className="text-xs text-[var(--color-text-muted)] font-normal">· {a.customer_phone}</span>}
-                          {/* 동적 필드 추가 값 표시 */}
-                          {useDynamicFields && a.extra_data && customFields.slice(1).map(f =>
-                            a.extra_data?.[f.id] ? (
-                              <span key={f.id} className="text-xs text-[var(--color-text-muted)] font-normal">· {a.extra_data[f.id]}</span>
-                            ) : null
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex flex-col gap-0.5 min-w-0">
+                        <span className="text-sm text-[var(--color-text-primary)] font-medium flex items-center flex-wrap gap-1">
+                          {isFreeform && useDynamicFields && customFields[0]
+                            ? `${customFields[0].label}: ${a.volunteer_name}`
+                            : a.volunteer_name}
+                          {a.time_sub && <span className="text-xs text-[var(--color-text-muted)] font-normal">({formatTimeSub(a.time_sub)})</span>}
+                          {!isFreeform && isAdmin && !isSplitMode && (
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${a.volunteer_type === '50plus' ? 'bg-orange-100 text-orange-600' : 'bg-blue-50 text-blue-500'}`}>
+                              {a.volunteer_type === '50plus' ? '50+' : '봉사'}
+                            </span>
                           )}
-                          {a.note && <span className="text-xs text-[var(--color-text-muted)] font-normal">· {a.note}</span>}
-                        </>
-                      ) : (
-                        a.note && <span className="text-xs text-[var(--color-text-muted)] font-normal">· {a.note}</span>
-                      )}
-                      {!isFreeform && isAdmin && !isSplitMode && (
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${a.volunteer_type === '50plus' ? 'bg-orange-100 text-orange-600' : 'bg-blue-50 text-blue-500'}`}>
-                          {a.volunteer_type === '50plus' ? '50+' : '봉사'}
                         </span>
-                      )}
-                    </span>
-                    {canEdit && (
-                      <div className="flex gap-2 ml-2 shrink-0">
-                        <button onClick={() => startEdit(a)} className="text-xs text-blue-500 hover:text-blue-600 font-medium transition-colors">수정</button>
-                        <button onClick={() => handleDelete(a.id)} className="text-xs text-red-400 hover:text-red-500 font-medium transition-colors">삭제</button>
+                        {isFreeform ? (
+                          <div className="flex flex-col gap-0.5 mt-0.5">
+                            {!useDynamicFields && a.customer_phone && (
+                              <span className="text-xs text-[var(--color-text-muted)]">연락처: {a.customer_phone}</span>
+                            )}
+                            {useDynamicFields && customFields.slice(1).map(f =>
+                              a.extra_data?.[f.id] ? (
+                                <span key={f.id} className="text-xs text-[var(--color-text-muted)]">{f.label}: {a.extra_data[f.id]}</span>
+                              ) : null
+                            )}
+                            {a.note && <span className="text-xs text-[var(--color-text-muted)]">메모: {a.note}</span>}
+                          </div>
+                        ) : (
+                          a.note && <span className="text-xs text-[var(--color-text-muted)] mt-0.5">메모: {a.note}</span>
+                        )}
                       </div>
-                    )}
+                      {canEdit && (
+                        <div className="flex gap-2 shrink-0">
+                          <button onClick={() => startEdit(a)} className="text-xs text-blue-500 hover:text-blue-600 font-medium transition-colors">수정</button>
+                          <button onClick={() => handleDelete(a.id)} className="text-xs text-red-400 hover:text-red-500 font-medium transition-colors">삭제</button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )
               })}
