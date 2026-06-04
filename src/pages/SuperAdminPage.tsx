@@ -25,8 +25,8 @@ interface SlotEditorProps {
 }
 
 function SlotEditor({ slots, onChange }: SlotEditorProps) {
-  const [start, setStart] = useState(10)
-  const [end, setEnd]     = useState(11)
+  const [start, setStart] = useState(9)
+  const [end, setEnd]     = useState(10)
   const [msg, setMsg]     = useState('')
 
   function applyTemplate(templateSlots: string[]) {
@@ -151,7 +151,7 @@ export function SuperAdminPage() {
   // Create form state
   const [showCreate, setShowCreate] = useState(false)
   const [form, setForm]             = useState<CreateForm>(EMPTY_FORM)
-  const [createSlots, setCreateSlots] = useState<string[]>(['10-12', '13-14', '14-16', '16-18', '20-22'])
+  const [createSlots, setCreateSlots] = useState<string[]>(['09-12', '13-14', '14-16', '16-18', '20-22'])
   const [saving, setSaving]         = useState(false)
 
   // Edit state
@@ -396,8 +396,8 @@ export function SuperAdminPage() {
           title: form.title.trim() || form.name.trim(),
           theme_color: form.theme_color.trim() || undefined,
           time_slots: createSlots,
-          open_from: '00:00',
-          open_to: '24:00',
+          open_from: '09:00',
+          open_to: '22:00',
           slot_interval_minutes: hasHalf ? 30 : 60,
           timezone: 'Asia/Seoul',
           locale: 'ko-KR',
