@@ -11,9 +11,9 @@ const baseCellState: CellState = {
 
 const baseAssignment: Assignment = {
   id: '1', tenant_id: 'test-tenant', year: 2026, month: 4, day: 1,
-  time_slot: '10-12', volunteer_name: '이연화',
+  time_slot: '10-12', member_name: '이연화',
   note: null, user_id: 'u1', created_at: '',
-  volunteer_type: 'volunteer', time_sub: null, color: null,
+  member_type: 'member', time_sub: null, color: null,
   role_id: null, customer_name: null, customer_phone: null,
 }
 

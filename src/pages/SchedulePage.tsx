@@ -127,7 +127,7 @@ export function SchedulePage() {
   ) : null
 
   const filledCount = useMemo(
-    () => assignments.filter(a => a.volunteer_type !== 'admin_note').length,
+    () => assignments.filter(a => a.member_type !== 'admin_note').length,
     [assignments]
   )
   const operatingDays = useMemo(() => {
@@ -195,7 +195,7 @@ export function SchedulePage() {
       isSplitMode,
       memberPreferences,
       roleRatios: tenant?.settings?.role_ratios,
-      volunteerLabel: typeLabels.volunteer,
+      volunteerLabel: typeLabels.member,
     })
     if (!proposals.length) {
       alert('배정할 빈 슬롯이 없거나 배정 가능한 회원이 없습니다.')
@@ -246,8 +246,8 @@ export function SchedulePage() {
               tenant_id: tenant!.id,
               year: target.year, month: target.month, day: target.day,
               time_slot: target.timeSlot,
-              volunteer_name: profile.name,
-              volunteer_type: 'volunteer',
+              member_name: profile.name,
+              member_type: 'member',
               user_id: profile.id,
               role_id: target.roleId ?? null,
               note: undefined,
@@ -443,13 +443,13 @@ export function SchedulePage() {
           typeLabels={typeLabels}
           onClose={() => setModalTarget(null)}
           lockedUserId={tenantMode === '회원개별' && isPrivileged ? (filterMemberId ?? undefined) : undefined}
-          onAdd={(name, note, volunteerType, timeSub, color, userId, roleId, customerName, customerPhone, extraData) => addAssignment({
+          onAdd={(name, note, memberType, timeSub, color, userId, roleId, customerName, customerPhone, extraData) => addAssignment({
             tenant_id: tenant!.id,
             year, month, day: modalTarget.day,
             time_slot: modalTarget.timeSlot,
-            volunteer_name: name,
+            member_name: name,
             note: note?.trim() || undefined,
-            volunteer_type: volunteerType,
+            member_type: memberType,
             time_sub: timeSub || undefined,
             color: color || undefined,
             user_id: userId ?? (tenantMode === '비회원' ? null : profile!.id),
@@ -458,10 +458,10 @@ export function SchedulePage() {
             customer_phone: customerPhone ?? null,
             extra_data: extraData,
           })}
-          onUpdate={(id, name, note, volunteerType, timeSub, color, roleId, customerName, customerPhone, extraData) => updateAssignment(id, {
-            volunteer_name: name,
+          onUpdate={(id, name, note, memberType, timeSub, color, roleId, customerName, customerPhone, extraData) => updateAssignment(id, {
+            member_name: name,
             note,
-            volunteer_type: volunteerType,
+            member_type: memberType,
             time_sub: timeSub ?? undefined,
             color: color ?? undefined,
             role_id: roleId ?? null,
@@ -490,8 +490,8 @@ export function SchedulePage() {
                 month: p.month,
                 day: p.day,
                 time_slot: p.timeSlot,
-                volunteer_name: p.userName,
-                volunteer_type: p.volunteerType,
+                member_name: p.userName,
+                member_type: p.memberType,
                 user_id: p.userId,
                 role_id: p.roleId ?? null,
               })
@@ -589,7 +589,7 @@ export function SchedulePage() {
           initialStartHour={holidayTarget.startHour}
           initialEndHour={holidayTarget.endHour}
           onClose={() => setHolidayTarget(null)}
-          onAdd={(params) => addAssignment({ ...params, tenant_id: tenant!.id })}
+          onAdd={(params) => addAssignment({ ...params, tenant_id: tenant!.id, user_id: params.user_id })}
           onUpdate={(id, params) => updateAssignment(id, params)}
           onDelete={deleteAssignment}
         />

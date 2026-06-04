@@ -71,7 +71,7 @@ export function MobileScheduleView({ year, month, timeSlots, slotLabels = {}, as
                     timeSlot={slot}
                     colType="vol"
                     highlightName={highlightName}
-                    onClick={() => onCellClick({ year, month, day: selectedDay, timeSlot: slot, volunteerType: 'volunteer' })}
+                    onClick={() => onCellClick({ year, month, day: selectedDay, timeSlot: slot, memberType: 'member' })}
                   />
                 </div>
                 {!isSat && (
@@ -81,7 +81,7 @@ export function MobileScheduleView({ year, month, timeSlots, slotLabels = {}, as
                       timeSlot={slot}
                       colType="plus"
                       highlightName={highlightName}
-                      onClick={() => onCellClick({ year, month, day: selectedDay, timeSlot: slot, volunteerType: '50plus' })}
+                      onClick={() => onCellClick({ year, month, day: selectedDay, timeSlot: slot, memberType: '50plus' })}
                     />
                   </div>
                 )}

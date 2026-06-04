@@ -4,11 +4,11 @@ import type { TenantMemberWithRole, SlotSetting, TenantRole } from '../types'
 
 export interface AssignmentSummary {
   user_id: string | null
-  volunteer_name: string
+  member_name: string
   time_slot: string
   day: number
   role_id: string | null
-  volunteer_type?: string
+  member_type?: string
   extra_data?: Record<string, string>
 }
 
@@ -65,11 +65,11 @@ export function useDashboard(tenantId: string, year: number, month: number): Das
     setLoading(true)
     supabase
       .from('assignments')
-      .select('user_id, volunteer_name, time_slot, day, role_id, volunteer_type, extra_data')
+      .select('user_id, member_name, time_slot, day, role_id, member_type, extra_data')
       .eq('tenant_id', tenantId)
       .eq('year', year)
       .eq('month', month)
-      .or('volunteer_type.neq.admin_note,volunteer_type.is.null')
+      .or('member_type.neq.admin_note,member_type.is.null')
       .then(({ data }) => {
         setAssignments(data ?? [])
         setLoading(false)

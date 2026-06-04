@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import type { Assignment, CellState, ModalTarget, Profile, TenantRole, VolunteerType, CustomFieldDef, TenantMode } from '../../types'
+import type { Assignment, CellState, ModalTarget, Profile, TenantRole, MemberType, CustomFieldDef, TenantMode } from '../../types'
 import { parseSlotLabel, getTimeSubOptions, formatTimeSub } from '../../utils/timeSlots'
 import { useProfiles } from '../../hooks/useProfiles'
 import type { ProfileWithRole } from '../../hooks/useProfiles'
@@ -16,11 +16,11 @@ interface Props {
   tenantMode?: TenantMode | '직접입력' | '회원선택'
   customFields?: CustomFieldDef[]
   slotLabels?: Record<string, string>
-  typeLabels?: { volunteer: string; '50plus': string }
+  typeLabels?: { member: string; '50plus': string }
   lockedUserId?: string
   onClose: () => void
-  onAdd: (name: string, note: string, volunteerType: VolunteerType, timeSub: string | null, color?: string, userId?: string, roleId?: string | null, customerName?: string | null, customerPhone?: string | null, extraData?: Record<string, string>) => Promise<string | null>
-  onUpdate: (id: string, name: string, note: string, volunteerType: VolunteerType, timeSub: string | null, color?: string, roleId?: string | null, customerName?: string | null, customerPhone?: string | null, extraData?: Record<string, string>) => Promise<string | null>
+  onAdd: (name: string, note: string, memberType: MemberType, timeSub: string | null, color?: string, userId?: string, roleId?: string | null, customerName?: string | null, customerPhone?: string | null, extraData?: Record<string, string>) => Promise<string | null>
+  onUpdate: (id: string, name: string, note: string, memberType: MemberType, timeSub: string | null, color?: string, roleId?: string | null, customerName?: string | null, customerPhone?: string | null, extraData?: Record<string, string>) => Promise<string | null>
   onDelete: (id: string) => Promise<string | null>
 }
 
@@ -47,19 +47,19 @@ export function SlotEditModal({
   splitRoles = [], isSplitMode = false, tenantRoles = [],
   tenantMode = '회원선택', customFields = [],
   slotLabels = {},
-  typeLabels = { volunteer: '팀원', '50plus': '50플러스활동가' },
+  typeLabels = { member: '팀원', '50plus': '50플러스활동가' },
   lockedUserId,
   onClose, onAdd, onUpdate, onDelete,
 }: Props) {
-  const { day, month, timeSlot, volunteerType: defaultType, roleId: initialRoleId } = target
+  const { day, month, timeSlot, memberType: defaultType, roleId: initialRoleId } = target
   const isAdmin = profile?.is_super_admin || tenantRole === 'admin'
   const isReadOnly = !isAdmin && tenantMode === '회원개별'
-  const profileType: VolunteerType = 'volunteer'
+  const profileType: MemberType = 'member'
 
   const isFreeform = tenantMode === '비회원' || tenantMode === '직접입력'
   const useDynamicFields = isFreeform && customFields.length > 0
 
-  const [volunteerType, setVolunteerType] = useState<VolunteerType>(
+  const [memberType, setMemberType] = useState<MemberType>(
     isAdmin ? defaultType : profileType
   )
   const timeSubOptions = getTimeSubOptions(timeSlot)
@@ -94,19 +94,19 @@ export function SlotEditModal({
     ? (lockedProfile ?? profiles.find(p => p.id === selectedUserId) ?? null)
     : profile
 
-  const effectiveVolunteerType: VolunteerType = isAdmin
-    ? 'volunteer'
-    : volunteerType
+  const effectiveMemberType: MemberType = isAdmin
+    ? 'member'
+    : memberType
 
   const displayedAssignments = isSplitMode
     ? cellState.assignments.filter(a => a.role_id === selectedRoleId)
     : isAdmin
-    ? cellState.assignments.filter(a => a.volunteer_type === defaultType)
-    : cellState.assignments.filter(a => !a.volunteer_type || a.volunteer_type === volunteerType)
+    ? cellState.assignments.filter(a => a.member_type === defaultType)
+    : cellState.assignments.filter(a => !a.member_type || a.member_type === memberType)
 
-  // DB 제약: (year, month, day, time_slot, volunteer_name) 고유 → 역할 무관하게 같은 슬롯 중복 배정 불가
+  // DB 제약: (year, month, day, time_slot, member_name) 고유 → 역할 무관하게 같은 슬롯 중복 배정 불가
   const assignedNames = new Set(
-    cellState.assignments.filter(a => a.id !== editingId).map(a => a.volunteer_name)
+    cellState.assignments.filter(a => a.id !== editingId).map(a => a.member_name)
   )
 
   const selectableProfiles = (!isFreeform && isAdmin)
@@ -139,15 +139,15 @@ export function SlotEditModal({
     if (useDynamicFields) {
       const nameFieldId = customFields[0]?.id
       const restored: Record<string, string> = {}
-      if (nameFieldId) restored[nameFieldId] = a.volunteer_name
+      if (nameFieldId) restored[nameFieldId] = a.member_name
       Object.assign(restored, a.extra_data ?? {})
       setFieldValues(restored)
     } else if (isFreeform) {
-      setFreeformName(a.volunteer_name)
+      setFreeformName(a.member_name)
       setFreeformPhone(a.customer_phone ?? '')
     } else {
       setSelectedUserId(a.user_id ?? '')
-      setVolunteerType(a.volunteer_type ?? 'volunteer')
+      setMemberType(a.member_type ?? 'member')
     }
   }
 
@@ -207,7 +207,7 @@ export function SlotEditModal({
     const err = await onAdd(
       name,
       note.trim(),
-      isFreeform ? 'volunteer' : effectiveVolunteerType,
+      isFreeform ? 'member' : effectiveMemberType,
       timeSub,
       undefined,
       userId,
@@ -260,7 +260,7 @@ export function SlotEditModal({
       editingId,
       name,
       note.trim(),
-      isFreeform ? 'volunteer' : effectiveVolunteerType,
+      isFreeform ? 'member' : effectiveMemberType,
       timeSub,
       undefined,
       isSplitMode ? selectedRoleId : undefined,
@@ -305,7 +305,7 @@ export function SlotEditModal({
               {slotLabels[timeSlot]
                 ? `${slotLabels[timeSlot]} (${parseSlotLabel(timeSlot)})`
                 : parseSlotLabel(timeSlot)}
-              {isSplitMode && selectedRole ? ` · ${selectedRole.name}` : !isSplitMode && isAdmin && !isFreeform && tenantRoles.length === 0 ? ` · ${defaultType === '50plus' ? typeLabels['50plus'] : typeLabels.volunteer}` : ''}
+              {isSplitMode && selectedRole ? ` · ${selectedRole.name}` : !isSplitMode && isAdmin && !isFreeform && tenantRoles.length === 0 ? ` · ${defaultType === '50plus' ? typeLabels['50plus'] : typeLabels.member}` : ''}
             </p>
           </div>
           <button
@@ -345,25 +345,25 @@ export function SlotEditModal({
           ) : null
         ) : !isAdmin && !isFreeform && tenantRoles.length === 0 && (  // 커스텀 역할 없는 조직만 표시
           <div className="flex border-b border-[var(--color-border)] px-2 shrink-0">
-            {(['volunteer', '50plus'] as VolunteerType[]).map(t => {
+            {(['member', '50plus'] as MemberType[]).map(t => {
               const isDisabled = !isAdmin && profileType !== t
               return (
                 <button
                   key={t}
                   onClick={() => {
                     if (!isDisabled) {
-                      setVolunteerType(t)
+                      setMemberType(t)
                       setSelectedUserId(isAdmin ? '' : (profile?.id ?? ''))
                     }
                   }}
                   disabled={isDisabled}
                   className={`flex-1 py-2.5 text-xs font-semibold border-b-2 transition-all duration-200
-                    ${volunteerType === t
+                    ${memberType === t
                       ? 'border-[var(--color-brand-primary)] text-[var(--color-brand-primary)]'
                       : 'border-transparent text-[var(--color-text-muted)]'}
                     ${isDisabled ? 'opacity-40 cursor-not-allowed' : 'hover:text-[var(--color-text-secondary)]'}`}
                 >
-                  {t === '50plus' ? typeLabels['50plus'] : typeLabels.volunteer}
+                  {t === '50plus' ? typeLabels['50plus'] : typeLabels.member}
                 </button>
               )
             })}
@@ -376,7 +376,7 @@ export function SlotEditModal({
             <div className="space-y-1.5">
               {displayedAssignments.map(a => {
                 const canEdit = isAdmin || (a.user_id === profile?.id && !isReadOnly)
-                const isOwnEntry = !isAdmin && a.user_id === profile?.id && a.volunteer_name === profile?.name
+                const isOwnEntry = !isAdmin && a.user_id === profile?.id && a.member_name === profile?.name
                 return (
                   <div
                     key={a.id}
@@ -387,12 +387,12 @@ export function SlotEditModal({
                       <div className="flex flex-col gap-0.5 min-w-0">
                         <span className="text-sm text-[var(--color-text-primary)] font-medium flex items-center flex-wrap gap-1">
                           {isFreeform && useDynamicFields && customFields[0]
-                            ? `${customFields[0].label}: ${a.volunteer_name}`
-                            : a.volunteer_name}
+                            ? `${customFields[0].label}: ${a.member_name}`
+                            : a.member_name}
                           {a.time_sub && <span className="text-xs text-[var(--color-text-muted)] font-normal">({formatTimeSub(a.time_sub)})</span>}
                           {!isFreeform && isAdmin && !isSplitMode && (
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${a.volunteer_type === '50plus' ? 'bg-orange-100 text-orange-600' : 'bg-blue-50 text-blue-500'}`}>
-                              {a.volunteer_type === '50plus' ? '50+' : '봉사'}
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${a.member_type === '50plus' ? 'bg-orange-100 text-orange-600' : 'bg-blue-50 text-blue-500'}`}>
+                              {a.member_type === '50plus' ? '50+' : '봉사'}
                             </span>
                           )}
                         </span>

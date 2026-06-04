@@ -32,7 +32,7 @@ function assignmentCoversHour(timeSub: string | null, hour: number): boolean {
   return Number(timeSub) === hour
 }
 
-// Determine tint based on volunteer_type and time slot
+// Determine tint based on member_type and time slot
 function resolveTint(colType: 'vol' | 'plus' | 'role', slotStart: number): { bg: string; ink: string } {
   if (colType === 'plus') return { bg: 'var(--tint-plus)', ink: 'var(--tint-plus-ink)' }
   if (slotStart >= 20)    return { bg: 'var(--tint-moon)', ink: 'var(--tint-moon-ink)' }
@@ -64,9 +64,9 @@ function NameChips({ assignments, highlightName, tintBg, tintInk, teamLeaderUser
   return (
     <div className="flex flex-col gap-0.5 w-full px-0.5">
       {visible.map(a => {
-        const isHighlighted = !!(highlightName && a.volunteer_name.includes(highlightName))
+        const isHighlighted = !!(highlightName && a.member_name.includes(highlightName))
         const isWithdrawn = !!(a.user_id && withdrawnUserIds?.has(a.user_id))
-        const displayText = a.note ? `${a.volunteer_name}(${a.note})` : a.volunteer_name
+        const displayText = a.note ? `${a.member_name}(${a.note})` : a.member_name
         const timeLabel = showTimeSub && a.time_sub ? formatTimeSub(a.time_sub) : null
         return (
           <div
@@ -235,8 +235,8 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
   }
 
   // ── legacy vol / plus columns ────────────────────────────────────────────────
-  const volunteerAssignments = assignments.filter(a => !a.volunteer_type || a.volunteer_type === 'volunteer')
-  const plusAssignments = assignments.filter(a => a.volunteer_type === '50plus')
+  const volunteerAssignments = assignments.filter(a => !a.member_type || a.member_type === 'member')
+  const plusAssignments = assignments.filter(a => a.member_type === '50plus')
   const saturdayAssignments = isSaturdayShift ? [...volunteerAssignments, ...plusAssignments] : volunteerAssignments
   const hasTeamLeaderInVol = !!(teamLeaderUserIds && volunteerAssignments.some(a => teamLeaderUserIds.has(a.user_id ?? '')))
 

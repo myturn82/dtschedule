@@ -198,7 +198,7 @@ export function WeekGrid({
                             disabled={!canClick}
                             onClick={() => {
                               if (!canClick) return
-                              onCellClick({ year: y, month: m, day, timeSlot: slot, volunteerType: 'volunteer', roleId: role.id })
+                              onCellClick({ year: y, month: m, day, timeSlot: slot, memberType: 'member', roleId: role.id })
                             }}
                             className={`flex flex-col items-center justify-center gap-0.5 p-1 transition-colors ${
                               ri > 0 ? 'border-l border-dashed border-[var(--color-border-strong)]' : ''
@@ -207,7 +207,7 @@ export function WeekGrid({
                           >
                             {roleAssigns.length > 0 ? (
                               roleAssigns.map(a => {
-                                const isHighlighted = !!(highlightName && a.volunteer_name.includes(highlightName))
+                                const isHighlighted = !!(highlightName && a.member_name.includes(highlightName))
                                 const timeLbl = a.time_sub ? formatTimeSub(a.time_sub) : null
                                 const isWithdrawn = !!(a.user_id && withdrawnUserIds?.has(a.user_id))
                                 return (
@@ -220,7 +220,7 @@ export function WeekGrid({
                                         ? { background: 'oklch(0.97 0.02 25)', color: 'oklch(0.55 0.16 25)', opacity: 0.85 }
                                         : { background: tint.bg, color: tint.ink }}
                                   >
-                                    <span className="truncate block" style={isWithdrawn ? { textDecoration: 'line-through' } : undefined}>{a.volunteer_name}</span>
+                                    <span className="truncate block" style={isWithdrawn ? { textDecoration: 'line-through' } : undefined}>{a.member_name}</span>
                                     {isWithdrawn && <span className="block text-[6px] sm:text-[8px] font-normal">삭제됨</span>}
                                     {timeLbl && <span className="block text-[6px] sm:text-[8px] font-normal opacity-60">{timeLbl}</span>}
                                   </div>
@@ -239,7 +239,7 @@ export function WeekGrid({
                 // ── Non-split mode: single cell ──
                 const hasBar = displayCs.assignments.some(a => a.role_id && indicatorBarRoleIds.has(a.role_id))
                 const visibleAssigns = displayCs.assignments.filter(
-                  a => a.volunteer_type !== 'admin_note' && !(a.user_id && teamLeaderUserIds?.has(a.user_id)) && !indicatorBarRoleIds.has(a.role_id ?? '')
+                  a => a.member_type !== 'admin_note' && !(a.user_id && teamLeaderUserIds?.has(a.user_id)) && !indicatorBarRoleIds.has(a.role_id ?? '')
                 )
                 const tint = isMoon
                   ? { bg: 'var(--tint-moon)', ink: 'var(--tint-moon-ink)' }
@@ -248,7 +248,7 @@ export function WeekGrid({
                 return (
                   <button
                     key={di}
-                    onClick={() => onCellClick({ year: y, month: m, day, timeSlot: slot, volunteerType: 'volunteer' })}
+                    onClick={() => onCellClick({ year: y, month: m, day, timeSlot: slot, memberType: 'member' })}
                     className={`relative border-l border-[var(--color-border)] flex flex-col items-center justify-center gap-0.5 p-1 group transition-colors ${visibleAssigns.length > 0 ? 'hover:brightness-95' : 'hover:bg-[var(--color-surface-hover)]'}`}
                     style={{ background: visibleAssigns.length > 0 ? tint.bg : undefined }}
                   >
@@ -257,7 +257,7 @@ export function WeekGrid({
                     )}
                     {visibleAssigns.length > 0 ? (
                       visibleAssigns.map(a => {
-                        const isHighlighted = !!(highlightName && a.volunteer_name.includes(highlightName))
+                        const isHighlighted = !!(highlightName && a.member_name.includes(highlightName))
                         const timeLbl = a.time_sub ? formatTimeSub(a.time_sub) : null
                         const isWithdrawn = !!(a.user_id && withdrawnUserIds?.has(a.user_id))
                         return (
@@ -270,7 +270,7 @@ export function WeekGrid({
                                 ? { background: 'oklch(0.97 0.02 25)', color: 'oklch(0.55 0.16 25)', opacity: 0.85 }
                                 : { background: tint.bg, color: tint.ink }}
                           >
-                            <span className="truncate block" style={isWithdrawn ? { textDecoration: 'line-through' } : undefined}>{a.volunteer_name}</span>
+                            <span className="truncate block" style={isWithdrawn ? { textDecoration: 'line-through' } : undefined}>{a.member_name}</span>
                             {isWithdrawn && <span className="block text-[6px] sm:text-[8px] font-normal">삭제됨</span>}
                             {timeLbl && <span className="block text-[6px] sm:text-[8px] font-normal opacity-60">{timeLbl}</span>}
                           </div>
