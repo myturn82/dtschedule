@@ -15,7 +15,6 @@ import { DayView } from '../components/schedule/DayView'
 import { Legend } from '../components/schedule/Legend'
 import { FilterBar } from '../components/shared/FilterBar'
 import { ExportButton } from '../components/shared/ExportButton'
-import { LoginModal } from '../components/auth/LoginModal'
 import { SlotEditModal } from '../components/modals/SlotEditModal'
 import { RecurringModal } from '../components/modals/RecurringModal'
 import { CapacityModal } from '../components/modals/CapacityModal'
@@ -33,7 +32,6 @@ export function SchedulePage() {
   const [day, setDay] = useState(today.getDate())
   const [viewType, setViewType] = useState<ViewType>('month')
   const [highlightName, setHighlightName] = useState('')
-  const [showLogin, setShowLogin] = useState(false)
   const [showCapacity, setShowCapacity] = useState(false)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [showNoClearTarget, setShowNoClearTarget] = useState(false)
@@ -46,7 +44,7 @@ export function SchedulePage() {
 
   const [filterMemberId, setFilterMemberId] = useState<string | null>(null)
 
-  const { profile, loading: authLoading, signIn, signUp, signInWithGoogle, signInWithKakao } = useAuth()
+  const { profile, loading: authLoading } = useAuth()
   const { tenant, tenantRole, memberships, timeSlots, slotLabels, legendItems, customFields, typeLabels } = useTenant()
   const memberRoleId = memberships.find(m => m.tenant_id === tenant?.id)?.role_id ?? null
   const isPrivileged = profile?.is_super_admin || tenantRole === 'admin'
@@ -64,11 +62,6 @@ export function SchedulePage() {
     }
     return (a: Assignment) => a.user_id === (profile?.id ?? '')
   }, [tenantMode, isPrivileged, filterMemberId, profile?.id])
-
-  useEffect(() => {
-    if (!authLoading && !profile) setShowLogin(true)
-    if (profile) setShowLogin(false)
-  }, [authLoading, profile])
 
   // 소셜 회원가입 탭에서 이미 가입된 조직 감지 → localStorage 플래그 수거
   useEffect(() => {
@@ -316,7 +309,6 @@ export function SchedulePage() {
             </button>
           </>
         )}
-        onShowLogin={() => setShowLogin(true)}
       />
       {memberNotice && (
         <div className="flex items-center justify-between gap-2 mx-3 mt-2 sm:mx-5 px-3 py-2 rounded-xl bg-blue-50 border border-blue-200 text-sm text-blue-700">
@@ -416,17 +408,6 @@ export function SchedulePage() {
           </div>
         </div>
       </main>
-
-      {showLogin && (
-        <LoginModal
-          onClose={() => { if (profile) setShowLogin(false) }}
-          onSignIn={signIn}
-          onSignUp={signUp}
-          onGoogle={signInWithGoogle}
-          onKakao={signInWithKakao}
-          hideCancelButton={!profile}
-        />
-      )}
 
       {modalTarget && selectedCellState && (
         <SlotEditModal
