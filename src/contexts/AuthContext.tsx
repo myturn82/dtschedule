@@ -121,7 +121,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       body: tenantId ? { tenant_id: tenantId } : undefined,
     })
     if (error || data?.error) return data?.error ?? error?.message ?? '오류가 발생했습니다.'
-    if (!tenantId) await supabase.auth.signOut()
+    if (!tenantId) {
+      const { error: soErr } = await supabase.auth.signOut({ scope: 'global' })
+      if (soErr) await supabase.auth.signOut({ scope: 'local' })
+    }
     return null
   }, [])
 
