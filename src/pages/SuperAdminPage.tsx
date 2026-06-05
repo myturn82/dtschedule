@@ -108,7 +108,7 @@ export function SuperAdminPage() {
         .eq('email', customerForm.ownerEmail.trim())
         .maybeSingle()
       if (prof) ownerUserId = prof.id
-      else { setMessage('오류: 해당 이메일의 가입 유저를 찾을 수 없습니다.'); setCustomerSaving(false); return }
+      // 이메일 미발견 시 오너 미설정으로 생성 (경고만 표시)
     }
     const { data, error } = await supabase
       .from('customers')
@@ -121,7 +121,10 @@ export function SuperAdminPage() {
       setCustomers(prev => [...prev, data as Customer])
       setShowCreateCustomer(false)
       setCustomerForm({ name: '', ownerEmail: '', plan: 'basic' })
-      setMessage('고객이 생성됐습니다.')
+      const ownerNotFound = customerForm.ownerEmail.trim() && !ownerUserId
+      setMessage(ownerNotFound
+        ? `고객이 생성됐습니다. (오너 이메일 "${customerForm.ownerEmail.trim()}"을 찾을 수 없어 미설정 상태입니다)`
+        : '고객이 생성됐습니다.')
     }
     setCustomerSaving(false)
   }
