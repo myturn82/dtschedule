@@ -91,6 +91,9 @@ export function SuperAdminPage() {
   const [customerSaving, setCustomerSaving] = useState(false)
   const [createOrgCustomerId, setCreateOrgCustomerId] = useState<string>('00000000-0000-0000-0000-000000000001')
 
+  // Org list filter
+  const [filterCustomerId, setFilterCustomerId] = useState('')
+
   // Owner edit state
   const [editingOwnerCustomerId, setEditingOwnerCustomerId] = useState<string | null>(null)
   const [editOwnerEmail, setEditOwnerEmail] = useState('')
@@ -722,21 +725,35 @@ export function SuperAdminPage() {
         </div>
 
         {/* ── List header ── */}
-        <div className="flex items-center gap-[14px] flex-wrap mb-[14px]">
-          <h2 className="m-0 text-[16px] font-bold tracking-[-0.3px] text-[var(--color-text-secondary)] flex items-baseline gap-[7px] whitespace-nowrap">
-            조직 목록
-            <span className="text-[12.5px] font-bold px-[9px] py-[2px] rounded-full" style={{ color: 'oklch(0.45 0.14 28)', background: 'oklch(0.95 0.045 28)' }}>
-              {tenants.length}
-            </span>
-          </h2>
-          <button
-            onClick={() => setShowCreate(v => !v)}
-            className="ml-auto inline-flex items-center justify-center gap-[6px] h-[40px] px-[17px] rounded-[11px] text-[13.5px] font-bold tracking-[-0.2px] whitespace-nowrap text-white transition-colors hover:opacity-90 active:translate-y-px"
-            style={{ background: 'var(--color-brand-primary)', boxShadow: '0 6px 14px -8px var(--color-brand-primary)' }}
-          >
-            + 새 조직
-          </button>
-        </div>
+        {(() => {
+          const filteredTenants = filterCustomerId ? tenants.filter(t => t.customer_id === filterCustomerId) : tenants
+          return (
+            <>
+              <div className="flex items-center gap-[14px] flex-wrap mb-[14px]">
+                <h2 className="m-0 text-[16px] font-bold tracking-[-0.3px] text-[var(--color-text-secondary)] flex items-baseline gap-[7px] whitespace-nowrap">
+                  조직 목록
+                  <span className="text-[12.5px] font-bold px-[9px] py-[2px] rounded-full" style={{ color: 'oklch(0.45 0.14 28)', background: 'oklch(0.95 0.045 28)' }}>
+                    {filteredTenants.length}{filterCustomerId ? `/${tenants.length}` : ''}
+                  </span>
+                </h2>
+                <select
+                  value={filterCustomerId}
+                  onChange={e => setFilterCustomerId(e.target.value)}
+                  className="px-3 py-2 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-sm text-[var(--color-text-secondary)] focus:outline-none focus:border-[var(--color-brand-primary)]"
+                >
+                  <option value="">전체 고객</option>
+                  {customers.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => setShowCreate(v => !v)}
+                  className="ml-auto inline-flex items-center justify-center gap-[6px] h-[40px] px-[17px] rounded-[11px] text-[13.5px] font-bold tracking-[-0.2px] whitespace-nowrap text-white transition-colors hover:opacity-90 active:translate-y-px"
+                  style={{ background: 'var(--color-brand-primary)', boxShadow: '0 6px 14px -8px var(--color-brand-primary)' }}
+                >
+                  + 새 조직
+                </button>
+              </div>
 
         {/* Create form */}
         {showCreate && (
@@ -917,9 +934,14 @@ export function SuperAdminPage() {
           </div>
         )}
 
-        {/* ── Org list ── */}
-        <ul className="flex flex-col gap-3">
-          {tenants.map(t => (
+              {/* ── Org list ── */}
+              <ul className="flex flex-col gap-3">
+                {filteredTenants.length === 0 && (
+                  <li className="text-center py-10 text-[var(--color-text-secondary)] text-sm">
+                    {filterCustomerId ? '해당 고객의 조직이 없습니다.' : '조직이 없습니다.'}
+                  </li>
+                )}
+                {filteredTenants.map(t => (
             <li
               key={t.id}
               className={`grid [grid-template-columns:1fr_auto] items-start md:[grid-template-columns:minmax(0,1fr)_auto_auto_auto] md:items-center gap-x-[14px] gap-y-[13px] md:gap-[18px] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[22px] shadow-[var(--shadow-sm)] transition-all duration-150 hover:-translate-y-px hover:shadow-[var(--shadow-md)] hover:border-[var(--color-border-strong)] ${t.is_active === false ? 'opacity-60' : ''}`}
@@ -1053,8 +1075,11 @@ export function SuperAdminPage() {
                 )}
               </div>
             </li>
-          ))}
-        </ul>
+                ))}
+              </ul>
+            </>
+          )
+        })()}
       </div>
     </div>
   )

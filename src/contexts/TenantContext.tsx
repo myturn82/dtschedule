@@ -59,50 +59,12 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   }, [])
 
   async function fetchMemberships(userId: string) {
-    const [memberRes, customerRes] = await Promise.all([
-      supabase
-        .from('tenant_members')
-        .select('*, tenant:tenants(*), tenant_role:tenant_roles(name)')
-        .eq('user_id', userId),
-      supabase
-        .from('customers')
-        .select('id')
-        .eq('owner_user_id', userId)
-        .eq('is_active', true)
-        .maybeSingle(),
-    ])
+    const { data } = await supabase
+      .from('tenant_members')
+      .select('*, tenant:tenants(*), tenant_role:tenant_roles(name)')
+      .eq('user_id', userId)
 
-    let list = (memberRes.data ?? []) as MembershipWithTenant[]
-
-    // 고객 오너는 해당 고객 소속 조직 전체를 admin 권한으로 접근 가능
-    if (customerRes.data?.id) {
-      const { data: customerTenants } = await supabase
-        .from('tenants')
-        .select('*')
-        .eq('customer_id', customerRes.data.id)
-      if (customerTenants?.length) {
-        const memberTenantIds = new Set(list.map(m => m.tenant_id))
-        const ownerMemberships: MembershipWithTenant[] = customerTenants
-          .filter(t => !memberTenantIds.has(t.id))
-          .map(t => ({
-            id: `owner-${t.id}`,
-            tenant_id: t.id,
-            user_id: userId,
-            role: 'admin' as const,
-            role_id: null,
-            is_approved: true,
-            created_at: t.created_at,
-            withdrawal_status: 'none' as const,
-            withdrawal_requested_at: null,
-            withdrawal_approved_at: null,
-            available_days: null,
-            monthly_limit: null,
-            tenant: t as Tenant,
-            tenant_role: null,
-          }))
-        list = [...list, ...ownerMemberships]
-      }
-    }
+    const list = (data ?? []) as MembershipWithTenant[]
 
     // 소셜 가입 후 복귀 시 pending 조직/역할 처리
     // 동시에 두 번 호출될 수 있으므로 키를 즉시(동기적으로) 제거해 경쟁 조건 방지
