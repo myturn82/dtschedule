@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useTenant } from '../contexts/TenantContext'
 import { useAuth } from '../hooks/useAuth'
-import type { Tenant } from '../types'
+import { useCustomerAdmin } from '../hooks/useCustomerAdmin'
+import type { Tenant, Customer } from '../types'
 
 function getGreeting() {
   const h = new Date().getHours()
@@ -184,6 +185,7 @@ function OrgCard({ name, roleLabel, isAdmin, mode, position, pendingCount, membe
 export function TenantSelectPage() {
   const { memberships, setTenant } = useTenant()
   const { profile, signOut } = useAuth()
+  const { isCustomerAdmin } = useCustomerAdmin()
   const navigate = useNavigate()
   const [allTenants, setAllTenants] = useState<Tenant[]>([])
   const [pendingCounts, setPendingCounts] = useState<Record<string, number>>({})
@@ -191,6 +193,9 @@ export function TenantSelectPage() {
   const [memberNotice, setMemberNotice] = useState<string | null>(null)
   const [memberCounts, setMemberCounts] = useState<Record<string, number>>({})
   const [assignmentCounts, setAssignmentCounts] = useState<Record<string, number>>({})
+  const [customers, setCustomers] = useState<Customer[]>([])
+  const [filterCustomerId, setFilterCustomerId] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     if (!profile) return
@@ -213,8 +218,10 @@ export function TenantSelectPage() {
         .eq('year', now.getFullYear())
         .eq('month', now.getMonth() + 1)
         .neq('member_type', 'admin_note'),
-    ]).then(([{ data: tenants }, { data: members }, { data: assignments }]) => {
+      supabase.from('customers').select('id, name').order('name'),
+    ]).then(([{ data: tenants }, { data: members }, { data: assignments }, { data: custData }]) => {
       setAllTenants(tenants ?? [])
+      setCustomers((custData ?? []) as Customer[])
       const pending: Record<string, number> = {}
       const memberC: Record<string, number> = {}
       for (const m of members ?? []) {
@@ -456,7 +463,7 @@ export function TenantSelectPage() {
           )}
 
           {/* List header */}
-          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 8 }}>
             <span style={{
               fontSize: 11, fontWeight: 600, letterSpacing: 0.8, textTransform: 'uppercase',
               color: '#8A8F99', fontFamily: '"JetBrains Mono", monospace',
@@ -465,6 +472,52 @@ export function TenantSelectPage() {
               {items.length}개
             </span>
           </div>
+
+          {/* System admin: customer filter */}
+          {profile?.is_super_admin && customers.length > 0 && (
+            <select
+              value={filterCustomerId}
+              onChange={e => setFilterCustomerId(e.target.value)}
+              style={{
+                width: '100%', marginBottom: 10,
+                padding: '8px 12px', borderRadius: 12,
+                border: '1px solid rgba(20,23,28,0.12)',
+                background: '#FFFFFF', fontSize: 13, fontFamily: 'inherit',
+                color: filterCustomerId ? '#14171C' : '#8A8F99',
+                outline: 'none', cursor: 'pointer',
+                boxShadow: '0 1px 0 rgba(20,23,28,0.03)',
+              }}
+            >
+              <option value="">전체 고객</option>
+              {customers.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          )}
+
+          {/* Customer owner: org search */}
+          {isCustomerAdmin && (
+            <div style={{ position: 'relative', marginBottom: 10 }}>
+              <svg style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
+                viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="#8A8F99" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="8.5" cy="8.5" r="5.5"/><path d="M15 15l-3-3"/>
+              </svg>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="조직 검색..."
+                style={{
+                  width: '100%', boxSizing: 'border-box',
+                  padding: '8px 12px 8px 30px', borderRadius: 12,
+                  border: '1px solid rgba(20,23,28,0.12)',
+                  background: '#FFFFFF', fontSize: 13, fontFamily: 'inherit',
+                  color: '#14171C', outline: 'none',
+                  boxShadow: '0 1px 0 rgba(20,23,28,0.03)',
+                }}
+              />
+            </div>
+          )}
 
           {/* Org list */}
           {loading ? (
@@ -509,9 +562,12 @@ export function TenantSelectPage() {
     </div>
   )
 
-  // Super admin: show all tenants
+  // Super admin: show all tenants with optional customer filter
   if (profile?.is_super_admin) {
-    const items = allTenants.map(t => ({
+    const visibleTenants = filterCustomerId
+      ? allTenants.filter(t => t.customer_id === filterCustomerId)
+      : allTenants
+    const items = visibleTenants.map(t => ({
       id: t.id,
       name: t.name,
       roleLabel: '슈퍼관리자',
@@ -528,8 +584,11 @@ export function TenantSelectPage() {
     return pageContent(items)
   }
 
-  // Regular user: own memberships
-  const items = memberships.map(m => ({
+  // Regular user / customer owner: own memberships with optional search
+  const visibleMemberships = searchQuery
+    ? memberships.filter(m => m.tenant.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : memberships
+  const items = visibleMemberships.map(m => ({
     id: m.id,
     name: m.tenant.name,
     roleLabel: m.role === 'admin' ? '관리자' : '멤버',
