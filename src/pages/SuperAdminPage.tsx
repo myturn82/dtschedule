@@ -4,7 +4,6 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { useTenant } from '../contexts/TenantContext'
 import { SlotEditor } from '../components/shared/SlotEditor'
-import { PLAN_LABELS } from '../types'
 import type { Tenant, TenantMode, Customer, PlanType } from '../types'
 
 // ─── Create form ──────────────────────────────────────────────────────────────
