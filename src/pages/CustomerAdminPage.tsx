@@ -21,7 +21,7 @@ const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 
 export function CustomerAdminPage() {
   const { profile, myCustomer, loading: authLoading } = useAuth()
-  const { setTenant } = useTenant()
+  const { setTenant, reloadMemberships } = useTenant()
   const navigate = useNavigate()
 
   const [tenants, setTenants]     = useState<Tenant[]>([])
@@ -123,6 +123,7 @@ export function CustomerAdminPage() {
         })
       }
       setTenants(prev => [...prev, data])
+      await reloadMemberships()
       setShowCreate(false)
       setForm(EMPTY_FORM)
       setCreateSlots(['09-12', '13-14', '14-16', '16-18', '20-22'])
