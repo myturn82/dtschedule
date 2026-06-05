@@ -27,9 +27,9 @@ function AppRoutes() {
     )
   }
 
-  // 승인된 조직이 없으면 PendingPage (슈퍼관리자 제외)
+  // 승인된 조직이 없으면 PendingPage (슈퍼관리자, 고객관리자 제외)
   // memberships는 TenantContext에서 이미 is_approved=true만 필터됨
-  if (profile && memberships.length === 0 && !profile.is_super_admin) {
+  if (profile && memberships.length === 0 && !profile.is_super_admin && !isCustomerAdmin) {
     return (
       <Routes>
         <Route path="/share" element={<SharePage />} />
