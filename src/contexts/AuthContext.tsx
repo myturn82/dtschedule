@@ -108,7 +108,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut()
+    const { error } = await supabase.auth.signOut({ scope: 'global' })
+    // 토큰 만료(403) 등으로 서버 로그아웃 실패 시 로컬 세션만 제거
+    if (error) await supabase.auth.signOut({ scope: 'local' })
   }, [])
 
   const deleteAccount = useCallback(async (tenantId?: string): Promise<string | null> => {
