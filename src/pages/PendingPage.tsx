@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useTenant } from '../contexts/TenantContext'
 import { supabase } from '../lib/supabase'
@@ -8,9 +7,8 @@ interface TenantRole { id: string; name: string; display_order: number }
 interface Tenant { id: string; name: string }
 
 export function PendingPage() {
-  const { profile, signOut, deleteAccount, refreshCustomer } = useAuth()
+  const { profile, signOut, deleteAccount } = useAuth()
   const { reloadMemberships } = useTenant()
-  const navigate = useNavigate()
 
   // 'choose' | 'start-service' | 'join-org'
   const [mode, setMode] = useState<'choose' | 'start-service' | 'join-org'>('choose')
