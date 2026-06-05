@@ -1,9 +1,10 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
-import type { Profile } from '../types'
+import type { Profile, Customer } from '../types'
 
 interface AuthState {
   profile: Profile | null
+  myCustomer: Customer | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<string | null>
   signUp: (email: string, password: string, name: string, role: 'volunteer' | '50plus' | 'team_leader' | 'admin', tenantId?: string, tenantRoleId?: string) => Promise<string | null>
@@ -20,6 +21,7 @@ const AuthContext = createContext<AuthState | null>(null)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null)
+  const [myCustomer, setMyCustomer] = useState<Customer | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -30,15 +32,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) fetchProfile(session.user.id)
-      else { setProfile(null); setLoading(false) }
+      else { setProfile(null); setMyCustomer(null); setLoading(false) }
     })
 
     return () => subscription.unsubscribe()
   }, [])
 
   async function fetchProfile(userId: string) {
-    const { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
-    setProfile(data)
+    const [profileRes, customerRes] = await Promise.all([
+      supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
+      supabase.from('customers').select('*').eq('owner_user_id', userId).eq('is_active', true).maybeSingle(),
+    ])
+    setProfile(profileRes.data)
+    setMyCustomer(customerRes.data ?? null)
     setLoading(false)
   }
 
@@ -130,7 +136,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={{
-      profile, loading,
+      profile, myCustomer, loading,
       signIn, signUp, signInWithGoogle, signInWithKakao,
       linkGoogle, linkKakao, getIdentities, signOut, deleteAccount,
     }}>

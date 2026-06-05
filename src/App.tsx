@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import { TenantProvider, useTenant } from './contexts/TenantContext'
 import { useAuth } from './hooks/useAuth'
+import { useCustomerAdmin } from './hooks/useCustomerAdmin'
 import { SchedulePage } from './pages/SchedulePage'
 import { SharePage } from './pages/SharePage'
 import { AdminPage } from './pages/AdminPage'
@@ -9,11 +10,13 @@ import { DashboardPage } from './pages/DashboardPage'
 import { TenantSelectPage } from './pages/TenantSelectPage'
 import { PendingPage } from './pages/PendingPage'
 import { SuperAdminPage } from './pages/SuperAdminPage'
+import { CustomerAdminPage } from './pages/CustomerAdminPage'
 import { useDarkMode } from './hooks/useDarkMode'
 
 function AppRoutes() {
   useDarkMode()
   const { profile, loading: authLoading } = useAuth()
+  const { isCustomerAdmin, myCustomer } = useCustomerAdmin()
   const { tenant, tenantRole, memberships, loading: tenantLoading, tenantSelectedByUser } = useTenant()
 
   if (authLoading || tenantLoading) {
@@ -54,8 +57,20 @@ function AppRoutes() {
       <Routes>
         <Route path="/share" element={<SharePage />} />
         <Route path="/superadmin" element={<SuperAdminPage />} />
+        <Route path="/customer-admin" element={<CustomerAdminPage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="*" element={<TenantSelectPage />} />
+      </Routes>
+    )
+  }
+
+  // Customer admin who hasn't selected a tenant → customer admin page
+  if (isCustomerAdmin && !tenantSelectedByUser) {
+    return (
+      <Routes>
+        <Route path="/share" element={<SharePage />} />
+        <Route path="/customer-admin" element={<CustomerAdminPage />} />
+        <Route path="*" element={<CustomerAdminPage />} />
       </Routes>
     )
   }
@@ -67,7 +82,8 @@ function AppRoutes() {
       } />
       <Route path="/schedule" element={<SchedulePage />} />
       <Route path="/dashboard" element={
-        tenantRole === 'admin' || profile?.is_super_admin
+        (tenantRole === 'admin' || profile?.is_super_admin) &&
+        (profile?.is_super_admin || myCustomer?.plan === 'business')
           ? <DashboardPage />
           : <Navigate to="/" replace />
       } />
@@ -77,6 +93,9 @@ function AppRoutes() {
       <Route path="/pending" element={<PendingPage />} />
       <Route path="/superadmin" element={
         profile?.is_super_admin ? <SuperAdminPage /> : <Navigate to="/" replace />
+      } />
+      <Route path="/customer-admin" element={
+        isCustomerAdmin || profile?.is_super_admin ? <CustomerAdminPage /> : <Navigate to="/" replace />
       } />
     </Routes>
   )

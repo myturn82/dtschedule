@@ -3,119 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { useTenant } from '../contexts/TenantContext'
-import { buildSlot, parseSlotLabel, SLOT_TEMPLATES } from '../utils/timeSlots'
-import type { Tenant, TenantMode } from '../types'
-
-// ─── Time select helpers ───────────────────────────────────────────────────────
-
-function makeTimeOption(halfHours: number) {
-  const h = Math.floor(halfHours / 2)
-  const m = halfHours % 2 === 0 ? '00' : '30'
-  return { value: halfHours / 2, label: `${h}:${m}` }
-}
-
-const START_OPTIONS = Array.from({ length: 48 }, (_, i) => makeTimeOption(i))      // 0:00–23:30
-const END_OPTIONS   = Array.from({ length: 48 }, (_, i) => makeTimeOption(i + 1))  // 0:30–24:00
-
-// ─── SlotEditor ───────────────────────────────────────────────────────────────
-
-interface SlotEditorProps {
-  slots: string[]
-  onChange: (slots: string[]) => void
-}
-
-function SlotEditor({ slots, onChange }: SlotEditorProps) {
-  const [start, setStart] = useState(9)
-  const [end, setEnd]     = useState(10)
-  const [msg, setMsg]     = useState('')
-
-  function applyTemplate(templateSlots: string[]) {
-    setMsg('')
-    onChange(templateSlots)
-  }
-
-  function handleAdd() {
-    if (end <= start) { setMsg('종료 시간은 시작 시간보다 커야 합니다.'); return }
-    const slot = buildSlot(start, end)
-    if (slots.includes(slot)) { setMsg('이미 등록된 슬롯입니다.'); return }
-    setMsg('')
-    onChange([...slots, slot].sort((a, b) => parseFloat(a) - parseFloat(b)))
-  }
-
-  const selectCls = 'px-2 py-1.5 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]'
-
-  return (
-    <div className="space-y-3">
-      {/* Template buttons */}
-      <div>
-        <p className="text-xs text-[var(--color-text-secondary)] font-medium mb-2">템플릿 적용</p>
-        <div className="flex gap-2 flex-wrap">
-          {SLOT_TEMPLATES.map(t => (
-            <button
-              key={t.label}
-              type="button"
-              onClick={() => applyTemplate(t.slots)}
-              className="px-3 py-1.5 text-xs rounded-xl border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary)] hover:bg-[var(--color-surface-hover)] transition-colors"
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Manual add */}
-      <div>
-        <p className="text-xs text-[var(--color-text-secondary)] font-medium mb-2">직접 추가</p>
-        <div className="flex items-end gap-2 flex-wrap">
-          <div>
-            <label className="block text-xs text-[var(--color-text-secondary)] mb-1">시작</label>
-            <select value={start} onChange={e => setStart(Number(e.target.value))} className={selectCls}>
-              {START_OPTIONS.map(o => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs text-[var(--color-text-secondary)] mb-1">종료</label>
-            <select value={end} onChange={e => setEnd(Number(e.target.value))} className={selectCls}>
-              {END_OPTIONS.map(o => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
-          </div>
-          <button
-            type="button"
-            onClick={handleAdd}
-            className="px-3 py-1.5 text-sm border border-[var(--color-brand-primary)] text-[var(--color-brand-primary)] rounded-xl hover:bg-[var(--color-surface-hover)]"
-          >
-            + 추가
-          </button>
-        </div>
-        {msg && <p className="text-xs text-red-500 mt-1">{msg}</p>}
-      </div>
-
-      {/* Slot list */}
-      {slots.length === 0 ? (
-        <p className="text-xs text-[var(--color-text-secondary)]">슬롯 없음 — 템플릿을 적용하거나 직접 추가하세요.</p>
-      ) : (
-        <ul className="space-y-1">
-          {slots.map(slot => (
-            <li key={slot} className="flex items-center justify-between px-3 py-1.5 bg-[var(--color-surface-secondary)] rounded-xl">
-              <span className="text-sm text-[var(--color-text-primary)]">{parseSlotLabel(slot)}</span>
-              <button
-                type="button"
-                onClick={() => onChange(slots.filter(s => s !== slot))}
-                className="text-xs text-red-500 hover:text-red-700 ml-3"
-              >
-                삭제
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  )
-}
+import { SlotEditor } from '../components/shared/SlotEditor'
+import { PLAN_LABELS } from '../types'
+import type { Tenant, TenantMode, Customer, PlanType } from '../types'
 
 // ─── Create form ──────────────────────────────────────────────────────────────
 
@@ -194,6 +84,70 @@ export function SuperAdminPage() {
   const [selectedMemberIds, setSelectedMemberIds] = useState<Set<string>>(new Set())
   const [approving, setApproving] = useState(false)
 
+  // Customer management state
+  const [customers, setCustomers] = useState<Customer[]>([])
+  const [showCreateCustomer, setShowCreateCustomer] = useState(false)
+  const [customerForm, setCustomerForm] = useState({ name: '', ownerEmail: '', plan: 'basic' as PlanType })
+  const [customerSaving, setCustomerSaving] = useState(false)
+  const [createOrgCustomerId, setCreateOrgCustomerId] = useState<string>('00000000-0000-0000-0000-000000000001')
+
+  async function fetchCustomers() {
+    const { data } = await supabase.from('customers').select('*').order('created_at')
+    setCustomers((data ?? []) as Customer[])
+  }
+
+  async function createCustomer(e: React.FormEvent) {
+    e.preventDefault()
+    if (!customerForm.name.trim()) return
+    setCustomerSaving(true)
+    let ownerUserId: string | null = null
+    if (customerForm.ownerEmail.trim()) {
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', customerForm.ownerEmail.trim())
+        .maybeSingle()
+      if (prof) ownerUserId = prof.id
+      else { setMessage('오류: 해당 이메일의 가입 유저를 찾을 수 없습니다.'); setCustomerSaving(false); return }
+    }
+    const { data, error } = await supabase
+      .from('customers')
+      .insert({ name: customerForm.name.trim(), owner_user_id: ownerUserId, plan: customerForm.plan })
+      .select()
+      .single()
+    if (error) {
+      setMessage(`오류: ${error.message}`)
+    } else if (data) {
+      setCustomers(prev => [...prev, data as Customer])
+      setShowCreateCustomer(false)
+      setCustomerForm({ name: '', ownerEmail: '', plan: 'basic' })
+      setMessage('고객이 생성됐습니다.')
+    }
+    setCustomerSaving(false)
+  }
+
+  async function updateCustomerPlan(customerId: string, plan: PlanType) {
+    const { data, error } = await supabase
+      .from('customers')
+      .update({ plan, updated_at: new Date().toISOString() })
+      .eq('id', customerId)
+      .select()
+      .single()
+    if (error) setMessage(`오류: ${error.message}`)
+    else if (data) setCustomers(prev => prev.map(c => c.id === customerId ? data as Customer : c))
+  }
+
+  async function toggleCustomerActive(customer: Customer) {
+    const { data, error } = await supabase
+      .from('customers')
+      .update({ is_active: !customer.is_active, updated_at: new Date().toISOString() })
+      .eq('id', customer.id)
+      .select()
+      .single()
+    if (error) setMessage(`오류: ${error.message}`)
+    else if (data) setCustomers(prev => prev.map(c => c.id === customer.id ? data as Customer : c))
+  }
+
   async function fetchPendingMembers() {
     const { data } = await supabase
       .from('tenant_members')
@@ -231,6 +185,7 @@ export function SuperAdminPage() {
       setLoading(false)
     })
     fetchPendingMembers()
+    fetchCustomers()
   }, [profile])
 
   async function saveName(tenant: Tenant) {
@@ -371,6 +326,7 @@ export function SuperAdminPage() {
         slug: slugTrimmed,
         name: form.name.trim(),
         business_type: form.business_type.trim() || null,
+        customer_id: createOrgCustomerId || null,
         settings: {
           title: form.title.trim() || form.name.trim(),
           theme_color: form.theme_color.trim() || undefined,
@@ -401,7 +357,7 @@ export function SuperAdminPage() {
       setMessage('조직이 생성됐습니다.')
     }
     setSaving(false)
-  }, [form, createSlots])
+  }, [form, createSlots, createOrgCustomerId])
 
   if (authLoading || loading) {
     return <div className="min-h-screen flex items-center justify-center text-[var(--color-text-secondary)]">로딩 중...</div>
@@ -584,6 +540,110 @@ export function SuperAdminPage() {
           </div>
         )}
 
+        {/* ── 고객 관리 ── */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-4 flex-wrap">
+            <h2 className="m-0 text-[16px] font-bold tracking-[-0.3px] text-[var(--color-text-secondary)] flex items-baseline gap-[7px] whitespace-nowrap">
+              고객 관리
+              <span className="text-[12.5px] font-bold px-[9px] py-[2px] rounded-full" style={{ color: 'oklch(0.45 0.14 28)', background: 'oklch(0.95 0.045 28)' }}>
+                {customers.length}
+              </span>
+            </h2>
+            <button
+              onClick={() => setShowCreateCustomer(v => !v)}
+              className="ml-auto inline-flex items-center justify-center gap-[6px] h-[36px] px-[14px] rounded-[10px] text-[13px] font-bold whitespace-nowrap border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
+            >
+              + 새 고객
+            </button>
+          </div>
+
+          {showCreateCustomer && (
+            <form onSubmit={createCustomer} className="mb-4 p-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] space-y-3">
+              <h3 className="font-semibold text-sm text-[var(--color-text-primary)]">새 고객 등록</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs text-[var(--color-text-secondary)] mb-1">고객명 *</label>
+                  <input type="text" required value={customerForm.name} onChange={e => setCustomerForm(p => ({ ...p, name: e.target.value }))} placeholder="홍길동 미용실" className={inputCls} />
+                </div>
+                <div>
+                  <label className="block text-xs text-[var(--color-text-secondary)] mb-1">오너 이메일 (선택)</label>
+                  <input type="email" value={customerForm.ownerEmail} onChange={e => setCustomerForm(p => ({ ...p, ownerEmail: e.target.value }))} placeholder="owner@example.com" className={inputCls} />
+                </div>
+                <div>
+                  <label className="block text-xs text-[var(--color-text-secondary)] mb-1">플랜</label>
+                  <select value={customerForm.plan} onChange={e => setCustomerForm(p => ({ ...p, plan: e.target.value as PlanType }))}
+                    className="w-full px-3 py-2 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-sm text-[var(--color-text-primary)] focus:outline-none">
+                    <option value="basic">Basic (무료)</option>
+                    <option value="pro">Pro</option>
+                    <option value="business">Business</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button type="submit" disabled={customerSaving} className="px-4 py-2 rounded-xl bg-[var(--color-brand-primary)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-40">
+                  {customerSaving ? '저장 중...' : '생성'}
+                </button>
+                <button type="button" onClick={() => setShowCreateCustomer(false)} className="px-4 py-2 rounded-xl border border-[var(--color-border)] text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]">취소</button>
+              </div>
+            </form>
+          )}
+
+          {customers.length > 0 && (
+            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[22px] overflow-hidden shadow-[var(--shadow-sm)]">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">고객명</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">플랜</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)] hidden sm:table-cell">조직 수</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)] hidden md:table-cell">가입일</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">상태</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--color-border)]">
+                  {customers.map(c => (
+                    <tr key={c.id} className="hover:bg-[var(--color-surface-hover)]">
+                      <td className="px-4 py-3 font-semibold text-[var(--color-text-primary)]">
+                        {c.name}
+                        {c.id === '00000000-0000-0000-0000-000000000001' && (
+                          <span className="ml-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)]">시스템</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <select
+                          value={c.plan}
+                          onChange={e => updateCustomerPlan(c.id, e.target.value as PlanType)}
+                          className="px-2 py-1 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-xs text-[var(--color-text-secondary)] focus:outline-none"
+                        >
+                          <option value="basic">Basic</option>
+                          <option value="pro">Pro</option>
+                          <option value="business">Business</option>
+                        </select>
+                      </td>
+                      <td className="px-4 py-3 text-[var(--color-text-muted)] text-xs hidden sm:table-cell">
+                        {tenants.filter(t => t.customer_id === c.id).length}개
+                      </td>
+                      <td className="px-4 py-3 text-[var(--color-text-muted)] text-xs hidden md:table-cell">{c.created_at.slice(0, 10)}</td>
+                      <td className="px-4 py-3">
+                        {c.id !== '00000000-0000-0000-0000-000000000001' && (
+                          <button
+                            onClick={() => toggleCustomerActive(c)}
+                            className={`px-2 py-1 text-[11px] font-semibold rounded-lg transition-colors ${c.is_active
+                              ? 'border border-amber-200 text-amber-700 hover:bg-amber-50'
+                              : 'border border-green-200 text-green-700 hover:bg-green-50'}`}
+                          >
+                            {c.is_active ? '비활성화' : '복구'}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
         {/* ── List header ── */}
         <div className="flex items-center gap-[14px] flex-wrap mb-[14px]">
           <h2 className="m-0 text-[16px] font-bold tracking-[-0.3px] text-[var(--color-text-secondary)] flex items-baseline gap-[7px] whitespace-nowrap">
@@ -627,6 +687,19 @@ export function SuperAdminPage() {
                   />
                 </div>
               ))}
+            </div>
+
+            <div>
+              <label className="block text-xs text-[var(--color-text-secondary)] mb-1">고객 계정</label>
+              <select
+                value={createOrgCustomerId}
+                onChange={e => setCreateOrgCustomerId(e.target.value)}
+                className={inputCls}
+              >
+                {customers.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
             </div>
 
             <div>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
-import type { Profile, ScheduleRule, DateOverride, TenantSettings, TenantMemberWithRole, TenantAccessRole } from '../types'
+import { PLAN_LIMITS, PLAN_LABELS } from '../types'
+import type { Profile, ScheduleRule, DateOverride, TenantSettings, TenantMemberWithRole, TenantAccessRole, PlanType } from '../types'
 
 interface AdminState {
   members: TenantMemberWithRole[]
@@ -68,6 +69,34 @@ export function useAdmin(tenantId: string): AdminState {
   const profiles: Profile[] = members.map(m => m.profile).filter(Boolean)
 
   const addMember = useCallback(async (email: string, roleId?: string): Promise<string | null> => {
+    // 플랜 회원 한도 체크
+    const { data: tenantData } = await supabase
+      .from('tenants')
+      .select('customer_id')
+      .eq('id', tenantId)
+      .maybeSingle()
+    if (tenantData?.customer_id) {
+      const { data: customerData } = await supabase
+        .from('customers')
+        .select('plan')
+        .eq('id', tenantData.customer_id)
+        .maybeSingle()
+      if (customerData?.plan) {
+        const plan = customerData.plan as PlanType
+        const limit = PLAN_LIMITS[plan].maxUsers
+        if (limit !== Infinity) {
+          const { count } = await supabase
+            .from('tenant_members')
+            .select('*', { count: 'exact', head: true })
+            .in('tenant_id', (await supabase.from('tenants').select('id').eq('customer_id', tenantData.customer_id)).data?.map(t => t.id) ?? [tenantId])
+            .eq('is_approved', true)
+          if ((count ?? 0) >= limit) {
+            return `현재 플랜(${PLAN_LABELS[plan]})의 최대 회원 수(${limit}명)에 도달했습니다. 플랜을 업그레이드해 주세요.`
+          }
+        }
+      }
+    }
+
     const { data: user, error: findErr } = await supabase
       .from('profiles')
       .select('*')
