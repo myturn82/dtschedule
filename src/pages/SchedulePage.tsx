@@ -332,7 +332,7 @@ export function SchedulePage() {
           <div className="px-3 py-3 sm:px-5 sm:py-4 border-b border-[var(--color-border)]">
             <ScheduleHeader
               year={year} month={month} day={day}
-              title={tenant?.name}
+              title={tenant?.settings?.title || tenant?.name}
               filledCount={filledCount}
               operatingDays={operatingDays}
               viewType={viewType}

@@ -166,6 +166,7 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
   function switchMode(m: Mode) { setMode(m); setError(null); setSuccess(null); setSocialPending(null) }
 
   const hasCustomRoles = tenantRoles !== null && tenantRoles.length > 0
+  const hasNoRoles = tenantRoles !== null && tenantRoles.length === 0
   const effectiveDefaultRoles = [
     { value: 'volunteer' as const, label: tenantTypeLabels?.volunteer ?? '팀원' },
     { value: '50plus' as const, label: tenantTypeLabels?.['50plus'] ?? '50플러스' },
@@ -211,6 +212,7 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
   }
   async function handleSocialConfirm() {
     if (!tenantId) { setError('가입할 조직을 선택해주세요.'); return }
+    if (hasNoRoles) { setError('이 조직은 아직 활동 유형이 등록되지 않았습니다. 관리자에게 문의하세요.'); return }
     if (hasCustomRoles && !tenantRoleId) { setError('활동 유형을 선택해주세요.'); return }
     if (!hasCustomRoles && !role) { setError('활동 유형을 선택해주세요.'); return }
     localStorage.setItem('vs_pending_social', JSON.stringify({ tenantId, tenantRoleId }))
@@ -535,7 +537,9 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
                         <label style={{ display:'block', fontSize:11.5, fontWeight:600, color:'#353A44', marginBottom:5 }}>활동 유형 *</label>
                         {tenantRoles === null
                           ? <p style={{ fontSize:12, color:'#8A8F99', margin:0 }}>로딩 중...</p>
-                          : hasCustomRoles ? (
+                          : hasNoRoles ? (
+                            <p style={{ fontSize:12, color:'oklch(0.55 0.12 60)', background:'oklch(0.97 0.04 80)', border:'1px solid oklch(0.88 0.08 80)', borderRadius:8, padding:'8px 12px', margin:0 }}>이 조직은 아직 활동 유형이 등록되지 않았습니다. 관리자에게 문의하세요.</p>
+                          ) : hasCustomRoles ? (
                             <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:6 }}>
                               {tenantRoles.map(tr => (
                                 <button key={tr.id} type="button" onClick={() => { setTenantRoleId(tr.id); setRole(null) }}

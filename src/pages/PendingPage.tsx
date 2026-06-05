@@ -42,6 +42,13 @@ export function PendingPage() {
   const hasPending = pendingOrgs.length > 0
 
 
+  // 소셜 회원가입 경로로 진입 시 신청완료 상태로 전환
+  useEffect(() => {
+    if (!profile) return
+    const notice = localStorage.getItem('vs_notice_join_requested')
+    if (notice) { localStorage.removeItem('vs_notice_join_requested'); setSubmitted(true) }
+  }, [profile?.id])
+
   // 멤버십이 없는 신규 사용자(로그인 탭 카카오 등)는 폼 자동 오픈
   useEffect(() => {
     if (memberships !== null && memberships.length === 0 && !submitted && !profile?.is_super_admin) setShowForm(true)
@@ -78,6 +85,7 @@ export function PendingPage() {
 
   const isAdminRole = profile?.is_super_admin
   const hasCustomRoles = tenantRoles !== null && tenantRoles.length > 0
+  const hasNoRoles = tenantRoles !== null && tenantRoles.length === 0
   const effectiveDefaultRoles = [
     { value: 'volunteer', label: tenantTypeLabels?.volunteer ?? '팀원' },
     { value: '50plus', label: tenantTypeLabels?.['50plus'] ?? '50플러스' },
@@ -92,6 +100,7 @@ export function PendingPage() {
 
   async function handleReapply() {
     if (!tenantId) { setError('조직을 선택해주세요.'); return }
+    if (hasNoRoles) { setError('이 조직은 아직 활동 유형이 등록되지 않았습니다. 관리자에게 문의하세요.'); return }
     if (hasCustomRoles && !tenantRoleId) { setError('활동 유형을 선택해주세요.'); return }
     if (!hasCustomRoles && !defaultRole) { setError('활동 유형을 선택해주세요.'); return }
 
@@ -114,13 +123,24 @@ export function PendingPage() {
         role_id: tenantRoleId ?? null,
       })
 
+    const isFirstRequest = (memberships?.length ?? 0) === 0
     setSubmitting(false)
     if (insertErr) {
       if (insertErr.code === '23505') { setError('이미 해당 조직에 신청 중입니다.'); return }
       setError(insertErr.message); return
     }
-    setSubmitted(true)
-    setShowForm(false)
+    if (isFirstRequest) {
+      setSubmitted(true)
+      setShowForm(false)
+    } else {
+      // 추가 조직 신청: 목록 재조회 후 폼 리셋
+      const { data } = await supabase
+        .from('tenant_members')
+        .select('tenant_id, is_approved, tenant:tenants(name)')
+        .eq('user_id', profile!.id)
+      setMemberships((data ?? []) as unknown as MyMembership[])
+      resetForm()
+    }
   }
 
   function resetForm() {
@@ -207,6 +227,8 @@ export function PendingPage() {
                     </label>
                     {tenantRoles === null ? (
                       <p className="text-xs text-[var(--color-text-muted)]">로딩 중...</p>
+                    ) : hasNoRoles ? (
+                      <p className="text-xs text-amber-600 bg-amber-50 px-3 py-2 rounded-lg">이 조직은 아직 활동 유형이 등록되지 않았습니다. 관리자에게 문의하세요.</p>
                     ) : hasCustomRoles ? (
                       <div className="grid grid-cols-2 gap-1.5">
                         {tenantRoles.map(tr => (
