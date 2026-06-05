@@ -58,6 +58,39 @@ export interface LegendItem {
   color: LegendColor
 }
 
+// ─── Customer / Plan types ────────────────────────────────────────────────────
+
+export type PlanType = 'basic' | 'pro' | 'business'
+
+export const PLAN_LABELS: Record<PlanType, string> = {
+  basic:    'Basic (무료)',
+  pro:      'Pro (월 9,900원)',
+  business: 'Business (월 29,000원)',
+}
+
+export const PLAN_LIMITS: Record<PlanType, { maxOrgs: number; maxUsers: number }> = {
+  basic:    { maxOrgs: 1,        maxUsers: 20  },
+  pro:      { maxOrgs: 5,        maxUsers: 100 },
+  business: { maxOrgs: Infinity, maxUsers: Infinity },
+}
+
+export const PLAN_FEATURES: Record<PlanType, { autoNotify: boolean; excelExport: boolean; dashboard: boolean }> = {
+  basic:    { autoNotify: false, excelExport: false, dashboard: false },
+  pro:      { autoNotify: true,  excelExport: false, dashboard: false },
+  business: { autoNotify: true,  excelExport: true,  dashboard: true  },
+}
+
+export interface Customer {
+  id: string
+  name: string
+  owner_user_id: string | null
+  plan: PlanType
+  plan_expires_at: string | null
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
 export interface Tenant {
   id: string;
   slug: string;
@@ -65,6 +98,7 @@ export interface Tenant {
   business_type: string | null;
   settings: TenantSettings;
   is_active: boolean;
+  customer_id: string | null;
   created_at: string;
   updated_at: string;
 }

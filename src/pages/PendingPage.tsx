@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useTenant } from '../contexts/TenantContext'
 import { supabase } from '../lib/supabase'
@@ -9,6 +10,12 @@ interface Tenant { id: string; name: string }
 export function PendingPage() {
   const { profile, signOut, deleteAccount } = useAuth()
   const { reloadMemberships } = useTenant()
+  const navigate = useNavigate()
+
+  // 'choose' | 'start-service' | 'join-org'
+  const [mode, setMode] = useState<'choose' | 'start-service' | 'join-org'>('choose')
+  const [customerName, setCustomerName] = useState('')
+  const [customerCreating, setCustomerCreating] = useState(false)
 
   const [showForm, setShowForm] = useState(false)
   const [tenants, setTenants] = useState<Tenant[]>([])
@@ -45,9 +52,7 @@ export function PendingPage() {
     if (notice) { localStorage.removeItem('vs_notice_join_requested'); setSubmitted(true) }
   }, [profile?.id])
 
-  useEffect(() => {
-    if (memberships !== null && memberships.length === 0 && !submitted && !profile?.is_super_admin) setShowForm(true)
-  }, [memberships, submitted, profile?.is_super_admin])
+  // Note: 신규 유저(memberships.length===0)는 choose 모드로 시작 — 자동 showForm 불필요
 
   useEffect(() => {
     if (!showForm || memberships === null) return
@@ -172,6 +177,24 @@ export function PendingPage() {
     setError(null)
   }
 
+  async function handleCreateCustomer(e: React.FormEvent) {
+    e.preventDefault()
+    if (!profile || !customerName.trim()) return
+    setCustomerCreating(true)
+    const { data, error } = await supabase
+      .from('customers')
+      .insert({ name: customerName.trim(), owner_user_id: profile.id, plan: 'basic' })
+      .select()
+      .single()
+    if (error) {
+      setError(`오류: ${error.message}`)
+      setCustomerCreating(false)
+      return
+    }
+    if (data) navigate('/customer-admin')
+    setCustomerCreating(false)
+  }
+
   const roleBtn = (selected: boolean) =>
     `py-2 px-3 rounded-xl text-xs font-semibold border-2 transition-all duration-200 ${
       selected
@@ -206,14 +229,62 @@ export function PendingPage() {
 
         {!isAdminRole && !submitted && (
           <div className="mb-4">
-            {!showForm ? (
+            {/* 완전 신규 유저: 서비스 시작 or 조직 가입 선택 */}
+            {memberships?.length === 0 && !hasPending && mode === 'choose' && (
+              <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-4 text-left space-y-3">
+                <p className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wide mb-1">시작하기</p>
+                <button
+                  onClick={() => setMode('start-service')}
+                  className="w-full text-left px-4 py-3 rounded-xl border-2 border-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/5 hover:bg-[var(--color-brand-primary)]/10 transition-colors"
+                >
+                  <p className="text-sm font-bold text-[var(--color-brand-primary)]">내 서비스 시작하기</p>
+                  <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">나만의 조직을 직접 만들고 관리합니다 (Basic 무료)</p>
+                </button>
+                <button
+                  onClick={() => { setMode('join-org'); setShowForm(true) }}
+                  className="w-full text-left px-4 py-3 rounded-xl border border-[var(--color-border-strong)] hover:bg-[var(--color-surface-hover)] transition-colors"
+                >
+                  <p className="text-sm font-semibold text-[var(--color-text-primary)]">기존 조직에 가입하기</p>
+                  <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">운영 중인 조직에 구성원으로 가입합니다</p>
+                </button>
+              </div>
+            )}
+
+            {/* 내 서비스 시작하기 폼 */}
+            {mode === 'start-service' && (
+              <form onSubmit={handleCreateCustomer} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-4 text-left space-y-3">
+                <p className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wide">서비스 계정 이름</p>
+                <input
+                  type="text"
+                  required
+                  value={customerName}
+                  onChange={e => setCustomerName(e.target.value)}
+                  placeholder="예: 홍길동 미용실"
+                  className="w-full px-3 py-2 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]"
+                />
+                {error && <p className="text-xs text-red-500">{error}</p>}
+                <div className="flex gap-2">
+                  <button type="submit" disabled={customerCreating || !customerName.trim()}
+                    className="flex-1 py-2 text-sm font-semibold rounded-xl bg-[var(--color-brand-primary)] text-white hover:opacity-90 disabled:opacity-40 transition-colors">
+                    {customerCreating ? '생성 중...' : '시작하기'}
+                  </button>
+                  <button type="button" onClick={() => setMode('choose')}
+                    className="flex-1 py-2 text-sm font-medium rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors">
+                    뒤로
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* 기존 조직 가입 폼 */}
+            {(mode === 'join-org' || (memberships !== null && memberships.length > 0)) && !showForm ? (
               <button
                 onClick={() => setShowForm(true)}
                 className="px-4 py-2 text-sm font-medium rounded-xl border border-[var(--color-brand-primary)] text-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary)]/8 transition-colors"
               >
                 조직에 가입 신청하기
               </button>
-            ) : (
+            ) : mode === 'join-org' && showForm ? (
               <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-4 text-left space-y-3">
                 <p className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wide">가입 신청</p>
 
@@ -322,7 +393,7 @@ export function PendingPage() {
                   </button>
                 </div>
               </div>
-            )}
+            ) : null}
           </div>
         )}
 
