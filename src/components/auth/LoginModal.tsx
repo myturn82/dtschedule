@@ -41,6 +41,7 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
   const [tenantTypeLabels, setTenantTypeLabels] = useState<{ volunteer: string; '50plus': string } | null>(null)
   const [role, setRole] = useState<'volunteer' | '50plus' | 'team_leader' | 'admin' | null>(null)
 
+  const [signupType, setSignupType] = useState<'service' | 'join'>('join')
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -163,7 +164,7 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
 
   useEffect(() => { return runAssignAnimation() }, [runAssignAnimation])
 
-  function switchMode(m: Mode) { setMode(m); setError(null); setSuccess(null); setSocialPending(null) }
+  function switchMode(m: Mode) { setMode(m); setError(null); setSuccess(null); setSocialPending(null); setSignupType('join') }
 
   const hasCustomRoles = tenantRoles !== null && tenantRoles.length > 0
   const hasNoRoles = tenantRoles !== null && tenantRoles.length === 0
@@ -185,20 +186,28 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
       if (err) setError(err)
       else { localStorage.setItem('lastLoginEmail', email); onClose() }
     } else {
-      if (!tenantId) { setError('가입할 조직을 선택해주세요.'); setLoading(false); return }
-      if (hasCustomRoles && !tenantRoleId) { setError('활동 유형을 선택해주세요.'); setLoading(false); return }
-      if (!hasCustomRoles && !role) { setError('활동 유형을 선택해주세요.'); setLoading(false); return }
+      if (signupType === 'join') {
+        if (!tenantId) { setError('가입할 조직을 선택해주세요.'); setLoading(false); return }
+        if (hasCustomRoles && !tenantRoleId) { setError('활동 유형을 선택해주세요.'); setLoading(false); return }
+        if (!hasCustomRoles && !role) { setError('활동 유형을 선택해주세요.'); setLoading(false); return }
+      }
       if (!name.trim()) { setError('이름을 입력해주세요.'); setLoading(false); return }
       if (password !== confirmPassword) { setError('비밀번호가 일치하지 않습니다.'); setLoading(false); return }
       if (password.length < 6) { setError('비밀번호는 6자 이상이어야 합니다.'); setLoading(false); return }
       const effectiveRole: 'volunteer' | '50plus' | 'team_leader' | 'admin' =
-        hasCustomRoles ? 'volunteer' : (role as 'volunteer' | '50plus' | 'team_leader' | 'admin')
-      const err = await onSignUp(email, password, name, effectiveRole, tenantId, tenantRoleId ?? undefined)
+        signupType === 'service' ? 'volunteer' : hasCustomRoles ? 'volunteer' : (role as 'volunteer' | '50plus' | 'team_leader' | 'admin')
+      const err = await onSignUp(
+        email, password, name, effectiveRole,
+        signupType === 'join' ? tenantId : undefined,
+        signupType === 'join' ? (tenantRoleId ?? undefined) : undefined,
+      )
       setLoading(false)
       if (err) setError(err)
-      else setSuccess(effectiveRole === 'admin'
-        ? '가입이 완료됐습니다. 슈퍼관리자가 승인하면 로그인하실 수 있습니다.'
-        : '가입이 완료됐습니다. 조직 관리자가 승인하면 로그인하실 수 있습니다.')
+      else setSuccess(signupType === 'service'
+        ? '가입이 완료됐습니다. 로그인 후 서비스를 시작할 수 있습니다.'
+        : effectiveRole === 'admin'
+          ? '가입이 완료됐습니다. 슈퍼관리자가 승인하면 로그인하실 수 있습니다.'
+          : '가입이 완료됐습니다. 조직 관리자가 승인하면 로그인하실 수 있습니다.')
     }
   }
 
@@ -591,6 +600,25 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
                     <form onSubmit={handleSubmit}>
                   {mode === 'signup' && (
                     <>
+                      {/* 가입 유형 선택 */}
+                      <div style={{ display:'flex', gap:6, marginBottom:14 }}>
+                        {([
+                          { type: 'join' as const,    label: '조직에 가입', desc: '운영 중인 조직 구성원으로' },
+                          { type: 'service' as const, label: '서비스 시작', desc: '나만의 조직을 직접 운영' },
+                        ] as { type: 'join' | 'service'; label: string; desc: string }[]).map(({ type, label, desc }) => (
+                          <button key={type} type="button" onClick={() => setSignupType(type)} style={{
+                            flex:1, padding:'9px 10px', borderRadius:10, textAlign:'left',
+                            border:`2px solid ${signupType===type ? accent : 'rgba(20,23,28,0.12)'}`,
+                            background: signupType===type ? accentSoft : '#fff',
+                            cursor:'pointer', font:'inherit', transition:'all .15s',
+                          }}>
+                            <div style={{ fontSize:12, fontWeight:700, color: signupType===type ? accentInk : '#353A44' }}>{label}</div>
+                            <div style={{ fontSize:10.5, color:'#8A8F99', marginTop:2 }}>{desc}</div>
+                          </button>
+                        ))}
+                      </div>
+
+                      {signupType === 'join' && (
                       <div className="lmp-field">
                         <label style={{ display:'block', fontSize:11.5, fontWeight:600, color:'#353A44', marginBottom:5 }}>가입할 조직 *</label>
                         <select value={tenantId} onChange={e => setTenantId(e.target.value)} style={{ ...inputSt, padding:'0 14px', appearance:'none' as const }}>
@@ -598,7 +626,8 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
                           {tenants.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                         </select>
                       </div>
-                      {tenantId && (
+                      )}
+                      {signupType === 'join' && tenantId && (
                         <div className="lmp-field">
                           <label style={{ display:'block', fontSize:11.5, fontWeight:600, color:'#353A44', marginBottom:5 }}>활동 유형 *</label>
                           {tenantRoles === null
