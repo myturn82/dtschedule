@@ -64,6 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = useCallback(async (email: string, password: string): Promise<string | null> => {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (!error) return null
+    if (error.status === 429) return '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.'
     if (error.message === 'Email not confirmed') return '이메일 인증이 필요합니다. 가입 시 받은 인증 메일을 확인해 주세요.'
     if (error.message === 'Invalid login credentials') return '이메일 또는 비밀번호가 올바르지 않습니다.'
     return error.message
@@ -82,6 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       },
     })
     if (error) {
+      if (error.status === 429) return '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.'
       if (error.message === 'User already registered') return '이미 가입된 이메일입니다. 로그인 후 재신청해 주세요.'
       return error.message
     }
