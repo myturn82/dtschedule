@@ -68,16 +68,11 @@ export function ScheduleBackground({ topNavSlot, children }: ScheduleBackgroundP
     const shuffle = <T,>(arr: T[]) => { const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}; return a }
 
     function runCycle() {
-      nodes.forEach(n => n.classList.remove('visible','just-placed','fading'))
+      nodes.forEach(n => n.classList.remove('visible','fading'))
       const order = shuffle(nodes.map((_,i)=>i))
-      let prev: HTMLElement|null = null
       order.forEach((idx,i) => {
         timers.push(setTimeout(()=>{
-          const n=nodes[idx]
-          if(prev) prev.classList.remove('just-placed')
-          n.classList.add('visible','just-placed')
-          prev=n
-          timers.push(setTimeout(()=>n.classList.remove('just-placed'),260))
+          nodes[idx].classList.add('visible')
         },i*95))
       })
       const done = order.length*95+400

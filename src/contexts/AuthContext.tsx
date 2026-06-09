@@ -6,7 +6,7 @@ interface AuthState {
   profile: Profile | null
   myCustomer: Customer | null
   loading: boolean
-  refreshCustomer: () => Promise<void>
+  refreshCustomer: () => Promise<Customer | null>
   signIn: (email: string, password: string) => Promise<string | null>
   signUp: (email: string, password: string, name: string, role: 'volunteer' | '50plus' | 'team_leader' | 'admin', tenantId?: string, tenantRoleId?: string) => Promise<string | null>
   signInWithGoogle: () => Promise<string | null>
@@ -16,6 +16,8 @@ interface AuthState {
   getIdentities: () => Promise<{ provider: string }[]>
   signOut: () => Promise<void>
   deleteAccount: (tenantId?: string) => Promise<string | null>
+  resetPassword: (email: string) => Promise<string | null>
+  updatePassword: (password: string) => Promise<string | null>
 }
 
 const AuthContext = createContext<AuthState | null>(null)
@@ -27,11 +29,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (window.location.pathname === '/reset-password') { setLoading(false); return }
       if (session?.user) fetchProfile(session.user.id)
       else setLoading(false)
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') { setLoading(false); return }
+      if (window.location.pathname === '/reset-password') { setLoading(false); return }
       if (session?.user) fetchProfile(session.user.id)
       else { setProfile(null); setMyCustomer(null); setLoading(false) }
     })
@@ -49,9 +54,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(false)
   }
 
-  const refreshCustomer = useCallback(async () => {
+  const refreshCustomer = useCallback(async (): Promise<Customer | null> => {
     const { data: { session } } = await supabase.auth.getSession()
-    if (!session?.user) return
+    if (!session?.user) return null
     const { data } = await supabase
       .from('customers')
       .select('*')
@@ -59,6 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .eq('is_active', true)
       .maybeSingle()
     setMyCustomer(data ?? null)
+    return data ?? null
   }, [])
 
   const signIn = useCallback(async (email: string, password: string): Promise<string | null> => {
@@ -128,6 +134,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return (user?.identities ?? []).map(i => ({ provider: i.provider }))
   }, [])
 
+  const resetPassword = useCallback(async (email: string): Promise<string | null> => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    })
+    if (!error) return null
+    if (error.status === 429) return '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.'
+    return error.message
+  }, [])
+
+  const updatePassword = useCallback(async (password: string): Promise<string | null> => {
+    const { error } = await supabase.auth.updateUser({ password })
+    return error?.message ?? null
+  }, [])
+
   const signOut = useCallback(async () => {
     const { error } = await supabase.auth.signOut({ scope: 'global' })
     // 토큰 만료(403) 등으로 서버 로그아웃 실패 시 로컬 세션만 제거
@@ -155,6 +175,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       refreshCustomer,
       signIn, signUp, signInWithGoogle, signInWithKakao,
       linkGoogle, linkKakao, getIdentities, signOut, deleteAccount,
+      resetPassword, updatePassword,
     }}>
       {children}
     </AuthContext.Provider>

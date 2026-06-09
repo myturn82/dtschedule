@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { useTenant } from '../contexts/TenantContext'
 import { SlotEditor } from '../components/shared/SlotEditor'
+import { IndustryPicker } from '../components/IndustryPicker'
 import type { Tenant, TenantMode, Customer, PlanType } from '../types'
 
 // ─── Create form ──────────────────────────────────────────────────────────────
@@ -88,7 +89,7 @@ export function SuperAdminPage() {
   const [showCreateCustomer, setShowCreateCustomer] = useState(false)
   const [customerForm, setCustomerForm] = useState({ name: '', ownerEmail: '', plan: 'basic' as PlanType })
   const [customerSaving, setCustomerSaving] = useState(false)
-  const [createOrgCustomerId, setCreateOrgCustomerId] = useState<string>('00000000-0000-0000-0000-000000000001')
+  const [createOrgCustomerId, setCreateOrgCustomerId] = useState<string>('')
 
   // Org list filter
   const [filterCustomerId, setFilterCustomerId] = useState('')
@@ -837,11 +838,10 @@ export function SuperAdminPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {([
-                { key: 'slug',          label: 'Slug (소문자+하이픈)', placeholder: 'my-org',       required: true,  maxLength: 50 },
-                { key: 'name',          label: '조직명',               placeholder: '한서미용실',    required: true,  maxLength: 50 },
-                { key: 'business_type', label: '업종 (선택)',           placeholder: 'salon / volunteer',              maxLength: 50 },
-                { key: 'title',         label: '페이지 타이틀 (선택)',  placeholder: '스케줄',                         maxLength: 50 },
-                { key: 'theme_color',   label: '테마 색상 (선택)',      placeholder: '#2563eb',                        maxLength: 7  },
+                { key: 'slug',        label: 'Slug (소문자+하이픈)', placeholder: 'my-org',    required: true,  maxLength: 50 },
+                { key: 'name',        label: '조직명',               placeholder: '한서미용실', required: true,  maxLength: 50 },
+                { key: 'title',       label: '페이지 타이틀 (선택)',  placeholder: '스케줄',                    maxLength: 50 },
+                { key: 'theme_color', label: '테마 색상 (선택)',      placeholder: '#2563eb',                   maxLength: 7  },
               ] as { key: keyof CreateForm; label: string; placeholder: string; required?: boolean; maxLength?: number }[]).map(f => (
                 <div key={f.key}>
                   <label className="block text-xs text-[var(--color-text-secondary)] mb-1">{f.label}</label>
@@ -856,6 +856,13 @@ export function SuperAdminPage() {
                   />
                 </div>
               ))}
+              <div className="sm:col-span-2">
+                <IndustryPicker
+                  value={form.business_type}
+                  onChange={v => setForm(prev => ({ ...prev, business_type: v }))}
+                  inputCls={inputCls}
+                />
+              </div>
             </div>
 
             <div>
@@ -865,6 +872,7 @@ export function SuperAdminPage() {
                 onChange={e => setCreateOrgCustomerId(e.target.value)}
                 className={inputCls}
               >
+                <option value="">고객 계정 없음</option>
                 {customers.map(c => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}

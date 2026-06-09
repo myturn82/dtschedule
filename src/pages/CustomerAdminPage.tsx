@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { useTenant } from '../contexts/TenantContext'
 import { SlotEditor } from '../components/shared/SlotEditor'
+import { IndustryPicker } from '../components/IndustryPicker'
 import { PLAN_LABELS, PLAN_LIMITS } from '../types'
 import type { Tenant, TenantMode, PlanType } from '../types'
 
@@ -20,7 +21,7 @@ const EMPTY_FORM: CreateForm = { slug: '', name: '', title: '', business_type: '
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 
 export function CustomerAdminPage() {
-  const { profile, myCustomer, loading: authLoading, signOut, deleteAccount } = useAuth()
+  const { profile, myCustomer, loading: authLoading, signOut, deleteAccount, refreshCustomer } = useAuth()
   const { setTenant, reloadMemberships } = useTenant()
   const navigate = useNavigate()
 
@@ -32,7 +33,7 @@ export function CustomerAdminPage() {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false)
   const [showCreate, setShowCreate] = useState(false)
   const [form, setForm]             = useState<CreateForm>(EMPTY_FORM)
-  const [createSlots, setCreateSlots] = useState<string[]>(['09-12', '13-14', '14-16', '16-18', '20-22'])
+  const [createSlots, setCreateSlots] = useState<string[]>(['09-10', '10-11', '11-12', '12-13', '13-14', '14-15', '15-16', '16-17', '17-18'])
   const [saving, setSaving]         = useState(false)
 
   useEffect(() => {
@@ -85,6 +86,8 @@ export function CustomerAdminPage() {
     if (createSlots.length === 0) { setMessage('슬롯을 하나 이상 등록해야 합니다.'); return }
     setSaving(true)
     setMessage('')
+    const freshCustomer = await refreshCustomer()
+    const customerId = freshCustomer?.id ?? myCustomer.id
     const hasHalf = createSlots.some(s => s.includes('.'))
     const { data, error } = await supabase
       .from('tenants')
@@ -92,7 +95,7 @@ export function CustomerAdminPage() {
         slug: slugTrimmed,
         name: form.name.trim(),
         business_type: form.business_type.trim() || null,
-        customer_id: myCustomer.id,
+        customer_id: customerId,
         settings: {
           title: form.title.trim() || form.name.trim(),
           theme_color: form.theme_color.trim() || undefined,
@@ -108,7 +111,13 @@ export function CustomerAdminPage() {
       .select()
       .single()
     if (error) {
-      setMessage(`오류: ${error.message}`)
+      if (error.code === '23505' && error.message.includes('slug')) {
+        setMessage('오류: 이미 사용 중인 Slug입니다. 다른 Slug를 입력해 주세요.')
+      } else if (error.code === '23503' && error.message.includes('customer_id')) {
+        setMessage('오류: 서비스 계정 정보가 올바르지 않습니다. 페이지를 새로고침 후 다시 시도해 주세요.')
+      } else {
+        setMessage(`오류: ${error.message}`)
+      }
     } else if (data) {
       const ruleRows = [0, 1, 2, 3, 4, 5, 6].flatMap(day =>
         createSlots.map(slot => ({ tenant_id: data.id, day_of_week: day, time_slot: slot, is_open: true }))
@@ -218,11 +227,10 @@ export function CustomerAdminPage() {
             <h3 className="font-semibold text-[var(--color-text-primary)]">새 조직 만들기</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {([
-                { key: 'slug',          label: 'Slug (소문자+하이픈)', placeholder: 'my-org',    required: true  },
-                { key: 'name',          label: '조직명',               placeholder: '홍길동 미용실', required: true  },
-                { key: 'business_type', label: '업종 (선택)',           placeholder: 'salon'                    },
-                { key: 'title',         label: '페이지 타이틀 (선택)',  placeholder: '스케줄'                    },
-                { key: 'theme_color',   label: '테마 색상 (선택)',      placeholder: '#2563eb'                   },
+                { key: 'slug',        label: 'Slug (소문자+하이픈)', placeholder: 'my-org',    required: true  },
+                { key: 'name',        label: '조직명',               placeholder: '홍길동 미용실', required: true  },
+                { key: 'title',       label: '페이지 타이틀 (선택)',  placeholder: '스케줄'                    },
+                { key: 'theme_color', label: '테마 색상 (선택)',      placeholder: '#2563eb'                   },
               ] as { key: keyof CreateForm; label: string; placeholder: string; required?: boolean }[]).map(f => (
                 <div key={f.key}>
                   <label className="block text-xs text-[var(--color-text-secondary)] mb-1">{f.label}</label>
@@ -236,6 +244,13 @@ export function CustomerAdminPage() {
                   />
                 </div>
               ))}
+              <div className="sm:col-span-2">
+                <IndustryPicker
+                  value={form.business_type}
+                  onChange={v => setForm(prev => ({ ...prev, business_type: v }))}
+                  inputCls={inputCls}
+                />
+              </div>
             </div>
 
             <div>

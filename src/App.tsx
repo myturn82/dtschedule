@@ -14,6 +14,7 @@ import { CustomerAdminPage } from './pages/CustomerAdminPage'
 import { LandingPage }  from './pages/LandingPage'
 import { ConsentPage }  from './pages/ConsentPage'
 import { AuthPage }     from './pages/AuthPage'
+import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { useDarkMode } from './hooks/useDarkMode'
 
 function AppRoutes() {
@@ -36,9 +37,10 @@ function AppRoutes() {
       <Routes>
         <Route path="/"        element={<LandingPage />} />
         <Route path="/consent" element={<ConsentPage />} />
-        <Route path="/auth"    element={<AuthPage />} />
-        <Route path="/share"   element={<SharePage />} />
-        <Route path="*"        element={<Navigate to="/" replace />} />
+        <Route path="/auth"           element={<AuthPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/share"          element={<SharePage />} />
+        <Route path="*"               element={<Navigate to="/" replace />} />
       </Routes>
     )
   }

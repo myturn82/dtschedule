@@ -71,8 +71,11 @@ $$;
 
 -- ── profiles ──────────────────────────────────────────────────────────────────
 
-DROP POLICY IF EXISTS "profiles_select_all"        ON profiles;
-DROP POLICY IF EXISTS "profiles_superadmin_update" ON profiles;
+DROP POLICY IF EXISTS "profiles_select_all"         ON profiles;
+DROP POLICY IF EXISTS "profiles_superadmin_update"  ON profiles;
+DROP POLICY IF EXISTS "profiles_select_self"        ON profiles;
+DROP POLICY IF EXISTS "profiles_select_same_tenant" ON profiles;
+DROP POLICY IF EXISTS "profiles_select_superadmin"  ON profiles;
 
 -- 자기 자신 조회
 CREATE POLICY "profiles_select_self" ON profiles
@@ -165,7 +168,10 @@ CREATE POLICY "date_overrides_admin_all" ON date_overrides
 -- ── tenants ───────────────────────────────────────────────────────────────────
 -- 가입 전 조직 목록 선택 필요 → SELECT는 모두 허용 (이름/모드만 노출)
 
-DROP POLICY IF EXISTS "tenants_select_all" ON tenants;
+DROP POLICY IF EXISTS "tenants_select_all"        ON tenants;
+DROP POLICY IF EXISTS "tenants_admin_update"      ON tenants;
+DROP POLICY IF EXISTS "tenants_superadmin_delete" ON tenants;
+DROP POLICY IF EXISTS "tenants_superadmin_insert" ON tenants;
 
 CREATE POLICY "tenants_select_all" ON tenants
   FOR SELECT USING (true);
@@ -183,6 +189,7 @@ CREATE POLICY "tenants_superadmin_insert" ON tenants
 -- 가입 전 활동유형 선택 필요 → SELECT는 모두 허용
 
 DROP POLICY IF EXISTS "tenant_roles_select_all" ON tenant_roles;
+DROP POLICY IF EXISTS "tenant_roles_admin_all"  ON tenant_roles;
 
 CREATE POLICY "tenant_roles_select_all" ON tenant_roles
   FOR SELECT USING (true);
@@ -192,7 +199,12 @@ CREATE POLICY "tenant_roles_admin_all" ON tenant_roles
 
 -- ── tenant_members ────────────────────────────────────────────────────────────
 
-DROP POLICY IF EXISTS "tenant_members_self_insert" ON tenant_members;
+DROP POLICY IF EXISTS "tenant_members_self_insert"   ON tenant_members;
+DROP POLICY IF EXISTS "tenant_members_self_apply"    ON tenant_members;
+DROP POLICY IF EXISTS "tenant_members_self_select"   ON tenant_members;
+DROP POLICY IF EXISTS "tenant_members_tenant_select" ON tenant_members;
+DROP POLICY IF EXISTS "tenant_members_admin_update"  ON tenant_members;
+DROP POLICY IF EXISTS "tenant_members_admin_delete"  ON tenant_members;
 
 -- 자가 신청: role=member, is_approved=false 강제
 CREATE POLICY "tenant_members_self_apply" ON tenant_members
