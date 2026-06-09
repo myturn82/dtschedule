@@ -5,7 +5,7 @@ import { useAuth } from '../hooks/useAuth'
 import { ScheduleBackground } from '../components/auth/ScheduleBackground'
 
 type Tab       = 'login' | 'signup'
-type LoginStep = 'buttons' | 'email' | 'password'
+type LoginStep = 'buttons' | 'email' | 'password' | 'forgot'
 type JoinStep  = 'name' | 'password' | 'confirm' | 'choice' | 'org-name'
 
 const COUNTABLE: JoinStep[] = ['name', 'password', 'confirm', 'org-name']
@@ -87,7 +87,7 @@ const IPlus = () => (
 )
 
 export function AuthPage() {
-  const { profile, signIn, signUp, signInWithGoogle, signInWithKakao } = useAuth()
+  const { profile, signIn, signUp, signInWithGoogle, signInWithKakao, resetPassword } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
@@ -115,6 +115,9 @@ export function AuthPage() {
   const [orgName, setOrgName] = useState('')
   const [showJoinPw, setShowJoinPw] = useState(false)
   const [wizChoice, setWizChoice] = useState<'service' | 'join'>('service')
+
+  // Forgot password
+  const [forgotSent, setForgotSent] = useState(false)
 
   // Shared
   const [error, setError] = useState<string | null>(null)
@@ -147,6 +150,15 @@ export function AuthPage() {
     setLoading(false)
     if (err) setError(err)
     else { localStorage.setItem('lastLoginEmail', loginEmail); navigate('/', { replace: true }) }
+  }
+
+  async function handleForgotPassword() {
+    if (!loginEmail.trim() || !loginEmail.includes('@')) { setError('올바른 이메일을 입력해 주세요.'); return }
+    setError(null); setLoading(true)
+    const err = await resetPassword(loginEmail.trim())
+    setLoading(false)
+    if (err) { setError(err); return }
+    setForgotSent(true)
   }
 
   async function handleEmailNext() {
@@ -316,7 +328,10 @@ export function AuthPage() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '2px 0 10px' }}>
-                  <button style={{ fontSize: 12.5, color: 'var(--ink-500)', fontWeight: 500 }}>비밀번호를 잊으셨나요?</button>
+                  <button style={{ fontSize: 12.5, color: 'var(--ink-500)', fontWeight: 500 }}
+                    onClick={() => { setForgotSent(false); setError(null); setLoginStep('forgot') }}>
+                    비밀번호를 잊으셨나요?
+                  </button>
                 </div>
                 {error && <div className="af-err">{error}</div>}
                 <button className="af-btn af-btn-primary" onClick={handleLogin}
@@ -326,6 +341,48 @@ export function AuthPage() {
                 <button className="af-back-link" onClick={() => { setLoginStep('email'); setLoginPw(''); setError(null) }}>
                   <IBack /> 뒤로
                 </button>
+              </>
+            )}
+            {loginStep === 'forgot' && (
+              <>
+                {forgotSent ? (
+                  <>
+                    <div style={{ textAlign: 'center', padding: '8px 0 4px' }}>
+                      <div style={{ fontSize: 36, marginBottom: 8 }}>📧</div>
+                      <h3 className="af-title sm" style={{ marginBottom: 6 }}>이메일을 확인해 주세요</h3>
+                      <p className="af-sub" style={{ marginBottom: 0 }}>
+                        <strong>{loginEmail}</strong>로<br />비밀번호 재설정 링크를 보냈습니다.
+                      </p>
+                    </div>
+                    <button className="af-btn af-btn-primary" style={{ marginTop: 20 }}
+                      onClick={() => { setLoginStep('buttons'); setForgotSent(false); setError(null) }}>
+                      로그인으로 돌아가기
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="af-title sm" style={{ marginBottom: 4 }}>비밀번호 재설정</h3>
+                    <p className="af-sub">가입한 이메일로 재설정 링크를 보내드립니다.</p>
+                    <div className="af-field">
+                      <label className="af-label">이메일</label>
+                      <div className="af-input-wrap">
+                        <span className="af-input-ic">{IMail()}</span>
+                        <input className="af-input" type="email" value={loginEmail}
+                          onChange={e => setLoginEmail(e.target.value)}
+                          placeholder="you@example.com" autoComplete="email" autoFocus
+                          onKeyDown={e => { if (e.key === 'Enter') handleForgotPassword() }} />
+                      </div>
+                    </div>
+                    {error && <div className="af-err">{error}</div>}
+                    <button className="af-btn af-btn-primary" style={{ marginTop: 6, opacity: loading ? 0.6 : 1 }}
+                      disabled={loading} onClick={handleForgotPassword}>
+                      {loading ? '전송 중...' : <>링크 보내기 <IArrow /></>}
+                    </button>
+                    <button className="af-back-link" onClick={() => { setLoginStep('password'); setError(null) }}>
+                      <IBack /> 뒤로
+                    </button>
+                  </>
+                )}
               </>
             )}
           </>
