@@ -175,21 +175,24 @@ export function SuperAdminPage() {
   async function executeHardDelete() {
     if (!hardDeleteConfirm) return
     setHardDeleteSaving(true)
-    const { error } = await supabase
-      .from('customers')
-      .delete()
-      .eq('id', hardDeleteConfirm.id)
-    if (error) {
-      setMessage(`삭제 오류: ${error.message}`)
-    } else {
-      const deletedId = hardDeleteConfirm.id
-      setDeletionRequests(prev => prev.filter(c => c.id !== deletedId))
-      setCustomers(prev => prev.filter(c => c.id !== deletedId))
-      setTenants(prev => prev.filter(t => t.customer_id !== deletedId))
-      setMessage(`'${hardDeleteConfirm.name}' 계정이 완전히 삭제됐습니다.`)
+    try {
+      const { error } = await supabase
+        .from('customers')
+        .delete()
+        .eq('id', hardDeleteConfirm.id)
+      if (error) {
+        setMessage(`삭제 오류: ${error.message}`)
+      } else {
+        const deletedId = hardDeleteConfirm.id
+        setDeletionRequests(prev => prev.filter(c => c.id !== deletedId))
+        setCustomers(prev => prev.filter(c => c.id !== deletedId))
+        setTenants(prev => prev.filter(t => t.customer_id !== deletedId))
+        setMessage(`'${hardDeleteConfirm.name}' 계정이 완전히 삭제됐습니다.`)
+      }
+    } finally {
+      setHardDeleteSaving(false)
+      setHardDeleteConfirm(null)
     }
-    setHardDeleteSaving(false)
-    setHardDeleteConfirm(null)
   }
 
   async function createCustomer(e: React.FormEvent) {
@@ -674,7 +677,8 @@ export function SuperAdminPage() {
             </h2>
             <ul className="flex flex-col gap-2">
               {deletionRequests.map(c => {
-                const elapsed = Math.floor((Date.now() - new Date(c.deletion_requested_at!).getTime()) / 86_400_000)
+                if (!c.deletion_requested_at) return null
+                const elapsed = Math.floor((Date.now() - new Date(c.deletion_requested_at).getTime()) / 86_400_000)
                 const canDelete = elapsed >= 30
                 return (
                   <li key={c.id} className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-2xl px-4 py-3">
