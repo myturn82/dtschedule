@@ -127,6 +127,16 @@ export function AuthPage() {
     if (profile && !signupInProgress.current) navigate('/', { replace: true })
   }, [profile, navigate])
 
+  // 회원가입 탭은 서비스 이용 동의(/consent)를 거친 직후에만 1회 접근 허용 (재진입 시 다시 동의 필요)
+  useEffect(() => {
+    if (tab !== 'signup') return
+    if (sessionStorage.getItem('vs_consent_ok') === '1') {
+      sessionStorage.removeItem('vs_consent_ok')
+    } else {
+      navigate('/consent', { replace: true })
+    }
+  }, [tab, navigate])
+
   function switchTab(t: Tab) {
     signupInProgress.current = false
     setTab(t); setError(null)
