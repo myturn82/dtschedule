@@ -81,7 +81,10 @@ export function ConsentPage() {
 
         <button className="af-btn af-btn-primary" disabled={!canProceed}
           style={{ marginTop: 18 }}
-          onClick={() => navigate('/auth?tab=signup')}>
+          onClick={() => {
+            sessionStorage.setItem('vs_consent_ok', '1')
+            navigate('/auth?tab=signup')
+          }}>
           동의 및 계속하기 {canProceed && <IArrow />}
         </button>
       </div>
