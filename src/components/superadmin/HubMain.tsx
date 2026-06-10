@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { Customer, PlanType, Tenant } from '../../types'
 import { colorOf, initialsOf } from '../../lib/avatarColor'
 import { SlotEditor } from '../shared/SlotEditor'
@@ -8,6 +9,29 @@ import { OrgCardsView } from './OrgCardsView'
 import { EMPTY_ORG_FORM, type CreateOrgForm } from './createOrgForm'
 
 const inputCls = 'w-full px-3 py-2 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]'
+
+const THEME_COLORS = [
+  // 레드
+  '#fca5a5', '#f87171', '#ef4444', '#dc2626', '#b91c1c',
+  // 오렌지
+  '#fdba74', '#fb923c', '#f97316', '#ea580c', '#c2410c',
+  // 앰버
+  '#fcd34d', '#fbbf24', '#f59e0b', '#d97706', '#b45309',
+  // 그린
+  '#86efac', '#4ade80', '#22c55e', '#16a34a', '#15803d',
+  // 에메랄드/틸
+  '#6ee7b7', '#34d399', '#10b981', '#059669', '#047857',
+  // 사이안
+  '#67e8f9', '#22d3ee', '#06b6d4', '#0891b2', '#0e7490',
+  // 블루
+  '#93c5fd', '#60a5fa', '#3b82f6', '#2563eb', '#1d4ed8',
+  // 인디고
+  '#a5b4fc', '#818cf8', '#6366f1', '#4f46e5', '#4338ca',
+  // 바이올렛/퍼플
+  '#c4b5fd', '#a78bfa', '#8b5cf6', '#7c3aed', '#6d28d9',
+  // 핑크/로즈
+  '#f9a8d4', '#f472b6', '#ec4899', '#db2777', '#be185d',
+]
 
 const SYSTEM_CUSTOMER_ID = '00000000-0000-0000-0000-000000000001'
 
@@ -55,6 +79,8 @@ export function HubMain({
   updateCustomerPlan, toggleCustomerActive, startDeleteCustomer, restoreCustomer, restoringId, onHardDelete,
   showCreate, setShowCreate, form, setForm, createSlots, setCreateSlots, saving, onCreateTenant,
 }: Props) {
+  const [colorOpen, setColorOpen] = useState(false)
+
   const isSystem = customer.id === SYSTEM_CUSTOMER_ID
   const { bg, fg } = colorOf(customer.name)
 
@@ -225,9 +251,8 @@ export function HubMain({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {([
               { key: 'slug', label: 'Slug (소문자+하이픈)', placeholder: 'my-org', required: true, maxLength: 50 },
-              { key: 'name', label: '조직명', placeholder: '한서미용실', required: true, maxLength: 50 },
+              { key: 'name', label: '조직명', placeholder: '조직명', required: true, maxLength: 50 },
               { key: 'title', label: '페이지 타이틀 (선택)', placeholder: '스케줄', maxLength: 50 },
-              { key: 'theme_color', label: '테마 색상 (선택)', placeholder: '#2563eb', maxLength: 7 },
             ] as { key: keyof CreateOrgForm; label: string; placeholder: string; required?: boolean; maxLength?: number }[]).map(f => (
               <div key={f.key}>
                 <label className="block text-xs text-[var(--color-text-secondary)] mb-1">{f.label}</label>
@@ -249,6 +274,59 @@ export function HubMain({
                 inputCls={inputCls}
               />
             </div>
+          </div>
+
+          {/* 테마 색상 스워치 피커 */}
+          <div>
+            <button
+              type="button"
+              onClick={() => setColorOpen(!colorOpen)}
+              className="flex items-center gap-2 text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+            >
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: colorOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }}>
+                <path d="M4 2l4 4-4 4" />
+              </svg>
+              <span>테마 색상 (선택)</span>
+              {form.theme_color && <span className="w-4 h-4 rounded-sm border border-[var(--color-border-strong)] inline-block" style={{ background: form.theme_color }} />}
+            </button>
+            {colorOpen && (
+              <div className="mt-2 space-y-2">
+                <div className="flex flex-wrap gap-1.5">
+                  {THEME_COLORS.map(color => (
+                    <button
+                      key={color}
+                      type="button"
+                      title={color}
+                      onClick={() => setForm(prev => ({ ...prev, theme_color: prev.theme_color === color ? '' : color }))}
+                      className="w-7 h-7 rounded-lg border-2 transition-transform hover:scale-110 flex items-center justify-center flex-shrink-0"
+                      style={{ background: color, borderColor: form.theme_color === color ? '#1f2937' : 'transparent', boxShadow: form.theme_color === color ? '0 0 0 1px #fff inset' : undefined }}
+                    >
+                      {form.theme_color === color && (
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                          <path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  {form.theme_color && <span className="w-6 h-6 rounded-md border border-[var(--color-border-strong)] flex-shrink-0" style={{ background: form.theme_color }} />}
+                  <input
+                    type="text"
+                    placeholder="직접 입력 (#2563eb)"
+                    maxLength={7}
+                    value={form.theme_color}
+                    onChange={e => setForm(prev => ({ ...prev, theme_color: e.target.value }))}
+                    className={inputCls + ' text-xs py-1.5 font-mono'}
+                  />
+                  {form.theme_color && (
+                    <button type="button" onClick={() => setForm(prev => ({ ...prev, theme_color: '' }))} className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] flex-shrink-0">
+                      초기화
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           <div>

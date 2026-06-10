@@ -697,9 +697,30 @@ export function SuperAdminPage() {
             />
           ) : (
             <div className="hub-main">
-              <p className="text-center text-sm text-[var(--color-text-muted)] py-16">
-                {customers.length === 0 ? '고객 계정이 없습니다. 좌측에서 새 고객을 추가해 주세요.' : '고객을 선택해 주세요.'}
-              </p>
+              <div className="hub-breadcrumb">
+                <button
+                  onClick={() => setRailOpen(true)}
+                  className="hidden max-[1000px]:inline-flex items-center justify-center w-7 h-7 rounded-lg border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] mr-1"
+                  title="고객 목록"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </button>
+                <span>계정 허브</span>
+              </div>
+              {customers.length === 0 ? (
+                <div className="flex flex-col items-center gap-4 py-20 text-center">
+                  <p className="text-sm text-[var(--color-text-muted)]">등록된 고객 계정이 없습니다.</p>
+                  <button
+                    onClick={() => { setShowCreateCustomer(true); setRailOpen(true) }}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-colors"
+                    style={{ background: 'var(--color-brand-primary)' }}
+                  >
+                    + 새 고객 추가
+                  </button>
+                </div>
+              ) : (
+                <p className="text-center text-sm text-[var(--color-text-muted)] py-16">고객을 선택해 주세요.</p>
+              )}
             </div>
           )}
 
