@@ -1,7 +1,7 @@
 {
   "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"cd \\\"d:/claudePrj/volunteer-schedule\\\" && vercel env add VITE_SUPABASE_URL production <<< \\\"https://bjnmaajhcmhxwonybnqc.supabase.co\\\" 2>&1\",\"timeout\":30000,\"description\":\"Set Supabase URL...",
-  "error": "Exit code 1\n<claude-code-hint v=\"1\" type=\"plugin\" value=\"vercel@claude-plugins-official\" />\n{\n  \"status\": \"error\",\n  \"reason\": \"not_linked\",\n  \"message\": \"Your codebase isn't linked to a project on Vercel. Run vercel link to begin. Use --yes for non-interactive; use --scope or --project to specify team or project. Then run your env add command.\",\n  \"next\": [\n    {\n      \"command\": \"vercel link --scope <scope> --yes\"\n    },\n    {\n      \"command\": \"vercel env add VITE_SUPABASE_URL production --yes...",
-  "timestamp": "2026-05-07T12:58:43.771Z",
+  "tool_input_preview": "{\"command\":\"cd \\\"C:\\\\claudePrj\\\\dtschedule\\\" && npx supabase db push --project-ref mcuszdvophmqrwostcah\",\"timeout\":120000,\"description\":\"Push migration 041 to dev DB\"}",
+  "error": "Exit code 1\nDESCRIPTION\n  Push new migrations to the remote database.\n\nUSAGE\n  supabase db push [flags]\n\nFLAGS\n  --include-all            Include all migrations not found on remote history table.\n  --include-roles          Include custom roles from supabase/roles.sql.\n  --include-seed           Include seed data from your config.\n  --dry-run                Print the migrations that would be applied, but don't actually apply them.\n  --db-url string          Pushes to the database specified by the...",
+  "timestamp": "2026-06-11T04:52:54.888Z",
   "retry_count": 1
 }

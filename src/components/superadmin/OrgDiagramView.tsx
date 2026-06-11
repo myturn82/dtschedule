@@ -1,5 +1,5 @@
 import type { Tenant } from '../../types'
-import { colorOf, initialsOf } from '../../lib/avatarColor'
+import { colorOf, avatarColorFor, initialsOf } from '../../lib/avatarColor'
 import { displayMode } from '../../lib/tenantMode'
 
 interface Props {
@@ -26,7 +26,7 @@ export function OrgDiagramView({ customerName, tenants, memberCounts, pendingCou
       </div>
       <div className="hub-dg-branches">
         {tenants.map(t => {
-          const { bg, fg } = colorOf(t.name)
+          const { bg, fg } = avatarColorFor(t.name, t.settings?.theme_color)
           const pending = pendingCounts[t.id] ?? 0
           return (
             <div

@@ -12,6 +12,29 @@ import { LEGEND_COLOR_STYLES } from '../components/schedule/Legend'
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
 const HEX_COLOR_RE = /^#[0-9A-Fa-f]{6}$/
 
+const THEME_COLORS = [
+  // 레드
+  '#fca5a5', '#f87171', '#ef4444', '#dc2626', '#b91c1c',
+  // 오렌지
+  '#fdba74', '#fb923c', '#f97316', '#ea580c', '#c2410c',
+  // 앰버
+  '#fcd34d', '#fbbf24', '#f59e0b', '#d97706', '#b45309',
+  // 그린
+  '#86efac', '#4ade80', '#22c55e', '#16a34a', '#15803d',
+  // 에메랄드/틸
+  '#6ee7b7', '#34d399', '#10b981', '#059669', '#047857',
+  // 사이안
+  '#67e8f9', '#22d3ee', '#06b6d4', '#0891b2', '#0e7490',
+  // 블루
+  '#93c5fd', '#60a5fa', '#3b82f6', '#2563eb', '#1d4ed8',
+  // 인디고
+  '#a5b4fc', '#818cf8', '#6366f1', '#4f46e5', '#4338ca',
+  // 바이올렛/퍼플
+  '#c4b5fd', '#a78bfa', '#8b5cf6', '#7c3aed', '#6d28d9',
+  // 핑크/로즈
+  '#f9a8d4', '#f472b6', '#ec4899', '#db2777', '#be185d',
+]
+
 function makeTimeOpt(halfHours: number) {
   const h = Math.floor(halfHours / 2)
   const m = halfHours % 2 === 0 ? '00' : '30'
@@ -51,7 +74,7 @@ export function AdminPage() {
   const {
     members, scheduleRules, dateOverrides, loading,
     reloadMembers,
-    addMember, removeMember, updateMemberTenantRole, updateMemberAccess,
+    addMember, removeMember, updateMemberName, updateMemberTenantRole, updateMemberAccess,
     toggleScheduleRule, upsertScheduleRulesForSlots,
     addDateOverride, deleteDateOverride,
     updateTenantSettings, updateTenantName, approveUser,
@@ -74,6 +97,11 @@ export function AdminPage() {
   const [expandedPrefUserId, setExpandedPrefUserId] = useState<string | null>(null)
   const [prefDays, setPrefDays] = useState<number[]>([])
   const [prefLimit, setPrefLimit] = useState<string>('')
+
+  // 회원 성명 수정
+  const [editingNameUserId, setEditingNameUserId] = useState<string | null>(null)
+  const [editName, setEditName] = useState('')
+  const [nameSaving, setNameSaving] = useState(false)
 
   // 직접 등록 (이메일 인증 없이 테스트 계정 생성)
   const [showDirectCreate, setShowDirectCreate] = useState(false)
@@ -98,6 +126,7 @@ export function AdminPage() {
   const [settingsName, setSettingsName] = useState('')
   const [settingsTitle, setSettingsTitle] = useState('')
   const [settingsTheme, setSettingsTheme] = useState('')
+  const [colorOpen, setColorOpen] = useState(false)
 
   const [slotLabels, setSlotLabels] = useState<Record<string, string>>({})
   const [roleRatios, setRoleRatios] = useState<Record<string, number>>({})
@@ -207,6 +236,15 @@ export function AdminPage() {
     msg(`${addEmail} 회원이 추가됐습니다.`)
     setAddEmail('')
     setShowAddMember(false)
+  }
+
+  async function handleSaveMemberName(userId: string) {
+    if (!editName.trim()) { msg('이름을 입력해 주세요.', true); return }
+    setNameSaving(true)
+    const err = await updateMemberName(userId, editName.trim())
+    setNameSaving(false)
+    if (err) { msg(err, true); return }
+    setEditingNameUserId(null)
   }
 
   async function addLegendItem() {
@@ -553,7 +591,10 @@ export function AdminPage() {
               <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M13 16l-5-6 5-6"/></svg>
             </button>
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-xl bg-[var(--color-brand-primary)] text-white flex items-center justify-center text-[13px] font-bold shrink-0 shadow-[0_4px_12px_-4px_var(--color-brand-primary)]">
+              <div
+                className={`w-8 h-8 rounded-xl text-white flex items-center justify-center text-[13px] font-bold shrink-0 ${adminTenant?.settings?.theme_color ? '' : 'bg-[var(--color-brand-primary)] shadow-[0_4px_12px_-4px_var(--color-brand-primary)]'}`}
+                style={adminTenant?.settings?.theme_color ? { background: adminTenant.settings.theme_color } : undefined}
+              >
                 {adminTenant?.name?.[0] ?? '관'}
               </div>
               <div className="min-w-0">
@@ -747,7 +788,31 @@ export function AdminPage() {
                         <Fragment key={m.user_id}>
                           <tr className="hover:bg-[var(--color-surface-hover)]">
                             <td className="px-4 py-3 font-medium text-[var(--color-text-primary)] text-center">
-                              {m.profile?.name ?? '-'}
+                              {editingNameUserId === m.user_id ? (
+                                <span className="flex items-center justify-center gap-1">
+                                  <input
+                                    value={editName}
+                                    onChange={e => setEditName(e.target.value)}
+                                    onKeyDown={e => { if (e.key === 'Enter') handleSaveMemberName(m.user_id); if (e.key === 'Escape') setEditingNameUserId(null) }}
+                                    className="text-xs px-1.5 py-1 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] w-20 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]"
+                                    autoFocus
+                                  />
+                                  <button onClick={() => handleSaveMemberName(m.user_id)} disabled={nameSaving}
+                                    className="px-1.5 py-1 text-[10px] bg-[var(--color-brand-primary)] text-white rounded-lg disabled:opacity-40">
+                                    {nameSaving ? '...' : '저장'}
+                                  </button>
+                                  <button onClick={() => setEditingNameUserId(null)}
+                                    className="px-1.5 py-1 text-[10px] border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] rounded-lg">취소</button>
+                                </span>
+                              ) : (
+                                <button
+                                  onClick={() => { setEditingNameUserId(m.user_id); setEditName(m.profile?.name ?? '') }}
+                                  className="hover:text-[var(--color-brand-primary)] transition-colors"
+                                  title="성명 수정"
+                                >
+                                  {m.profile?.name ?? '-'}
+                                </button>
+                              )}
                               {m.user_id === profile.id && <span className="ml-1.5 text-xs text-[var(--color-text-muted)]">(나)</span>}
                             </td>
                             <td className="px-4 py-3 text-[var(--color-text-muted)] hidden sm:table-cell text-xs text-center">{m.profile?.email ?? '-'}</td>
@@ -1263,8 +1328,55 @@ export function AdminPage() {
                     <input type="text" value={settingsTitle} onChange={e => setSettingsTitle(e.target.value)} maxLength={50} className={inputCls + ' w-full'} />
                   </div>
                   <div>
-                    <label className="block text-xs text-[var(--color-text-muted)] mb-1">테마 색상 (#RRGGBB, 선택)</label>
-                    <input type="text" value={settingsTheme} onChange={e => setSettingsTheme(e.target.value)} placeholder="#2563eb" maxLength={7} className={inputCls + ' w-full'} />
+                    <button
+                      type="button"
+                      onClick={() => setColorOpen(!colorOpen)}
+                      className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: colorOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }}>
+                        <path d="M4 2l4 4-4 4" />
+                      </svg>
+                      <span>테마 색상 (선택)</span>
+                      {settingsTheme && <span className="w-4 h-4 rounded-sm border border-[var(--color-border-strong)] inline-block" style={{ background: settingsTheme }} />}
+                    </button>
+                    {colorOpen && (
+                      <div className="mt-2 space-y-2">
+                        <div className="flex flex-wrap gap-1.5">
+                          {THEME_COLORS.map(color => (
+                            <button
+                              key={color}
+                              type="button"
+                              title={color}
+                              onClick={() => setSettingsTheme(prev => prev === color ? '' : color)}
+                              className="w-7 h-7 rounded-lg border-2 transition-transform hover:scale-110 flex items-center justify-center flex-shrink-0"
+                              style={{ background: color, borderColor: settingsTheme === color ? '#1f2937' : 'transparent', boxShadow: settingsTheme === color ? '0 0 0 1px #fff inset' : undefined }}
+                            >
+                              {settingsTheme === color && (
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                  <path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {settingsTheme && <span className="w-6 h-6 rounded-md border border-[var(--color-border-strong)] flex-shrink-0" style={{ background: settingsTheme }} />}
+                          <input
+                            type="text"
+                            placeholder="직접 입력 (#2563eb)"
+                            maxLength={7}
+                            value={settingsTheme}
+                            onChange={e => setSettingsTheme(e.target.value)}
+                            className={inputCls + ' text-xs py-1.5 font-mono w-full'}
+                          />
+                          {settingsTheme && (
+                            <button type="button" onClick={() => setSettingsTheme('')} className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] flex-shrink-0">
+                              초기화
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 

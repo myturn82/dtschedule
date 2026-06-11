@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useTenant } from '../contexts/TenantContext'
 import { supabase } from '../lib/supabase'
 import { ScheduleBackground } from '../components/auth/ScheduleBackground'
+import { isValidPhone } from '../lib/phone'
 
 interface TenantRole { id: string; name: string; display_order: number }
 
@@ -53,6 +54,7 @@ export function PendingPage() {
   }, [])
 
   const [customerName, setCustomerName] = useState('')
+  const [customerPhone, setCustomerPhone] = useState('')
   const [customerCreating, setCustomerCreating] = useState(false)
   const [showForm, setShowForm] = useState(false)
 
@@ -169,9 +171,10 @@ export function PendingPage() {
   async function handleCreateCustomer(e: React.FormEvent) {
     e.preventDefault()
     if (!profile || !customerName.trim()) return
+    if (!isValidPhone(customerPhone)) { setError('올바른 전화번호를 입력해 주세요. (예: 010-1234-5678)'); return }
     setCustomerCreating(true)
     const { data, error } = await supabase
-      .from('customers').insert({ name: customerName.trim(), owner_user_id: profile.id, plan: 'basic' }).select().single()
+      .from('customers').insert({ name: customerName.trim(), phone: customerPhone.trim(), owner_user_id: profile.id, plan: 'basic' }).select().single()
     if (error) { setError(`오류: ${error.message}`); setCustomerCreating(false); return }
     if (data) { window.location.href = '/customer-admin'; return }
     setCustomerCreating(false)
@@ -256,6 +259,11 @@ export function PendingPage() {
                   <label style={labelSt}>서비스 계정 이름</label>
                   <input className="af-input plain" type="text" required value={customerName}
                     onChange={e => setCustomerName(e.target.value)} placeholder="예: 홍길동 미용실" />
+                </div>
+                <div className="af-field">
+                  <label style={labelSt}>전화번호</label>
+                  <input className="af-input plain" type="tel" required value={customerPhone}
+                    onChange={e => setCustomerPhone(e.target.value)} placeholder="예: 010-1234-5678" />
                 </div>
                 {error && <div className="af-err">{error}</div>}
                 <div className="af-btn-row">

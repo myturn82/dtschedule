@@ -49,8 +49,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
       supabase.from('customers').select('*').eq('owner_user_id', userId).maybeSingle(),
     ])
-    setProfile(profileRes.data)
+    let profileData = profileRes.data
     setMyCustomer(customerRes.data ?? null)
+
+    // 소셜 로그인은 가입 메타데이터로 동의 시각을 전달할 수 없으므로,
+    // /consent 페이지를 거쳐온 직후라면 여기서 한 번 기록한다.
+    const consentTs = sessionStorage.getItem('vs_consent_ts')
+    if (profileData && !profileData.terms_agreed_at && consentTs) {
+      const { data } = await supabase
+        .from('profiles')
+        .update({ terms_agreed_at: consentTs, privacy_agreed_at: consentTs })
+        .eq('id', userId)
+        .select('*')
+        .maybeSingle()
+      if (data) profileData = data
+      sessionStorage.removeItem('vs_consent_ts')
+    }
+
+    setProfile(profileData)
     setLoading(false)
   }
 
@@ -76,12 +92,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const signUp = useCallback(async (email: string, password: string, name: string, role: 'volunteer' | '50plus' | 'team_leader' | 'admin', tenantId?: string, tenantRoleId?: string): Promise<string | null> => {
+    const consentTs = sessionStorage.getItem('vs_consent_ts') ?? new Date().toISOString()
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           name, role,
+          terms_agreed_at: consentTs,
+          privacy_agreed_at: consentTs,
           ...(tenantId ? { tenant_id: tenantId } : {}),
           ...(tenantRoleId ? { tenant_role_id: tenantRoleId } : {}),
         },
@@ -93,6 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return error.message
     }
     if (data.user?.identities?.length === 0) return '이미 가입된 이메일입니다. 로그인 후 재신청해 주세요.'
+    sessionStorage.removeItem('vs_consent_ts')
     return null
   }, [])
 

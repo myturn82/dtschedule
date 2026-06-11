@@ -1,7 +1,7 @@
 -- ============================================================
 -- 운영 DB 초기화 스크립트 (전체 재생성)
 -- 생성일: 2026-06-10
--- 기준 마이그레이션: 001 ~ 037
+-- 기준 마이그레이션: 001 ~ 041
 --
 -- ⚠️  주의: 이 스크립트는 모든 데이터를 삭제합니다.
 --           Supabase SQL Editor에서 직접 실행하세요.
@@ -26,6 +26,7 @@ DROP FUNCTION IF EXISTS public.is_super_admin_caller()          CASCADE;
 DROP FUNCTION IF EXISTS public.shares_tenant_with(uuid)         CASCADE;
 DROP FUNCTION IF EXISTS public.customer_has_active_tenant(uuid) CASCADE;
 DROP FUNCTION IF EXISTS public.cascade_customer_soft_delete()   CASCADE;
+DROP FUNCTION IF EXISTS public.admin_update_member_name(uuid, text) CASCADE;
 
 -- 테이블 삭제 (CASCADE로 FK·인덱스·정책 자동 제거)
 DROP TABLE IF EXISTS plan_limits    CASCADE;
@@ -50,10 +51,10 @@ CREATE TABLE profiles (
   name           text        NOT NULL,
   email          text,
   avatar_url     text,
-  role           text        NOT NULL DEFAULT 'volunteer'
-                             CHECK (role IN ('admin', 'volunteer', '50plus')),
   is_approved    boolean     NOT NULL DEFAULT false,
   is_super_admin boolean     NOT NULL DEFAULT false,
+  terms_agreed_at   timestamptz,
+  privacy_agreed_at timestamptz,
   created_at     timestamptz NOT NULL DEFAULT now()
 );
 
@@ -61,6 +62,7 @@ CREATE TABLE profiles (
 CREATE TABLE customers (
   id                    uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   name                  text        NOT NULL,
+  phone                 text,
   owner_user_id         uuid        REFERENCES profiles(id) ON DELETE SET NULL,
   plan                  text        NOT NULL DEFAULT 'basic'
                                     CHECK (plan IN ('basic', 'pro', 'business')),
@@ -299,6 +301,41 @@ SET search_path = public AS $$
   );
 $$;
 
+-- 조직 관리자(이상)가 멤버의 성명을 직접 수정할 수 있는 RPC
+-- 카카오 등 소셜 로그인 시 닉네임/계정ID가 성명으로 들어가는 경우를 관리자가 보정할 수 있도록 함
+CREATE OR REPLACE FUNCTION public.admin_update_member_name(p_user_id uuid, p_name text)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_name text := trim(p_name);
+BEGIN
+  IF v_name = '' THEN
+    RAISE EXCEPTION '이름을 입력해 주세요.';
+  END IF;
+
+  IF NOT (
+    is_super_admin_caller()
+    OR EXISTS (
+      SELECT 1 FROM tenant_members tm_target
+      JOIN tenant_members tm_admin
+        ON tm_admin.tenant_id = tm_target.tenant_id
+       AND tm_admin.user_id = auth.uid()
+       AND tm_admin.role = 'admin'
+      WHERE tm_target.user_id = p_user_id
+    )
+  ) THEN
+    RAISE EXCEPTION '권한이 없습니다.';
+  END IF;
+
+  UPDATE profiles SET name = v_name WHERE id = p_user_id;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.admin_update_member_name(uuid, text) TO authenticated;
+
 
 -- ────────────────────────────────────────────────────────────
 -- STEP 6. RLS 정책
@@ -487,7 +524,7 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger
 LANGUAGE plpgsql SECURITY DEFINER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, name, email, avatar_url, role, is_approved, is_super_admin)
+  INSERT INTO public.profiles (id, name, email, avatar_url, is_approved, is_super_admin, terms_agreed_at, privacy_agreed_at)
   VALUES (
     new.id,
     COALESCE(
@@ -500,9 +537,10 @@ BEGIN
       new.raw_user_meta_data->>'avatar_url',
       new.raw_user_meta_data->>'picture'
     ),
-    'volunteer',  -- 항상 volunteer, 메타데이터 무시
     false,        -- 관리자 승인 필요
-    false         -- DB에서만 super_admin 부여
+    false,        -- DB에서만 super_admin 부여
+    (new.raw_user_meta_data->>'terms_agreed_at')::timestamptz,
+    (new.raw_user_meta_data->>'privacy_agreed_at')::timestamptz
   )
   ON CONFLICT (id) DO NOTHING;
 
