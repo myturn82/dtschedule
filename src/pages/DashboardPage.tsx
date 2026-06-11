@@ -200,7 +200,9 @@ export function DashboardPage() {
           <header className="flex items-center gap-3 px-4 py-3 sm:px-5 sm:py-4 border-b border-[var(--color-border)]">
             <div
               className="w-[38px] h-[38px] rounded-[11px] text-[17px] font-bold flex items-center justify-center shrink-0 select-none"
-              style={{ background: 'var(--tint-break)', color: 'var(--tint-break-ink)' }}
+              style={tenant?.settings?.theme_color
+                ? { background: tenant.settings.theme_color, color: '#fff' }
+                : { background: 'var(--tint-break)', color: 'var(--tint-break-ink)' }}
             >
               {tenant?.name?.charAt(0) ?? '?'}
             </div>

@@ -11,6 +11,7 @@ import { PendingApprovalsBanner, type PendingMember } from '../components/supera
 import { PlanLimitsPanel } from '../components/superadmin/PlanLimitsPanel'
 import { EMPTY_ORG_FORM, SLUG_RE, type CreateOrgForm } from '../components/superadmin/createOrgForm'
 import { displayMode } from '../lib/tenantMode'
+import { isValidPhone } from '../lib/phone'
 import '../styles/account-hub.css'
 
 // ─── SuperAdminPage ───────────────────────────────────────────────────────────
@@ -77,7 +78,7 @@ export function SuperAdminPage() {
   // Customer management state
   const [customers, setCustomers] = useState<Customer[]>([])
   const [showCreateCustomer, setShowCreateCustomer] = useState(false)
-  const [customerForm, setCustomerForm] = useState({ name: '', ownerEmail: '', plan: 'basic' as PlanType })
+  const [customerForm, setCustomerForm] = useState({ name: '', phone: '', ownerEmail: '', plan: 'basic' as PlanType })
   const [customerSaving, setCustomerSaving] = useState(false)
   const [restoringId, setRestoringId]             = useState<string | null>(null)
   const [hardDeleteConfirm, setHardDeleteConfirm] = useState<Customer | null>(null)
@@ -93,6 +94,11 @@ export function SuperAdminPage() {
   const [editOwnerEmail, setEditOwnerEmail] = useState('')
   const [ownerSaving, setOwnerSaving] = useState(false)
   const [ownerEmails, setOwnerEmails] = useState<Record<string, string>>({})
+
+  // Phone edit state
+  const [editingPhoneCustomerId, setEditingPhoneCustomerId] = useState<string | null>(null)
+  const [editPhone, setEditPhone] = useState('')
+  const [phoneSaving, setPhoneSaving] = useState(false)
 
   async function loadOwnerEmails(customerList: Customer[]) {
     const ownerIds = customerList.map(c => c.owner_user_id).filter(Boolean) as string[]
@@ -126,6 +132,24 @@ export function SuperAdminPage() {
     }
     setEditingOwnerCustomerId(null)
     setOwnerSaving(false)
+  }
+
+  async function savePhone(customerId: string) {
+    if (!isValidPhone(editPhone)) { setMessage('오류: 올바른 전화번호를 입력해 주세요. (예: 010-1234-5678)'); return }
+    setPhoneSaving(true)
+    const { data, error } = await supabase
+      .from('customers')
+      .update({ phone: editPhone.trim(), updated_at: new Date().toISOString() })
+      .eq('id', customerId)
+      .select()
+      .single()
+    if (error) { setMessage(`오류: ${error.message}`); setPhoneSaving(false); return }
+    if (data) {
+      setCustomers(prev => prev.map(c => c.id === customerId ? data as Customer : c))
+      setMessage('전화번호가 수정됐습니다.')
+    }
+    setEditingPhoneCustomerId(null)
+    setPhoneSaving(false)
   }
 
   async function fetchTenants() {
@@ -243,6 +267,7 @@ export function SuperAdminPage() {
   async function createCustomer(e: React.FormEvent) {
     e.preventDefault()
     if (!customerForm.name.trim()) return
+    if (!isValidPhone(customerForm.phone)) { setMessage('오류: 올바른 전화번호를 입력해 주세요. (예: 010-1234-5678)'); return }
     setCustomerSaving(true)
     let ownerUserId: string | null = null
     if (customerForm.ownerEmail.trim()) {
@@ -256,7 +281,7 @@ export function SuperAdminPage() {
     }
     const { data, error } = await supabase
       .from('customers')
-      .insert({ name: customerForm.name.trim(), owner_user_id: ownerUserId, plan: customerForm.plan })
+      .insert({ name: customerForm.name.trim(), phone: customerForm.phone.trim(), owner_user_id: ownerUserId, plan: customerForm.plan })
       .select()
       .single()
     if (error) {
@@ -264,7 +289,7 @@ export function SuperAdminPage() {
     } else if (data) {
       setCustomers(prev => [...prev, data as Customer])
       setShowCreateCustomer(false)
-      setCustomerForm({ name: '', ownerEmail: '', plan: 'basic' })
+      setCustomerForm({ name: '', phone: '', ownerEmail: '', plan: 'basic' })
       setSelectedCustomerId(data.id)
       const ownerNotFound = customerForm.ownerEmail.trim() && !ownerUserId
       setMessage(ownerNotFound
@@ -680,6 +705,12 @@ export function SuperAdminPage() {
               setEditOwnerEmail={setEditOwnerEmail}
               ownerSaving={ownerSaving}
               saveOwner={saveOwner}
+              editingPhoneCustomerId={editingPhoneCustomerId}
+              setEditingPhoneCustomerId={setEditingPhoneCustomerId}
+              editPhone={editPhone}
+              setEditPhone={setEditPhone}
+              phoneSaving={phoneSaving}
+              savePhone={savePhone}
               updateCustomerPlan={updateCustomerPlan}
               toggleCustomerActive={toggleCustomerActive}
               startDeleteCustomer={startDeleteCustomer}

@@ -54,14 +54,15 @@ interface OrgCardProps {
   memberCount?: number
   assignmentCount?: number
   tintIdx: number
+  themeColor?: string
   onClick: () => void
   onPendingClick?: () => void
 }
 
-function OrgCard({ name, roleLabel, isAdmin, mode, position, pendingCount, memberCount, assignmentCount, tintIdx, onClick, onPendingClick }: OrgCardProps) {
+function OrgCard({ name, roleLabel, isAdmin, mode, position, pendingCount, memberCount, assignmentCount, tintIdx, themeColor, onClick, onPendingClick }: OrgCardProps) {
   const [hovered, setHovered] = useState(false)
   const initial = name.charAt(0)
-  const tint = TINTS[tintIdx % TINTS.length]
+  const tint = themeColor ? { bg: themeColor, ink: '#fff' } : TINTS[tintIdx % TINTS.length]
 
   return (
     <button
@@ -258,6 +259,7 @@ export function TenantSelectPage() {
     pendingCount?: number
     memberCount?: number
     assignmentCount?: number
+    themeColor?: string
     onClick: () => void
   }
 
@@ -538,6 +540,7 @@ export function TenantSelectPage() {
                   memberCount={item.memberCount}
                   assignmentCount={item.assignmentCount}
                   tintIdx={idx}
+                  themeColor={item.themeColor}
                   onClick={item.onClick}
                   onPendingClick={(item as { onPendingClick?: () => void }).onPendingClick}
                 />
@@ -576,6 +579,7 @@ export function TenantSelectPage() {
       pendingCount: pendingCounts[t.id] ?? 0,
       memberCount: memberCounts[t.id] ?? 0,
       assignmentCount: assignmentCounts[t.id] ?? 0,
+      themeColor: t.settings?.theme_color,
       onClick: () => { setTenant(t, 'admin'); navigate('/') },
       onPendingClick: (pendingCounts[t.id] ?? 0) > 0
         ? () => { setTenant(t, 'admin'); navigate(`/admin?org=${t.id}&tab=pending`) }
@@ -595,6 +599,7 @@ export function TenantSelectPage() {
     isAdmin: m.role === 'admin',
     mode: m.tenant.settings?.tenant_mode ?? '회원선택',
     position: m.tenant_role?.name,
+    themeColor: m.tenant.settings?.theme_color,
     onClick: () => { setTenant(m.tenant, m.role); navigate('/') },
   }))
   return pageContent(items)

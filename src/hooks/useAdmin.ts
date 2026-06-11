@@ -13,6 +13,7 @@ interface AdminState {
   reloadMembers: () => Promise<void>
   addMember: (email: string, roleId?: string) => Promise<string | null>
   removeMember: (userId: string) => Promise<string | null>
+  updateMemberName: (userId: string, name: string) => Promise<string | null>
   updateMemberTenantRole: (userId: string, roleId: string | null) => Promise<string | null>
   updateMemberAccess: (userId: string, role: TenantAccessRole) => Promise<string | null>
   toggleScheduleRule: (ruleId: string, currentIsOpen: boolean) => Promise<string | null>
@@ -127,6 +128,16 @@ export function useAdmin(tenantId: string): AdminState {
     if (!error) setMembers(prev => prev.filter(m => m.user_id !== userId))
     return error?.message ?? null
   }, [tenantId])
+
+  const updateMemberName = useCallback(async (userId: string, name: string): Promise<string | null> => {
+    const { error } = await supabase.rpc('admin_update_member_name', { p_user_id: userId, p_name: name })
+    if (!error) {
+      setMembers(prev => prev.map(m =>
+        m.user_id === userId && m.profile ? { ...m, profile: { ...m.profile, name: name.trim() } } : m
+      ))
+    }
+    return error?.message ?? null
+  }, [])
 
   const updateMemberTenantRole = useCallback(async (userId: string, roleId: string | null): Promise<string | null> => {
     const { error } = await supabase
@@ -265,7 +276,7 @@ export function useAdmin(tenantId: string): AdminState {
   return {
     members, profiles, scheduleRules, dateOverrides, loading,
     reloadMembers,
-    addMember, removeMember, updateMemberTenantRole, updateMemberAccess,
+    addMember, removeMember, updateMemberName, updateMemberTenantRole, updateMemberAccess,
     toggleScheduleRule, upsertScheduleRulesForSlots,
     addDateOverride, deleteDateOverride,
     updateTenantSettings, updateTenantName, approveUser,

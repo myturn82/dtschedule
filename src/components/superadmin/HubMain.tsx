@@ -7,6 +7,7 @@ import { OrgTreeView } from './OrgTreeView'
 import { OrgDiagramView } from './OrgDiagramView'
 import { OrgCardsView } from './OrgCardsView'
 import { EMPTY_ORG_FORM, type CreateOrgForm } from './createOrgForm'
+import { formatPhone } from '../../lib/phone'
 
 const inputCls = 'w-full px-3 py-2 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]'
 
@@ -56,6 +57,13 @@ interface Props {
   ownerSaving: boolean
   saveOwner: (customerId: string) => void
 
+  editingPhoneCustomerId: string | null
+  setEditingPhoneCustomerId: (id: string | null) => void
+  editPhone: string
+  setEditPhone: (v: string) => void
+  phoneSaving: boolean
+  savePhone: (customerId: string) => void
+
   updateCustomerPlan: (customerId: string, plan: PlanType) => void
   toggleCustomerActive: (customer: Customer) => void
   startDeleteCustomer: (customer: Customer) => void
@@ -76,6 +84,7 @@ interface Props {
 export function HubMain({
   customer, tenants, memberCounts, pendingCounts, view, setView, selectedOrgId, onSelectOrg, onOpenRail,
   ownerEmails, editingOwnerCustomerId, setEditingOwnerCustomerId, editOwnerEmail, setEditOwnerEmail, ownerSaving, saveOwner,
+  editingPhoneCustomerId, setEditingPhoneCustomerId, editPhone, setEditPhone, phoneSaving, savePhone,
   updateCustomerPlan, toggleCustomerActive, startDeleteCustomer, restoreCustomer, restoringId, onHardDelete,
   showCreate, setShowCreate, form, setForm, createSlots, setCreateSlots, saving, onCreateTenant,
 }: Props) {
@@ -118,16 +127,59 @@ export function HubMain({
               {isSystem && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)]">시스템</span>}
               {customer.is_active === false && <span className="hub-badge hub-badge-danger">비활성</span>}
             </h1>
-            <div className="flex items-center gap-2 flex-wrap mt-2 text-xs">
-              <select
-                value={customer.plan}
-                onChange={e => updateCustomerPlan(customer.id, e.target.value as PlanType)}
-                className="px-2 py-1 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-xs font-semibold text-[var(--color-text-secondary)] focus:outline-none"
-              >
-                <option value="basic">Basic</option>
-                <option value="pro">Pro</option>
-                <option value="business">Business</option>
-              </select>
+            <div className="flex flex-col gap-1.5 mt-2 text-xs">
+              <div>
+                <p className="text-[10px] font-semibold text-[var(--color-text-muted)] mb-0.5">요금제</p>
+                <select
+                  value={customer.plan}
+                  onChange={e => updateCustomerPlan(customer.id, e.target.value as PlanType)}
+                  className="w-full px-2 py-1 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-xs font-semibold text-[var(--color-text-secondary)] focus:outline-none"
+                >
+                  <option value="basic">Basic</option>
+                  <option value="pro">Pro</option>
+                  <option value="business">Business</option>
+                </select>
+              </div>
+
+              <div>
+                <p className="text-[10px] font-semibold text-[var(--color-text-muted)] mb-0.5">가입일</p>
+                <div className="px-2 py-1 rounded-lg bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)]">
+                  {customer.created_at.slice(0, 10)}
+                </div>
+              </div>
+
+              {editingPhoneCustomerId === customer.id ? (
+                <span className="flex items-center gap-1">
+                  <input
+                    value={editPhone}
+                    onChange={e => setEditPhone(formatPhone(e.target.value))}
+                    placeholder="010-1234-5678"
+                    maxLength={13}
+                    className="flex-1 min-w-0 text-xs px-2 py-1 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]"
+                    onKeyDown={e => { if (e.key === 'Enter') savePhone(customer.id); if (e.key === 'Escape') setEditingPhoneCustomerId(null) }}
+                    autoFocus
+                  />
+                  <button onClick={() => savePhone(customer.id)} disabled={phoneSaving}
+                    className="shrink-0 px-1.5 py-1 text-xs bg-[var(--color-brand-primary)] text-white rounded-lg disabled:opacity-40">
+                    {phoneSaving ? '...' : '저장'}
+                  </button>
+                  <button onClick={() => setEditingPhoneCustomerId(null)}
+                    className="shrink-0 px-1.5 py-1 text-xs border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] rounded-lg">취소</button>
+                </span>
+              ) : (
+                <div>
+                  <p className="text-[10px] font-semibold text-[var(--color-text-muted)] mb-0.5">전화번호</p>
+                  <button
+                    onClick={() => {
+                      setEditingPhoneCustomerId(customer.id)
+                      setEditPhone(formatPhone(customer.phone ?? ''))
+                    }}
+                    className="block w-full text-left px-2 py-1 rounded-lg border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-brand-primary)] hover:border-[var(--color-brand-primary)]/40 transition-colors"
+                  >
+                    {customer.phone ? formatPhone(customer.phone) : '미입력'}
+                  </button>
+                </div>
+              )}
 
               {editingOwnerCustomerId === customer.id ? (
                 <span className="flex items-center gap-1">
@@ -135,30 +187,31 @@ export function HubMain({
                     value={editOwnerEmail}
                     onChange={e => setEditOwnerEmail(e.target.value)}
                     placeholder="오너 이메일"
-                    className="text-xs px-2 py-1 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] w-40 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]"
+                    className="flex-1 min-w-0 text-xs px-2 py-1 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]"
                     onKeyDown={e => { if (e.key === 'Enter') saveOwner(customer.id); if (e.key === 'Escape') setEditingOwnerCustomerId(null) }}
                     autoFocus
                   />
                   <button onClick={() => saveOwner(customer.id)} disabled={ownerSaving}
-                    className="px-1.5 py-1 text-xs bg-[var(--color-brand-primary)] text-white rounded-lg disabled:opacity-40">
+                    className="shrink-0 px-1.5 py-1 text-xs bg-[var(--color-brand-primary)] text-white rounded-lg disabled:opacity-40">
                     {ownerSaving ? '...' : '저장'}
                   </button>
                   <button onClick={() => setEditingOwnerCustomerId(null)}
-                    className="px-1.5 py-1 text-xs border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] rounded-lg">취소</button>
+                    className="shrink-0 px-1.5 py-1 text-xs border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] rounded-lg">취소</button>
                 </span>
               ) : (
-                <button
-                  onClick={() => {
-                    setEditingOwnerCustomerId(customer.id)
-                    setEditOwnerEmail(customer.owner_user_id ? (ownerEmails[customer.owner_user_id] ?? '') : '')
-                  }}
-                  className="flex items-center gap-1 px-2 py-1 rounded-lg border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-brand-primary)] hover:border-[var(--color-brand-primary)]/40 transition-colors"
-                >
-                  오너: {customer.owner_user_id ? (ownerEmails[customer.owner_user_id] ?? '...') : '미설정'}
-                </button>
+                <div>
+                  <p className="text-[10px] font-semibold text-[var(--color-text-muted)] mb-0.5">오너</p>
+                  <button
+                    onClick={() => {
+                      setEditingOwnerCustomerId(customer.id)
+                      setEditOwnerEmail(customer.owner_user_id ? (ownerEmails[customer.owner_user_id] ?? '') : '')
+                    }}
+                    className="block w-full text-left px-2 py-1 rounded-lg border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-brand-primary)] hover:border-[var(--color-brand-primary)]/40 transition-colors break-all"
+                  >
+                    {customer.owner_user_id ? (ownerEmails[customer.owner_user_id] ?? '...') : '미설정'}
+                  </button>
+                </div>
               )}
-
-              <span className="text-[var(--color-text-muted)]">가입일 {customer.created_at.slice(0, 10)}</span>
             </div>
           </div>
 

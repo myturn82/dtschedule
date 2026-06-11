@@ -6,6 +6,7 @@ import { useTenant } from '../contexts/TenantContext'
 import { DashboardNav } from './DashboardNav'
 import { ProfileModal } from './auth/ProfileModal'
 import { JoinOrgModal } from './modals/JoinOrgModal'
+import { StartServiceModal } from './modals/StartServiceModal'
 
 interface AppHeaderProps {
   funcMenuItems?: (closeMenu: () => void) => React.ReactNode
@@ -20,11 +21,12 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
   const navigate = useNavigate()
   const { profile, loading: authLoading, signOut, deleteAccount, linkGoogle, linkKakao, getIdentities } = useAuth()
   const { isCustomerAdmin } = useCustomerAdmin()
-  const { tenant, tenantRole, memberships, resetTenantSelection, reloadMemberships } = useTenant()
+  const { tenant, tenantRole, tenantPlan, memberships, resetTenantSelection, reloadMemberships } = useTenant()
   const [showFuncMenu, setShowFuncMenu] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
   const [showJoinOrg, setShowJoinOrg] = useState(false)
+  const [showStartService, setShowStartService] = useState(false)
   const [showWithdrawModal, setShowWithdrawModal] = useState(false)
   const [joinSuccessMsg, setJoinSuccessMsg] = useState<string | null>(null)
 
@@ -171,6 +173,14 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
                     </span>
                   </button>
                 )}
+                {!profile?.is_super_admin && !isCustomerAdmin && (
+                  <button onClick={() => { setShowStartService(true); setShowUserMenu(false) }} className={menuBtn}>
+                    <span className="flex items-center gap-2.5">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><path d="M17.5 14v7M14 17.5h7"/></svg>
+                      내 서비스 시작하기
+                    </span>
+                  </button>
+                )}
                 {sep}
                 <button onClick={() => { signOut(); setShowUserMenu(false) }} className={menuBtn}>
                   <span className="flex items-center gap-2.5">
@@ -197,7 +207,7 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
         </div>
       )}
 
-      {isPrivileged && <DashboardNav />}
+      {isPrivileged && (profile?.is_super_admin || tenantPlan === 'business') && <DashboardNav />}
 
       {showProfile && profile && (
         <ProfileModal
@@ -217,6 +227,14 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
             setShowJoinOrg(false)
             setJoinSuccessMsg('가입 신청이 완료됐습니다. 관리자 승인 후 이용하실 수 있습니다.')
           }}
+        />
+      )}
+
+      {showStartService && profile && (
+        <StartServiceModal
+          userId={profile.id}
+          onClose={() => setShowStartService(false)}
+          onSuccess={() => { window.location.href = '/customer-admin' }}
         />
       )}
 

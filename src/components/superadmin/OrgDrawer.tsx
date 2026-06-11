@@ -1,5 +1,5 @@
 import type { Tenant, TenantMode } from '../../types'
-import { colorOf, initialsOf } from '../../lib/avatarColor'
+import { colorOf, avatarColorFor, initialsOf } from '../../lib/avatarColor'
 import { displayMode } from '../../lib/tenantMode'
 
 export interface DrawerMember {
@@ -58,7 +58,7 @@ export function OrgDrawer({
   deletingSaving, onDelete, onReactivate,
   onApproveMember, onRejectMember, approvingMemberId,
 }: Props) {
-  const { bg, fg } = colorOf(tenant.name)
+  const { bg, fg } = avatarColorFor(tenant.name, tenant.settings?.theme_color)
   const pendingMembers = members.filter(m => !m.is_approved)
   const approvedMembers = members.filter(m => m.is_approved)
 

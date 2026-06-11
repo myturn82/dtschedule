@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
-import type { Tenant, TenantMember, TenantAccessRole, LegendItem, CustomFieldDef, CustomFieldOption } from '../types'
+import type { Tenant, TenantMember, TenantAccessRole, LegendItem, CustomFieldDef, CustomFieldOption, PlanType } from '../types'
 import { generateTimeSlots, DEFAULT_TIME_SLOTS } from '../utils/timeSlots'
 
 interface MembershipWithTenant extends TenantMember {
@@ -11,6 +11,7 @@ interface MembershipWithTenant extends TenantMember {
 interface TenantContextValue {
   tenant: Tenant | null
   tenantRole: TenantAccessRole | null
+  tenantPlan: PlanType | null
   memberships: MembershipWithTenant[]
   loading: boolean
   tenantSelectedByUser: boolean
@@ -32,6 +33,7 @@ const TenantContext = createContext<TenantContextValue | null>(null)
 export function TenantProvider({ children }: { children: ReactNode }) {
   const [tenant, setTenantState] = useState<Tenant | null>(null)
   const [tenantRole, setTenantRole] = useState<TenantAccessRole | null>(null)
+  const [tenantPlan, setTenantPlan] = useState<PlanType | null>(null)
   const [memberships, setMemberships] = useState<MembershipWithTenant[]>([])
   const [loading, setLoading] = useState(true)
   const [tenantSelectedByUser, setTenantSelectedByUser] = useState(false)
@@ -50,6 +52,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
         setMemberships([])
         setTenantState(null)
         setTenantRole(null)
+        setTenantPlan(null)
         setTenantSelectedByUser(false)
         setLoading(false)
       }
@@ -119,9 +122,19 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     setTenantSelectedByUser(true)
   }
 
+  // 현재 선택된 조직이 속한 customer의 플랜 조회 (대시보드 등 플랜별 기능 노출에 사용)
+  useEffect(() => {
+    if (!tenant?.customer_id) { setTenantPlan(null); return }
+    let cancelled = false
+    supabase.from('customers').select('plan').eq('id', tenant.customer_id).maybeSingle()
+      .then(({ data }) => { if (!cancelled) setTenantPlan((data?.plan as PlanType) ?? null) })
+    return () => { cancelled = true }
+  }, [tenant?.customer_id])
+
   function resetTenantSelection() {
     setTenantState(null)
     setTenantRole(null)
+    setTenantPlan(null)
     setTenantSelectedByUser(false)
   }
 
@@ -130,6 +143,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     if (session?.user) {
       setTenantState(null)
       setTenantRole(null)
+      setTenantPlan(null)
       setTenantSelectedByUser(false)
       await fetchMemberships(session.user.id)
     }
@@ -180,6 +194,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     <TenantContext.Provider value={{
       tenant,
       tenantRole,
+      tenantPlan,
       memberships,
       loading,
       tenantSelectedByUser,

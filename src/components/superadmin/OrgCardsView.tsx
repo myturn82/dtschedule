@@ -1,5 +1,5 @@
 import type { Tenant } from '../../types'
-import { colorOf, initialsOf } from '../../lib/avatarColor'
+import { avatarColorFor, initialsOf } from '../../lib/avatarColor'
 import { displayMode } from '../../lib/tenantMode'
 
 interface Props {
@@ -18,7 +18,7 @@ export function OrgCardsView({ tenants, memberCounts, pendingCounts, selectedOrg
   return (
     <div className="hub-cards">
       {tenants.map(t => {
-        const { bg, fg } = colorOf(t.name)
+        const { bg, fg } = avatarColorFor(t.name, t.settings?.theme_color)
         const pending = pendingCounts[t.id] ?? 0
         return (
           <button

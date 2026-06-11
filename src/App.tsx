@@ -1,3 +1,4 @@
+import { useRef, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import { PlanLimitsProvider } from './contexts/PlanLimitsContext'
@@ -21,8 +22,14 @@ import { useDarkMode } from './hooks/useDarkMode'
 function AppRoutes() {
   useDarkMode()
   const { profile, loading: authLoading } = useAuth()
-  const { isCustomerAdmin, myCustomer } = useCustomerAdmin()
-  const { tenant, tenantRole, memberships, loading: tenantLoading, tenantSelectedByUser } = useTenant()
+  const { isCustomerAdmin } = useCustomerAdmin()
+  const { tenant, tenantRole, tenantPlan, memberships, loading: tenantLoading, tenantSelectedByUser } = useTenant()
+
+  // 로그인 직후 슈퍼관리자는 조직 선택 화면 대신 슈퍼관리자 어드민으로 바로 이동
+  const justLoggedInRef = useRef(sessionStorage.getItem('vs_just_logged_in') === '1')
+  useEffect(() => {
+    sessionStorage.removeItem('vs_just_logged_in')
+  }, [])
 
   if (authLoading || tenantLoading) {
     return (
@@ -71,6 +78,7 @@ function AppRoutes() {
   }
 
   // Super admin who hasn't explicitly selected a tenant → org picker (shows all tenants)
+  // 단, 로그인 직후라면 조직 선택 화면을 건너뛰고 슈퍼관리자 어드민으로 바로 이동
   if (profile?.is_super_admin && !tenantSelectedByUser) {
     return (
       <Routes>
@@ -78,7 +86,9 @@ function AppRoutes() {
         <Route path="/superadmin" element={<SuperAdminPage />} />
         <Route path="/customer-admin" element={<CustomerAdminPage />} />
         <Route path="/admin" element={<AdminPage />} />
-        <Route path="*" element={<TenantSelectPage />} />
+        <Route path="*" element={
+          justLoggedInRef.current ? <Navigate to="/superadmin" replace /> : <TenantSelectPage />
+        } />
       </Routes>
     )
   }
@@ -102,7 +112,7 @@ function AppRoutes() {
       <Route path="/schedule" element={<SchedulePage />} />
       <Route path="/dashboard" element={
         (tenantRole === 'admin' || profile?.is_super_admin) &&
-        (profile?.is_super_admin || myCustomer?.plan === 'business')
+        (profile?.is_super_admin || tenantPlan === 'business')
           ? <DashboardPage />
           : <Navigate to="/" replace />
       } />

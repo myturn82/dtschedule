@@ -5,12 +5,13 @@ import { useAuth } from '../hooks/useAuth'
 import { useTenant } from '../contexts/TenantContext'
 import { SlotEditor } from '../components/shared/SlotEditor'
 import { IndustryPicker } from '../components/IndustryPicker'
-import { colorOf, initialsOf } from '../lib/avatarColor'
+import { colorOf, avatarColorFor, initialsOf } from '../lib/avatarColor'
 import { OrgTreeView } from '../components/superadmin/OrgTreeView'
 import { OrgDiagramView } from '../components/superadmin/OrgDiagramView'
 import { OrgCardsView } from '../components/superadmin/OrgCardsView'
 import type { HubView } from '../components/superadmin/HubMain'
 import { usePlanLimits } from '../contexts/PlanLimitsContext'
+import { isValidPhone, formatPhone } from '../lib/phone'
 import { PLAN_LABELS } from '../types'
 import type { Tenant, TenantMode, PlanType } from '../types'
 import '../styles/account-hub.css'
@@ -26,6 +27,29 @@ interface CreateForm {
 
 const EMPTY_FORM: CreateForm = { slug: '', name: '', title: '', business_type: '', theme_color: '', tenant_mode: '회원공유' }
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+
+const THEME_COLORS = [
+  // 레드
+  '#fca5a5', '#f87171', '#ef4444', '#dc2626', '#b91c1c',
+  // 오렌지
+  '#fdba74', '#fb923c', '#f97316', '#ea580c', '#c2410c',
+  // 앰버
+  '#fcd34d', '#fbbf24', '#f59e0b', '#d97706', '#b45309',
+  // 그린
+  '#86efac', '#4ade80', '#22c55e', '#16a34a', '#15803d',
+  // 에메랄드/틸
+  '#6ee7b7', '#34d399', '#10b981', '#059669', '#047857',
+  // 사이안
+  '#67e8f9', '#22d3ee', '#06b6d4', '#0891b2', '#0e7490',
+  // 블루
+  '#93c5fd', '#60a5fa', '#3b82f6', '#2563eb', '#1d4ed8',
+  // 인디고
+  '#a5b4fc', '#818cf8', '#6366f1', '#4f46e5', '#4338ca',
+  // 바이올렛/퍼플
+  '#c4b5fd', '#a78bfa', '#8b5cf6', '#7c3aed', '#6d28d9',
+  // 핑크/로즈
+  '#f9a8d4', '#f472b6', '#ec4899', '#db2777', '#be185d',
+]
 
 export function CustomerAdminPage() {
   const { profile, myCustomer, loading: authLoading, signOut, refreshCustomer } = useAuth()
@@ -44,10 +68,15 @@ export function CustomerAdminPage() {
   const [view, setView] = useState<HubView>('tree')
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null)
 
+  const [editingPhone, setEditingPhone] = useState(false)
+  const [editPhone, setEditPhone]       = useState('')
+  const [phoneSaving, setPhoneSaving]   = useState(false)
+
   const [showDeletionModal, setShowDeletionModal] = useState(false)
   const [deletionPending, setDeletionPending]     = useState(false)
   const [showCreate, setShowCreate] = useState(false)
   const [form, setForm]             = useState<CreateForm>(EMPTY_FORM)
+  const [colorOpen, setColorOpen]   = useState(false)
   const [createSlots, setCreateSlots] = useState<string[]>(['09-10', '10-11', '11-12', '12-13', '13-14', '14-15', '15-16', '16-17', '17-18'])
   const [saving, setSaving]         = useState(false)
 
@@ -118,6 +147,24 @@ export function CustomerAdminPage() {
     }
     await refreshCustomer()
     setDeletionPending(false)
+  }
+
+  async function savePhone() {
+    if (!myCustomer) return
+    if (!isValidPhone(editPhone)) { setMessage('오류: 올바른 전화번호를 입력해 주세요. (예: 010-1234-5678)'); return }
+    setPhoneSaving(true)
+    const { error } = await supabase
+      .from('customers')
+      .update({ phone: editPhone.trim(), updated_at: new Date().toISOString() })
+      .eq('id', myCustomer.id)
+    if (error) {
+      setMessage(`오류: ${error.message}`)
+      setPhoneSaving(false)
+      return
+    }
+    await refreshCustomer()
+    setEditingPhone(false)
+    setPhoneSaving(false)
   }
 
   const createTenant = useCallback(async (e: React.FormEvent) => {
@@ -274,7 +321,35 @@ export function CustomerAdminPage() {
                   className="text-xs font-semibold text-[var(--color-brand-primary)] hover:underline">
                   업그레이드 문의 →
                 </a>
-                <span className="text-[var(--color-text-muted)] text-xs">가입일 {myCustomer.created_at.slice(0, 10)}</span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {editingPhone ? (
+                    <span className="flex items-center gap-1">
+                      <input
+                        value={editPhone}
+                        onChange={e => setEditPhone(formatPhone(e.target.value))}
+                        placeholder="010-1234-5678"
+                        maxLength={13}
+                        className="text-xs px-2 py-1 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] w-32 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]"
+                        onKeyDown={e => { if (e.key === 'Enter') savePhone(); if (e.key === 'Escape') setEditingPhone(false) }}
+                        autoFocus
+                      />
+                      <button onClick={savePhone} disabled={phoneSaving}
+                        className="px-1.5 py-1 text-xs bg-[var(--color-brand-primary)] text-white rounded-lg disabled:opacity-40">
+                        {phoneSaving ? '...' : '저장'}
+                      </button>
+                      <button onClick={() => setEditingPhone(false)}
+                        className="px-1.5 py-1 text-xs border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] rounded-lg">취소</button>
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => { setEditingPhone(true); setEditPhone(formatPhone(myCustomer.phone ?? '')) }}
+                      className="flex items-center gap-1 px-2 py-1 rounded-lg border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-brand-primary)] hover:border-[var(--color-brand-primary)]/40 transition-colors text-xs"
+                    >
+                      전화번호: {myCustomer.phone ? formatPhone(myCustomer.phone) : '미입력'}
+                    </button>
+                  )}
+                  <span className="text-[var(--color-text-muted)] text-xs">가입일 {myCustomer.created_at.slice(0, 10)}</span>
+                </div>
               </div>
 
               {isDeletionPending && (
@@ -351,7 +426,6 @@ export function CustomerAdminPage() {
                     { key: 'slug',        label: 'Slug (소문자+하이픈)', placeholder: 'my-org',    required: true  },
                     { key: 'name',        label: '조직명',               placeholder: '홍길동 미용실', required: true  },
                     { key: 'title',       label: '페이지 타이틀 (선택)',  placeholder: '스케줄'                    },
-                    { key: 'theme_color', label: '테마 색상 (선택)',      placeholder: '#2563eb'                   },
                   ] as { key: keyof CreateForm; label: string; placeholder: string; required?: boolean }[]).map(f => (
                     <div key={f.key}>
                       <label className="block text-xs text-[var(--color-text-secondary)] mb-1">{f.label}</label>
@@ -372,6 +446,59 @@ export function CustomerAdminPage() {
                       inputCls={inputCls}
                     />
                   </div>
+                </div>
+
+                {/* 테마 색상 스워치 피커 */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setColorOpen(!colorOpen)}
+                    className="flex items-center gap-2 text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: colorOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }}>
+                      <path d="M4 2l4 4-4 4" />
+                    </svg>
+                    <span>테마 색상 (선택)</span>
+                    {form.theme_color && <span className="w-4 h-4 rounded-sm border border-[var(--color-border-strong)] inline-block" style={{ background: form.theme_color }} />}
+                  </button>
+                  {colorOpen && (
+                    <div className="mt-2 space-y-2">
+                      <div className="flex flex-wrap gap-1.5">
+                        {THEME_COLORS.map(color => (
+                          <button
+                            key={color}
+                            type="button"
+                            title={color}
+                            onClick={() => setForm(prev => ({ ...prev, theme_color: prev.theme_color === color ? '' : color }))}
+                            className="w-7 h-7 rounded-lg border-2 transition-transform hover:scale-110 flex items-center justify-center flex-shrink-0"
+                            style={{ background: color, borderColor: form.theme_color === color ? '#1f2937' : 'transparent', boxShadow: form.theme_color === color ? '0 0 0 1px #fff inset' : undefined }}
+                          >
+                            {form.theme_color === color && (
+                              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                <path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {form.theme_color && <span className="w-6 h-6 rounded-md border border-[var(--color-border-strong)] flex-shrink-0" style={{ background: form.theme_color }} />}
+                        <input
+                          type="text"
+                          placeholder="직접 입력 (#2563eb)"
+                          maxLength={7}
+                          value={form.theme_color}
+                          onChange={e => setForm(prev => ({ ...prev, theme_color: e.target.value }))}
+                          className={inputCls + ' text-xs py-1.5 font-mono'}
+                        />
+                        {form.theme_color && (
+                          <button type="button" onClick={() => setForm(prev => ({ ...prev, theme_color: '' }))} className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] flex-shrink-0">
+                            초기화
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -425,7 +552,7 @@ export function CustomerAdminPage() {
             <div className="hub-drawer-backdrop is-open" onClick={() => setSelectedTenantId(null)} />
           )}
           {selectedTenant && (() => {
-            const { bg, fg } = colorOf(selectedTenant.name)
+            const { bg, fg } = avatarColorFor(selectedTenant.name, selectedTenant.settings?.theme_color)
             const orgDisabled = isDeletionPending || selectedTenant.is_active === false
             return (
               <aside className="hub-drawer is-open">

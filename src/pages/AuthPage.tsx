@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { ScheduleBackground } from '../components/auth/ScheduleBackground'
+import { isValidPhone } from '../lib/phone'
 
 type Tab       = 'login' | 'signup'
 type LoginStep = 'buttons' | 'email' | 'password' | 'forgot'
@@ -113,6 +114,7 @@ export function AuthPage() {
   const [joinPw, setJoinPw] = useState('')
   const [joinConfirm, setJoinConfirm] = useState('')
   const [orgName, setOrgName] = useState('')
+  const [orgPhone, setOrgPhone] = useState('')
   const [showJoinPw, setShowJoinPw] = useState(false)
   const [wizChoice, setWizChoice] = useState<'service' | 'join'>('service')
 
@@ -124,7 +126,9 @@ export function AuthPage() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (profile && !signupInProgress.current) navigate('/', { replace: true })
+    if (profile && !signupInProgress.current) {
+      navigate(profile.is_super_admin ? '/superadmin' : '/', { replace: true })
+    }
   }, [profile, navigate])
 
   // 회원가입 탭은 서비스 이용 동의(/consent)를 거친 직후에만 1회 접근 허용 (재진입 시 다시 동의 필요)
@@ -159,7 +163,11 @@ export function AuthPage() {
     const err = await signIn(loginEmail, loginPw)
     setLoading(false)
     if (err) setError(err)
-    else { localStorage.setItem('lastLoginEmail', loginEmail); navigate('/', { replace: true }) }
+    else {
+      localStorage.setItem('lastLoginEmail', loginEmail)
+      sessionStorage.setItem('vs_just_logged_in', '1')
+      navigate('/', { replace: true })
+    }
   }
 
   async function handleForgotPassword() {
@@ -198,6 +206,7 @@ export function AuthPage() {
 
   async function handleJoinSubmit() {
     if (!orgName.trim()) { setError('서비스 이름을 입력해 주세요.'); return }
+    if (!isValidPhone(orgPhone)) { setError('올바른 전화번호를 입력해 주세요. (예: 010-1234-5678)'); return }
     setLoading(true); setError(null)
     const err = await signUp(joinEmail.trim(), joinPw, joinName.trim(), 'volunteer', '')
     if (err) { setLoading(false); setError(err); return }
@@ -205,7 +214,7 @@ export function AuthPage() {
     if (!user) { setLoading(false); setError('인증 오류가 발생했습니다.'); return }
     const { error: custErr } = await supabase
       .from('customers')
-      .insert({ name: orgName.trim(), owner_user_id: user.id, plan: 'basic' })
+      .insert({ name: orgName.trim(), phone: orgPhone.trim(), owner_user_id: user.id, plan: 'basic' })
     setLoading(false)
     if (custErr) { setError(`조직 생성 오류: ${custErr.message}`); return }
     window.location.href = '/'
@@ -213,12 +222,14 @@ export function AuthPage() {
 
   async function handleGoogle() {
     setLoading(true); setError(null)
+    if (tab === 'login') sessionStorage.setItem('vs_just_logged_in', '1')
     const err = await signInWithGoogle()
     setLoading(false); if (err) setError(err)
   }
 
   async function handleKakao() {
     setLoading(true); setError(null)
+    if (tab === 'login') sessionStorage.setItem('vs_just_logged_in', '1')
     const err = await signInWithKakao()
     setLoading(false); if (err) setError(err)
   }
@@ -239,14 +250,14 @@ export function AuthPage() {
   )
 
   // ── password field helper ─────────────────────────────────────
-  function PwField({ value, onChange, placeholder, show, onToggle, onEnter }: {
-    value: string; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  function PwField({ id, value, onChange, placeholder, show, onToggle, onEnter }: {
+    id: string; value: string; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
     placeholder: string; show: boolean; onToggle: () => void; onEnter?: () => void
   }) {
     return (
       <div className="af-input-wrap">
         <span className="af-input-ic"><ILock /></span>
-        <input className="af-input" type={show ? 'text' : 'password'} value={value}
+        <input id={id} name={id} className="af-input" type={show ? 'text' : 'password'} value={value}
           onChange={onChange} placeholder={placeholder} autoComplete="new-password" autoFocus
           onKeyDown={e => { if (e.key === 'Enter' && onEnter) onEnter() }} />
         <button type="button" className="af-input-eye" onClick={onToggle} aria-label="비밀번호 표시">
@@ -299,7 +310,7 @@ export function AuthPage() {
                   <label className="af-label">이메일</label>
                   <div className="af-input-wrap">
                     <span className="af-input-ic">{IMail()}</span>
-                    <input className="af-input" type="email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)}
+                    <input id="login-email" name="email" className="af-input" type="email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)}
                       placeholder="you@example.com" autoComplete="email" autoFocus
                       onKeyDown={e => {
                         if (e.key === 'Enter') {
@@ -329,7 +340,7 @@ export function AuthPage() {
                   <label className="af-label">비밀번호</label>
                   <div className="af-input-wrap">
                     <span className="af-input-ic"><ILock /></span>
-                    <input className="af-input" type={showLoginPw ? 'text' : 'password'} value={loginPw}
+                    <input id="login-password" name="password" className="af-input" type={showLoginPw ? 'text' : 'password'} value={loginPw}
                       onChange={e => setLoginPw(e.target.value)} placeholder="비밀번호" autoComplete="current-password" autoFocus
                       onKeyDown={e => { if (e.key === 'Enter') handleLogin() }} />
                     <button type="button" className="af-input-eye" onClick={() => setShowLoginPw(p => !p)}>
@@ -377,7 +388,7 @@ export function AuthPage() {
                       <label className="af-label">이메일</label>
                       <div className="af-input-wrap">
                         <span className="af-input-ic">{IMail()}</span>
-                        <input className="af-input" type="email" value={loginEmail}
+                        <input id="forgot-email" name="email" className="af-input" type="email" value={loginEmail}
                           onChange={e => setLoginEmail(e.target.value)}
                           placeholder="you@example.com" autoComplete="email" autoFocus
                           onKeyDown={e => { if (e.key === 'Enter') handleForgotPassword() }} />
@@ -419,7 +430,7 @@ export function AuthPage() {
                   <label className="af-label">이메일</label>
                   <div className="af-input-wrap">
                     <span className="af-input-ic">{IMail()}</span>
-                    <input className="af-input" type="email" value={joinEmail} onChange={e => setJoinEmail(e.target.value)}
+                    <input id="signup-email" name="email" className="af-input" type="email" value={joinEmail} onChange={e => setJoinEmail(e.target.value)}
                       placeholder="you@example.com" autoComplete="email" autoFocus
                       onKeyDown={e => { if (e.key === 'Enter') handleEmailNext() }} />
                   </div>
@@ -468,8 +479,8 @@ export function AuthPage() {
                     <label className="af-label">이름</label>
                     <div className="af-input-wrap">
                       <span className="af-input-ic"><IUser /></span>
-                      <input className="af-input" type="text" value={joinName} onChange={e => setJoinName(e.target.value)}
-                        placeholder="홍길동" autoFocus
+                      <input id="signup-name" name="name" className="af-input" type="text" value={joinName} onChange={e => setJoinName(e.target.value)}
+                        placeholder="홍길동" autoComplete="name" autoFocus
                         onKeyDown={e => {
                           if (e.key === 'Enter') {
                             if (!joinName.trim()) { setError('이름을 입력해 주세요.'); return }
@@ -494,7 +505,7 @@ export function AuthPage() {
                   <p className="af-sub">6자 이상으로 안전하게 만들어 주세요.</p>
                   <div className="af-field">
                     <label className="af-label">비밀번호</label>
-                    <PwField value={joinPw} onChange={e => setJoinPw(e.target.value)} placeholder="6자 이상"
+                    <PwField id="signup-password" value={joinPw} onChange={e => setJoinPw(e.target.value)} placeholder="6자 이상"
                       show={showJoinPw} onToggle={() => setShowJoinPw(p => !p)}
                       onEnter={() => {
                         if (joinPw.length < 6) { setError('비밀번호는 6자 이상이어야 합니다.'); return }
@@ -517,7 +528,7 @@ export function AuthPage() {
                   <p className="af-sub">동일한 비밀번호를 한 번 더 입력해 주세요.</p>
                   <div className="af-field">
                     <label className="af-label">비밀번호 확인</label>
-                    <PwField value={joinConfirm} onChange={e => setJoinConfirm(e.target.value)} placeholder="비밀번호 재입력"
+                    <PwField id="signup-password-confirm" value={joinConfirm} onChange={e => setJoinConfirm(e.target.value)} placeholder="비밀번호 재입력"
                       show={showJoinPw} onToggle={() => setShowJoinPw(p => !p)}
                       onEnter={() => {
                         if (joinPw !== joinConfirm) { setError('비밀번호가 일치하지 않습니다.'); return }
@@ -580,8 +591,17 @@ export function AuthPage() {
                     <label className="af-label">서비스 이름</label>
                     <div className="af-input-wrap">
                       <span className="af-input-ic"><IPlus /></span>
-                      <input className="af-input" type="text" value={orgName} onChange={e => setOrgName(e.target.value)}
-                        placeholder="예: 홍길동 미용실" autoFocus
+                      <input id="signup-org-name" name="organization" className="af-input" type="text" value={orgName} onChange={e => setOrgName(e.target.value)}
+                        placeholder="예: 홍길동 미용실" autoComplete="organization" autoFocus
+                        onKeyDown={e => { if (e.key === 'Enter' && orgName.trim()) handleJoinSubmit() }} />
+                    </div>
+                  </div>
+                  <div className="af-field">
+                    <label className="af-label">전화번호</label>
+                    <div className="af-input-wrap">
+                      <span className="af-input-ic"><IPlus /></span>
+                      <input id="signup-org-phone" name="tel" className="af-input" type="tel" required value={orgPhone} onChange={e => setOrgPhone(e.target.value)}
+                        placeholder="예: 010-1234-5678" autoComplete="tel"
                         onKeyDown={e => { if (e.key === 'Enter' && orgName.trim()) handleJoinSubmit() }} />
                     </div>
                   </div>

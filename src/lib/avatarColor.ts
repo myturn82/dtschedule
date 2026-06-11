@@ -15,6 +15,13 @@ export function colorOf(seed: string): { bg: string; fg: string } {
   }
 }
 
+// 조직(테넌트)에 테마 색상이 지정된 경우 이니셜 아바타에 해당 색상을 사용하고,
+// 없으면 기존처럼 이름 기반 결정적 색상(colorOf)을 사용한다.
+export function avatarColorFor(seed: string, themeColor?: string | null): { bg: string; fg: string } {
+  if (themeColor) return { bg: themeColor, fg: '#fff' }
+  return colorOf(seed)
+}
+
 const HANGUL_RE = /[가-힣]/
 
 export function initialsOf(name: string): string {

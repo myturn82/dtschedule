@@ -12,6 +12,7 @@ const inputCls = 'w-full px-3 py-2 rounded-xl border border-[var(--color-border-
 
 interface CustomerForm {
   name: string
+  phone: string
   ownerEmail: string
   plan: PlanType
 }
@@ -88,6 +89,11 @@ export function AccountRail({
                 type="text" required value={customerForm.name}
                 onChange={e => setCustomerForm(p => ({ ...p, name: e.target.value }))}
                 placeholder="고객명 *" className={inputCls + ' text-xs py-1.5'}
+              />
+              <input
+                type="tel" required value={customerForm.phone}
+                onChange={e => setCustomerForm(p => ({ ...p, phone: e.target.value }))}
+                placeholder="전화번호 * (예: 010-1234-5678)" className={inputCls + ' text-xs py-1.5'}
               />
               <input
                 type="email" value={customerForm.ownerEmail}
