@@ -89,15 +89,9 @@ export function SuperAdminPage() {
   const [deleteCustomerSaving, setDeleteCustomerSaving] = useState(false)
   const [deleteCustomerNameInput, setDeleteCustomerNameInput] = useState('')
 
-  // Owner edit state
-  const [editingOwnerCustomerId, setEditingOwnerCustomerId] = useState<string | null>(null)
-  const [editOwnerEmail, setEditOwnerEmail] = useState('')
+  // Owner / phone save state
   const [ownerSaving, setOwnerSaving] = useState(false)
   const [ownerEmails, setOwnerEmails] = useState<Record<string, string>>({})
-
-  // Phone edit state
-  const [editingPhoneCustomerId, setEditingPhoneCustomerId] = useState<string | null>(null)
-  const [editPhone, setEditPhone] = useState('')
   const [phoneSaving, setPhoneSaving] = useState(false)
 
   async function loadOwnerEmails(customerList: Customer[]) {
