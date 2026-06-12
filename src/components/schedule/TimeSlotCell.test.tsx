@@ -5,7 +5,7 @@ import type { CellState, Assignment } from '../../types'
 
 const baseCellState: CellState = {
   isBreaktime: false, isClosed: false, isHoliday: false,
-  isNightShift: false, isSaturdayShift: false,
+  isNightShift: false, isSaturdayShift: false, isLocked: false,
   assignments: [], maxCapacity: 2, isFull: false,
 }
 
@@ -15,6 +15,7 @@ const baseAssignment: Assignment = {
   note: null, user_id: 'u1', created_at: '',
   member_type: 'member', time_sub: null, color: null,
   role_id: null, customer_name: null, customer_phone: null,
+  is_locked: false, account_deleted: false,
 }
 
 describe('TimeSlotCell', () => {
