@@ -3,6 +3,7 @@ import type { Assignment, CellState, ModalTarget, Profile, TenantRole, MemberTyp
 import { parseSlotLabel, getTimeSubOptions, formatTimeSub } from '../../utils/timeSlots'
 import { useProfiles } from '../../hooks/useProfiles'
 import type { ProfileWithRole } from '../../hooks/useProfiles'
+import { LockIcon, UnlockIcon } from '../icons/LockIcons'
 
 interface Props {
   target: ModalTarget
@@ -22,6 +23,7 @@ interface Props {
   onAdd: (name: string, note: string, memberType: MemberType, timeSub: string | null, color?: string, userId?: string, roleId?: string | null, customerName?: string | null, customerPhone?: string | null, extraData?: Record<string, string>) => Promise<string | null>
   onUpdate: (id: string, name: string, note: string, memberType: MemberType, timeSub: string | null, color?: string, roleId?: string | null, customerName?: string | null, customerPhone?: string | null, extraData?: Record<string, string>) => Promise<string | null>
   onDelete: (id: string) => Promise<string | null>
+  onToggleLock?: (id: string, locked: boolean) => Promise<string | null>
 }
 
 const PHONE_RE = /^[0-9]{2,4}-[0-9]{3,4}-[0-9]{4}$|^[0-9]{9,11}$/
@@ -49,10 +51,11 @@ export function SlotEditModal({
   slotLabels = {},
   typeLabels = { member: '팀원', '50plus': '50플러스활동가' },
   lockedUserId,
-  onClose, onAdd, onUpdate, onDelete,
+  onClose, onAdd, onUpdate, onDelete, onToggleLock,
 }: Props) {
   const { day, month, timeSlot, memberType: defaultType, roleId: initialRoleId } = target
   const isAdmin = profile?.is_super_admin || tenantRole === 'admin'
+  const isSuperAdmin = !!profile?.is_super_admin
   const isReadOnly = !isAdmin && tenantMode === '회원개별'
   const profileType: MemberType = 'member'
 
@@ -280,6 +283,21 @@ export function SlotEditModal({
     if (err) setError(err)
   }
 
+  async function handleToggleLock(id: string, locked: boolean) {
+    if (!onToggleLock) return
+    setLoading(true)
+    const err = await onToggleLock(id, locked)
+    setLoading(false)
+    if (err) setError(err)
+  }
+
+  const ownLockedAssignment = !isAdmin && displayedAssignments.some(
+    a => a.user_id === profile?.id && a.is_locked
+  )
+
+  // 날짜 전체가 잠긴 경우(date_overrides.is_locked) 신규 등록은 누구도 불가 (기존 항목 수정은 가능)
+  const blockNewRegistration = !editingId && cellState.isLocked
+
   const isAddDisabled = loading || (() => {
     if (useDynamicFields) {
       return customFields.some(f => f.required && !fieldValues[f.id]?.trim())
@@ -375,7 +393,7 @@ export function SlotEditModal({
           {displayedAssignments.length > 0 && (
             <div className="space-y-1.5">
               {displayedAssignments.map(a => {
-                const canEdit = isAdmin || (a.user_id === profile?.id && !isReadOnly)
+                const canEdit = !a.is_locked && (isAdmin || (a.user_id === profile?.id && !isReadOnly))
                 const isOwnEntry = !isAdmin && a.user_id === profile?.id && a.member_name === profile?.name
                 return (
                   <div
@@ -395,6 +413,7 @@ export function SlotEditModal({
                               {a.member_type === '50plus' ? '50+' : '봉사'}
                             </span>
                           )}
+                          {a.is_locked && <span title="관리자에 의해 고정됨"><LockIcon size={12} className="inline -mt-0.5" /></span>}
                         </span>
                         {isFreeform ? (
                           <div className="flex flex-col gap-0.5 mt-0.5">
@@ -412,10 +431,20 @@ export function SlotEditModal({
                           a.note && <span className="text-xs text-[var(--color-text-muted)] mt-0.5">메모: {a.note}</span>
                         )}
                       </div>
-                      {canEdit && (
+                      {(canEdit || (onToggleLock && a.is_locked && isSuperAdmin)) && (
                         <div className="flex gap-2 shrink-0">
-                          <button onClick={() => startEdit(a)} className="text-xs text-blue-500 hover:text-blue-600 font-medium transition-colors">수정</button>
-                          <button onClick={() => handleDelete(a.id)} className="text-xs text-red-400 hover:text-red-500 font-medium transition-colors">삭제</button>
+                          {canEdit && (
+                            <>
+                              <button onClick={() => startEdit(a)} className="text-xs text-blue-500 hover:text-blue-600 font-medium transition-colors">수정</button>
+                              <button onClick={() => handleDelete(a.id)} className="text-xs text-red-400 hover:text-red-500 font-medium transition-colors">삭제</button>
+                              {onToggleLock && isAdmin && (
+                                <button onClick={() => handleToggleLock(a.id, true)} className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] font-medium transition-colors"><LockIcon size={12} /> 고정</button>
+                              )}
+                            </>
+                          )}
+                          {onToggleLock && a.is_locked && isSuperAdmin && (
+                            <button onClick={() => handleToggleLock(a.id, false)} className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] font-medium transition-colors"><UnlockIcon size={12} /> 해제</button>
+                          )}
                         </div>
                       )}
                     </div>
@@ -425,7 +454,17 @@ export function SlotEditModal({
             </div>
           )}
 
-          {profile && !isReadOnly ? (
+          {profile && ownLockedAssignment ? (
+            <p className="text-sm text-[var(--color-text-muted)] text-center py-3 flex items-center justify-center gap-1.5">
+              <LockIcon size={14} />
+              고정된 항목은 수정할 수 없습니다. 해제는 슈퍼관리자에게 문의하세요.
+            </p>
+          ) : profile && blockNewRegistration ? (
+            <p className="text-sm text-[var(--color-text-muted)] text-center py-3 flex items-center justify-center gap-1.5">
+              <LockIcon size={14} />
+              이 날짜는 전체 고정되어 새 등록이 불가합니다.
+            </p>
+          ) : profile && !isReadOnly ? (
             <>
               {/* Time slot selector */}
               {timeSubOptions && (

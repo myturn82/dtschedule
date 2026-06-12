@@ -98,3 +98,16 @@ npm run dev
 
 기능 추가/수정 작업을 완료하면 `docs/CHANGE_TEST_CHECKLIST_TEMPLATE.md`를 기준으로
 `docs/checklist_YYYY-MM-DD.md` 파일을 작성하여 사용자가 직접 동작을 점검할 수 있도록 한다.
+
+## 스케줄 화면(월/주/일 뷰) 동일 적용 규칙
+
+스케줄 표시·동작에 영향을 주는 변경(셀 상태 표시, 잠금/휴관 등 뱃지·아이콘, 클릭 동작, 권한별 노출 등)을
+작업할 때는 월간 뷰(`ScheduleGrid`/`TimeSlotCell`), 주간 뷰(`WeekGrid`), 일간 뷰(`DayView`),
+모바일 뷰(`MobileScheduleView`) 중 어디서 시작했든 **나머지 뷰에도 동일하게 적용되었는지 반드시 함께 확인**한다.
+
+- 각 뷰는 렌더링 코드가 별도로 분리되어 있어(`WeekGrid`/`DayView`는 `TimeSlotCell`을 사용하지 않고 자체 렌더링),
+  한 곳만 수정하면 다른 뷰에서는 누락되기 쉽다.
+- `getCellState()`가 반환하는 `CellState`의 필드(예: `isLocked`)를 활용하는 변경이라면,
+  주간 뷰처럼 인접 월의 데이터를 함께 보여주는 화면에서는 해당 월의 `dateOverrides`/`assignments`가
+  올바르게 병합되어 전달되는지도 확인한다.
+- 작업 완료 후 점검 체크리스트(`docs/checklist_YYYY-MM-DD.md`)에도 월/주/일 뷰 각각에 대한 확인 항목을 포함한다.

@@ -12,6 +12,7 @@ interface ScheduleData {
   updateAssignment: (id: string, params: UpdateParams) => Promise<string | null>
   deleteAssignment: (id: string) => Promise<string | null>
   clearAssignments: (days?: number[]) => Promise<string | null>
+  lockAssignments: (locked: boolean, isSuperAdmin: boolean, days?: number[]) => Promise<string | null>
   updateSlotCapacity: (timeSlot: TimeSlot, maxCapacity: number) => Promise<string | null>
 }
 
@@ -43,6 +44,7 @@ interface UpdateParams {
   customer_name?: string | null
   customer_phone?: string | null
   extra_data?: Record<string, string>
+  is_locked?: boolean
 }
 
 export function useSchedule(tenantId: string, year: number, month: number): ScheduleData {
@@ -137,14 +139,66 @@ export function useSchedule(tenantId: string, year: number, month: number): Sche
       .eq('tenant_id', tenantId)
       .eq('year', year)
       .eq('month', month)
+      .eq('is_locked', false)
     if (days?.length) query = query.in('day', days)
     const { error } = await query
     if (error) return error.message
     setAssignments(prev =>
-      days?.length
-        ? prev.filter(a => !(a.year === year && a.month === month && days.includes(a.day)))
-        : []
+      prev.filter(a => a.is_locked || !(
+        a.year === year && a.month === month && (!days?.length || days.includes(a.day))
+      ))
     )
+    return null
+  }, [tenantId, year, month])
+
+  const lockAssignments = useCallback(async (locked: boolean, isSuperAdmin: boolean, days?: number[]): Promise<string | null> => {
+    // 1. 날짜 단위 잠금 — 미배정 슬롯의 신규 등록 차단/허용 (date_overrides.is_locked)
+    const daysInMonth = new Date(year, month, 0).getDate()
+    const targetDays = days?.length ? days : Array.from({ length: daysInMonth }, (_, i) => i + 1)
+    const targetDates = targetDays.map(d => `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`)
+
+    if (locked) {
+      const { error: dovError } = await supabase
+        .from('date_overrides')
+        .upsert(targetDates.map(date => ({ tenant_id: tenantId, date, is_locked: true })), { onConflict: 'tenant_id,date' })
+      if (dovError) return dovError.message
+      setDateOverrides(prev => {
+        const next = [...prev]
+        targetDates.forEach(date => {
+          const idx = next.findIndex(o => o.date === date)
+          if (idx >= 0) next[idx] = { ...next[idx], is_locked: true }
+          else next.push({ id: crypto.randomUUID(), tenant_id: tenantId, date, is_open: true, is_holiday: false, is_locked: true, label: null })
+        })
+        return next
+      })
+    } else {
+      const { error: dovError } = await supabase
+        .from('date_overrides')
+        .update({ is_locked: false })
+        .eq('tenant_id', tenantId)
+        .in('date', targetDates)
+      if (dovError) return dovError.message
+      setDateOverrides(prev => prev.map(o => targetDates.includes(o.date) ? { ...o, is_locked: false } : o))
+    }
+
+    // 2. 기존 배정 건의 잠금/해제 — 해제는 슈퍼관리자만 가능 (043 트리거)
+    if (locked || isSuperAdmin) {
+      let query = supabase.from('assignments')
+        .update({ is_locked: locked })
+        .eq('tenant_id', tenantId)
+        .eq('year', year)
+        .eq('month', month)
+        .eq('is_locked', !locked)
+      if (days?.length) query = query.in('day', days)
+      const { error } = await query
+      if (error) return error.message
+      setAssignments(prev => prev.map(a =>
+        a.year === year && a.month === month && (!days?.length || days.includes(a.day)) && a.is_locked === !locked
+          ? { ...a, is_locked: locked }
+          : a
+      ))
+    }
+
     return null
   }, [tenantId, year, month])
 
@@ -161,5 +215,5 @@ export function useSchedule(tenantId: string, year: number, month: number): Sche
     return null
   }, [tenantId])
 
-  return { assignments, slotSettings, scheduleRules, dateOverrides, loading, addAssignment, updateAssignment, deleteAssignment, clearAssignments, updateSlotCapacity }
+  return { assignments, slotSettings, scheduleRules, dateOverrides, loading, addAssignment, updateAssignment, deleteAssignment, clearAssignments, lockAssignments, updateSlotCapacity }
 }

@@ -1,6 +1,7 @@
 import type { Assignment, SlotSetting, ScheduleRule, DateOverride, ModalTarget, Profile, TenantRole, TimeSlot, TenantAccessRole } from '../../types'
 import { getCellState } from '../../utils/cellState'
 import { shortSlotLabel, formatTimeSub } from '../../utils/timeSlots'
+import { LockIcon } from '../icons/LockIcons'
 
 const DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일']
 const INDICATOR_BAR_COLOR = 'oklch(0.65 0.15 60)'
@@ -17,6 +18,17 @@ const ROLE_TINTS = [
   { bg: 'var(--tint-plus)', ink: 'var(--tint-plus-ink)' },
   { bg: 'var(--tint-moon)', ink: 'var(--tint-moon-ink)' },
 ]
+
+function EmptyOrLockHint({ isLocked }: { isLocked: boolean }) {
+  if (isLocked) {
+    return <LockIcon size={11} className="text-[var(--color-text-muted)]" />
+  }
+  return (
+    <span className="text-base leading-none text-[var(--color-border-strong)] group-hover:text-[var(--color-brand-primary)] transition-colors select-none">
+      +
+    </span>
+  )
+}
 
 interface Props {
   weekDays: Date[]
@@ -209,7 +221,7 @@ export function WeekGrid({
                               roleAssigns.map(a => {
                                 const isHighlighted = !!(highlightName && a.member_name.includes(highlightName))
                                 const timeLbl = a.time_sub ? formatTimeSub(a.time_sub) : null
-                                const isWithdrawn = !!(a.user_id && withdrawnUserIds?.has(a.user_id))
+                                const isWithdrawn = !!(a.user_id && withdrawnUserIds?.has(a.user_id)) || a.account_deleted
                                 return (
                                   <div
                                     key={a.id}
@@ -220,14 +232,17 @@ export function WeekGrid({
                                         ? { background: 'oklch(0.97 0.02 25)', color: 'oklch(0.55 0.16 25)', opacity: 0.85 }
                                         : { background: tint.bg, color: tint.ink }}
                                   >
-                                    <span className="truncate block" style={isWithdrawn ? { textDecoration: 'line-through' } : undefined}>{a.member_name}</span>
+                                    <span className="flex items-center justify-center gap-0.5 w-full">
+                                      <span className="truncate min-w-0" style={isWithdrawn ? { textDecoration: 'line-through' } : undefined}>{a.member_name}</span>
+                                      {a.is_locked && <LockIcon size={8} className="shrink-0" />}
+                                    </span>
                                     {isWithdrawn && <span className="block text-[6px] sm:text-[8px] font-normal">삭제됨</span>}
                                     {timeLbl && <span className="block text-[6px] sm:text-[8px] font-normal opacity-60">{timeLbl}</span>}
                                   </div>
                                 )
                               })
                             ) : canClick ? (
-                              <span className="text-base leading-none text-[var(--color-border-strong)] group-hover:text-[var(--color-brand-primary)] transition-colors select-none">+</span>
+                              <EmptyOrLockHint isLocked={cs.isLocked} />
                             ) : null}
                           </button>
                         )
@@ -259,7 +274,7 @@ export function WeekGrid({
                       visibleAssigns.map(a => {
                         const isHighlighted = !!(highlightName && a.member_name.includes(highlightName))
                         const timeLbl = a.time_sub ? formatTimeSub(a.time_sub) : null
-                        const isWithdrawn = !!(a.user_id && withdrawnUserIds?.has(a.user_id))
+                        const isWithdrawn = !!(a.user_id && withdrawnUserIds?.has(a.user_id)) || a.account_deleted
                         return (
                           <div
                             key={a.id}
@@ -270,14 +285,17 @@ export function WeekGrid({
                                 ? { background: 'oklch(0.97 0.02 25)', color: 'oklch(0.55 0.16 25)', opacity: 0.85 }
                                 : { background: tint.bg, color: tint.ink }}
                           >
-                            <span className="truncate block" style={isWithdrawn ? { textDecoration: 'line-through' } : undefined}>{a.member_name}</span>
+                            <span className="flex items-center justify-center gap-0.5 w-full">
+                              <span className="truncate min-w-0" style={isWithdrawn ? { textDecoration: 'line-through' } : undefined}>{a.member_name}</span>
+                              {a.is_locked && <LockIcon size={8} className="shrink-0" />}
+                            </span>
                             {isWithdrawn && <span className="block text-[6px] sm:text-[8px] font-normal">삭제됨</span>}
                             {timeLbl && <span className="block text-[6px] sm:text-[8px] font-normal opacity-60">{timeLbl}</span>}
                           </div>
                         )
                       })
                     ) : (
-                      <span className="text-base leading-none text-[var(--color-border-strong)] group-hover:text-[var(--color-brand-primary)] transition-colors select-none">+</span>
+                      <EmptyOrLockHint isLocked={cs.isLocked} />
                     )}
                   </button>
                 )

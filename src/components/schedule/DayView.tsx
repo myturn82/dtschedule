@@ -1,6 +1,7 @@
 import type { Assignment, SlotSetting, ScheduleRule, DateOverride, ModalTarget, Profile, TenantRole, TimeSlot } from '../../types'
 import { getCellState } from '../../utils/cellState'
 import { parseSlotLabel } from '../../utils/timeSlots'
+import { LockIcon } from '../icons/LockIcons'
 
 const DAY_KR = ['일', '월', '화', '수', '목', '금', '토']
 
@@ -32,7 +33,7 @@ interface Props {
 }
 
 function PersonChip({ a, withdrawnUserIds, onClick }: { a: Assignment; withdrawnUserIds?: Set<string>; onClick?: () => void }) {
-  const isW = !!(a.user_id && withdrawnUserIds?.has(a.user_id))
+  const isW = !!(a.user_id && withdrawnUserIds?.has(a.user_id)) || a.account_deleted
   const initial = a.member_name?.charAt(0) ?? '?'
   return (
     <div
@@ -174,6 +175,12 @@ export function DayView({
                 {customLabel && (
                   <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] border border-[var(--color-border)] whitespace-nowrap">
                     {customLabel}
+                  </span>
+                )}
+                {cs.isLocked && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] border border-[var(--color-border)] whitespace-nowrap">
+                    <LockIcon size={10} />
+                    고정
                   </span>
                 )}
                 <span className="ml-auto flex-shrink-0 text-xs font-bold px-3 py-1 rounded-full bg-[var(--color-surface-secondary)] border border-[var(--color-border)] whitespace-nowrap">

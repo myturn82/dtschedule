@@ -1,5 +1,6 @@
 import type { Assignment, CellState, TenantRole } from '../../types'
 import { formatTimeSub } from '../../utils/timeSlots'
+import { LockIcon } from '../icons/LockIcons'
 
 const INDICATOR_BAR_COLOR = 'oklch(0.65 0.15 60)'
 
@@ -65,7 +66,7 @@ function NameChips({ assignments, highlightName, tintBg, tintInk, teamLeaderUser
     <div className="flex flex-col gap-0.5 w-full px-0.5">
       {visible.map(a => {
         const isHighlighted = !!(highlightName && a.member_name.includes(highlightName))
-        const isWithdrawn = !!(a.user_id && withdrawnUserIds?.has(a.user_id))
+        const isWithdrawn = !!(a.user_id && withdrawnUserIds?.has(a.user_id)) || a.account_deleted
         const displayText = a.note ? `${a.member_name}(${a.note})` : a.member_name
         const timeLabel = showTimeSub && a.time_sub ? formatTimeSub(a.time_sub) : null
         return (
@@ -79,6 +80,7 @@ function NameChips({ assignments, highlightName, tintBg, tintInk, teamLeaderUser
                 : { background: tintBg, color: tintInk }}
           >
             <span style={isWithdrawn ? { textDecoration: 'line-through' } : undefined}>{displayText}</span>
+            {a.is_locked && <span title="고정됨" className="inline-flex items-center"><LockIcon size={9} className="ml-0.5" /></span>}
             {isWithdrawn && <span className={`block ${subSize} font-normal`}>삭제됨</span>}
             {timeLabel && (
               <span className={`block ${subSize} font-normal opacity-60`}>{timeLabel}</span>
@@ -103,8 +105,15 @@ function EmptyHint() {
   )
 }
 
+function EmptyOrLockHint({ isLocked }: { isLocked: boolean }) {
+  if (isLocked) {
+    return <LockIcon size={11} className="text-[var(--color-text-muted)]" />
+  }
+  return <EmptyHint />
+}
+
 export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightName, teamLeaderUserIds, roleId, indicatorBarRoles, canInteract = true, onIndicatorBarClick, withdrawnUserIds }: Props) {
-  const { isBreaktime, isClosed, isHoliday, isSaturdayShift, assignments, isFull } = cellState
+  const { isBreaktime, isClosed, isHoliday, isSaturdayShift, isLocked, assignments, isFull } = cellState
   const [slotStart, slotEnd] = timeSlot.split('-').map(Number)
   const cellMinH = slotEnd - slotStart === 1
     ? 'min-h-[1.25rem] sm:min-h-[1.75rem]'
@@ -200,7 +209,7 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
                   ) : null}
                   {hourA.length
                     ? <NameChips assignments={hourA} highlightName={highlightName} tintBg={tint.bg} tintInk={tint.ink} teamLeaderUserIds={teamLeaderUserIds} showTimeSub withdrawnUserIds={withdrawnUserIds} />
-                    : canInteract && <EmptyHint />
+                    : canInteract && <EmptyOrLockHint isLocked={isLocked} />
                   }
                 </button>
               )
@@ -228,7 +237,7 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
               <NameChips assignments={roleAssignments} highlightName={highlightName} tintBg={tint.bg} tintInk={tint.ink} teamLeaderUserIds={teamLeaderUserIds} withdrawnUserIds={withdrawnUserIds} />
               {isFull && <span className="text-[7px] sm:text-[9px] font-semibold mt-0.5 px-1.5 py-0.5 rounded-full" style={{ background: 'oklch(0.97 0.02 25)', color: 'oklch(0.55 0.16 25)' }}>마감</span>}
             </>
-          : canInteract && <EmptyHint />
+          : canInteract && <EmptyOrLockHint isLocked={isLocked} />
         }
       </button>
     )
@@ -296,7 +305,7 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
                   ) : null}
                   {hourVisible.length
                     ? <NameChips assignments={hourVisible} highlightName={highlightName} tintBg={hourTint.bg} tintInk={hourTint.ink} teamLeaderUserIds={teamLeaderUserIds} showTimeSub withdrawnUserIds={withdrawnUserIds} />
-                    : canInteract && <EmptyHint />
+                    : canInteract && <EmptyOrLockHint isLocked={isLocked} />
                   }
                 </button>
               )
@@ -325,7 +334,7 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
               <NameChips assignments={visibleAssignments} highlightName={highlightName} tintBg={cellTint.bg} tintInk={cellTint.ink} teamLeaderUserIds={teamLeaderUserIds} withdrawnUserIds={withdrawnUserIds} />
               {isFull && <span className="text-[7px] sm:text-[9px] font-semibold mt-0.5 px-1.5 py-0.5 rounded-full" style={{ background: 'oklch(0.97 0.02 25)', color: 'oklch(0.55 0.16 25)' }}>마감</span>}
             </>
-          : canInteract && <EmptyHint />
+          : canInteract && <EmptyOrLockHint isLocked={isLocked} />
         }
       </button>
     )
@@ -348,7 +357,7 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
             >
               {hourPlus.length
                 ? <NameChips assignments={hourPlus} highlightName={highlightName} tintBg={plusTint.bg} tintInk={plusTint.ink} teamLeaderUserIds={teamLeaderUserIds} small withdrawnUserIds={withdrawnUserIds} />
-                : canInteract && <EmptyHint />
+                : canInteract && <EmptyOrLockHint isLocked={isLocked} />
               }
             </button>
           )
@@ -364,7 +373,7 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
     >
       {hasPlusAssign
         ? <NameChips assignments={plusAssignments} highlightName={highlightName} tintBg={plusTint.bg} tintInk={plusTint.ink} teamLeaderUserIds={teamLeaderUserIds} small withdrawnUserIds={withdrawnUserIds} />
-        : canInteract && <EmptyHint />
+        : canInteract && <EmptyOrLockHint isLocked={isLocked} />
       }
     </button>
   )

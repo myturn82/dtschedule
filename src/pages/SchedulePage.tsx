@@ -20,10 +20,20 @@ import { RecurringModal } from '../components/modals/RecurringModal'
 import { CapacityModal } from '../components/modals/CapacityModal'
 import { HolidayNoteModal } from '../components/modals/HolidayNoteModal'
 import { ConfirmDialog } from '../components/shared/ConfirmDialog'
+import { LockIcon, UnlockIcon } from '../components/icons/LockIcons'
 import { AutoAssignPreviewModal } from '../components/modals/AutoAssignPreviewModal'
 import { computeAutoAssignments } from '../utils/autoAssign'
+import { exportMonthScheduleToExcel } from '../utils/exportSchedule'
 import type { ProposedAssignment } from '../utils/autoAssign'
-import type { ModalTarget, ViewType, TenantMode, Assignment } from '../types'
+import type { ModalTarget, ViewType, TenantMode, Assignment, DateOverride } from '../types'
+
+// 날짜 단위 잠금(date_overrides.is_locked) 기준으로 고정/해제 대상이 있는지 확인
+function hasDateLockTarget(dateOverrides: DateOverride[], dates: string[], locked: boolean): boolean {
+  return dates.some(dateStr => {
+    const isLocked = dateOverrides.find(o => o.date === dateStr)?.is_locked === true
+    return locked ? !isLocked : isLocked
+  })
+}
 
 export function SchedulePage() {
   const today = new Date()
@@ -35,6 +45,8 @@ export function SchedulePage() {
   const [showCapacity, setShowCapacity] = useState(false)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [showNoClearTarget, setShowNoClearTarget] = useState(false)
+  const [lockAction, setLockAction] = useState<'lock' | 'unlock' | null>(null)
+  const [showNoLockTarget, setShowNoLockTarget] = useState<'lock' | 'unlock' | null>(null)
   const [autoProposals, setAutoProposals] = useState<ProposedAssignment[] | null>(null)
   const [modalTarget, setModalTarget] = useState<ModalTarget | null>(null)
   const [directRegMsg, setDirectRegMsg] = useState<string | null>(null)
@@ -83,9 +95,10 @@ export function SchedulePage() {
   const adjMonth = _sundayDate.getMonth() + 1
   const needsAdj = viewType === 'week' && (adjYear !== year || adjMonth !== month)
 
-  const { assignments: primaryAssignments, slotSettings, scheduleRules, dateOverrides, loading, addAssignment, updateAssignment, deleteAssignment, clearAssignments, updateSlotCapacity } = useSchedule(tenant?.id ?? '', year, month)
-  const { assignments: adjAssignments, clearAssignments: clearAdjAssignments } = useSchedule(needsAdj ? (tenant?.id ?? '') : '', adjYear, adjMonth)
+  const { assignments: primaryAssignments, slotSettings, scheduleRules, dateOverrides, loading, addAssignment, updateAssignment, deleteAssignment, clearAssignments, lockAssignments, updateSlotCapacity } = useSchedule(tenant?.id ?? '', year, month)
+  const { assignments: adjAssignments, dateOverrides: adjDateOverrides, clearAssignments: clearAdjAssignments, lockAssignments: lockAdjAssignments } = useSchedule(needsAdj ? (tenant?.id ?? '') : '', adjYear, adjMonth)
   const assignments = needsAdj ? [...primaryAssignments, ...adjAssignments] : primaryAssignments
+  const weekDateOverrides = needsAdj ? [...dateOverrides, ...adjDateOverrides] : dateOverrides
   const { profiles, memberPreferences } = useProfiles()
   const teamLeaderUserIds = new Set<string>()
   const { roles: tenantRoles } = useTenantRoles(tenant?.id ?? '')
@@ -198,6 +211,15 @@ export function SchedulePage() {
     setAutoProposals(proposals)
   }
 
+  async function handleExportExcel() {
+    await exportMonthScheduleToExcel({
+      year, month,
+      tenantName: tenant?.settings?.title || tenant?.name || '스케줄',
+      timeSlots, assignments, slotSettings, scheduleRules, dateOverrides,
+      slotLabels, splitRoles, isSplitMode, withdrawnUserIds, displayAssignmentFilter,
+    })
+  }
+
   function handleClearClick() {
     const hasClearTarget = viewType === 'month'
       ? assignments.some(a => a.year === year && a.month === month)
@@ -206,6 +228,36 @@ export function SchedulePage() {
       : assignments.some(a => a.year === year && a.month === month && a.day === day)
     if (!hasClearTarget) { setShowNoClearTarget(true); return }
     setShowClearConfirm(true)
+  }
+
+  function handleLockClick(locked: boolean) {
+    const isSuperAdmin = !!profile?.is_super_admin
+
+    let assignmentTarget: boolean
+    let dateTarget: boolean
+    if (viewType === 'month') {
+      assignmentTarget = assignments.some(a => a.year === year && a.month === month && a.is_locked === !locked)
+      const daysInMonth = new Date(year, month, 0).getDate()
+      const dates = Array.from({ length: daysInMonth }, (_, i) => `${year}-${String(month).padStart(2, '0')}-${String(i + 1).padStart(2, '0')}`)
+      dateTarget = hasDateLockTarget(dateOverrides, dates, locked)
+    } else if (viewType === 'week') {
+      assignmentTarget = assignments.some(a => weekDays.some(d => d.getFullYear() === a.year && d.getMonth() + 1 === a.month && d.getDate() === a.day) && a.is_locked === !locked)
+      const primaryDates = weekDays
+        .filter(d => d.getFullYear() === year && d.getMonth() + 1 === month)
+        .map(d => `${year}-${String(month).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)
+      const adjDates = weekDays
+        .filter(d => d.getFullYear() === adjYear && d.getMonth() + 1 === adjMonth)
+        .map(d => `${adjYear}-${String(adjMonth).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)
+      dateTarget = hasDateLockTarget(dateOverrides, primaryDates, locked) || hasDateLockTarget(adjDateOverrides, adjDates, locked)
+    } else {
+      assignmentTarget = assignments.some(a => a.year === year && a.month === month && a.day === day && a.is_locked === !locked)
+      const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+      dateTarget = hasDateLockTarget(dateOverrides, [dateStr], locked)
+    }
+
+    const hasTarget = dateTarget || ((locked || isSuperAdmin) && assignmentTarget)
+    if (!hasTarget) { setShowNoLockTarget(locked ? 'lock' : 'unlock'); return }
+    setLockAction(locked ? 'lock' : 'unlock')
   }
 
   async function handleCellClick(target: ModalTarget) {
@@ -224,7 +276,7 @@ export function SchedulePage() {
         target.day, target.timeSlot, target.year, target.month,
         scheduleRules, slotSettings, dateOverrides, assignments
       )
-      if (!cs.isClosed && !cs.isHoliday && !cs.isBreaktime) {
+      if (!cs.isClosed && !cs.isHoliday && !cs.isBreaktime && !cs.isLocked) {
         const alreadyIn = cs.assignments.some(a => a.user_id === profile.id)
         if (!alreadyIn) {
           const roleAssigns = target.roleId
@@ -278,6 +330,12 @@ export function SchedulePage() {
         roleLabel={memberTenantRoleName ?? undefined}
         funcMenuItems={(close) => (
           <>
+            <button onClick={() => { handleExportExcel(); close() }} className={menuItemCls}>
+              <span className="flex items-center gap-2.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+                엑셀 다운로드
+              </span>
+            </button>
             <button onClick={() => { setShowCapacity(true); close() }} className={menuItemCls}>
               <span className="flex items-center gap-2.5">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -297,6 +355,22 @@ export function SchedulePage() {
                 <span className="flex items-center gap-2.5">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg>
                   반복 등록
+                </span>
+              </button>
+            )}
+            {isPrivileged && (
+              <button onClick={() => { handleLockClick(true); close() }} className={menuItemCls}>
+                <span className="flex items-center gap-2.5">
+                  <LockIcon />
+                  전체 고정
+                </span>
+              </button>
+            )}
+            {isPrivileged && (
+              <button onClick={() => { handleLockClick(false); close() }} className={menuItemCls}>
+                <span className="flex items-center gap-2.5">
+                  <UnlockIcon />
+                  전체 고정 해제
                 </span>
               </button>
             )}
@@ -369,7 +443,7 @@ export function SchedulePage() {
                 weekDays={weekDays}
                 timeSlots={timeSlots}
                 assignments={assignments} slotSettings={slotSettings}
-                scheduleRules={scheduleRules} dateOverrides={dateOverrides}
+                scheduleRules={scheduleRules} dateOverrides={weekDateOverrides}
                 highlightName={highlightName || null}
                 profile={profile}
                 splitRoles={splitRoles}
@@ -452,6 +526,7 @@ export function SchedulePage() {
             extra_data: extraData,
           })}
           onDelete={deleteAssignment}
+          onToggleLock={(id, locked) => updateAssignment(id, { is_locked: locked })}
         />
       )}
 
@@ -541,6 +616,11 @@ export function SchedulePage() {
           onConfirm={async () => {
             setShowClearConfirm(false)
             let err: string | null = null
+            const lockedCount = viewType === 'month'
+              ? assignments.filter(a => a.year === year && a.month === month && a.is_locked).length
+              : viewType === 'week'
+              ? assignments.filter(a => weekDays.some(d => d.getFullYear() === a.year && d.getMonth() + 1 === a.month && d.getDate() === a.day) && a.is_locked).length
+              : assignments.filter(a => a.year === year && a.month === month && a.day === day && a.is_locked).length
             if (viewType === 'month') {
               err = await clearAssignments()
             } else if (viewType === 'day') {
@@ -552,6 +632,53 @@ export function SchedulePage() {
               if (!err && needsAdj) {
                 const adjDays = weekDays.filter(d => d.getFullYear() === adjYear && d.getMonth() + 1 === adjMonth).map(d => d.getDate())
                 if (adjDays.length) err = await clearAdjAssignments(adjDays)
+              }
+            }
+            if (err) alert(err)
+            else if (lockedCount > 0) alert(`고정된 배정 ${lockedCount}건은 삭제되지 않고 유지됩니다.`)
+          }}
+        />
+      )}
+
+      {showNoLockTarget && (
+        <ConfirmDialog
+          title={showNoLockTarget === 'lock' ? '고정 대상 없음' : '해제 대상 없음'}
+          message={`해당 기간에 ${showNoLockTarget === 'lock' ? '고정할' : '해제할'} 스케줄이 없습니다.`}
+          confirmLabel="확인"
+          hideCancelButton
+          onConfirm={() => setShowNoLockTarget(null)}
+          onCancel={() => setShowNoLockTarget(null)}
+        />
+      )}
+
+      {lockAction && (
+        <ConfirmDialog
+          title={lockAction === 'lock' ? '일정 고정' : '고정 해제'}
+          message={
+            viewType === 'month'
+              ? `${year}년 ${month}월 스케줄을 전체 ${lockAction === 'lock' ? '고정' : '해제'}합니다.`
+              : viewType === 'week'
+              ? `${weekDays[0].getMonth() + 1}월 ${weekDays[0].getDate()}일 ~ ${weekDays[6].getMonth() + 1}월 ${weekDays[6].getDate()}일\n해당 주의 스케줄을 ${lockAction === 'lock' ? '고정' : '해제'}합니다.`
+              : `${year}년 ${month}월 ${day}일 스케줄을 ${lockAction === 'lock' ? '고정' : '해제'}합니다.`
+          }
+          confirmLabel={lockAction === 'lock' ? '고정' : '해제'}
+          cancelLabel="취소"
+          onCancel={() => setLockAction(null)}
+          onConfirm={async () => {
+            const locked = lockAction === 'lock'
+            const isSuperAdmin = !!profile?.is_super_admin
+            setLockAction(null)
+            let err: string | null = null
+            if (viewType === 'month') {
+              err = await lockAssignments(locked, isSuperAdmin)
+            } else if (viewType === 'day') {
+              err = await lockAssignments(locked, isSuperAdmin, [day])
+            } else {
+              const primaryDays = weekDays.filter(d => d.getFullYear() === year && d.getMonth() + 1 === month).map(d => d.getDate())
+              if (primaryDays.length) err = await lockAssignments(locked, isSuperAdmin, primaryDays)
+              if (!err && needsAdj) {
+                const adjDays = weekDays.filter(d => d.getFullYear() === adjYear && d.getMonth() + 1 === adjMonth).map(d => d.getDate())
+                if (adjDays.length) err = await lockAdjAssignments(locked, isSuperAdmin, adjDays)
               }
             }
             if (err) alert(err)
