@@ -1,7 +1,7 @@
 -- ============================================================
 -- 운영 DB 초기화 스크립트 (전체 재생성)
 -- 생성일: 2026-06-10
--- 기준 마이그레이션: 001 ~ 041
+-- 기준 마이그레이션: 001 ~ 047
 --
 -- ⚠️  주의: 이 스크립트는 모든 데이터를 삭제합니다.
 --           Supabase SQL Editor에서 직접 실행하세요.
@@ -16,6 +16,9 @@
 -- 트리거 삭제
 DROP TRIGGER IF EXISTS on_auth_user_created            ON auth.users;
 DROP TRIGGER IF EXISTS trg_cascade_customer_soft_delete ON customers;
+DROP TRIGGER IF EXISTS trg_assignments_lock_update      ON assignments;
+DROP TRIGGER IF EXISTS trg_assignments_lock_delete      ON assignments;
+DROP TRIGGER IF EXISTS trg_assignments_date_lock_insert ON assignments;
 
 -- 함수 삭제
 DROP FUNCTION IF EXISTS public.handle_new_user()                CASCADE;
@@ -27,6 +30,9 @@ DROP FUNCTION IF EXISTS public.shares_tenant_with(uuid)         CASCADE;
 DROP FUNCTION IF EXISTS public.customer_has_active_tenant(uuid) CASCADE;
 DROP FUNCTION IF EXISTS public.cascade_customer_soft_delete()   CASCADE;
 DROP FUNCTION IF EXISTS public.admin_update_member_name(uuid, text) CASCADE;
+DROP FUNCTION IF EXISTS public.check_assignment_lock_update()   CASCADE;
+DROP FUNCTION IF EXISTS public.check_assignment_lock_delete()   CASCADE;
+DROP FUNCTION IF EXISTS public.check_assignment_date_lock_insert() CASCADE;
 
 -- 테이블 삭제 (CASCADE로 FK·인덱스·정책 자동 제거)
 DROP TABLE IF EXISTS plan_limits    CASCADE;
@@ -140,6 +146,8 @@ CREATE TABLE assignments (
   role_id        uuid        REFERENCES tenant_roles(id) ON DELETE SET NULL,
   customer_name  text,
   customer_phone text,
+  is_locked      boolean     NOT NULL DEFAULT false,
+  account_deleted boolean    NOT NULL DEFAULT false,
   created_at     timestamptz          DEFAULT now()
 );
 
@@ -171,6 +179,7 @@ CREATE TABLE date_overrides (
   date       date        NOT NULL,
   is_open    boolean     NOT NULL DEFAULT true,
   is_holiday boolean     NOT NULL DEFAULT false,
+  is_locked  boolean     NOT NULL DEFAULT false,
   label      text,
   tenant_id  uuid        NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
   UNIQUE (tenant_id, date)
@@ -202,9 +211,9 @@ CREATE INDEX idx_schedule_rules_tenant    ON schedule_rules(tenant_id);
 CREATE INDEX idx_date_overrides_tenant    ON date_overrides(tenant_id);
 CREATE INDEX idx_date_overrides_tenant_dt ON date_overrides(tenant_id, date);
 
--- 같은 날·시간대에 동일 이름 중복 방지 (admin_note 제외)
+-- 같은 조직·날짜·시간대에 동일 이름 중복 방지 (admin_note 제외)
 CREATE UNIQUE INDEX unique_member_assignment
-  ON assignments (year, month, day, time_slot, member_name)
+  ON assignments (tenant_id, year, month, day, time_slot, member_name)
   WHERE member_type != 'admin_note';
 
 
@@ -590,6 +599,104 @@ DROP TRIGGER IF EXISTS trg_cascade_customer_soft_delete ON customers;
 CREATE TRIGGER trg_cascade_customer_soft_delete
   AFTER UPDATE OF is_active ON customers
   FOR EACH ROW EXECUTE FUNCTION public.cascade_customer_soft_delete();
+
+-- 배정 건 고정(hold): 잠긴 행은 그 누구도(슈퍼관리자 포함) 수정 불가하며,
+-- 잠금 해제(is_locked: true -> false)만 슈퍼관리자에게 허용한다.
+-- 단, 계정 삭제로 인한 user_id -> NULL 변경(FK ON DELETE SET NULL cascade) 및
+-- 그에 따른 account_deleted 플래그 설정은 예외로 허용한다.
+CREATE OR REPLACE FUNCTION public.check_assignment_lock_update()
+RETURNS TRIGGER
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public AS $$
+DECLARE
+  new_cmp assignments;
+  old_cmp assignments;
+  account_deleted_now boolean;
+BEGIN
+  account_deleted_now := (NEW.user_id IS NULL AND OLD.user_id IS NOT NULL);
+
+  IF OLD.is_locked THEN
+    new_cmp := NEW;
+    old_cmp := OLD;
+    new_cmp.is_locked := false;
+    old_cmp.is_locked := false;
+
+    -- 계정 삭제로 인한 user_id -> NULL 변경 및 account_deleted 플래그 설정은 허용
+    IF account_deleted_now THEN
+      new_cmp.user_id := old_cmp.user_id;
+      new_cmp.account_deleted := old_cmp.account_deleted;
+    END IF;
+
+    -- 잠긴 동안 잠금 여부 외 다른 필드 변경은 전면 차단
+    IF new_cmp IS DISTINCT FROM old_cmp THEN
+      RAISE EXCEPTION 'assignment is locked';
+    END IF;
+
+    -- 잠금 해제는 슈퍼관리자만 가능
+    IF NEW.is_locked IS DISTINCT FROM OLD.is_locked AND NOT is_super_admin_caller() THEN
+      RAISE EXCEPTION 'only super admin can unlock';
+    END IF;
+  ELSE
+    -- 잠금 설정(false -> true)은 관리자 이상만 가능
+    IF NEW.is_locked IS DISTINCT FROM OLD.is_locked
+       AND NOT (is_tenant_admin(OLD.tenant_id) OR is_super_admin_caller()) THEN
+      RAISE EXCEPTION 'only admins can change lock status';
+    END IF;
+  END IF;
+
+  IF account_deleted_now THEN
+    NEW.account_deleted := true;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_assignments_lock_update ON assignments;
+CREATE TRIGGER trg_assignments_lock_update
+  BEFORE UPDATE ON assignments
+  FOR EACH ROW EXECUTE FUNCTION check_assignment_lock_update();
+
+-- 배정 건 고정(hold): 잠긴 행은 누구도 삭제 불가 (슈퍼관리자도 예외 없음)
+CREATE OR REPLACE FUNCTION public.check_assignment_lock_delete()
+RETURNS TRIGGER
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public AS $$
+BEGIN
+  IF OLD.is_locked THEN
+    RAISE EXCEPTION 'assignment is locked';
+  END IF;
+  RETURN OLD;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_assignments_lock_delete ON assignments;
+CREATE TRIGGER trg_assignments_lock_delete
+  BEFORE DELETE ON assignments
+  FOR EACH ROW EXECUTE FUNCTION check_assignment_lock_delete();
+
+-- 날짜 단위 잠금: date_overrides.is_locked인 날짜에는 누구도(관리자 포함) 새 배정 추가 불가
+CREATE OR REPLACE FUNCTION public.check_assignment_date_lock_insert()
+RETURNS TRIGGER
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public AS $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM date_overrides
+    WHERE tenant_id = NEW.tenant_id
+      AND date = make_date(NEW.year, NEW.month, NEW.day)
+      AND is_locked
+  ) THEN
+    RAISE EXCEPTION 'date is locked';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_assignments_date_lock_insert ON assignments;
+CREATE TRIGGER trg_assignments_date_lock_insert
+  BEFORE INSERT ON assignments
+  FOR EACH ROW EXECUTE FUNCTION check_assignment_date_lock_insert();
 
 
 -- ────────────────────────────────────────────────────────────

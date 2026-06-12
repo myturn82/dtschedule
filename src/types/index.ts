@@ -187,6 +187,8 @@ export interface Assignment {
   customer_name: string | null;
   customer_phone: string | null;
   extra_data?: Record<string, string>;
+  is_locked: boolean;
+  account_deleted: boolean;
   created_at: string;
 }
 
@@ -212,6 +214,7 @@ export interface DateOverride {
   date: string; // 'YYYY-MM-DD'
   is_open: boolean;
   is_holiday: boolean;
+  is_locked: boolean;
   label: string | null;
 }
 
@@ -221,6 +224,7 @@ export interface CellState {
   isHoliday: boolean;
   isNightShift: boolean;
   isSaturdayShift: boolean;
+  isLocked: boolean;
   assignments: Assignment[];
   maxCapacity: number;
   isFull: boolean;
