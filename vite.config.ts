@@ -45,6 +45,7 @@ export default defineConfig({
       workbox: {
         navigateFallback: '/index.html',
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/bjnmaajhcmhxwonybnqc\.supabase\.co\/.*/i,
@@ -58,4 +59,14 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules/docx')) return 'vendor-docx'
+          if (id.includes('node_modules/jspdf')) return 'vendor-pdf'
+        },
+      },
+    },
+  },
 })
