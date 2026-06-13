@@ -18,6 +18,7 @@ import { ConsentPage }  from './pages/ConsentPage'
 import { AuthPage }     from './pages/AuthPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { useDarkMode } from './hooks/useDarkMode'
+import { InstallBanner } from './components/InstallBanner'
 
 function AppRoutes() {
   useDarkMode()
@@ -137,6 +138,7 @@ export default function App() {
         <PlanLimitsProvider>
           <TenantProvider>
             <AppRoutes />
+            <InstallBanner />
           </TenantProvider>
         </PlanLimitsProvider>
       </AuthProvider>
