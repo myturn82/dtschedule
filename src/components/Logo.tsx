@@ -102,8 +102,8 @@ interface IconProps {
 
 export function LogoIcon({ size = 32, className }: IconProps) {
   const r = Math.round(size * 0.228)
-  const fs = Math.round(size * 0.315)
-  const ls = -(size * 0.011)
+  const fs = Math.round(size * 0.333)
+  const ls = -(fs * 0.034)
 
   return (
     <div
@@ -113,6 +113,7 @@ export function LogoIcon({ size = 32, className }: IconProps) {
         height: size,
         borderRadius: r,
         background: ACCENT,
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.5)',
         display: 'grid',
         placeItems: 'center',
         flexShrink: 0,
