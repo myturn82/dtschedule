@@ -5,8 +5,8 @@ interface Props {
 
 export function FilterBar({ value, onChange }: Props) {
   return (
-    <div className="flex items-center gap-2 min-w-0">
-      <div className="relative">
+    <div className="flex items-center gap-2 min-w-0 flex-1">
+      <div className="relative flex-1 min-w-0">
         <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] text-xs pointer-events-none select-none">
           🔍
         </span>
@@ -14,8 +14,8 @@ export function FilterBar({ value, onChange }: Props) {
           type="text"
           value={value}
           onChange={e => onChange(e.target.value)}
-          placeholder="회원 이름 검색"
-          className="pl-7 pr-7 py-1.5 text-sm border border-[var(--color-border)] rounded-xl bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500/60 transition-all duration-200 w-36 sm:w-52"
+          placeholder="전체 검색"
+          className="pl-7 pr-7 py-1.5 text-sm border border-[var(--color-border)] rounded-xl bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500/60 transition-all duration-200 w-full min-w-[72px] sm:w-52"
         />
         {value && (
           <button

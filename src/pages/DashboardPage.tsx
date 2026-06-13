@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase'
 import { useDashboard } from '../hooks/useDashboard'
 import { AppHeader } from '../components/AppHeader'
 import { shortSlotLabel } from '../utils/timeSlots'
+import { getOptionUnit } from '../types'
 
 function formatHours(h: number): string {
   const totalMin = Math.round(h * 60)
@@ -125,6 +126,7 @@ export function DashboardPage() {
       const rows = (field.options ?? []).map(opt => ({
         name: opt.name,
         value: opt.value,
+        unit: getOptionUnit(opt.value_type),
         count: countByValue.get(opt.value) ?? 0,
       }))
       return { fieldId: field.id, label: field.label, rows }
@@ -146,6 +148,7 @@ export function DashboardPage() {
       const rows = (field.options ?? []).map(opt => ({
         name: opt.name,
         value: opt.value,
+        unit: getOptionUnit(opt.value_type),
         count: countByValue.get(opt.value) ?? 0,
       })).filter(r => r.count > 0)
       return { fieldId: field.id, label: field.label, rows }
@@ -538,7 +541,7 @@ export function DashboardPage() {
                                                     className={`flex items-center gap-2 px-3 py-2 bg-[var(--color-surface)] border-b border-[var(--color-border)]`}
                                                   >
                                                     <span className="text-[12px] font-medium text-[var(--color-text-primary)] flex-1 min-w-0 truncate">{row.name}</span>
-                                                    <span className="text-[12px] font-semibold tabular-nums text-[var(--color-text-primary)] shrink-0">{row.count}건({fmtValue})</span>
+                                                    <span className="text-[12px] font-semibold tabular-nums text-[var(--color-text-primary)] shrink-0">{row.count}건({fmtValue}{row.unit})</span>
                                                   </div>
                                                 )
                                               })}
@@ -547,11 +550,13 @@ export function DashboardPage() {
                                                 const allNumeric = stat.rows.length > 0 && stat.rows.every(r => r.value !== '' && !isNaN(Number(r.value)))
                                                 const valueSum = allNumeric ? stat.rows.reduce((acc, r) => acc + r.count * Number(r.value), 0) : null
                                                 const fmtSum = valueSum !== null ? valueSum.toLocaleString('ko-KR') : null
+                                                const units = stat.rows.map(r => r.unit).filter(Boolean)
+                                                const sumUnit = units.length > 0 && units.every(u => u === units[0]) ? units[0] : ''
                                                 return (
                                                   <div className="flex items-center gap-2 px-3 py-2 bg-[var(--color-surface-secondary)]">
                                                     <span className="text-[12px] font-semibold text-[var(--color-text-primary)] flex-1">합계</span>
                                                     <span className="text-[12px] font-semibold tabular-nums text-[var(--color-text-primary)] shrink-0">
-                                                      {totalCount}건{fmtSum !== null && <span className="font-normal text-[var(--color-text-muted)]">({fmtSum})</span>}
+                                                      {totalCount}건{fmtSum !== null && <span className="font-normal text-[var(--color-text-muted)]">({fmtSum}{sumUnit})</span>}
                                                     </span>
                                                   </div>
                                                 )

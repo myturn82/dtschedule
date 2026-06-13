@@ -466,10 +466,10 @@ CREATE POLICY "tenant_members_admin_delete" ON tenant_members
 CREATE POLICY "assignments_tenant_select" ON assignments
   FOR SELECT USING (is_tenant_member(tenant_id) OR is_super_admin_caller());
 
--- 본인 등록
+-- 본인 등록 (비회원 모드에서는 user_id=NULL 허용)
 CREATE POLICY "assignments_tenant_insert" ON assignments
   FOR INSERT WITH CHECK (
-    user_id = auth.uid() AND is_tenant_member(tenant_id)
+    is_tenant_member(tenant_id) AND (user_id = auth.uid() OR user_id IS NULL)
   );
 
 -- 어드민·슈퍼어드민이 대신 등록
