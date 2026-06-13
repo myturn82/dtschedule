@@ -112,12 +112,10 @@ export function LogoIcon({ size = 32, className }: IconProps) {
         width: size,
         height: size,
         borderRadius: r,
-        background: '#F4F1EA',
-        border: '1px solid rgba(20,23,28,0.10)',
+        background: ACCENT,
         display: 'grid',
         placeItems: 'center',
         flexShrink: 0,
-        boxShadow: '0 6px 18px -8px rgba(20,23,28,0.3), inset 0 1px 0 rgba(255,255,255,0.7)',
       }}
     >
       <span style={{
@@ -125,11 +123,11 @@ export function LogoIcon({ size = 32, className }: IconProps) {
         fontWeight: 800,
         letterSpacing: ls,
         lineHeight: 1,
-        color: '#14171C',
+        color: '#fff',
         fontFamily: '"Pretendard Variable", Pretendard, system-ui, sans-serif',
         userSelect: 'none',
       }}>
-        DTS<span style={{ color: ACCENT }}>.</span>
+        DTS<span style={{ color: 'rgba(255,255,255,0.6)' }}>.</span>
       </span>
     </div>
   )
