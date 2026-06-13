@@ -1,7 +1,7 @@
 -- ============================================================
 -- 운영 DB 초기화 스크립트 (전체 재생성)
 -- 생성일: 2026-06-10
--- 기준 마이그레이션: 001 ~ 047
+-- 기준 마이그레이션: 001 ~ 049
 --
 -- ⚠️  주의: 이 스크립트는 모든 데이터를 삭제합니다.
 --           Supabase SQL Editor에서 직접 실행하세요.
@@ -35,6 +35,7 @@ DROP FUNCTION IF EXISTS public.check_assignment_lock_delete()   CASCADE;
 DROP FUNCTION IF EXISTS public.check_assignment_date_lock_insert() CASCADE;
 
 -- 테이블 삭제 (CASCADE로 FK·인덱스·정책 자동 제거)
+DROP TABLE IF EXISTS assignment_snapshots CASCADE;
 DROP TABLE IF EXISTS plan_limits    CASCADE;
 DROP TABLE IF EXISTS date_overrides CASCADE;
 DROP TABLE IF EXISTS schedule_rules CASCADE;
@@ -193,6 +194,20 @@ CREATE TABLE plan_limits (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
+-- assignment_snapshots
+CREATE TABLE assignment_snapshots (
+  id             UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id      UUID        NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  year           INT         NOT NULL,
+  month          INT         NOT NULL CHECK (month BETWEEN 1 AND 12),
+  scope          TEXT        NOT NULL CHECK (scope IN ('month', 'week', 'day')),
+  days           INT[],
+  snapshot_data  JSONB       NOT NULL,
+  deleted_count  INT         NOT NULL DEFAULT 0,
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_by     UUID        REFERENCES auth.users(id) ON DELETE SET NULL
+);
+
 
 -- ────────────────────────────────────────────────────────────
 -- STEP 3. 인덱스
@@ -210,6 +225,8 @@ CREATE INDEX idx_slot_settings_tenant     ON slot_settings(tenant_id);
 CREATE INDEX idx_schedule_rules_tenant    ON schedule_rules(tenant_id);
 CREATE INDEX idx_date_overrides_tenant    ON date_overrides(tenant_id);
 CREATE INDEX idx_date_overrides_tenant_dt ON date_overrides(tenant_id, date);
+CREATE INDEX idx_assignment_snapshots_lookup
+  ON assignment_snapshots(tenant_id, year, month, created_at DESC);
 
 -- 같은 조직·날짜·시간대에 동일 이름 중복 방지 (admin_note 제외)
 CREATE UNIQUE INDEX unique_member_assignment
@@ -230,7 +247,8 @@ ALTER TABLE assignments    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE slot_settings  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE schedule_rules ENABLE ROW LEVEL SECURITY;
 ALTER TABLE date_overrides ENABLE ROW LEVEL SECURITY;
-ALTER TABLE plan_limits    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE plan_limits             ENABLE ROW LEVEL SECURITY;
+ALTER TABLE assignment_snapshots    ENABLE ROW LEVEL SECURITY;
 
 
 -- ────────────────────────────────────────────────────────────
@@ -522,6 +540,12 @@ CREATE POLICY "plan_limits_select_authenticated" ON plan_limits
 
 CREATE POLICY "plan_limits_update_super_admin" ON plan_limits
   FOR UPDATE USING (is_super_admin()) WITH CHECK (is_super_admin());
+
+-- ── assignment_snapshots ──────────────────────────────────────
+CREATE POLICY "snapshots_admin_all" ON assignment_snapshots
+  FOR ALL
+  USING  (is_tenant_admin(tenant_id) OR is_super_admin())
+  WITH CHECK (is_tenant_admin(tenant_id) OR is_super_admin());
 
 
 -- ────────────────────────────────────────────────────────────

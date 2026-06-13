@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
+import { useAssignmentSnapshot, type SnapshotInfo, type SnapshotScope } from '../hooks/useAssignmentSnapshot'
 import { useAuth } from '../hooks/useAuth'
 import { useTenant } from '../contexts/TenantContext'
 import { useSchedule } from '../hooks/useSchedule'
@@ -65,6 +66,8 @@ export function SchedulePage() {
   const [showRecurring, setShowRecurring] = useState(false)
   const [holidayTarget, setHolidayTarget] = useState<{ day: number; startHour: number; endHour: number } | null>(null)
   const [memberNotice, setMemberNotice] = useState<string | null>(null)
+  const [lastSnapshot, setLastSnapshot] = useState<SnapshotInfo | null>(null)
+  const [showRestoreConfirm, setShowRestoreConfirm] = useState(false)
 
   const [filterMemberId, setFilterMemberId] = useState<string | null>(null)
 
@@ -131,6 +134,7 @@ export function SchedulePage() {
 
   const { assignments: primaryAssignments, slotSettings, scheduleRules, dateOverrides, loading, addAssignment, updateAssignment, deleteAssignment, clearAssignments, lockAssignments, updateSlotCapacity } = useSchedule(tenant?.id ?? '', year, month)
   const { assignments: adjAssignments, dateOverrides: adjDateOverrides, clearAssignments: clearAdjAssignments, lockAssignments: lockAdjAssignments } = useSchedule(needsAdj ? (tenant?.id ?? '') : '', adjYear, adjMonth)
+  const { saveSnapshot, restoreSnapshot } = useAssignmentSnapshot(tenant?.id ?? '')
   const assignments = needsAdj ? [...primaryAssignments, ...adjAssignments] : primaryAssignments
   const weekDateOverrides = needsAdj ? [...dateOverrides, ...adjDateOverrides] : dateOverrides
   const { profiles, memberPreferences } = useProfiles()
@@ -793,10 +797,10 @@ export function SchedulePage() {
           title="스케줄 초기화"
           message={
             viewType === 'month'
-              ? `${year}년 ${month}월 스케줄을 전체 삭제합니다.\n이 작업은 되돌릴 수 없습니다.`
+              ? `${year}년 ${month}월 스케줄을 전체 삭제합니다.\n초기화 후 복구할 수 있습니다.`
               : viewType === 'week'
-              ? `${weekDays[0].getMonth() + 1}월 ${weekDays[0].getDate()}일 ~ ${weekDays[6].getMonth() + 1}월 ${weekDays[6].getDate()}일\n해당 주의 스케줄을 삭제합니다.\n이 작업은 되돌릴 수 없습니다.`
-              : `${year}년 ${month}월 ${day}일 스케줄을 삭제합니다.\n이 작업은 되돌릴 수 없습니다.`
+              ? `${weekDays[0].getMonth() + 1}월 ${weekDays[0].getDate()}일 ~ ${weekDays[6].getMonth() + 1}월 ${weekDays[6].getDate()}일\n해당 주의 스케줄을 삭제합니다.\n초기화 후 복구할 수 있습니다.`
+              : `${year}년 ${month}월 ${day}일 스케줄을 삭제합니다.\n초기화 후 복구할 수 있습니다.`
           }
           confirmLabel="삭제"
           cancelLabel="취소"
@@ -804,6 +808,32 @@ export function SchedulePage() {
           onCancel={() => setShowClearConfirm(false)}
           onConfirm={async () => {
             setShowClearConfirm(false)
+
+            // 삭제 대상(미잠금) 수집 → 스냅샷 저장
+            let toDelete: typeof assignments
+            let snapshotDays: number[] | undefined
+            if (viewType === 'month') {
+              toDelete = assignments.filter(a => a.year === year && a.month === month && !a.is_locked)
+            } else if (viewType === 'day') {
+              toDelete = assignments.filter(a => a.year === year && a.month === month && a.day === day && !a.is_locked)
+              snapshotDays = [day]
+            } else {
+              toDelete = assignments.filter(a =>
+                weekDays.some(d => d.getFullYear() === a.year && d.getMonth() + 1 === a.month && d.getDate() === a.day) && !a.is_locked
+              )
+              // primary month 기준 days (인접 월은 snapshot_data에서 자동 판단)
+              snapshotDays = weekDays.filter(d => d.getFullYear() === year && d.getMonth() + 1 === month).map(d => d.getDate())
+            }
+
+            let snapshotId: string | null = null
+            if (toDelete.length > 0) {
+              const { snapshotId: sid } = await saveSnapshot(toDelete, {
+                year, month, scope: viewType as SnapshotScope, days: snapshotDays,
+              })
+              snapshotId = sid
+            }
+
+            // 실제 삭제 실행
             let err: string | null = null
             const lockedCount = viewType === 'month'
               ? assignments.filter(a => a.year === year && a.month === month && a.is_locked).length
@@ -823,8 +853,20 @@ export function SchedulePage() {
                 if (adjDays.length) err = await clearAdjAssignments(adjDays)
               }
             }
-            if (err) alert(err)
-            else if (lockedCount > 0) alert(`고정된 배정 ${lockedCount}건은 삭제되지 않고 유지됩니다.`)
+
+            if (err) {
+              alert(err)
+            } else {
+              if (snapshotId && toDelete.length > 0) {
+                setLastSnapshot({
+                  id: snapshotId, year, month,
+                  scope: viewType as SnapshotScope,
+                  days: snapshotDays ?? null,
+                  deletedCount: toDelete.length,
+                })
+              }
+              if (lockedCount > 0) alert(`고정된 배정 ${lockedCount}건은 삭제되지 않고 유지됩니다.`)
+            }
           }}
         />
       )}
@@ -890,6 +932,59 @@ export function SchedulePage() {
           onAdd={(params) => addAssignment({ ...params, tenant_id: tenant!.id, user_id: params.user_id })}
           onUpdate={(id, params) => updateAssignment(id, params)}
           onDelete={deleteAssignment}
+        />
+      )}
+
+      {lastSnapshot && (
+        <div style={{
+          position: 'fixed', bottom: directRegMsg ? 60 : 16, left: '50%', transform: 'translateX(-50%)',
+          zIndex: 9998, display: 'flex', alignItems: 'center', gap: 10,
+          background: '#14171C', borderRadius: 12, padding: '10px 14px',
+          boxShadow: '0 8px 24px -8px rgba(20,23,28,0.55)',
+          fontFamily: '"Pretendard Variable", Pretendard, system-ui, sans-serif',
+          whiteSpace: 'nowrap',
+          transition: 'bottom 0.2s ease',
+        }}>
+          <span style={{ fontSize: 13, color: '#9AA0AB' }}>
+            {lastSnapshot.deletedCount}건 초기화됨
+          </span>
+          <button
+            onClick={() => setShowRestoreConfirm(true)}
+            style={{
+              background: 'oklch(0.66 0.16 28)', color: '#fff', border: 0,
+              borderRadius: 7, padding: '5px 12px', fontSize: 13, fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >복구하기</button>
+          <button
+            onClick={() => setLastSnapshot(null)}
+            style={{
+              background: 'transparent', border: 0, color: '#71767F',
+              cursor: 'pointer', padding: '2px 4px', fontSize: 15, lineHeight: 1,
+            }}
+          >✕</button>
+        </div>
+      )}
+
+      {showRestoreConfirm && lastSnapshot && (
+        <ConfirmDialog
+          title="스케줄 복구"
+          message={`초기화 이전 스케줄 ${lastSnapshot.deletedCount}건을 복구합니다.\n초기화 이후 등록된 스케줄은 덮어써집니다.\n계속하시겠습니까?`}
+          confirmLabel="복구"
+          cancelLabel="취소"
+          danger
+          onCancel={() => setShowRestoreConfirm(false)}
+          onConfirm={async () => {
+            setShowRestoreConfirm(false)
+            const { restoredCount, error } = await restoreSnapshot(lastSnapshot.id)
+            if (error) {
+              alert(`복구 실패: ${error}`)
+            } else {
+              setLastSnapshot(null)
+              setDirectRegMsg(`${restoredCount}건 스케줄이 복구됐습니다.`)
+              setTimeout(() => setDirectRegMsg(null), 3000)
+            }
+          }}
         />
       )}
 

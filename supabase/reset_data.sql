@@ -21,6 +21,7 @@ DELETE FROM auth.users;
 -- ────────────────────────────────────────────────────────────
 
 TRUNCATE TABLE
+  assignment_snapshots,
   date_overrides,
   schedule_rules,
   slot_settings,
