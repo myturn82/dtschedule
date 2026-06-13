@@ -272,6 +272,9 @@ export function AuthPage() {
 
       {/* ── Main card ── */}
       <div className="af-card">
+        <div style={{ marginBottom: 24 }}>
+          <img src="/logo-timetable-stack.png" alt="Dynamic Team Schedule" style={{ width: 200, height: 'auto', display: 'block' }} />
+        </div>
         <span className="af-eyebrow">{tab === 'login' ? 'WELCOME BACK' : 'JOIN US'}</span>
         <h2 className="af-title">
           {tab === 'login' ? <>다시 만나서<br />반가워요</> : <>새로 오셨군요<br />반갑습니다</>}

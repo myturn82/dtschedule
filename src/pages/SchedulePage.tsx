@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { useTenant } from '../contexts/TenantContext'
 import { useSchedule } from '../hooks/useSchedule'
@@ -23,7 +23,7 @@ import { ConfirmDialog } from '../components/shared/ConfirmDialog'
 import { LockIcon, UnlockIcon } from '../components/icons/LockIcons'
 import { AutoAssignPreviewModal } from '../components/modals/AutoAssignPreviewModal'
 import { computeAutoAssignments } from '../utils/autoAssign'
-import { exportMonthScheduleToExcel } from '../utils/exportSchedule'
+import { exportMonthScheduleToExcel, exportMonthScheduleToCsv, exportMonthScheduleToDocx, exportMonthScheduleToPdf } from '../utils/exportSchedule'
 import type { ProposedAssignment } from '../utils/autoAssign'
 import type { ModalTarget, ViewType, TenantMode, Assignment, DateOverride } from '../types'
 
@@ -43,6 +43,18 @@ export function SchedulePage() {
   const [viewType, setViewType] = useState<ViewType>('month')
   const [highlightName, setHighlightName] = useState('')
   const [showCapacity, setShowCapacity] = useState(false)
+  const [exportOpen, setExportOpen] = useState(false)
+
+  // ── 셀 선택 / 복사 붙여넣기 ─────────────────────────────────────────────────
+  const isShiftRef = useRef(false)
+  type CellPos = { day: number; slotIdx: number }
+  type CopiedCell = {
+    dayOffset: number; slotOffset: number
+    assignments: Array<{ member_name: string; note: string | null; member_type: string; role_id: string | null; user_id: string | null; time_sub: string | null; color: string | null }>
+  }
+  const [excelMode, setExcelMode] = useState(false)
+  const [cellSel, setCellSel] = useState<{ anchor: CellPos; cursor: CellPos } | null>(null)
+  const [copyBuf, setCopyBuf] = useState<{ origin: CellPos; cells: CopiedCell[] } | null>(null)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [showNoClearTarget, setShowNoClearTarget] = useState(false)
   const [lockAction, setLockAction] = useState<'lock' | 'unlock' | null>(null)
@@ -65,6 +77,28 @@ export function SchedulePage() {
     rawMode === '회원선택' ? '회원공유' :
     rawMode === '직접입력' ? '비회원' :
     rawMode as TenantMode
+
+  const selRange = useMemo(() => {
+    if (!cellSel) return null
+    return {
+      minDay: Math.min(cellSel.anchor.day, cellSel.cursor.day),
+      maxDay: Math.max(cellSel.anchor.day, cellSel.cursor.day),
+      minSlotIdx: Math.min(cellSel.anchor.slotIdx, cellSel.cursor.slotIdx),
+      maxSlotIdx: Math.max(cellSel.anchor.slotIdx, cellSel.cursor.slotIdx),
+    }
+  }, [cellSel])
+
+  const cpRange = useMemo(() => {
+    if (!copyBuf || !copyBuf.cells.length) return null
+    const maxDO = Math.max(...copyBuf.cells.map(c => c.dayOffset))
+    const maxSO = Math.max(...copyBuf.cells.map(c => c.slotOffset))
+    return {
+      minDay: copyBuf.origin.day,
+      maxDay: copyBuf.origin.day + maxDO,
+      minSlotIdx: copyBuf.origin.slotIdx,
+      maxSlotIdx: copyBuf.origin.slotIdx + maxSO,
+    }
+  }, [copyBuf])
 
   const displayAssignmentFilter = useMemo<((a: Assignment) => boolean) | undefined>(() => {
     if (tenantMode !== '회원개별') return undefined
@@ -156,6 +190,84 @@ export function SchedulePage() {
     else setMonth(m => m + 1)
   }
 
+  // ── 키보드: Shift 추적 + Ctrl+C/V/Escape ──────────────────────────────────
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Shift') { isShiftRef.current = true; return }
+      if (!excelMode) return
+      if (e.key === 'Escape') { setCellSel(null); setCopyBuf(null); return }
+      if (!(e.ctrlKey || e.metaKey)) return
+
+      if (e.key === 'c') {
+        if (!selRange) return
+        e.preventDefault()
+        const cells: Array<{ dayOffset: number; slotOffset: number; assignments: Array<{ member_name: string; note: string | null; member_type: string; role_id: string | null; user_id: string | null; time_sub: string | null; color: string | null }> }> = []
+        for (let si = selRange.minSlotIdx; si <= selRange.maxSlotIdx; si++) {
+          if (si < 0 || si >= timeSlots.length) continue
+          for (let d = selRange.minDay; d <= selRange.maxDay; d++) {
+            const cs = getCellState(d, timeSlots[si], year, month, scheduleRules, slotSettings, dateOverrides, assignments)
+            cells.push({
+              dayOffset: d - selRange.minDay,
+              slotOffset: si - selRange.minSlotIdx,
+              assignments: cs.assignments
+                .filter(a => a.member_type !== 'admin_note')
+                .map(a => ({ member_name: a.member_name, note: a.note, member_type: a.member_type, role_id: a.role_id, user_id: a.user_id, time_sub: a.time_sub, color: a.color })),
+            })
+          }
+        }
+        setCopyBuf({ origin: { day: selRange.minDay, slotIdx: selRange.minSlotIdx }, cells })
+      }
+
+      if (e.key === 'v') {
+        if (!copyBuf || !cellSel || !isPrivileged) return
+        e.preventDefault()
+        const pasteDay = Math.min(cellSel.anchor.day, cellSel.cursor.day)
+        const pasteSlotIdx = Math.min(cellSel.anchor.slotIdx, cellSel.cursor.slotIdx)
+        const daysInMonth = new Date(year, month, 0).getDate()
+        ;(async () => {
+          for (const cell of copyBuf.cells) {
+            const td = pasteDay + cell.dayOffset
+            const tsi = pasteSlotIdx + cell.slotOffset
+            if (td < 1 || td > daysInMonth || tsi < 0 || tsi >= timeSlots.length) continue
+            const ts = timeSlots[tsi]
+            const cs = getCellState(td, ts, year, month, scheduleRules, slotSettings, dateOverrides, assignments)
+            if (cs.isHoliday || cs.isBreaktime || cs.isClosed || cs.isLocked) continue
+            for (const a of cell.assignments) {
+              await addAssignment({
+                tenant_id: tenant!.id, year, month, day: td, time_slot: ts,
+                member_name: a.member_name, note: a.note ?? undefined,
+                member_type: a.member_type, user_id: a.user_id,
+                role_id: a.role_id, time_sub: a.time_sub ?? undefined, color: a.color ?? undefined,
+                customer_name: null, customer_phone: null,
+              })
+            }
+          }
+        })()
+      }
+    }
+    function onKeyUp(e: KeyboardEvent) { if (e.key === 'Shift') isShiftRef.current = false }
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('keyup', onKeyUp)
+    return () => { window.removeEventListener('keydown', onKeyDown); window.removeEventListener('keyup', onKeyUp) }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [excelMode, cellSel, selRange, copyBuf, isPrivileged, timeSlots, year, month, scheduleRules, slotSettings, dateOverrides, assignments, addAssignment, tenant])
+
+  const swipeTouchStartX = useRef<number | null>(null)
+  function handleTouchStart(e: React.TouchEvent) {
+    swipeTouchStartX.current = e.touches[0].clientX
+  }
+  function handleTouchEnd(e: React.TouchEvent) {
+    if (swipeTouchStartX.current === null) return
+    const dx = e.changedTouches[0].clientX - swipeTouchStartX.current
+    swipeTouchStartX.current = null
+    if (Math.abs(dx) < 50) return
+    if (dx < 0) {
+      viewType === 'month' ? nextMonth() : shiftDate(viewType === 'week' ? 7 : 1)
+    } else {
+      viewType === 'month' ? prevMonth() : shiftDate(viewType === 'week' ? -7 : -1)
+    }
+  }
+
   function shiftDate(delta: number) {
     const d = new Date(year, month - 1, day)
     d.setDate(d.getDate() + delta)
@@ -211,14 +323,16 @@ export function SchedulePage() {
     setAutoProposals(proposals)
   }
 
-  async function handleExportExcel() {
-    await exportMonthScheduleToExcel({
-      year, month,
-      tenantName: tenant?.settings?.title || tenant?.name || '스케줄',
-      timeSlots, assignments, slotSettings, scheduleRules, dateOverrides,
-      slotLabels, splitRoles, isSplitMode, withdrawnUserIds, displayAssignmentFilter,
-    })
-  }
+  const exportParams = () => ({
+    year, month,
+    tenantName: tenant?.settings?.title || tenant?.name || '스케줄',
+    timeSlots, assignments, slotSettings, scheduleRules, dateOverrides,
+    slotLabels, splitRoles, isSplitMode, withdrawnUserIds, displayAssignmentFilter,
+  })
+  async function handleExportExcel() { await exportMonthScheduleToExcel(exportParams()) }
+  function handleExportCsv() { exportMonthScheduleToCsv(exportParams()) }
+  async function handleExportDocx() { await exportMonthScheduleToDocx(exportParams()) }
+  async function handleExportPdf() { await exportMonthScheduleToPdf(exportParams()) }
 
   function handleClearClick() {
     const hasClearTarget = viewType === 'month'
@@ -261,6 +375,21 @@ export function SchedulePage() {
   }
 
   async function handleCellClick(target: ModalTarget) {
+    const slotIdx = timeSlots.indexOf(target.timeSlot)
+
+    // 엑셀 모드: 선택만 하고 팝업 열지 않음
+    if (excelMode) {
+      if (isShiftRef.current) {
+        setCellSel(prev => ({
+          anchor: prev?.anchor ?? { day: target.day, slotIdx },
+          cursor: { day: target.day, slotIdx },
+        }))
+      } else {
+        setCellSel({ anchor: { day: target.day, slotIdx }, cursor: { day: target.day, slotIdx } })
+      }
+      return
+    }
+
     if (isSplitMode && tenantRole === 'member') {
       if (!memberRoleId || target.roleId !== memberRoleId) return
     }
@@ -322,7 +451,7 @@ export function SchedulePage() {
   const menuItemCls = 'w-full text-left px-3 py-2 text-sm rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors'
 
   return (
-    <div className="min-h-[100dvh] bg-[var(--color-bg)]">
+    <div className="min-h-[100dvh] bg-[var(--color-bg)]" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
       <AppHeader
         leftSlot={<FilterBar value={highlightName} onChange={setHighlightName} />}
         memberSelectSlot={memberSelectEl}
@@ -330,12 +459,59 @@ export function SchedulePage() {
         roleLabel={memberTenantRoleName ?? undefined}
         funcMenuItems={(close) => (
           <>
-            <button onClick={() => { handleExportExcel(); close() }} className={menuItemCls}>
-              <span className="flex items-center gap-2.5">
+            {isPrivileged && viewType === 'month' && (
+              <>
+                <button
+                  onClick={() => {
+                    setExcelMode(v => { if (v) { setCellSel(null); setCopyBuf(null) } return !v })
+                    close()
+                  }}
+                  className={`${menuItemCls} ${excelMode ? 'bg-[color-mix(in_srgb,var(--color-brand-primary)_12%,transparent)] text-[var(--color-brand-primary)]' : ''}`}
+                >
+                  <span className="flex items-center gap-2.5 w-full">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+                    <span className="flex-1">엑셀 모드</span>
+                    {excelMode && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-[var(--color-brand-primary)] text-white">ON</span>}
+                  </span>
+                </button>
+                <div className="h-px bg-[var(--color-border)] mx-1 my-1" />
+              </>
+            )}
+            <button onClick={() => setExportOpen(o => !o)} className={menuItemCls}>
+              <span className="flex items-center gap-2.5 w-full">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
-                엑셀 다운로드
+                <span className="flex-1">문서 다운로드</span>
+                <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: exportOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }}><path d="M4 2l4 4-4 4"/></svg>
               </span>
             </button>
+            {exportOpen && (
+              <div className="ml-3 pl-3 border-l-2 border-[var(--color-border)] flex flex-col gap-0.5 mb-1">
+                <button onClick={() => { handleExportExcel(); close() }} className={menuItemCls}>
+                  <span className="flex items-center gap-2.5">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+                    Excel (.xlsx)
+                  </span>
+                </button>
+                <button onClick={() => { handleExportCsv(); close() }} className={menuItemCls}>
+                  <span className="flex items-center gap-2.5">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+                    CSV (.csv)
+                  </span>
+                </button>
+                <button onClick={() => { handleExportDocx(); close() }} className={menuItemCls}>
+                  <span className="flex items-center gap-2.5">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    Word (.docx)
+                  </span>
+                </button>
+                <button onClick={() => { handleExportPdf(); close() }} className={menuItemCls}>
+                  <span className="flex items-center gap-2.5">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 13h1a2 2 0 0 1 0 4H9v-4z"/><path d="M15 13h1.5a1.5 1.5 0 0 1 0 3H15v-3z"/></svg>
+                    PDF (.pdf)
+                  </span>
+                </button>
+              </div>
+            )}
             <button onClick={() => { setShowCapacity(true); close() }} className={menuItemCls}>
               <span className="flex items-center gap-2.5">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -410,6 +586,17 @@ export function SchedulePage() {
             <Legend legendItems={legendItems} />
           </div>
 
+          {excelMode && (
+            <div className="mx-1.5 sm:mx-3 mt-2 mb-0 flex items-center gap-2 px-3 py-2 rounded-xl bg-[color-mix(in_srgb,var(--color-brand-primary)_10%,transparent)] border border-[var(--color-brand-primary)]/30 text-sm text-[var(--color-brand-primary)]">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+              <span className="flex-1 font-semibold text-xs">엑셀 모드 — 클릭으로 셀 선택, Shift+클릭으로 범위, Ctrl+C/V 복사·붙여넣기</span>
+              {copyBuf && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[var(--color-brand-primary)] text-white">복사됨</span>}
+              <button
+                onClick={() => { setExcelMode(false); setCellSel(null); setCopyBuf(null) }}
+                className="ml-1 opacity-60 hover:opacity-100 transition-opacity text-xs leading-none"
+              >✕</button>
+            </div>
+          )}
           <div className="p-1.5 sm:p-3">
             {loading ? (
               <div className="flex flex-col items-center justify-center h-64 gap-3">
@@ -437,6 +624,8 @@ export function SchedulePage() {
                   : undefined}
                 displayAssignmentFilter={displayAssignmentFilter}
                 withdrawnUserIds={withdrawnUserIds}
+                selectionRange={selRange}
+                copyRange={cpRange}
               />
             ) : viewType === 'week' ? (
               <WeekGrid
@@ -508,7 +697,7 @@ export function SchedulePage() {
             member_type: memberType,
             time_sub: timeSub || undefined,
             color: color || undefined,
-            user_id: userId ?? (tenantMode === '비회원' ? null : profile!.id),
+            user_id: userId ?? profile!.id,
             role_id: roleId ?? null,
             customer_name: customerName ?? null,
             customer_phone: customerPhone ?? null,

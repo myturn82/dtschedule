@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react'
+import { LogoIcon, LogoWordmark } from '../Logo'
 
 interface ScheduleBackgroundProps {
   topNavSlot?: React.ReactNode
@@ -261,26 +262,8 @@ export function ScheduleBackground({ topNavSlot, children }: ScheduleBackgroundP
       {/* Row 1 — brand bar */}
       <header className="lmp-brand-bar">
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="32" height="32" style={{ flexShrink:0, borderRadius:8, overflow:'hidden' }}>
-            <rect width="512" height="512" rx="112" fill="#FBF9F4"/>
-            <rect x="64"     y="142.8" width="55.67" height="68.8" rx="16" fill="oklch(0.85 0.10 70)"/>
-            <rect x="129.67" y="142.8" width="55.67" height="68.8" rx="16" fill="oklch(0.66 0.16 28)"/>
-            <rect x="326.67" y="142.8" width="55.67" height="68.8" rx="16" fill="oklch(0.78 0.09 230)"/>
-            <rect x="392.33" y="142.8" width="55.67" height="68.8" rx="16" fill="oklch(0.75 0.10 160)"/>
-            <rect x="64"     y="221.6" width="55.67" height="68.8" rx="16" fill="oklch(0.72 0.10 290)"/>
-            <rect x="129.67" y="221.6" width="55.67" height="68.8" rx="16" fill="oklch(0.85 0.10 70)"/>
-            <rect x="326.67" y="221.6" width="55.67" height="68.8" rx="16" fill="oklch(0.66 0.16 28)"/>
-            <rect x="392.33" y="221.6" width="55.67" height="68.8" rx="16" fill="oklch(0.78 0.09 230)"/>
-            <rect x="64"     y="300.4" width="55.67" height="68.8" rx="16" fill="oklch(0.75 0.10 160)"/>
-            <rect x="129.67" y="300.4" width="55.67" height="68.8" rx="16" fill="oklch(0.72 0.10 290)"/>
-            <rect x="326.67" y="300.4" width="55.67" height="68.8" rx="16" fill="oklch(0.85 0.10 70)"/>
-            <rect x="392.33" y="300.4" width="55.67" height="68.8" rx="16" fill="oklch(0.66 0.16 28)"/>
-            <rect x="64"     y="379.2" width="55.67" height="68.8" rx="16" fill="oklch(0.78 0.09 230)"/>
-            <rect x="129.67" y="379.2" width="55.67" height="68.8" rx="16" fill="oklch(0.75 0.10 160)"/>
-            <rect x="326.67" y="379.2" width="55.67" height="68.8" rx="16" fill="oklch(0.72 0.10 290)"/>
-            <rect x="392.33" y="379.2" width="55.67" height="68.8" rx="16" fill="oklch(0.85 0.10 70)"/>
-          </svg>
-          <span style={{ fontSize:15, fontWeight:600, letterSpacing:-0.2, color:'#14171C', whiteSpace:'nowrap' }}>스케줄러</span>
+          <LogoIcon size={28} />
+          <LogoWordmark size="sm" thin />
           <span className="lmp-brand-pill">WORKSPACE</span>
         </div>
         <div className="lmp-top-nav">

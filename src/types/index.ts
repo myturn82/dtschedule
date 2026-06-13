@@ -14,9 +14,23 @@ export const DEFAULT_MAX_CAPACITY = 2;
 
 // ─── Tenant types ─────────────────────────────────────────────────────────────
 
+export type OptionValueType = 'amount' | 'quantity' | 'people' | 'none'
+
+export const OPTION_VALUE_TYPES: { value: OptionValueType; label: string; unit: string }[] = [
+  { value: 'none',     label: '없음', unit: '' },
+  { value: 'amount',   label: '금액', unit: '원' },
+  { value: 'quantity', label: '수량', unit: '개' },
+  { value: 'people',   label: '인원', unit: '명' },
+]
+
+export function getOptionUnit(valueType?: OptionValueType | string): string {
+  return OPTION_VALUE_TYPES.find(t => t.value === valueType)?.unit ?? ''
+}
+
 export interface CustomFieldOption {
-  name: string;   // dropdown display label
-  value: string;  // stored in extra_data, used for stats aggregation
+  name: string;        // dropdown display label
+  value: string;       // stored in extra_data, used for stats aggregation
+  value_type?: OptionValueType;
 }
 
 export interface CustomFieldDef {

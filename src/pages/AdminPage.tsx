@@ -6,7 +6,8 @@ import { useTenant } from '../contexts/TenantContext'
 import { useTenantRoles } from '../hooks/useTenantRoles'
 import { supabase } from '../lib/supabase'
 import { buildSlot, parseSlotLabel, generateTimeSlots, DEFAULT_TIME_SLOTS, SLOT_TEMPLATES } from '../utils/timeSlots'
-import type { TimeSlot, Tenant, TenantAccessRole, LegendItem, LegendColor, CustomFieldDef, CustomFieldOption } from '../types'
+import type { TimeSlot, Tenant, TenantAccessRole, LegendItem, LegendColor, CustomFieldDef, CustomFieldOption, OptionValueType } from '../types'
+import { OPTION_VALUE_TYPES, getOptionUnit } from '../types'
 import { LEGEND_COLOR_STYLES } from '../components/schedule/Legend'
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
@@ -1673,9 +1674,16 @@ export function AdminPage() {
                             </div>
                             {editField.type === 'select' && (
                               <div className="space-y-1.5">
-                                <p className="text-xs text-[var(--color-text-muted)]">선택지 (표시명 / 저장값)</p>
+                                <p className="text-xs text-[var(--color-text-muted)]">선택지 (유형 / 표시명 / 저장값)</p>
                                 {(editField.options ?? []).map((opt, oi) => (
                                   <div key={oi} className="flex gap-1.5 items-center">
+                                    <select
+                                      value={opt.value_type ?? 'none'}
+                                      onChange={e => setEditField(f => ({ ...f, options: (f.options ?? []).map((o, i) => i === oi ? { ...o, value_type: e.target.value as OptionValueType } : o) }))}
+                                      className={inputCls + ' w-16 shrink-0 text-xs'}
+                                    >
+                                      {OPTION_VALUE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                                    </select>
                                     <input
                                       type="text"
                                       value={opt.name}
@@ -1683,18 +1691,23 @@ export function AdminPage() {
                                       placeholder="표시명"
                                       className={inputCls + ' flex-1 min-w-0'}
                                     />
-                                    <input
-                                      type="text"
-                                      value={opt.value}
-                                      onChange={e => setEditField(f => ({ ...f, options: (f.options ?? []).map((o, i) => i === oi ? { ...o, value: e.target.value } : o) }))}
-                                      placeholder="저장값"
-                                      className={inputCls + ' flex-1 min-w-0'}
-                                    />
+                                    <div className="flex items-center gap-0.5 flex-1 min-w-0">
+                                      <input
+                                        type="text"
+                                        value={opt.value}
+                                        onChange={e => setEditField(f => ({ ...f, options: (f.options ?? []).map((o, i) => i === oi ? { ...o, value: e.target.value } : o) }))}
+                                        placeholder="저장값"
+                                        className={inputCls + ' flex-1 min-w-0'}
+                                      />
+                                      {getOptionUnit(opt.value_type) && (
+                                        <span className="text-xs text-[var(--color-text-muted)] shrink-0 pl-0.5">{getOptionUnit(opt.value_type)}</span>
+                                      )}
+                                    </div>
                                     <button type="button" onClick={() => setEditField(f => ({ ...f, options: (f.options ?? []).filter((_, i) => i !== oi) }))}
                                       className="text-red-400 hover:text-red-600 text-xs px-1">✕</button>
                                   </div>
                                 ))}
-                                <button type="button" onClick={() => setEditField(f => ({ ...f, options: [...(f.options ?? []), { name: '', value: '' }] }))}
+                                <button type="button" onClick={() => setEditField(f => ({ ...f, options: [...(f.options ?? []), { name: '', value: '', value_type: 'none' }] }))}
                                   className="text-xs text-[var(--color-brand-primary)] hover:underline">+ 옵션 추가</button>
                                 <label className="flex items-center gap-1.5 text-xs text-[var(--color-text-secondary)] cursor-pointer pt-1">
                                   <input type="checkbox" checked={!!editField.show_in_dashboard} onChange={e => setEditField(f => ({ ...f, show_in_dashboard: e.target.checked }))} className="accent-[var(--color-brand-primary)]" />
@@ -1764,9 +1777,16 @@ export function AdminPage() {
                   </div>
                   {newFieldType === 'select' && (
                     <div className="space-y-1.5">
-                      <label className="block text-xs text-[var(--color-text-muted)]">선택지 (표시명 / 저장값)</label>
+                      <label className="block text-xs text-[var(--color-text-muted)]">선택지 (유형 / 표시명 / 저장값)</label>
                       {newFieldOptions.map((opt, oi) => (
                         <div key={oi} className="flex gap-1.5 items-center">
+                          <select
+                            value={opt.value_type ?? 'none'}
+                            onChange={e => setNewFieldOptions(prev => prev.map((o, i) => i === oi ? { ...o, value_type: e.target.value as OptionValueType } : o))}
+                            className={inputCls + ' w-16 shrink-0 text-xs'}
+                          >
+                            {OPTION_VALUE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                          </select>
                           <input
                             type="text"
                             value={opt.name}
@@ -1774,18 +1794,23 @@ export function AdminPage() {
                             placeholder="표시명"
                             className={inputCls + ' flex-1 min-w-0'}
                           />
-                          <input
-                            type="text"
-                            value={opt.value}
-                            onChange={e => setNewFieldOptions(prev => prev.map((o, i) => i === oi ? { ...o, value: e.target.value } : o))}
-                            placeholder="저장값"
-                            className={inputCls + ' flex-1 min-w-0'}
-                          />
+                          <div className="flex items-center gap-0.5 flex-1 min-w-0">
+                            <input
+                              type="text"
+                              value={opt.value}
+                              onChange={e => setNewFieldOptions(prev => prev.map((o, i) => i === oi ? { ...o, value: e.target.value } : o))}
+                              placeholder="저장값"
+                              className={inputCls + ' flex-1 min-w-0'}
+                            />
+                            {getOptionUnit(opt.value_type) && (
+                              <span className="text-xs text-[var(--color-text-muted)] shrink-0 pl-0.5">{getOptionUnit(opt.value_type)}</span>
+                            )}
+                          </div>
                           <button type="button" onClick={() => setNewFieldOptions(prev => prev.filter((_, i) => i !== oi))}
                             className="text-red-400 hover:text-red-600 text-xs px-1">✕</button>
                         </div>
                       ))}
-                      <button type="button" onClick={() => setNewFieldOptions(prev => [...prev, { name: '', value: '' }])}
+                      <button type="button" onClick={() => setNewFieldOptions(prev => [...prev, { name: '', value: '', value_type: 'none' }])}
                         className="text-xs text-[var(--color-brand-primary)] hover:underline">+ 옵션 추가</button>
                       <label className="flex items-center gap-1.5 text-xs text-[var(--color-text-secondary)] cursor-pointer pt-1">
                         <input type="checkbox" checked={newFieldShowInDashboard} onChange={e => setNewFieldShowInDashboard(e.target.checked)} className="accent-[var(--color-brand-primary)]" />

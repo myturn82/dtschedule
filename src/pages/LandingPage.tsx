@@ -21,16 +21,9 @@ export function LandingPage() {
         }
       `}</style>
       <div className="lmp-card">
-        {/* Brand pill */}
-        <div style={{
-          display: 'inline-block', fontSize: 11,
-          fontFamily: '"JetBrains Mono", monospace',
-          padding: '3px 8px', borderRadius: 999,
-          background: '#fff', border: '1px solid rgba(20,23,28,0.09)',
-          color: 'oklch(0.66 0.16 28)', letterSpacing: '1.2px',
-          textTransform: 'uppercase', marginBottom: 14, fontWeight: 700,
-        }}>
-          SCHEDULER
+        {/* Brand */}
+        <div style={{ marginBottom: 18 }}>
+          <img src="/logo-colon-time.png" alt="Dynamic Team Schedule" style={{ height: 30, width: 'auto', display: 'block' }} />
         </div>
 
         {/* Headline */}

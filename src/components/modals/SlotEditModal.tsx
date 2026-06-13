@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { Assignment, CellState, ModalTarget, Profile, TenantRole, MemberType, CustomFieldDef, TenantMode } from '../../types'
+import { getOptionUnit } from '../../types'
 import { parseSlotLabel, getTimeSubOptions, formatTimeSub } from '../../utils/timeSlots'
 import { useProfiles } from '../../hooks/useProfiles'
 import type { ProfileWithRole } from '../../hooks/useProfiles'
@@ -420,11 +421,12 @@ export function SlotEditModal({
                             {!useDynamicFields && a.customer_phone && (
                               <span className="text-xs text-[var(--color-text-muted)]">연락처: {a.customer_phone}</span>
                             )}
-                            {useDynamicFields && customFields.slice(1).map(f =>
-                              a.extra_data?.[f.id] ? (
-                                <span key={f.id} className="text-xs text-[var(--color-text-muted)]">{f.label}: {a.extra_data[f.id]}</span>
-                              ) : null
-                            )}
+                            {useDynamicFields && customFields.slice(1).map(f => {
+                              const val = a.extra_data?.[f.id]
+                              if (!val) return null
+                              const unit = getOptionUnit(f.options?.find(o => o.value === val)?.value_type)
+                              return <span key={f.id} className="text-xs text-[var(--color-text-muted)]">{f.label}: {val}{unit}</span>
+                            })}
                             {a.note && <span className="text-xs text-[var(--color-text-muted)]">메모: {a.note}</span>}
                           </div>
                         ) : (

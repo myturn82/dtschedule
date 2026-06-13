@@ -1,6 +1,6 @@
 import { Fragment } from 'react'
 import { getCellState } from '../../utils/cellState'
-import { rangeSlotLabel } from '../../utils/timeSlots'
+import { rangeSlotLabel, slotStartLabel } from '../../utils/timeSlots'
 import { getKoreanHolidayName } from '../../utils/koreanHolidays'
 import { TimeSlotCell } from './TimeSlotCell'
 import type { Assignment, SlotSetting, ScheduleRule, DateOverride, TimeSlot, ModalTarget, Profile, TenantRole } from '../../types'
@@ -26,6 +26,8 @@ interface Props {
   onHolidayCellClick?: (day: number, startHour: number, endHour: number) => void
   displayAssignmentFilter?: (a: Assignment) => boolean
   withdrawnUserIds?: Set<string>
+  selectionRange?: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number } | null
+  copyRange?: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number } | null
 }
 
 const DOW_ORDER = [1, 2, 3, 4, 5, 6, 0]
@@ -168,8 +170,13 @@ function buildColMap(
 export function ScheduleGrid({
   year, month, timeSlots, assignments, slotSettings, scheduleRules, dateOverrides,
   highlightName, profile, tenantRole, memberRoleId, teamLeaderUserIds, splitRoles = [], indicatorBarRoles = [], isSplitMode = false, slotLabels = {}, onCellClick, onHolidayCellClick, displayAssignmentFilter, withdrawnUserIds,
+  selectionRange, copyRange,
 }: Props) {
   const isAdmin = profile?.is_super_admin || tenantRole === 'admin'
+
+  function inRange(day: number, si: number, r: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number }) {
+    return day >= r.minDay && day <= r.maxDay && si >= r.minSlotIdx && si <= r.maxSlotIdx
+  }
   const isIndicatorBarMember = !isAdmin && indicatorBarRoles.some(r => r.id === memberRoleId)
   const weeks = getCalendarWeeks(year, month)
   const splitCount = splitRoles.length
@@ -275,7 +282,12 @@ export function ScheduleGrid({
                   <tr key={slot}>
                     <td className="border border-[var(--color-border-table)] bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] px-0.5 sm:px-1 py-1 text-[9px] sm:text-[10px] font-medium text-center sticky left-0 z-10 w-10 sm:w-20 whitespace-nowrap overflow-hidden font-mono-num">
                       <span className="block truncate" title={rangeSlotLabel(slot)}>
-                        {slotLabels[slot] ?? rangeSlotLabel(slot)}
+                        {slotLabels[slot] ?? (
+                          <>
+                            <span className="hidden sm:inline">{rangeSlotLabel(slot)}</span>
+                            <span className="sm:hidden">{slotStartLabel(slot)}</span>
+                          </>
+                        )}
                       </span>
                     </td>
                     {week.map((day, dowIdx) => {
@@ -394,9 +406,15 @@ export function ScheduleGrid({
                               <td
                                 key={role.id}
                                 rowSpan={merge.rowspan > 1 ? merge.rowspan : undefined}
-                                className="border border-[var(--color-border-table)] p-0"
+                                className="border border-[var(--color-border-table)] p-0 relative"
                                 style={{ height: '1px' }}
                               >
+                                {selectionRange && day && inRange(day, slotIdx, selectionRange) && (
+                                  <div className="absolute inset-0 bg-blue-400/20 pointer-events-none z-10" />
+                                )}
+                                {copyRange && day && inRange(day, slotIdx, copyRange) && (
+                                  <div className="absolute inset-0 border-2 border-dashed border-blue-500 pointer-events-none z-10" />
+                                )}
                                 <TimeSlotCell
                                   cellState={displayCellState}
                                   timeSlot={slot}
@@ -445,9 +463,15 @@ export function ScheduleGrid({
                           {!volMerge.skip && (
                             <td
                               rowSpan={volMerge.rowspan > 1 ? volMerge.rowspan : undefined}
-                              className="border border-[var(--color-border-table)] p-0"
+                              className="border border-[var(--color-border-table)] p-0 relative"
                               style={{ height: '1px' }}
                             >
+                              {selectionRange && inRange(day, slotIdx, selectionRange) && (
+                                <div className="absolute inset-0 bg-blue-400/20 pointer-events-none z-10" />
+                              )}
+                              {copyRange && inRange(day, slotIdx, copyRange) && (
+                                <div className="absolute inset-0 border-2 border-dashed border-blue-500 pointer-events-none z-10" />
+                              )}
                               <TimeSlotCell
                                 cellState={displayCellState}
                                 timeSlot={slot}
@@ -463,9 +487,15 @@ export function ScheduleGrid({
                           {showVolPlusSplit && !isSat && !plusMerge.skip && (
                             <td
                               rowSpan={plusMerge.rowspan > 1 ? plusMerge.rowspan : undefined}
-                              className="border border-[var(--color-border-table)] p-0"
+                              className="border border-[var(--color-border-table)] p-0 relative"
                               style={{ height: '1px' }}
                             >
+                              {selectionRange && inRange(day, slotIdx, selectionRange) && (
+                                <div className="absolute inset-0 bg-blue-400/20 pointer-events-none z-10" />
+                              )}
+                              {copyRange && inRange(day, slotIdx, copyRange) && (
+                                <div className="absolute inset-0 border-2 border-dashed border-blue-500 pointer-events-none z-10" />
+                              )}
                               <TimeSlotCell
                                 cellState={displayCellState}
                                 timeSlot={slot}

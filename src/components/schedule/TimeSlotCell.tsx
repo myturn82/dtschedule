@@ -65,7 +65,14 @@ function NameChips({ assignments, highlightName, tintBg, tintInk, teamLeaderUser
   return (
     <div className="flex flex-col gap-0.5 w-full px-0.5">
       {visible.map(a => {
-        const isHighlighted = !!(highlightName && a.member_name.includes(highlightName))
+        const _hq = highlightName?.toLowerCase() ?? ''
+        const isHighlighted = !!(highlightName && (
+          a.member_name.toLowerCase().includes(_hq) ||
+          (a.note && a.note.toLowerCase().includes(_hq)) ||
+          (a.customer_name && a.customer_name.toLowerCase().includes(_hq)) ||
+          (a.customer_phone && a.customer_phone.includes(_hq)) ||
+          (a.extra_data && Object.values(a.extra_data).some(v => String(v ?? '').toLowerCase().includes(_hq)))
+        ))
         const isWithdrawn = !!(a.user_id && withdrawnUserIds?.has(a.user_id)) || a.account_deleted
         const displayText = a.note ? `${a.member_name}(${a.note})` : a.member_name
         const timeLabel = showTimeSub && a.time_sub ? formatTimeSub(a.time_sub) : null

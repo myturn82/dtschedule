@@ -42,7 +42,7 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
         <div className="flex items-center justify-between gap-2 px-3 py-3 sm:px-5">
 
           {/* Left: hamburger + leftSlot + memberSelectSlot */}
-          <div className="flex items-center gap-1.5 min-w-0">
+          <div className="flex flex-1 items-center gap-1.5 min-w-0">
             {showHamburger && (
               <button
                 onClick={() => setShowFuncMenu(v => !v)}
@@ -60,6 +60,7 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
             ) : leftSlot}
             {memberSelectSlot}
           </div>
+
 
           {/* Right: rightSlot + name/badge + avatar */}
           <div className="flex items-center gap-1.5 shrink-0">

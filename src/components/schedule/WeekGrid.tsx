@@ -1,6 +1,6 @@
 import type { Assignment, SlotSetting, ScheduleRule, DateOverride, ModalTarget, Profile, TenantRole, TimeSlot, TenantAccessRole } from '../../types'
 import { getCellState } from '../../utils/cellState'
-import { shortSlotLabel, formatTimeSub } from '../../utils/timeSlots'
+import { shortSlotLabel, slotStartLabel, formatTimeSub } from '../../utils/timeSlots'
 import { LockIcon } from '../icons/LockIcons'
 
 const DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일']
@@ -140,8 +140,6 @@ export function WeekGrid({
         {timeSlots.map(slot => {
           const [slotStartNum] = slot.split('-').map(Number)
           const isMoon = slotStartNum >= 20
-          const slotLabel = slotLabels[slot] || shortSlotLabel(slot)
-
           return (
             <div
               key={slot}
@@ -151,7 +149,12 @@ export function WeekGrid({
               {/* Time label */}
               <div className="px-1.5 py-1.5 flex flex-col justify-center items-center text-center border-r border-[var(--color-border)]">
                 <span className="text-[9px] font-medium text-[var(--color-text-secondary)] leading-snug break-all">
-                  {slotLabel}
+                  {slotLabels[slot] ?? (
+                    <>
+                      <span className="hidden sm:inline">{shortSlotLabel(slot)}</span>
+                      <span className="sm:hidden">{slotStartLabel(slot)}</span>
+                    </>
+                  )}
                 </span>
               </div>
 
@@ -219,7 +222,14 @@ export function WeekGrid({
                           >
                             {roleAssigns.length > 0 ? (
                               roleAssigns.map(a => {
-                                const isHighlighted = !!(highlightName && a.member_name.includes(highlightName))
+                                const _hq = highlightName?.toLowerCase() ?? ''
+                                const isHighlighted = !!(highlightName && (
+                                  a.member_name.toLowerCase().includes(_hq) ||
+                                  (a.note && a.note.toLowerCase().includes(_hq)) ||
+                                  (a.customer_name && a.customer_name.toLowerCase().includes(_hq)) ||
+                                  (a.customer_phone && a.customer_phone.includes(_hq)) ||
+                                  (a.extra_data && Object.values(a.extra_data).some(v => String(v ?? '').toLowerCase().includes(_hq)))
+                                ))
                                 const timeLbl = a.time_sub ? formatTimeSub(a.time_sub) : null
                                 const isWithdrawn = !!(a.user_id && withdrawnUserIds?.has(a.user_id)) || a.account_deleted
                                 return (
@@ -272,7 +282,14 @@ export function WeekGrid({
                     )}
                     {visibleAssigns.length > 0 ? (
                       visibleAssigns.map(a => {
-                        const isHighlighted = !!(highlightName && a.member_name.includes(highlightName))
+                        const _hq = highlightName?.toLowerCase() ?? ''
+                        const isHighlighted = !!(highlightName && (
+                          a.member_name.toLowerCase().includes(_hq) ||
+                          (a.note && a.note.toLowerCase().includes(_hq)) ||
+                          (a.customer_name && a.customer_name.toLowerCase().includes(_hq)) ||
+                          (a.customer_phone && a.customer_phone.includes(_hq)) ||
+                          (a.extra_data && Object.values(a.extra_data).some(v => String(v ?? '').toLowerCase().includes(_hq)))
+                        ))
                         const timeLbl = a.time_sub ? formatTimeSub(a.time_sub) : null
                         const isWithdrawn = !!(a.user_id && withdrawnUserIds?.has(a.user_id)) || a.account_deleted
                         return (

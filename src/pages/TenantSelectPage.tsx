@@ -5,6 +5,7 @@ import { useTenant } from '../contexts/TenantContext'
 import { useAuth } from '../hooks/useAuth'
 import { useCustomerAdmin } from '../hooks/useCustomerAdmin'
 import type { Tenant, Customer } from '../types'
+import { LogoIcon } from '../components/Logo'
 
 function getGreeting() {
   const h = new Date().getHours()
@@ -323,28 +324,7 @@ export function TenantSelectPage() {
         padding: '20px 28px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="30" height="30" style={{ flexShrink: 0, borderRadius: 9, overflow: 'hidden' }}>
-            <rect width="512" height="512" rx="112" fill="#FBF9F4"/>
-            <rect x="64"     y="142.8" width="55.67" height="68.8" rx="16" fill="oklch(0.85 0.10 70)"/>
-            <rect x="129.67" y="142.8" width="55.67" height="68.8" rx="16" fill="oklch(0.66 0.16 28)"/>
-            <rect x="326.67" y="142.8" width="55.67" height="68.8" rx="16" fill="oklch(0.78 0.09 230)"/>
-            <rect x="392.33" y="142.8" width="55.67" height="68.8" rx="16" fill="oklch(0.75 0.10 160)"/>
-            <rect x="64"     y="221.6" width="55.67" height="68.8" rx="16" fill="oklch(0.72 0.10 290)"/>
-            <rect x="129.67" y="221.6" width="55.67" height="68.8" rx="16" fill="oklch(0.85 0.10 70)"/>
-            <rect x="326.67" y="221.6" width="55.67" height="68.8" rx="16" fill="oklch(0.66 0.16 28)"/>
-            <rect x="392.33" y="221.6" width="55.67" height="68.8" rx="16" fill="oklch(0.78 0.09 230)"/>
-            <rect x="64"     y="300.4" width="55.67" height="68.8" rx="16" fill="oklch(0.75 0.10 160)"/>
-            <rect x="129.67" y="300.4" width="55.67" height="68.8" rx="16" fill="oklch(0.72 0.10 290)"/>
-            <rect x="326.67" y="300.4" width="55.67" height="68.8" rx="16" fill="oklch(0.85 0.10 70)"/>
-            <rect x="392.33" y="300.4" width="55.67" height="68.8" rx="16" fill="oklch(0.66 0.16 28)"/>
-            <rect x="64"     y="379.2" width="55.67" height="68.8" rx="16" fill="oklch(0.78 0.09 230)"/>
-            <rect x="129.67" y="379.2" width="55.67" height="68.8" rx="16" fill="oklch(0.75 0.10 160)"/>
-            <rect x="326.67" y="379.2" width="55.67" height="68.8" rx="16" fill="oklch(0.72 0.10 290)"/>
-            <rect x="392.33" y="379.2" width="55.67" height="68.8" rx="16" fill="oklch(0.85 0.10 70)"/>
-          </svg>
-          <span style={{ fontSize: 16, fontWeight: 700, letterSpacing: -0.4, whiteSpace: 'nowrap' }}>스케줄러</span>
-        </div>
+        <LogoIcon size={30} />
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {profile?.is_super_admin && (
