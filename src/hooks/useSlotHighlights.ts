@@ -24,8 +24,9 @@ export function useSlotHighlights(tenantId: string) {
       })
       .on('postgres_changes', {
         event: 'DELETE', schema: 'public', table: 'slot_highlights',
-        // filter 없음 — DEFAULT replica identity에서 DELETE payload.old에는 PK(id)만 포함
-        // filter를 걸면 서버가 이벤트 자체를 전달하지 않음 (useSchedule과 동일 패턴)
+        filter: `tenant_id=eq.${tenantId}`,
+        // REPLICA IDENTITY FULL 설정으로 DELETE payload.old에 모든 컬럼 포함됨
+        // → tenant_id 필터 적용 가능 (다른 조직 이벤트 수신 차단)
       }, payload => {
         const { id } = payload.old as { id: string }
         setHighlights(prev => prev.filter(h => h.id !== id))
