@@ -33,4 +33,8 @@ CREATE POLICY "slot_highlights_member_select" ON slot_highlights
     OR is_super_admin()
   );
 
+-- REPLICA IDENTITY FULL: DELETE 이벤트 payload.old에 모든 컬럼 포함
+-- → DELETE 구독에도 tenant_id 필터 적용 가능 (비용 절감)
+ALTER TABLE slot_highlights REPLICA IDENTITY FULL;
+
 ALTER PUBLICATION supabase_realtime ADD TABLE slot_highlights;
