@@ -25,6 +25,8 @@ interface Props {
   onUpdate: (id: string, name: string, note: string, memberType: MemberType, timeSub: string | null, color?: string, roleId?: string | null, customerName?: string | null, customerPhone?: string | null, extraData?: Record<string, string>) => Promise<string | null>
   onDelete: (id: string) => Promise<string | null>
   onToggleLock?: (id: string, locked: boolean) => Promise<string | null>
+  isHighlighted?: boolean
+  onToggleHighlight?: () => void
 }
 
 const PHONE_RE = /^[0-9]{2,4}-[0-9]{3,4}-[0-9]{4}$|^[0-9]{9,11}$/
@@ -52,7 +54,7 @@ export function SlotEditModal({
   slotLabels = {},
   typeLabels = { member: '팀원', '50plus': '' },
   lockedUserId,
-  onClose, onAdd, onUpdate, onDelete, onToggleLock,
+  onClose, onAdd, onUpdate, onDelete, onToggleLock, isHighlighted, onToggleHighlight,
 }: Props) {
   const { day, month, timeSlot, memberType: defaultType, roleId: initialRoleId } = target
   const isAdmin = profile?.is_super_admin || tenantRole === 'admin'
@@ -615,6 +617,18 @@ export function SlotEditModal({
               )}
 
               <div className="flex gap-2">
+                {isAdmin && onToggleHighlight && !editingId && (
+                  <button
+                    onClick={onToggleHighlight}
+                    className={`flex-1 rounded-xl py-2.5 text-sm font-medium border transition-all duration-200 ${
+                      isHighlighted
+                        ? 'bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100'
+                        : 'border-[var(--color-border-strong)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)]'
+                    }`}
+                  >
+                    {isHighlighted ? '🔔 하이라이트 해제' : '🔔 빈 슬롯 알림'}
+                  </button>
+                )}
                 <button
                   onClick={editingId ? handleUpdate : handleAdd}
                   disabled={isAddDisabled}

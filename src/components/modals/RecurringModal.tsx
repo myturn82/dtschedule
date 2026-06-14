@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import type { Profile, TenantRole, ScheduleRule, DateOverride, TenantMode, TenantAccessRole } from '../../types'
 import type { ProfileWithRole } from '../../hooks/useProfiles'
-import { getDatesForPattern } from '../../utils/recurringDates'
+import { getDatesForPattern, getDatesForDaily, getDatesForMonthly, getDatesForYearly } from '../../utils/recurringDates'
 import { parseSlotLabel } from '../../utils/timeSlots'
 
 interface Props {
@@ -40,6 +40,10 @@ export function RecurringModal({
     ? (profiles.find(p => p.id === profile?.id)?.tenantRoleId ?? null)
     : null
 
+  type RepeatType = 'daily' | 'weekly' | 'monthly' | 'yearly'
+  const [repeatType, setRepeatType] = useState<RepeatType>('weekly')
+  const [dayOfMonth, setDayOfMonth] = useState(new Date().getDate())
+  const [monthOfYear, setMonthOfYear] = useState(new Date().getMonth() + 1)
   const [selectedDays, setSelectedDays] = useState<number[]>([])
   const [selectedSlots, setSelectedSlots] = useState<string[]>([])
   const [rangeMode, setRangeMode] = useState<'this' | 'next' | 'custom'>('this')
@@ -91,12 +95,22 @@ export function RecurringModal({
 
   // (date, slot) pairs across all selected slots
   const targetPairs = useMemo(() => {
-    if (!selectedDays.length || !selectedSlots.length) return []
-    return selectedSlots.flatMap(slot =>
-      getDatesForPattern(startDate, endDate, selectedDays, slot, scheduleRules, dateOverrides)
-        .map(d => ({ ...d, time_slot: slot }))
-    )
-  }, [selectedDays, selectedSlots, startDate, endDate, scheduleRules, dateOverrides])
+    if (!selectedSlots.length) return []
+    return selectedSlots.flatMap(slot => {
+      let dates: { year: number; month: number; day: number }[] = []
+      if (repeatType === 'daily') {
+        dates = getDatesForDaily(startDate, endDate, slot, scheduleRules, dateOverrides)
+      } else if (repeatType === 'weekly') {
+        if (!selectedDays.length) return []
+        dates = getDatesForPattern(startDate, endDate, selectedDays, slot, scheduleRules, dateOverrides)
+      } else if (repeatType === 'monthly') {
+        dates = getDatesForMonthly(startDate, endDate, dayOfMonth, slot, scheduleRules, dateOverrides)
+      } else {
+        dates = getDatesForYearly(startDate, endDate, monthOfYear, dayOfMonth, slot, scheduleRules, dateOverrides)
+      }
+      return dates.map(d => ({ ...d, time_slot: slot }))
+    })
+  }, [repeatType, selectedDays, selectedSlots, dayOfMonth, monthOfYear, startDate, endDate, scheduleRules, dateOverrides])
 
   // Unique dates (for preview)
   const uniqueDateKeys = useMemo(
@@ -114,7 +128,7 @@ export function RecurringModal({
 
   async function handleSubmit() {
     setError(null)
-    if (!selectedDays.length) { setError('요일을 선택해주세요'); return }
+    if (repeatType === 'weekly' && !selectedDays.length) { setError('요일을 선택해주세요'); return }
     if (!selectedSlots.length) { setError('시간대를 선택해주세요'); return }
     if (!volunteerName.trim()) { setError('이름을 입력해주세요'); return }
     if (isAdmin && !isFreeform && !selectedUserId) { setError('회원을 선택해주세요'); return }
@@ -194,7 +208,20 @@ export function RecurringModal({
         {/* Scrollable body */}
         <div className="overflow-y-auto flex-1 px-5 py-4 space-y-5">
 
-          {/* 요일 선택 */}
+          {/* 반복 유형 */}
+          <div>
+            <p className="text-xs font-semibold text-[var(--color-text-secondary)] mb-2">반복 유형</p>
+            <div className="grid grid-cols-4 gap-1.5">
+              {(['daily','weekly','monthly','yearly'] as RepeatType[]).map(t => (
+                <button key={t} onClick={() => setRepeatType(t)} className={tabCls(repeatType === t)}>
+                  {t === 'daily' ? '매일' : t === 'weekly' ? '매주' : t === 'monthly' ? '매월' : '매년'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 요일 선택 (매주만) */}
+          {repeatType === 'weekly' && (
           <div>
             <p className="text-xs font-semibold text-[var(--color-text-secondary)] mb-2">
               요일 선택 <span className="text-red-500">*</span>
@@ -220,6 +247,39 @@ export function RecurringModal({
               })}
             </div>
           </div>
+          )}
+
+          {/* 월 선택 (매년만) */}
+          {repeatType === 'yearly' && (
+          <div>
+            <p className="text-xs font-semibold text-[var(--color-text-secondary)] mb-2">월 선택</p>
+            <div className="grid grid-cols-6 gap-1.5">
+              {Array.from({length:12},(_,i)=>i+1).map(m=>(
+                <button key={m} onClick={()=>setMonthOfYear(m)}
+                  className={`py-1.5 rounded-xl text-xs font-semibold transition-colors ${monthOfYear===m ? 'bg-[var(--color-brand-primary)] text-white' : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'}`}>
+                  {m}월
+                </button>
+              ))}
+            </div>
+          </div>
+          )}
+
+          {/* 날짜(일) 선택 (매월/매년) */}
+          {(repeatType === 'monthly' || repeatType === 'yearly') && (
+          <div>
+            <p className="text-xs font-semibold text-[var(--color-text-secondary)] mb-2">
+              {repeatType === 'monthly' ? '매월 반복 날짜' : '매년 반복 날짜'}
+            </p>
+            <div className="grid grid-cols-7 gap-1">
+              {Array.from({length:31},(_,i)=>i+1).map(d=>(
+                <button key={d} onClick={()=>setDayOfMonth(d)}
+                  className={`py-1.5 rounded-lg text-xs font-semibold transition-colors ${dayOfMonth===d ? 'bg-[var(--color-brand-primary)] text-white' : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'}`}>
+                  {d}
+                </button>
+              ))}
+            </div>
+          </div>
+          )}
 
           {/* 시간대 멀티 선택 */}
           <div>
