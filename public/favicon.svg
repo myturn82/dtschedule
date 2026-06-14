@@ -1,20 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <rect width="512" height="512" rx="116" fill="#E05A3A"/>
   <text
-    x="180" y="308"
+    x="256" y="316"
     text-anchor="middle"
     font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
     font-size="170"
     font-weight="800"
     letter-spacing="-6"
     fill="#ffffff"
-  >DTS</text>
-  <text
-    x="382" y="308"
-    text-anchor="middle"
-    font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
-    font-size="170"
-    font-weight="800"
-    fill="rgba(255,255,255,0.6)"
-  >.</text>
+  >DTS<tspan fill="rgba(255,255,255,0.55)">.</tspan></text>
 </svg>
