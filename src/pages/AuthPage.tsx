@@ -184,7 +184,13 @@ export function AuthPage() {
     setLoading(true); setError(null)
     const { data } = await supabase.from('profiles').select('id').eq('email', joinEmail.trim()).maybeSingle()
     setLoading(false)
-    if (data) { setError('이미 가입된 이메일입니다. 로그인을 이용해 주세요.'); return }
+    if (data) {
+      setTab('login')
+      setLoginStep('email')
+      setLoginEmail(joinEmail.trim())
+      setError('이미 가입된 이메일입니다. 로그인을 이용해 주세요.')
+      return
+    }
     signupInProgress.current = true
     setSignupEmailInCard(false)
     setJoinStep('name')
