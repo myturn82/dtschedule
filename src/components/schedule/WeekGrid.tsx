@@ -273,7 +273,7 @@ export function WeekGrid({
                 const cellTint = isAllPlus ? plusTint : baseTint
                 const hlKey = `${y}-${pad2(m)}-${pad2(day)}|${slot}`
                 const isHighlighted = !visibleAssigns.length && (highlightedSlots?.has(hlKey) ?? false)
-                const hlBg = 'oklch(0.97 0.06 80)'
+
 
                 return (
                   <button
@@ -281,17 +281,17 @@ export function WeekGrid({
                     onClick={() => onCellClick({ year: y, month: m, day, timeSlot: slot, memberType: 'member' })}
                     className={`relative border-l border-[var(--color-border)] flex flex-col items-center justify-center gap-0.5 p-1 group transition-colors ${visibleAssigns.length > 0 ? 'hover:brightness-95' : 'hover:bg-[var(--color-surface-hover)]'}`}
                     style={{
-                      background: visibleAssigns.length > 0 ? cellTint.bg : isHighlighted ? hlBg : undefined,
+                      background: visibleAssigns.length > 0 ? cellTint.bg : undefined,
                     }}
                   >
                     {isHighlighted && (
-                      <span className="absolute inset-[2px] rounded pointer-events-none" style={{ border: '2px dashed oklch(0.72 0.16 80)' }} />
+                      <span className="absolute inset-[2px] rounded pointer-events-none" style={{ border: '2px dashed var(--color-brand-primary)' }} />
                     )}
                     {hasBar && (
                       <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: INDICATOR_BAR_COLOR }} />
                     )}
                     {isHighlighted && !cs.isLocked && (
-                      <span className="text-xs" style={{ color: 'oklch(0.55 0.18 80)' }}>🔔</span>
+                      <span className="text-xs" style={{ color: 'var(--color-brand-primary)' }}>🔔</span>
                     )}
                     {visibleAssigns.length > 0 ? (
                       visibleAssigns.map(a => {
