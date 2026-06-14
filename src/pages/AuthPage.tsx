@@ -153,6 +153,8 @@ export function AuthPage() {
     signupInProgress.current = false
     setWizOpen(false); setError(null)
     setSignupEmailInCard(true)
+    setJoinStep('name')
+    setJoinName(''); setJoinPw(''); setJoinConfirm('')
   }
 
   // ── handlers ──────────────────────────────────────────────────
@@ -186,25 +188,29 @@ export function AuthPage() {
     setLoading(false)
     if (data) {
       setTab('login')
-      setLoginStep('email')
+      setLoginStep('password')
       setLoginEmail(joinEmail.trim())
+      setLoginPw('')
       setError('이미 가입된 이메일입니다. 로그인을 이용해 주세요.')
       return
     }
     signupInProgress.current = true
     setSignupEmailInCard(false)
     setJoinStep('name')
+    setJoinName(''); setJoinPw(''); setJoinConfirm('')
     setWizOpen(true)
   }
 
-  // 이미 가입된 이메일 오류 시 wizard를 닫고 로그인 탭으로 전환
+  // 이미 가입된 이메일 오류 시 wizard를 완전히 초기화하고 로그인 비밀번호 단계로 전환
   function redirectToLoginTab(message: string) {
     signupInProgress.current = false
     setWizOpen(false)
     setTab('login')
-    setLoginStep('email')
+    setLoginStep('password')
     setLoginEmail(joinEmail.trim())
+    setLoginPw('')
     setJoinStep('name')
+    setJoinName(''); setJoinPw(''); setJoinConfirm('')
     setError(message)
   }
 
