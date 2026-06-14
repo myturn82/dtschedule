@@ -187,7 +187,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
 
   const typeLabels = useMemo(() => ({
     member: tenant?.settings?.volunteer_label ?? '팀원',
-    '50plus': tenant?.settings?.plus_label ?? '50플러스활동가',
+    '50plus': tenant?.settings?.plus_label ?? '50+',
   }), [tenant])
 
   return (

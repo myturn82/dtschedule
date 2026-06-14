@@ -13,11 +13,6 @@ const HOLIDAY_STRIPE = {
   background: 'repeating-linear-gradient(135deg, transparent 0 8px, oklch(0.96 0.02 25 / 0.6) 8px 16px)',
 } as const
 
-const ROLE_TINTS = [
-  { bg: 'var(--tint-sun)',  ink: 'var(--tint-sun-ink)' },
-  { bg: 'var(--tint-plus)', ink: 'var(--tint-plus-ink)' },
-  { bg: 'var(--tint-moon)', ink: 'var(--tint-moon-ink)' },
-]
 
 function EmptyOrLockHint({ isLocked }: { isLocked: boolean }) {
   if (isLocked) {
@@ -205,7 +200,9 @@ export function WeekGrid({
                           a => a.role_id === role.id && !(a.user_id && teamLeaderUserIds?.has(a.user_id))
                         )
                         const canClick = isAdmin || memberRoleId === role.id
-                        const tint = ROLE_TINTS[ri % ROLE_TINTS.length]
+                        const tint = isMoon
+                          ? { bg: 'var(--tint-moon)', ink: 'var(--tint-moon-ink)' }
+                          : { bg: 'var(--tint-sun)',  ink: 'var(--tint-sun-ink)' }
 
                         return (
                           <button
