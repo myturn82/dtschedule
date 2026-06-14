@@ -1,7 +1,7 @@
 -- ============================================================
 -- 운영 DB 초기화 스크립트 (전체 재생성)
 -- 생성일: 2026-06-10
--- 기준 마이그레이션: 001 ~ 049
+-- 기준 마이그레이션: 001 ~ 050
 --
 -- ⚠️  주의: 이 스크립트는 모든 데이터를 삭제합니다.
 --           Supabase SQL Editor에서 직접 실행하세요.
@@ -35,6 +35,7 @@ DROP FUNCTION IF EXISTS public.check_assignment_lock_delete()   CASCADE;
 DROP FUNCTION IF EXISTS public.check_assignment_date_lock_insert() CASCADE;
 
 -- 테이블 삭제 (CASCADE로 FK·인덱스·정책 자동 제거)
+DROP TABLE IF EXISTS slot_highlights        CASCADE;
 DROP TABLE IF EXISTS assignment_snapshots CASCADE;
 DROP TABLE IF EXISTS plan_limits    CASCADE;
 DROP TABLE IF EXISTS date_overrides CASCADE;
@@ -209,6 +210,17 @@ CREATE TABLE assignment_snapshots (
 );
 
 
+-- slot_highlights
+CREATE TABLE slot_highlights (
+  id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id   UUID        NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  date        DATE        NOT NULL,
+  time_slot   TEXT        NOT NULL,
+  note        TEXT,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (tenant_id, date, time_slot)
+);
+
 -- ────────────────────────────────────────────────────────────
 -- STEP 3. 인덱스
 -- ────────────────────────────────────────────────────────────
@@ -227,6 +239,8 @@ CREATE INDEX idx_date_overrides_tenant    ON date_overrides(tenant_id);
 CREATE INDEX idx_date_overrides_tenant_dt ON date_overrides(tenant_id, date);
 CREATE INDEX idx_assignment_snapshots_lookup
   ON assignment_snapshots(tenant_id, year, month, created_at DESC);
+CREATE INDEX idx_slot_highlights_tenant_date
+  ON slot_highlights(tenant_id, date);
 
 -- 같은 조직·날짜·시간대에 동일 이름 중복 방지 (admin_note 제외)
 CREATE UNIQUE INDEX unique_member_assignment
@@ -249,6 +263,7 @@ ALTER TABLE schedule_rules ENABLE ROW LEVEL SECURITY;
 ALTER TABLE date_overrides ENABLE ROW LEVEL SECURITY;
 ALTER TABLE plan_limits             ENABLE ROW LEVEL SECURITY;
 ALTER TABLE assignment_snapshots    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE slot_highlights         ENABLE ROW LEVEL SECURITY;
 
 
 -- ────────────────────────────────────────────────────────────
@@ -546,6 +561,20 @@ CREATE POLICY "snapshots_admin_all" ON assignment_snapshots
   FOR ALL
   USING  (is_tenant_admin(tenant_id) OR is_super_admin())
   WITH CHECK (is_tenant_admin(tenant_id) OR is_super_admin());
+
+-- ── slot_highlights ───────────────────────────────────────────
+CREATE POLICY "slot_highlights_admin_all" ON slot_highlights
+  FOR ALL
+  USING  (is_tenant_admin(tenant_id) OR is_super_admin())
+  WITH CHECK (is_tenant_admin(tenant_id) OR is_super_admin());
+CREATE POLICY "slot_highlights_member_select" ON slot_highlights
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM tenant_members
+      WHERE tenant_members.tenant_id = slot_highlights.tenant_id
+        AND tenant_members.user_id = auth.uid()
+    ) OR is_super_admin()
+  );
 
 
 -- ────────────────────────────────────────────────────────────

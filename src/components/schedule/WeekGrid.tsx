@@ -47,14 +47,16 @@ interface Props {
   isPrivileged?: boolean
   displayAssignmentFilter?: (a: Assignment) => boolean
   withdrawnUserIds?: Set<string>
+  highlightedSlots?: Set<string>
 }
 
 export function WeekGrid({
   weekDays, timeSlots, assignments, slotSettings, scheduleRules, dateOverrides,
   highlightName, splitRoles = [], indicatorBarRoles = [], isSplitMode = false, slotLabels = {},
   selectedDay, onDateHeaderClick, onCellClick,
-  memberRoleId, teamLeaderUserIds, isPrivileged = false, displayAssignmentFilter, withdrawnUserIds,
+  memberRoleId, teamLeaderUserIds, isPrivileged = false, displayAssignmentFilter, withdrawnUserIds, highlightedSlots,
 }: Props) {
+  const pad2 = (n: number) => String(n).padStart(2, '0')
   const today = new Date()
   const activeRoles = isSplitMode && splitRoles.length > 0 ? splitRoles : []
   const isAdmin = isPrivileged
@@ -267,19 +269,28 @@ export function WeekGrid({
                   ? { bg: 'var(--tint-moon)', ink: 'var(--tint-moon-ink)' }
                   : { bg: 'var(--tint-sun)',  ink: 'var(--tint-sun-ink)' }
                 const plusTint = { bg: 'var(--tint-plus)', ink: 'var(--tint-plus-ink)' }
-                // 월달력 plus 컬럼 색상 통일: 50plus만 있으면 셀도 plus 색
                 const isAllPlus = visibleAssigns.length > 0 && visibleAssigns.every(a => a.member_type === '50plus')
                 const cellTint = isAllPlus ? plusTint : baseTint
+                const hlKey = `${y}-${pad2(m)}-${pad2(day)}|${slot}`
+                const isHighlighted = !visibleAssigns.length && (highlightedSlots?.has(hlKey) ?? false)
+                const hlBg = 'oklch(0.97 0.06 80)'
 
                 return (
                   <button
                     key={di}
                     onClick={() => onCellClick({ year: y, month: m, day, timeSlot: slot, memberType: 'member' })}
                     className={`relative border-l border-[var(--color-border)] flex flex-col items-center justify-center gap-0.5 p-1 group transition-colors ${visibleAssigns.length > 0 ? 'hover:brightness-95' : 'hover:bg-[var(--color-surface-hover)]'}`}
-                    style={{ background: visibleAssigns.length > 0 ? cellTint.bg : undefined }}
+                    style={{
+                      background: visibleAssigns.length > 0 ? cellTint.bg : isHighlighted ? hlBg : undefined,
+                      outline: isHighlighted ? '2px dashed oklch(0.72 0.16 80)' : undefined,
+                      outlineOffset: '-2px',
+                    }}
                   >
                     {hasBar && (
                       <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: INDICATOR_BAR_COLOR }} />
+                    )}
+                    {isHighlighted && !cs.isLocked && (
+                      <span className="text-xs" style={{ color: 'oklch(0.55 0.18 80)' }}>🔔</span>
                     )}
                     {visibleAssigns.length > 0 ? (
                       visibleAssigns.map(a => {

@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useAssignmentSnapshot, type SnapshotInfo, type SnapshotScope } from '../hooks/useAssignmentSnapshot'
+import { useSlotHighlights } from '../hooks/useSlotHighlights'
 import { useAuth } from '../hooks/useAuth'
 import { useTenant } from '../contexts/TenantContext'
 import { useSchedule } from '../hooks/useSchedule'
@@ -71,6 +72,8 @@ export function SchedulePage() {
 
   const [filterMemberId, setFilterMemberId] = useState<string | null>(null)
 
+  const pad2 = (n: number) => String(n).padStart(2, '0')
+
   const { profile } = useAuth()
   const { tenant, tenantRole, memberships, timeSlots, slotLabels, legendItems, customFields, typeLabels } = useTenant()
   const memberRoleId = memberships.find(m => m.tenant_id === tenant?.id)?.role_id ?? null
@@ -80,6 +83,9 @@ export function SchedulePage() {
     rawMode === '회원선택' ? '회원공유' :
     rawMode === '직접입력' ? '비회원' :
     rawMode as TenantMode
+
+  const { highlightSet: highlightedSlots, loadHighlights, toggleHighlight } = useSlotHighlights(tenant?.id ?? '')
+  useEffect(() => { if (tenant?.id) loadHighlights(year, month) }, [tenant?.id, year, month]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const selRange = useMemo(() => {
     if (!cellSel) return null
@@ -628,6 +634,7 @@ export function SchedulePage() {
                   : undefined}
                 displayAssignmentFilter={displayAssignmentFilter}
                 withdrawnUserIds={withdrawnUserIds}
+                highlightedSlots={highlightedSlots}
                 selectionRange={selRange}
                 copyRange={cpRange}
               />
@@ -656,6 +663,7 @@ export function SchedulePage() {
                 onCellClick={handleCellClick}
                 displayAssignmentFilter={displayAssignmentFilter}
                 withdrawnUserIds={withdrawnUserIds}
+                highlightedSlots={highlightedSlots}
               />
             ) : (
               <DayView
@@ -692,6 +700,8 @@ export function SchedulePage() {
           typeLabels={typeLabels}
           onClose={() => setModalTarget(null)}
           lockedUserId={tenantMode === '회원개별' && isPrivileged ? (filterMemberId ?? undefined) : undefined}
+          isHighlighted={highlightedSlots.has(`${modalTarget.year}-${pad2(modalTarget.month)}-${pad2(modalTarget.day)}|${modalTarget.timeSlot}`)}
+          onToggleHighlight={isPrivileged ? () => toggleHighlight(`${modalTarget.year}-${pad2(modalTarget.month)}-${pad2(modalTarget.day)}`, modalTarget.timeSlot) : undefined}
           onAdd={(name, note, memberType, timeSub, color, userId, roleId, customerName, customerPhone, extraData) => addAssignment({
             tenant_id: tenant!.id,
             year, month, day: modalTarget.day,

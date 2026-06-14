@@ -16,6 +16,7 @@ interface Props {
   canInteract?: boolean
   onIndicatorBarClick?: () => void
   withdrawnUserIds?: Set<string>
+  highlighted?: boolean
 }
 
 function getSlotHours(timeSlot: string): number[] {
@@ -119,7 +120,7 @@ function EmptyOrLockHint({ isLocked }: { isLocked: boolean }) {
   return <EmptyHint />
 }
 
-export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightName, teamLeaderUserIds, roleId, indicatorBarRoles, canInteract = true, onIndicatorBarClick, withdrawnUserIds }: Props) {
+export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightName, teamLeaderUserIds, roleId, indicatorBarRoles, canInteract = true, onIndicatorBarClick, withdrawnUserIds, highlighted = false }: Props) {
   const { isBreaktime, isClosed, isHoliday, isSaturdayShift, isLocked, assignments, isFull } = cellState
   const [slotStart, slotEnd] = timeSlot.split('-').map(Number)
   const cellMinH = slotEnd - slotStart === 1
@@ -323,10 +324,15 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
     }
 
     const cellTint = hasTeamLeaderInVol ? teamLeaderTint : hasIndicatorBar && !hasAssign ? indicatorTint : activeTint
+    const hlBg = 'oklch(0.97 0.06 80)'
     return (
       <button onClick={onClick}
         className={`relative w-full h-full ${cellMinH} flex flex-col items-center justify-center transition-all duration-150 active:scale-[0.98] group`}
-        style={{ background: hasAssign || hasIndicatorBar ? cellTint.bg : 'var(--color-surface)' }}
+        style={{
+          background: hasAssign || hasIndicatorBar ? cellTint.bg : highlighted && !hasAssign ? hlBg : 'var(--color-surface)',
+          outline: highlighted && !hasAssign ? '2px dashed oklch(0.72 0.16 80)' : undefined,
+          outlineOffset: '-2px',
+        }}
       >
         {onIndicatorBarClick ? (
           <div role="button" tabIndex={0} onClick={e => { e.stopPropagation(); onIndicatorBarClick() }} onKeyDown={e => e.key === 'Enter' && (e.stopPropagation(), onIndicatorBarClick())}
@@ -341,7 +347,9 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
               <NameChips assignments={visibleAssignments} highlightName={highlightName} tintBg={cellTint.bg} tintInk={cellTint.ink} teamLeaderUserIds={teamLeaderUserIds} withdrawnUserIds={withdrawnUserIds} />
               {isFull && <span className="text-[7px] sm:text-[9px] font-semibold mt-0.5 px-1.5 py-0.5 rounded-full" style={{ background: 'oklch(0.97 0.02 25)', color: 'oklch(0.55 0.16 25)' }}>마감</span>}
             </>
-          : canInteract && <EmptyOrLockHint isLocked={isLocked} />
+          : highlighted && !isLocked
+            ? <span className="text-[10px] sm:text-xs" style={{ color: 'oklch(0.55 0.18 80)' }}>🔔</span>
+            : canInteract && <EmptyOrLockHint isLocked={isLocked} />
         }
       </button>
     )

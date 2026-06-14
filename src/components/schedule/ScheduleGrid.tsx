@@ -26,6 +26,7 @@ interface Props {
   onHolidayCellClick?: (day: number, startHour: number, endHour: number) => void
   displayAssignmentFilter?: (a: Assignment) => boolean
   withdrawnUserIds?: Set<string>
+  highlightedSlots?: Set<string>
   selectionRange?: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number } | null
   copyRange?: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number } | null
 }
@@ -169,9 +170,10 @@ function buildColMap(
 
 export function ScheduleGrid({
   year, month, timeSlots, assignments, slotSettings, scheduleRules, dateOverrides,
-  highlightName, profile, tenantRole, memberRoleId, teamLeaderUserIds, splitRoles = [], indicatorBarRoles = [], isSplitMode = false, slotLabels = {}, onCellClick, onHolidayCellClick, displayAssignmentFilter, withdrawnUserIds,
+  highlightName, profile, tenantRole, memberRoleId, teamLeaderUserIds, splitRoles = [], indicatorBarRoles = [], isSplitMode = false, slotLabels = {}, onCellClick, onHolidayCellClick, displayAssignmentFilter, withdrawnUserIds, highlightedSlots,
   selectionRange, copyRange,
 }: Props) {
+  const pad2 = (n: number) => String(n).padStart(2, '0')
   const isAdmin = profile?.is_super_admin || tenantRole === 'admin'
 
   function inRange(day: number, si: number, r: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number }) {
@@ -481,6 +483,7 @@ export function ScheduleGrid({
                                 teamLeaderUserIds={teamLeaderUserIds}
                                 indicatorBarRoles={indicatorBarRoles}
                                 withdrawnUserIds={withdrawnUserIds}
+                                highlighted={highlightedSlots?.has(`${year}-${pad2(month)}-${pad2(day)}|${slot}`) ?? false}
                               />
                             </td>
                           )}
