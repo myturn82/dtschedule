@@ -143,6 +143,24 @@ npm run dev
 
 ---
 
+## 아이콘 사용 원칙 (시스템 이모지 기준)
+
+이 사이트의 아이콘 표준은 **시스템 이모지(System Emoji)** 다.
+별도 이모지 폰트를 지정하지 않으므로 OS/브라우저 기본 이모지(Windows: Segoe UI Emoji, macOS/iOS: Apple Color Emoji, Android: Noto Color Emoji)로 렌더링된다.
+
+### 반드시 지켜야 할 규칙
+
+1. **UI 아이콘에 이모지 사용** — 버튼·셀·뱃지 등 UI 요소의 아이콘은 이모지를 사용한다.
+   - 단, 크기·레이아웃 제어가 세밀하게 필요한 곳(예: 잠금 아이콘)은 SVG 인라인 아이콘 허용.
+
+2. **이모지에 CSS `color` 금지** — 이모지는 시스템이 색상을 제어하므로 `color` / `fill` 속성을 적용해도 무효다. 이모지 색상을 CSS로 바꾸려 하지 않는다.
+
+3. **이모지 크기는 `text-sm` 이상** — `text-[10px]` 등 지나치게 작은 크기는 이모지가 뭉개진다. 캘린더 셀처럼 공간이 좁은 곳도 최소 `text-sm`(14px)으로 지정한다.
+
+4. **`select-none` 추가** — 이모지를 UI 아이콘으로 사용할 때는 `select-none` 클래스를 붙여 텍스트 선택을 방지한다.
+
+---
+
 ## 타입 체크 명령어
 
 루트에서 실행하는 `npx tsc --noEmit`은 루트 `tsconfig.json`(`files: []`, project reference만 있음) 기준으로 동작해
