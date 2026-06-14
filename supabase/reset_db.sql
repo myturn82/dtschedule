@@ -757,6 +757,7 @@ CREATE TRIGGER trg_assignments_date_lock_insert
 -- ────────────────────────────────────────────────────────────
 
 ALTER PUBLICATION supabase_realtime ADD TABLE assignments;
+ALTER PUBLICATION supabase_realtime ADD TABLE slot_highlights;
 
 
 -- ────────────────────────────────────────────────────────────

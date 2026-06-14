@@ -32,3 +32,5 @@ CREATE POLICY "slot_highlights_member_select" ON slot_highlights
     )
     OR is_super_admin()
   );
+
+ALTER PUBLICATION supabase_realtime ADD TABLE slot_highlights;
