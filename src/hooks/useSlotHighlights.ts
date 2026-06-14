@@ -24,9 +24,9 @@ export function useSlotHighlights(tenantId: string) {
       })
       .on('postgres_changes', {
         event: 'DELETE', schema: 'public', table: 'slot_highlights',
-        filter: `tenant_id=eq.${tenantId}`,
+        // filter 없음 — DEFAULT replica identity에서 DELETE payload.old에는 PK(id)만 포함
+        // filter를 걸면 서버가 이벤트 자체를 전달하지 않음 (useSchedule과 동일 패턴)
       }, payload => {
-        // DEFAULT replica identity → payload.old 에는 PK(id)만 포함됨
         const { id } = payload.old as { id: string }
         setHighlights(prev => prev.filter(h => h.id !== id))
       })
