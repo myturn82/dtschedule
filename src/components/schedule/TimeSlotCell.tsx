@@ -249,7 +249,7 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
               {isFull && <span className="text-[7px] sm:text-[9px] font-semibold mt-0.5 px-1.5 py-0.5 rounded-full" style={{ background: 'oklch(0.97 0.02 25)', color: 'oklch(0.55 0.16 25)' }}>마감</span>}
             </>
           : highlighted && !isLocked
-            ? <span className="text-sm leading-none select-none">❕</span>
+            ? null
             : canInteract && <EmptyOrLockHint isLocked={isLocked} />
         }
       </button>
@@ -337,7 +337,7 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
         }}
       >
         {highlighted && !hasAssign && (
-          <span className="absolute inset-[2px] rounded pointer-events-none" style={{ border: '2px dashed var(--color-brand-primary)' }} />
+          <span className="absolute inset-[2px] rounded pointer-events-none" style={{ border: '2px dashed oklch(0.72 0.16 80)' }} />
         )}
         {onIndicatorBarClick ? (
           <div role="button" tabIndex={0} onClick={e => { e.stopPropagation(); onIndicatorBarClick() }} onKeyDown={e => e.key === 'Enter' && (e.stopPropagation(), onIndicatorBarClick())}
@@ -353,7 +353,7 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
               {isFull && <span className="text-[7px] sm:text-[9px] font-semibold mt-0.5 px-1.5 py-0.5 rounded-full" style={{ background: 'oklch(0.97 0.02 25)', color: 'oklch(0.55 0.16 25)' }}>마감</span>}
             </>
           : highlighted && !isLocked
-            ? <span className="text-sm leading-none select-none">❕</span>
+            ? null
             : canInteract && <EmptyOrLockHint isLocked={isLocked} />
         }
       </button>
