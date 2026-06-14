@@ -50,7 +50,7 @@ export function SlotEditModal({
   splitRoles = [], isSplitMode = false, tenantRoles = [],
   tenantMode = '회원선택', customFields = [],
   slotLabels = {},
-  typeLabels = { member: '팀원', '50plus': '50+' },
+  typeLabels = { member: '팀원', '50plus': '' },
   lockedUserId,
   onClose, onAdd, onUpdate, onDelete, onToggleLock,
 }: Props) {
@@ -364,7 +364,7 @@ export function SlotEditModal({
           ) : null
         ) : !isAdmin && !isFreeform && tenantRoles.length === 0 && (  // 커스텀 역할 없는 조직만 표시
           <div className="flex border-b border-[var(--color-border)] px-2 shrink-0">
-            {(['member', '50plus'] as MemberType[]).map(t => {
+            {(['member', '50plus'] as MemberType[]).filter(t => t !== '50plus' || !!typeLabels['50plus']).map(t => {
               const isDisabled = !isAdmin && profileType !== t
               return (
                 <button
