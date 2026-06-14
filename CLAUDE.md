@@ -112,6 +112,37 @@ npm run dev
   올바르게 병합되어 전달되는지도 확인한다.
 - 작업 완료 후 점검 체크리스트(`docs/checklist_YYYY-MM-DD.md`)에도 월/주/일 뷰 각각에 대한 확인 항목을 포함한다.
 
+## 다이나믹 구현 원칙 (하드코딩 금지)
+
+이 시스템의 핵심은 **조직(tenant)마다 설정이 다른 멀티테넌트 구조**다.
+역할 이름, 타입 라벨, 슬롯 설정, 테마 색상 등 모든 표시 값은 조직 설정에서 읽어야 하며,
+특정 조직의 값을 소스코드에 하드코딩해서는 절대 안 된다.
+
+### 반드시 지켜야 할 규칙
+
+1. **라벨·명칭 하드코딩 금지**
+   - `member_label`, `plus_label`, `role.name` 등 표시 문자열은 반드시 DB/설정에서 읽는다.
+   - 폴백(fallback) 기본값도 특정 조직의 명칭이 아닌, 빈 문자열(`''`) 또는 완전히 중립적인 값만 허용.
+   - 폴백이 빈 문자열이면 해당 기능/탭/버튼을 **숨기거나 비활성화**한다(미설정 조직에서 불필요한 UI 노출 방지).
+
+2. **역할(role) 기반 로직은 항상 동적으로**
+   - `splitRoles`, `tenantRoles`, `ROLE_TINTS` 등은 조직 설정에서 주입된 값을 사용한다.
+   - 역할 개수·이름·색상을 코드에 고정하지 않는다.
+
+3. **조직 설정 경로**
+   - 조직 설정: `tenant.settings` (JSONB) — `volunteer_label`, `plus_label`, `theme_color`, `open_from`, `open_to` 등
+   - 역할 목록: `tenantRoles` (`tenant_roles` 테이블)
+   - 슬롯 설정: `slotSettings`, `scheduleRules`, `dateOverrides`
+   - 이 값들은 `TenantContext`를 통해 컴포넌트에 주입한다.
+
+4. **신규 기능 구현 시 체크리스트**
+   - [ ] 표시 문자열이 조직 설정에서 오는가?
+   - [ ] 역할/타입 목록이 DB에서 동적으로 로드되는가?
+   - [ ] 특정 조직 이름·값이 소스코드 어디에도 없는가?
+   - [ ] 미설정 조직에서도 UI가 깨지지 않는가?
+
+---
+
 ## 타입 체크 명령어
 
 루트에서 실행하는 `npx tsc --noEmit`은 루트 `tsconfig.json`(`files: []`, project reference만 있음) 기준으로 동작해
