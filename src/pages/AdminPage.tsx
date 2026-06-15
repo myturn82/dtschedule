@@ -10,6 +10,7 @@ import type { TimeSlot, Tenant, TenantAccessRole, LegendItem, LegendColor, Custo
 import { OPTION_VALUE_TYPES, getOptionUnit } from '../types'
 import { LEGEND_COLOR_STYLES } from '../components/schedule/Legend'
 import { THEME_COLORS } from '../lib/themeColors'
+import { displayMode } from '../lib/tenantMode'
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
 const HEX_COLOR_RE = /^#[0-9A-Fa-f]{6}$/
@@ -170,6 +171,9 @@ export function AdminPage() {
     }
     loadOrgs()
   }, [profile?.id, authLoading])
+
+  const adminTenantMode = displayMode(adminTenant?.settings?.tenant_mode)
+  const adminIsFreeform = adminTenantMode === '비회원'
 
   // timeSlots derived from adminTenant (not from TenantContext)
   const adminTimeSlots = useMemo<TimeSlot[]>(() => {
@@ -1614,12 +1618,16 @@ export function AdminPage() {
             {tab === 'custom_fields' && (
               <div className="max-w-lg space-y-4">
                 <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-semibold">
-                  직접입력 모드 커스텀 필드 ({customFields.length}개)
-                  {customFields.length > 0 && <span className="ml-2 normal-case font-normal text-[var(--color-brand-primary)]">첫 번째 필드가 이름(성명) 필드로 사용됩니다</span>}
+                  커스텀 필드 ({customFields.length}개)
+                  {adminIsFreeform && customFields.length > 0 && <span className="ml-2 normal-case font-normal text-[var(--color-brand-primary)]">첫 번째 필드가 이름(성명) 필드로 사용됩니다</span>}
                 </p>
 
-                {customFields.length === 0 && (
-                  <p className="text-xs text-[var(--color-text-muted)]">필드가 없으면 기본 이름+연락처 입력이 표시됩니다.</p>
+                {adminIsFreeform ? (
+                  customFields.length === 0 && (
+                    <p className="text-xs text-[var(--color-text-muted)]">필드가 없으면 기본 이름+연락처 입력이 표시됩니다.</p>
+                  )
+                ) : (
+                  <p className="text-xs text-[var(--color-text-muted)]">스케줄 등록 시 추가로 입력받을 정보를 설정합니다. 등록한 필드는 스케줄 등록 팝업에 표시됩니다.</p>
                 )}
 
                 <ul className="space-y-2">

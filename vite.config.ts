@@ -5,6 +5,12 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  server: {
+    watch: {
+      // OMC(.omc) 세션 상태 파일이 계속 갱신되며 dev 서버 워처를 자극하는 것을 방지
+      ignored: ['**/.omc/**', '**/dist/**'],
+    },
+  },
   plugins: [
     react(),
     tailwindcss(),
