@@ -1,4 +1,5 @@
 import type { Assignment, CellState, TenantRole } from '../../types'
+import { fmtPhone } from '../../lib/format'
 import { formatTimeSub } from '../../utils/timeSlots'
 import { LockIcon } from '../icons/LockIcons'
 
@@ -95,7 +96,7 @@ function NameChips({ assignments, highlightName, tintBg, tintInk, teamLeaderUser
             )}
             {a.customer_name && (
               <span className={`block ${subSize} font-normal opacity-70 truncate`}>
-                {a.customer_name}{a.customer_phone ? ` · ${a.customer_phone}` : ''}
+                {a.customer_name}{a.customer_phone ? ` · ${fmtPhone(a.customer_phone)}` : ''}
               </span>
             )}
           </div>
