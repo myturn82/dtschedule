@@ -450,6 +450,12 @@ export function SchedulePage() {
       }
     }
 
+    // 비회원 모드 일반회원: 빈 슬롯은 팝업 없음
+    if (tenantMode === '비회원' && !isPrivileged) {
+      const cs = getCellState(target.day, target.timeSlot, target.year, target.month, scheduleRules, slotSettings, dateOverrides, assignments)
+      if (cs.assignments.length === 0) return
+    }
+
     setModalTarget(target)
   }
 
@@ -627,6 +633,7 @@ export function SchedulePage() {
                 indicatorBarRoles={indicatorBarRoles}
                 isSplitMode={isSplitMode}
                 slotLabels={slotLabels}
+                canAdd={tenantMode !== '비회원' || isPrivileged}
                 onCellClick={handleCellClick}
                 onHolidayCellClick={profile && isPrivileged
                   ? (d, startHour, endHour) => setHolidayTarget({ day: d, startHour, endHour })
@@ -659,6 +666,7 @@ export function SchedulePage() {
                   setMonth(d.getMonth() + 1)
                   setDay(d.getDate())
                 }}
+                canAdd={tenantMode !== '비회원' || isPrivileged}
                 onCellClick={handleCellClick}
                 displayAssignmentFilter={displayAssignmentFilter}
                 withdrawnUserIds={withdrawnUserIds}
