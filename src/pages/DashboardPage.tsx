@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { fmtNumber } from '../lib/format'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useTenant } from '../contexts/TenantContext'
@@ -534,7 +535,7 @@ export function DashboardPage() {
                                             <p className="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-[0.6px] mb-1.5 font-mono-num">{stat.label}</p>
                                             <div className="rounded-[10px] border border-[var(--color-border)] overflow-hidden">
                                               {stat.rows.map((row) => {
-                                                const fmtValue = isNaN(Number(row.value)) ? row.value : Number(row.value).toLocaleString('ko-KR')
+                                                const fmtValue = fmtNumber(row.value) || row.value
                                                 return (
                                                   <div
                                                     key={row.value}
@@ -549,7 +550,7 @@ export function DashboardPage() {
                                                 const totalCount = stat.rows.reduce((acc, r) => acc + r.count, 0)
                                                 const allNumeric = stat.rows.length > 0 && stat.rows.every(r => r.value !== '' && !isNaN(Number(r.value)))
                                                 const valueSum = allNumeric ? stat.rows.reduce((acc, r) => acc + r.count * Number(r.value), 0) : null
-                                                const fmtSum = valueSum !== null ? valueSum.toLocaleString('ko-KR') : null
+                                                const fmtSum = valueSum !== null ? fmtNumber(valueSum) : null
                                                 const units = stat.rows.map(r => r.unit).filter(Boolean)
                                                 const sumUnit = units.length > 0 && units.every(u => u === units[0]) ? units[0] : ''
                                                 return (
