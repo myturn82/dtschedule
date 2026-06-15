@@ -214,3 +214,25 @@ useEffect(() => {
 루트에서 실행하는 `npx tsc --noEmit`은 루트 `tsconfig.json`(`files: []`, project reference만 있음) 기준으로 동작해
 실제로는 아무 파일도 검사하지 않고 항상 통과한다. **타입 체크는 반드시 `npx tsc -b`
 (또는 `npm run build`)로 확인**한다. 실제 빌드(`tsc -b && vite build`)와 동일한 결과를 보장한다.
+
+---
+
+## 데이터 표시 포맷팅 규칙
+
+모든 데이터 **표시** 포맷팅은 `src/lib/format.ts`의 함수를 사용한다.
+
+| 대상 | 함수 | 출력 예시 |
+|------|------|-----------|
+| 전화번호 표시 | `fmtPhone(value)` | `010-1234-5678` |
+| 숫자 천단위 | `fmtNumber(value)` | `1,234,567` |
+| 전화번호 마스킹 | `maskPhone(value)` | 현재: 전체 노출 |
+| 이메일 마스킹 | `maskEmail(value)` | 현재: 전체 노출 |
+| 이름 마스킹 | `maskName(value)` | 현재: 전체 노출 |
+
+### 반드시 지켜야 할 규칙
+
+1. **`toLocaleString('ko-KR')` 인라인 사용 금지** — 항상 `fmtNumber()`를 사용한다.
+2. **`formatPhone()` 직접 import 금지** — 표시 목적이라면 `fmtPhone()` from `src/lib/format.ts`를 사용한다.
+   - 예외: 실시간 입력 onChange 핸들러 내부에서는 `formatPhone()` 직접 사용 허용.
+3. **마스킹 정책 변경 시** — `format.ts`의 `mask*` 함수 내부만 수정하면 전체 적용된다.
+4. **`null` / `undefined` 안전** — `fmtPhone`, `fmtNumber` 모두 null/undefined를 빈 문자열로 처리한다.
