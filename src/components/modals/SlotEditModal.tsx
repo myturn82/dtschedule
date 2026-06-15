@@ -42,7 +42,7 @@ export function SlotEditModal({
   const { year, day, month, timeSlot, memberType: defaultType, roleId: initialRoleId } = target
   const isAdmin = profile?.is_super_admin || tenantRole === 'admin'
   const isSuperAdmin = !!profile?.is_super_admin
-  const isReadOnly = !isAdmin && tenantMode === '회원개별'
+  const isReadOnly = !isAdmin && (tenantMode === '회원개별' || tenantMode === '비회원')
   const profileType: MemberType = 'member'
 
   const isFreeform = tenantMode === '비회원' || tenantMode === '직접입력'
