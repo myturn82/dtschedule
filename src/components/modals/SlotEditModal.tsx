@@ -304,11 +304,13 @@ export function SlotEditModal({
     a => a.user_id === profile?.id && a.is_locked
   )
 
-  // 비회원/직접입력(동적 필드 없음) 등 회원선택 모드에서, 이미 본인 명의의 배정이 있으면
-  // 새로 등록(handleAdd) 시 동일 member_name으로 인한 중복 등록 오류가 발생하므로
-  // 수정 모드로 진입하도록 안내
-  const ownAssignment = (!isAdmin && !useDynamicFields)
-    ? displayedAssignments.find(a => a.member_name === profile?.name && !a.is_locked)
+  // 이미 본인 배정이 있으면 새로 등록 대신 수정 모드로 진입하도록 안내
+  // - 동적 필드 없는 경우: member_name 일치로 본인 배정 탐지
+  // - 직접입력(useDynamicFields) 모드: user_id로 본인 배정 탐지
+  const ownAssignment = !isAdmin
+    ? useDynamicFields
+      ? displayedAssignments.find(a => !!profile?.id && a.user_id === profile.id && !a.is_locked)
+      : displayedAssignments.find(a => a.member_name === profile?.name && !a.is_locked)
     : undefined
 
   // 날짜 전체가 잠긴 경우(date_overrides.is_locked) 신규 등록은 누구도 불가 (기존 항목 수정은 가능)
