@@ -2,6 +2,7 @@ import type { Assignment, SlotSetting, ScheduleRule, DateOverride, ModalTarget, 
 import { getCellState } from '../../utils/cellState'
 import { parseSlotLabel } from '../../utils/timeSlots'
 import { LockIcon } from '../icons/LockIcons'
+import { fmtPhone } from '../../lib/format'
 
 const DAY_KR = ['일', '월', '화', '수', '목', '금', '토']
 
@@ -58,7 +59,7 @@ function PersonChip({ a, withdrawnUserIds, onClick }: { a: Assignment; withdrawn
         </span>
       )}
       {!isW && a.customer_phone && (
-        <span className="text-xs text-[var(--color-text-muted)] truncate">· {a.customer_phone}</span>
+        <span className="text-xs text-[var(--color-text-muted)] truncate">· {fmtPhone(a.customer_phone)}</span>
       )}
       {!isW && a.note && (
         <span className="text-xs text-[var(--color-text-muted)] truncate">· {a.note}</span>
