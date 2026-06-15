@@ -29,6 +29,7 @@ interface Props {
   highlightedSlots?: Set<string>
   selectionRange?: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number } | null
   copyRange?: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number } | null
+  canAdd?: boolean
 }
 
 const DOW_ORDER = [1, 2, 3, 4, 5, 6, 0]
@@ -171,7 +172,7 @@ function buildColMap(
 export function ScheduleGrid({
   year, month, timeSlots, assignments, slotSettings, scheduleRules, dateOverrides,
   highlightName, profile, tenantRole, memberRoleId, teamLeaderUserIds, splitRoles = [], indicatorBarRoles = [], isSplitMode = false, slotLabels = {}, onCellClick, onHolidayCellClick, displayAssignmentFilter, withdrawnUserIds, highlightedSlots,
-  selectionRange, copyRange,
+  selectionRange, copyRange, canAdd = true,
 }: Props) {
   const pad2 = (n: number) => String(n).padStart(2, '0')
   const isAdmin = profile?.is_super_admin || tenantRole === 'admin'
@@ -483,6 +484,7 @@ export function ScheduleGrid({
                                 highlightName={highlightName}
                                 teamLeaderUserIds={teamLeaderUserIds}
                                 indicatorBarRoles={indicatorBarRoles}
+                                canInteract={canAdd}
                                 withdrawnUserIds={withdrawnUserIds}
                                 highlighted={highlightedSlots?.has(`${year}-${pad2(month)}-${pad2(day)}|${slot}`) ?? false}
                               />
@@ -507,6 +509,7 @@ export function ScheduleGrid({
                                 onClick={() => onCellClick({ year, month, day, timeSlot: slot, memberType: '50plus' })}
                                 highlightName={highlightName}
                                 teamLeaderUserIds={teamLeaderUserIds}
+                                canInteract={canAdd}
                                 withdrawnUserIds={withdrawnUserIds}
                               />
                             </td>

@@ -48,13 +48,14 @@ interface Props {
   displayAssignmentFilter?: (a: Assignment) => boolean
   withdrawnUserIds?: Set<string>
   highlightedSlots?: Set<string>
+  canAdd?: boolean
 }
 
 export function WeekGrid({
   weekDays, timeSlots, assignments, slotSettings, scheduleRules, dateOverrides,
   highlightName, splitRoles = [], indicatorBarRoles = [], isSplitMode = false, slotLabels = {},
   selectedDay, onDateHeaderClick, onCellClick,
-  memberRoleId, teamLeaderUserIds, isPrivileged = false, displayAssignmentFilter, withdrawnUserIds, highlightedSlots,
+  memberRoleId, teamLeaderUserIds, isPrivileged = false, displayAssignmentFilter, withdrawnUserIds, highlightedSlots, canAdd = true,
 }: Props) {
   const pad2 = (n: number) => String(n).padStart(2, '0')
   const today = new Date()
@@ -327,9 +328,9 @@ export function WeekGrid({
                           </div>
                         )
                       })
-                    ) : (
+                    ) : canAdd ? (
                       <EmptyOrLockHint isLocked={cs.isLocked} />
-                    )}
+                    ) : null}
                   </button>
                 )
               })}
