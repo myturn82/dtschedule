@@ -5,6 +5,7 @@ import { parseSlotLabel, getTimeSubOptions, formatTimeSub } from '../../utils/ti
 import { useProfiles } from '../../hooks/useProfiles'
 import type { ProfileWithRole } from '../../hooks/useProfiles'
 import { LockIcon, UnlockIcon } from '../icons/LockIcons'
+import { fmtPhone } from '../../lib/format'
 
 interface Props {
   target: ModalTarget
@@ -480,7 +481,7 @@ export function SlotEditModal({
                   : a.member_name
                 const detailChips: { key: string; label: string; value: string }[] = []
                 if (isFreeform) {
-                  if (!useDynamicFields && a.customer_phone) detailChips.push({ key: 'phone', label: '연락처', value: a.customer_phone })
+                  if (!useDynamicFields && a.customer_phone) detailChips.push({ key: 'phone', label: '연락처', value: fmtPhone(a.customer_phone) })
                   if (useDynamicFields) customFields.slice(1).forEach(f => {
                     const val = a.extra_data?.[f.id]
                     if (!val) return
