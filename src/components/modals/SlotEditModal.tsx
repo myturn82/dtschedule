@@ -619,7 +619,6 @@ export function SlotEditModal({
                 /* 회원선택 모드 */
                 <>
                   {isAdmin ? (
-                    // 역할 분리 + 비회원/직접입력 모드는 위쪽의 "회원 선택" 드롭다운에서 이미 처리됨
                     (isFreeform && isSplitMode && selectableProfiles.length > 0) ? null : (
                     <div>
                       <p className="text-xs font-bold text-[var(--color-text-muted)] mb-2">회원 선택</p>
