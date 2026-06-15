@@ -64,6 +64,8 @@ export function SlotEditModal({
 
   const isFreeform = tenantMode === '비회원' || tenantMode === '직접입력'
   const useDynamicFields = isFreeform && customFields.length > 0
+  // 회원공유/회원개별 모드에서도 관리자콘솔에 등록된 커스텀 필드를 추가 입력으로 노출
+  const showExtraCustomFields = !isFreeform && customFields.length > 0
 
   const [memberType, setMemberType] = useState<MemberType>(
     isAdmin ? defaultType : profileType
@@ -155,6 +157,9 @@ export function SlotEditModal({
       setSelectedUserId(a.user_id ?? '')
       setMemberType(a.member_type ?? 'member')
     }
+    if (showExtraCustomFields) {
+      setFieldValues({ ...(a.extra_data ?? {}) })
+    }
   }
 
   function cancelEdit() {
@@ -202,6 +207,20 @@ export function SlotEditModal({
       if (!selectedProfile) return
       name = selectedProfile.name
       userId = isAdmin ? selectedProfile.id : undefined
+    }
+
+    if (showExtraCustomFields) {
+      for (const field of customFields) {
+        if (field.required && !fieldValues[field.id]?.trim()) {
+          setError(`"${field.label}"은(는) 필수 항목입니다`)
+          return
+        }
+      }
+      const rest: Record<string, string> = {}
+      customFields.forEach(f => {
+        if (fieldValues[f.id]?.trim()) rest[f.id] = fieldValues[f.id].trim()
+      })
+      if (Object.keys(rest).length > 0) extraData = rest
     }
 
     if (cellState.isFull) {
@@ -261,6 +280,20 @@ export function SlotEditModal({
       name = selectedProfile.name
     }
 
+    if (showExtraCustomFields) {
+      for (const field of customFields) {
+        if (field.required && !fieldValues[field.id]?.trim()) {
+          setError(`"${field.label}"은(는) 필수 항목입니다`)
+          return
+        }
+      }
+      const rest: Record<string, string> = {}
+      customFields.forEach(f => {
+        if (fieldValues[f.id]?.trim()) rest[f.id] = fieldValues[f.id].trim()
+      })
+      if (Object.keys(rest).length > 0) extraData = rest
+    }
+
     setLoading(true)
     const err = await onUpdate(
       editingId,
@@ -308,10 +341,44 @@ export function SlotEditModal({
     if (isFreeform) {
       return !freeformName.trim() || !freeformPhone.trim() || !isValidPhone(freeformPhone.trim())
     }
+    if (showExtraCustomFields && customFields.some(f => f.required && !fieldValues[f.id]?.trim())) {
+      return true
+    }
     return !selectedUserId
   })()
 
   const inputClass = 'w-full border border-[var(--color-border-strong)] rounded-xl px-3 py-2.5 text-sm bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500/60 transition-all duration-200'
+
+  function renderFieldInput(field: CustomFieldDef) {
+    return (
+      <div key={field.id}>
+        <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
+          {field.label}{field.required && <span className="text-red-500 ml-0.5">*</span>}
+        </label>
+        {field.type === 'select' && (field.options?.length ?? 0) > 0 ? (
+          <select
+            value={fieldValues[field.id] ?? ''}
+            onChange={e => setFieldValues(prev => ({ ...prev, [field.id]: e.target.value }))}
+            className={inputClass}
+          >
+            <option value="">{field.placeholder || `-- ${field.label} 선택 --`}</option>
+            {field.options!.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.name}</option>
+            ))}
+          </select>
+        ) : (
+          <input
+            type="text"
+            value={fieldValues[field.id] ?? ''}
+            onChange={e => setFieldValues(prev => ({ ...prev, [field.id]: e.target.value }))}
+            placeholder={field.placeholder || `${field.label}${field.required ? ' (필수)' : ' (선택)'}`}
+            maxLength={100}
+            className={inputClass}
+          />
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-hidden">
@@ -432,7 +499,15 @@ export function SlotEditModal({
                             {a.note && <span className="text-xs text-[var(--color-text-muted)]">메모: {a.note}</span>}
                           </div>
                         ) : (
-                          a.note && <span className="text-xs text-[var(--color-text-muted)] mt-0.5">메모: {a.note}</span>
+                          <div className="flex flex-col gap-0.5 mt-0.5">
+                            {showExtraCustomFields && customFields.map(f => {
+                              const val = a.extra_data?.[f.id]
+                              if (!val) return null
+                              const unit = getOptionUnit(f.options?.find(o => o.value === val)?.value_type)
+                              return <span key={f.id} className="text-xs text-[var(--color-text-muted)]">{f.label}: {val}{unit}</span>
+                            })}
+                            {a.note && <span className="text-xs text-[var(--color-text-muted)]">메모: {a.note}</span>}
+                          </div>
                         )}
                       </div>
                       {(canEdit || (onToggleLock && a.is_locked && isSuperAdmin)) && (
@@ -495,34 +570,7 @@ export function SlotEditModal({
               {useDynamicFields ? (
                 /* 동적 커스텀 필드 */
                 <>
-                  {customFields.map(field => (
-                    <div key={field.id}>
-                      <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
-                        {field.label}{field.required && <span className="text-red-500 ml-0.5">*</span>}
-                      </label>
-                      {field.type === 'select' && (field.options?.length ?? 0) > 0 ? (
-                        <select
-                          value={fieldValues[field.id] ?? ''}
-                          onChange={e => setFieldValues(prev => ({ ...prev, [field.id]: e.target.value }))}
-                          className={inputClass}
-                        >
-                          <option value="">{field.placeholder || `-- ${field.label} 선택 --`}</option>
-                          {field.options!.map(opt => (
-                            <option key={opt.value} value={opt.value}>{opt.name}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        <input
-                          type="text"
-                          value={fieldValues[field.id] ?? ''}
-                          onChange={e => setFieldValues(prev => ({ ...prev, [field.id]: e.target.value }))}
-                          placeholder={field.placeholder || `${field.label}${field.required ? ' (필수)' : ' (선택)'}`}
-                          maxLength={100}
-                          className={inputClass}
-                        />
-                      )}
-                    </div>
-                  ))}
+                  {customFields.map(field => renderFieldInput(field))}
                   <input
                     value={note}
                     onChange={e => setNote(e.target.value)}
@@ -601,6 +649,7 @@ export function SlotEditModal({
                       {profile.name}
                     </div>
                   )}
+                  {showExtraCustomFields && customFields.map(field => renderFieldInput(field))}
                   <input
                     value={note}
                     onChange={e => setNote(e.target.value)}
