@@ -11,7 +11,8 @@ import { OrgDiagramView } from '../components/superadmin/OrgDiagramView'
 import { OrgCardsView } from '../components/superadmin/OrgCardsView'
 import type { HubView } from '../components/superadmin/HubMain'
 import { usePlanLimits } from '../contexts/PlanLimitsContext'
-import { isValidPhone, formatPhone } from '../lib/phone'
+import { isValidPhone } from '../lib/phone'
+import { fmtPhone } from '../lib/format'
 import { PLAN_LABELS } from '../types'
 import type { Tenant, TenantMode, PlanType } from '../types'
 import { THEME_COLORS } from '../lib/themeColors'
@@ -304,7 +305,7 @@ export function CustomerAdminPage() {
                     <span className="flex items-center gap-1">
                       <input
                         value={editPhone}
-                        onChange={e => setEditPhone(formatPhone(e.target.value))}
+                        onChange={e => setEditPhone(fmtPhone(e.target.value))}
                         placeholder="010-1234-5678"
                         maxLength={13}
                         className="text-xs px-2 py-1 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] w-32 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]"
@@ -320,10 +321,10 @@ export function CustomerAdminPage() {
                     </span>
                   ) : (
                     <button
-                      onClick={() => { setEditingPhone(true); setEditPhone(formatPhone(myCustomer.phone ?? '')) }}
+                      onClick={() => { setEditingPhone(true); setEditPhone(fmtPhone(myCustomer.phone ?? '')) }}
                       className="flex items-center gap-1 px-2 py-1 rounded-lg border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-brand-primary)] hover:border-[var(--color-brand-primary)]/40 transition-colors text-xs"
                     >
-                      전화번호: {myCustomer.phone ? formatPhone(myCustomer.phone) : '미입력'}
+                      전화번호: {myCustomer.phone ? fmtPhone(myCustomer.phone) : '미입력'}
                     </button>
                   )}
                   <span className="text-[var(--color-text-muted)] text-xs">가입일 {myCustomer.created_at.slice(0, 10)}</span>

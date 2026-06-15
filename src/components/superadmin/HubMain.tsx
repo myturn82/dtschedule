@@ -7,7 +7,7 @@ import { OrgTreeView } from './OrgTreeView'
 import { OrgDiagramView } from './OrgDiagramView'
 import { OrgCardsView } from './OrgCardsView'
 import { EMPTY_ORG_FORM, type CreateOrgForm } from './createOrgForm'
-import { formatPhone } from '../../lib/phone'
+import { fmtPhone } from '../../lib/format'
 import { THEME_COLORS } from '../../lib/themeColors'
 
 const inputCls = 'w-full px-3 py-2 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]'
@@ -70,13 +70,13 @@ export function HubMain({
 
   const currentOwnerEmail = customer.owner_user_id ? (ownerEmails[customer.owner_user_id] ?? '') : ''
   const [localPlan, setLocalPlan] = useState<PlanType>(customer.plan)
-  const [localPhone, setLocalPhone] = useState(formatPhone(customer.phone ?? ''))
+  const [localPhone, setLocalPhone] = useState(fmtPhone(customer.phone ?? ''))
   const [localOwnerEmail, setLocalOwnerEmail] = useState(currentOwnerEmail)
   const [fieldSaving, setFieldSaving] = useState(false)
 
   useEffect(() => {
     setLocalPlan(customer.plan)
-    setLocalPhone(formatPhone(customer.phone ?? ''))
+    setLocalPhone(fmtPhone(customer.phone ?? ''))
     setLocalOwnerEmail(customer.owner_user_id ? (ownerEmails[customer.owner_user_id] ?? '') : '')
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [customer.id])
@@ -88,7 +88,7 @@ export function HubMain({
   }, [ownerEmails, customer.owner_user_id])
 
   const isPlanDirty = localPlan !== customer.plan
-  const isPhoneDirty = localPhone !== formatPhone(customer.phone ?? '')
+  const isPhoneDirty = localPhone !== fmtPhone(customer.phone ?? '')
   const isOwnerDirty = localOwnerEmail !== currentOwnerEmail
   const isDirty = isPlanDirty || isPhoneDirty || isOwnerDirty
 
@@ -102,7 +102,7 @@ export function HubMain({
 
   function handleCancel() {
     setLocalPlan(customer.plan)
-    setLocalPhone(formatPhone(customer.phone ?? ''))
+    setLocalPhone(fmtPhone(customer.phone ?? ''))
     setLocalOwnerEmail(currentOwnerEmail)
   }
 
@@ -215,7 +215,7 @@ export function HubMain({
                   type="tel"
                   inputMode="tel"
                   value={localPhone}
-                  onChange={e => setLocalPhone(formatPhone(e.target.value))}
+                  onChange={e => setLocalPhone(fmtPhone(e.target.value))}
                   placeholder="010-1234-5678"
                   maxLength={13}
                 />
