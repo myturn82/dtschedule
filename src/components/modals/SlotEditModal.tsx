@@ -602,38 +602,11 @@ export function SlotEditModal({
                 </div>
               )}
 
-              {/* 역할 분리 + 비회원/직접입력 모드: 등록된 회원에서 선택 (필수) */}
-              {isSplitMode && isAdmin && isFreeform && selectableProfiles.length > 0 && (
-                <div>
-                  <p className="text-xs font-bold text-[var(--color-text-muted)] mb-2">회원 선택</p>
-                  <select
-                    value={selectedUserId}
-                    onChange={e => {
-                      const id = e.target.value
-                      setSelectedUserId(id)
-                      const p = profiles.find(pr => pr.id === id)
-                      if (p && customFields[0]) {
-                        setFieldValues(prev => ({ ...prev, [customFields[0].id]: p.name }))
-                      }
-                    }}
-                    className={inputClass}
-                  >
-                    {selectableProfiles.map(p => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
               {/* Input section */}
               {useDynamicFields ? (
                 /* 동적 커스텀 필드 */
                 <>
-                  {customFields.map((field, idx) =>
-                    idx === 0 && isSplitMode && isAdmin && selectableProfiles.length > 0
-                      ? null
-                      : renderFieldInput(field)
-                  )}
+                  {customFields.map(field => renderFieldInput(field))}
                   <input
                     value={note}
                     onChange={e => setNote(e.target.value)}
