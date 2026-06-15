@@ -29,24 +29,6 @@ interface Props {
   onToggleHighlight?: () => void
 }
 
-const PHONE_RE = /^[0-9]{2,4}-[0-9]{3,4}-[0-9]{4}$|^[0-9]{9,11}$/
-function isValidPhone(phone: string): boolean {
-  return PHONE_RE.test(phone.replace(/\s/g, ''))
-}
-function formatPhone(value: string): string {
-  const d = value.replace(/\D/g, '')
-  if (d.startsWith('02')) {
-    if (d.length <= 2) return d
-    if (d.length <= 5) return `${d.slice(0, 2)}-${d.slice(2)}`
-    if (d.length <= 9) return `${d.slice(0, 2)}-${d.slice(2, 5)}-${d.slice(5)}`
-    return `${d.slice(0, 2)}-${d.slice(2, 6)}-${d.slice(6, 10)}`
-  }
-  if (d.length <= 3) return d
-  if (d.length <= 6) return `${d.slice(0, 3)}-${d.slice(3)}`
-  if (d.length <= 10) return `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}`
-  return `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7, 11)}`
-}
-
 export function SlotEditModal({
   target, cellState, profile, tenantRole, memberRoleId,
   splitRoles = [], isSplitMode = false, tenantRoles = [],
@@ -56,7 +38,7 @@ export function SlotEditModal({
   lockedUserId,
   onClose, onAdd, onUpdate, onDelete, onToggleLock, isHighlighted, onToggleHighlight,
 }: Props) {
-  const { day, month, timeSlot, memberType: defaultType, roleId: initialRoleId } = target
+  const { year, day, month, timeSlot, memberType: defaultType, roleId: initialRoleId } = target
   const isAdmin = profile?.is_super_admin || tenantRole === 'admin'
   const isSuperAdmin = !!profile?.is_super_admin
   const isReadOnly = !isAdmin && tenantMode === '회원개별'
@@ -79,7 +61,6 @@ export function SlotEditModal({
   const [note, setNote] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [phoneError, setPhoneError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(
@@ -88,10 +69,6 @@ export function SlotEditModal({
 
   // 동적 필드 값 (useDynamicFields 모드)
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({})
-
-  // 레거시 직접입력 필드 (fallback)
-  const [freeformName, setFreeformName] = useState('')
-  const [freeformPhone, setFreeformPhone] = useState('')
 
   const selectedRole = splitRoles.find(r => r.id === selectedRoleId) ?? null
 
@@ -117,7 +94,7 @@ export function SlotEditModal({
     cellState.assignments.filter(a => a.id !== editingId).map(a => a.member_name)
   )
 
-  const selectableProfiles = (!isFreeform && isAdmin)
+  const selectableProfiles = isAdmin && (isSplitMode || !isFreeform)
     ? isSplitMode
       ? (profiles as ProfileWithRole[]).filter(p =>
             p.tenantRoleId === selectedRoleId && !assignedNames.has(p.name)
@@ -132,12 +109,23 @@ export function SlotEditModal({
     : []
 
   // 선택 가능한 항목이 1개뿐이면 자동 선택
-  const singleProfileId = selectableProfiles.length === 1 ? selectableProfiles[0].id : null
+  const singleProfileId = !isFreeform && selectableProfiles.length === 1 ? selectableProfiles[0].id : null
   useEffect(() => {
     if (isAdmin && !editingId && singleProfileId) {
       setSelectedUserId(singleProfileId)
     }
   }, [isAdmin, editingId, singleProfileId])
+
+  // 역할분리 + 비회원/직접입력 모드: "회원 선택" 드롭다운 노출 시 첫 번째 회원을 기본 선택
+  useEffect(() => {
+    if (isAdmin && isSplitMode && isFreeform && !editingId && !selectedUserId && selectableProfiles.length > 0) {
+      const p = selectableProfiles[0]
+      setSelectedUserId(p.id)
+      if (customFields[0]) {
+        setFieldValues(prev => ({ ...prev, [customFields[0].id]: p.name }))
+      }
+    }
+  }, [isAdmin, isSplitMode, isFreeform, editingId, selectedUserId, selectableProfiles, customFields])
 
   function startEdit(a: Assignment) {
     setEditingId(a.id)
@@ -150,9 +138,7 @@ export function SlotEditModal({
       if (nameFieldId) restored[nameFieldId] = a.member_name
       Object.assign(restored, a.extra_data ?? {})
       setFieldValues(restored)
-    } else if (isFreeform) {
-      setFreeformName(a.member_name)
-      setFreeformPhone(a.customer_phone ?? '')
+      if (isAdmin && isSplitMode) setSelectedUserId(a.user_id ?? '')
     } else {
       setSelectedUserId(a.user_id ?? '')
       setMemberType(a.member_type ?? 'member')
@@ -167,9 +153,6 @@ export function SlotEditModal({
     setNote('')
     setTimeSub(defaultTimeSub)
     setFieldValues({})
-    setFreeformName('')
-    setFreeformPhone('')
-    setPhoneError(null)
     setSelectedUserId(isAdmin ? '' : (profile?.id ?? ''))
   }
 
@@ -197,12 +180,7 @@ export function SlotEditModal({
         if (fieldValues[f.id]?.trim()) rest[f.id] = fieldValues[f.id].trim()
       })
       if (Object.keys(rest).length > 0) extraData = rest
-    } else if (isFreeform) {
-      if (!freeformName.trim()) return
-      if (!freeformPhone.trim()) { setError('연락처를 입력해주세요'); return }
-      if (!isValidPhone(freeformPhone.trim())) { setError('연락처 형식이 올바르지 않습니다. (예: 010-1234-5678)'); return }
-      name = freeformName.trim()
-      customerPhone = freeformPhone.trim()
+      if (isAdmin && isSplitMode && selectedUserId) userId = selectedUserId
     } else {
       if (!selectedProfile) return
       name = selectedProfile.name
@@ -269,12 +247,6 @@ export function SlotEditModal({
         if (fieldValues[f.id]?.trim()) rest[f.id] = fieldValues[f.id].trim()
       })
       if (Object.keys(rest).length > 0) extraData = rest
-    } else if (isFreeform) {
-      if (!freeformName.trim()) return
-      if (!freeformPhone.trim()) { setError('연락처를 입력해주세요'); return }
-      if (!isValidPhone(freeformPhone.trim())) { setError('연락처 형식이 올바르지 않습니다. (예: 010-1234-5678)'); return }
-      name = freeformName.trim()
-      customerPhone = freeformPhone.trim()
     } else {
       if (!selectedProfile) return
       name = selectedProfile.name
@@ -331,6 +303,13 @@ export function SlotEditModal({
     a => a.user_id === profile?.id && a.is_locked
   )
 
+  // 비회원/직접입력(동적 필드 없음) 등 회원선택 모드에서, 이미 본인 명의의 배정이 있으면
+  // 새로 등록(handleAdd) 시 동일 member_name으로 인한 중복 등록 오류가 발생하므로
+  // 수정 모드로 진입하도록 안내
+  const ownAssignment = (!isAdmin && !useDynamicFields)
+    ? displayedAssignments.find(a => a.member_name === profile?.name && !a.is_locked)
+    : undefined
+
   // 날짜 전체가 잠긴 경우(date_overrides.is_locked) 신규 등록은 누구도 불가 (기존 항목 수정은 가능)
   const blockNewRegistration = !editingId && cellState.isLocked
 
@@ -338,16 +317,13 @@ export function SlotEditModal({
     if (useDynamicFields) {
       return customFields.some(f => f.required && !fieldValues[f.id]?.trim())
     }
-    if (isFreeform) {
-      return !freeformName.trim() || !freeformPhone.trim() || !isValidPhone(freeformPhone.trim())
-    }
     if (showExtraCustomFields && customFields.some(f => f.required && !fieldValues[f.id]?.trim())) {
       return true
     }
     return !selectedUserId
   })()
 
-  const inputClass = 'w-full border border-[var(--color-border-strong)] rounded-xl px-3 py-2.5 text-sm bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500/60 transition-all duration-200'
+  const inputClass = 'w-full min-w-0 h-11 border border-[var(--color-border-strong)] rounded-xl px-3 text-sm font-medium bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 focus:border-[var(--color-brand-primary)]/50 focus:bg-[var(--color-surface)] transition-all duration-200'
 
   function renderFieldInput(field: CustomFieldDef) {
     return (
@@ -370,7 +346,10 @@ export function SlotEditModal({
           <input
             type="text"
             value={fieldValues[field.id] ?? ''}
-            onChange={e => setFieldValues(prev => ({ ...prev, [field.id]: e.target.value }))}
+            onChange={e => {
+              setFieldValues(prev => ({ ...prev, [field.id]: e.target.value }))
+              if (isAdmin && isSplitMode && field.id === customFields[0]?.id) setSelectedUserId('')
+            }}
             placeholder={field.placeholder || `${field.label}${field.required ? ' (필수)' : ' (선택)'}`}
             maxLength={100}
             className={inputClass}
@@ -380,55 +359,86 @@ export function SlotEditModal({
     )
   }
 
+  const weekday = ['일', '월', '화', '수', '목', '금', '토'][new Date(year, month - 1, day).getDay()]
+  const kickerLabel = editingId
+    ? '배정 수정'
+    : (isReadOnly || ownLockedAssignment || blockNewRegistration || ownAssignment)
+      ? '슬롯 상세'
+      : isAdmin ? '관리자 등록' : '내 스케줄 등록'
+  const roleOrTypeLabel = isSplitMode && selectedRole
+    ? selectedRole.name
+    : !isSplitMode && isAdmin && !isFreeform && tenantRoles.length === 0
+      ? (defaultType === '50plus' ? typeLabels['50plus'] : typeLabels.member)
+      : null
+
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-hidden">
-      <div className="bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-2xl shadow-[var(--shadow-xl)] w-full max-w-md animate-scale-in overflow-hidden flex flex-col max-h-[calc(100dvh-2rem)]">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 sm:p-4 overflow-hidden">
+      <div className="bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-t-[26px] sm:rounded-[22px] shadow-[var(--shadow-xl)] w-full max-w-md animate-scale-in overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[calc(100dvh-2rem)]">
         {/* Header */}
-        <div className="flex justify-between items-center px-5 pt-5 pb-3 border-b border-[var(--color-border)] shrink-0">
-          <div>
-            <h2 className="text-base font-bold text-[var(--color-text-primary)]">
+        <div className="flex items-start gap-3 px-5 pt-5 pb-3.5 border-b border-[var(--color-border)] shrink-0">
+          <div className="min-w-0 flex-1">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold text-[var(--color-brand-primary)] bg-[color-mix(in_srgb,var(--color-brand-primary)_8%,transparent)] border border-[var(--color-brand-primary)]/20 px-2.5 py-1 rounded-full mb-2 whitespace-nowrap">
+              <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="10" cy="10" r="7"/><path d="M10 6.5v4l2.5 1.5"/></svg>
+              {kickerLabel}
+            </span>
+            <h2 className="text-[19px] font-extrabold tracking-tight text-[var(--color-text-primary)] flex items-baseline gap-2 flex-wrap m-0">
               {month}월 {day}일
+              <span className="text-[13px] font-semibold text-[var(--color-text-muted)]">({weekday})</span>
             </h2>
-            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
-              {slotLabels[timeSlot]
-                ? `${slotLabels[timeSlot]} (${parseSlotLabel(timeSlot)})`
-                : parseSlotLabel(timeSlot)}
-              {isSplitMode && selectedRole ? ` · ${selectedRole.name}` : !isSplitMode && isAdmin && !isFreeform && tenantRoles.length === 0 ? ` · ${defaultType === '50plus' ? typeLabels['50plus'] : typeLabels.member}` : ''}
-            </p>
+            <div className="mt-1.5 flex items-center gap-2 flex-wrap text-[13px] font-bold text-[var(--color-text-secondary)]">
+              <span className="font-mono tabular-nums">{parseSlotLabel(timeSlot)}</span>
+              {slotLabels[timeSlot] && <span className="text-[var(--color-text-muted)] font-semibold">· {slotLabels[timeSlot]}</span>}
+              {roleOrTypeLabel && <span className="text-[var(--color-text-muted)] font-semibold">· {roleOrTypeLabel}</span>}
+              <span className="w-1 h-1 rounded-full bg-[var(--color-border-strong)] shrink-0" />
+              <span
+                className="text-[11.5px] font-extrabold px-2.5 py-0.5 rounded-full whitespace-nowrap"
+                style={cellState.isFull
+                  ? { color: 'oklch(0.56 0.11 150)', backgroundColor: 'color-mix(in srgb, oklch(0.56 0.11 150) 12%, transparent)' }
+                  : { color: 'var(--color-brand-primary)', backgroundColor: 'color-mix(in srgb, var(--color-brand-primary) 10%, transparent)' }}
+              >
+                {cellState.assignments.length}/{cellState.maxCapacity}명
+              </span>
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-xl border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-secondary)] transition-all duration-200 text-lg leading-none"
+            aria-label="닫기"
+            className="w-8 h-8 flex items-center justify-center rounded-[10px] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-secondary)] transition-all duration-200 shrink-0"
           >
-            ×
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="m5 5 10 10M15 5 5 15"/></svg>
           </button>
         </div>
 
         {/* Role selector (split mode) OR type tabs (회원선택 모드) */}
         {isSplitMode ? (
           isAdmin && splitRoles.length > 1 ? (
-            <div className="flex border-b border-[var(--color-border)] px-4 py-2 gap-2 items-center shrink-0">
-              <p className="text-xs font-medium text-[var(--color-text-muted)] shrink-0">역할</p>
-              <select
-                value={selectedRoleId ?? ''}
-                onChange={e => {
-                  setSelectedRoleId(e.target.value || null)
-                  setFieldValues({})
-                  setFreeformName('')
-                  setFreeformPhone('')
-                  setSelectedUserId('')
-                }}
-                className={inputClass}
-              >
+            <div className="flex border-b border-[var(--color-border)] px-4 py-2.5 gap-2 items-center shrink-0 flex-wrap">
+              <p className="text-xs font-bold text-[var(--color-text-muted)] shrink-0">역할</p>
+              <div className="flex gap-1.5 flex-wrap">
                 {splitRoles.map(r => (
-                  <option key={r.id} value={r.id}>{r.name}</option>
+                  <button
+                    key={r.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedRoleId(r.id)
+                      setFieldValues({})
+                      setSelectedUserId('')
+                    }}
+                    className={`px-3.5 h-9 rounded-xl text-[13px] font-bold border transition-colors whitespace-nowrap ${
+                      selectedRoleId === r.id
+                        ? 'bg-[var(--color-brand-primary)] border-[var(--color-brand-primary)] text-white shadow-[0_4px_10px_-6px_var(--color-brand-primary)]'
+                        : 'bg-[var(--color-surface)] border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:border-[var(--color-brand-primary)]/40'
+                    }`}
+                  >
+                    {r.name}
+                  </button>
                 ))}
-              </select>
+              </div>
             </div>
           ) : !isAdmin && selectedRole ? (
-            <div className="flex border-b border-[var(--color-border)] px-4 py-2 gap-2 items-center shrink-0">
-              <p className="text-xs font-medium text-[var(--color-text-muted)] shrink-0">역할</p>
-              <p className="text-sm font-semibold text-[var(--color-text-primary)]">{selectedRole.name}</p>
+            <div className="flex border-b border-[var(--color-border)] px-4 py-2.5 gap-2 items-center shrink-0">
+              <p className="text-xs font-bold text-[var(--color-text-muted)] shrink-0">역할</p>
+              <span className="px-3.5 h-9 inline-flex items-center rounded-xl text-[13px] font-bold bg-[var(--color-surface-secondary)] border border-[var(--color-border-strong)] text-[var(--color-text-secondary)]">{selectedRole.name}</span>
             </div>
           ) : null
         ) : !isAdmin && !isFreeform && tenantRoles.length === 0 && (  // 커스텀 역할 없는 조직만 표시
@@ -458,75 +468,94 @@ export function SlotEditModal({
           </div>
         )}
 
-        <div className="px-5 py-4 space-y-3 overflow-y-auto flex-1">
+        <div className="px-5 py-4 flex flex-col gap-3 overflow-y-auto flex-1">
           {/* Existing assignments */}
           {displayedAssignments.length > 0 && (
-            <div className="space-y-1.5">
+            <div className="flex flex-col gap-2">
               {displayedAssignments.map(a => {
                 const canEdit = !a.is_locked && (isAdmin || (a.user_id === profile?.id && !isReadOnly))
                 const isOwnEntry = !isAdmin && a.user_id === profile?.id && a.member_name === profile?.name
+                const displayName = isFreeform && useDynamicFields && customFields[0]
+                  ? `${customFields[0].label}: ${a.member_name}`
+                  : a.member_name
+                const detailChips: { key: string; label: string; value: string }[] = []
+                if (isFreeform) {
+                  if (!useDynamicFields && a.customer_phone) detailChips.push({ key: 'phone', label: '연락처', value: a.customer_phone })
+                  if (useDynamicFields) customFields.slice(1).forEach(f => {
+                    const val = a.extra_data?.[f.id]
+                    if (!val) return
+                    const unit = getOptionUnit(f.options?.find(o => o.value === val)?.value_type)
+                    detailChips.push({ key: f.id, label: f.label, value: `${val}${unit}` })
+                  })
+                } else if (showExtraCustomFields) {
+                  customFields.forEach(f => {
+                    const val = a.extra_data?.[f.id]
+                    if (!val) return
+                    const unit = getOptionUnit(f.options?.find(o => o.value === val)?.value_type)
+                    detailChips.push({ key: f.id, label: f.label, value: `${val}${unit}` })
+                  })
+                }
+                if (a.note) detailChips.push({ key: 'note', label: '메모', value: a.note })
+
                 return (
                   <div
                     key={a.id}
-                    className="rounded-xl px-3 py-2.5 border border-[var(--color-border)]"
-                    style={{ backgroundColor: isOwnEntry ? '#FEF9C3' : (a.color || undefined) }}
+                    className={`rounded-2xl px-3 py-2.5 border transition-colors ${
+                      isOwnEntry
+                        ? 'bg-[color-mix(in_srgb,var(--color-brand-primary)_7%,var(--color-surface))] border-[color-mix(in_srgb,var(--color-brand-primary)_24%,var(--color-border-strong))]'
+                        : a.is_locked
+                          ? 'bg-[var(--color-surface-secondary)] border-[var(--color-border)]'
+                          : 'bg-[var(--color-surface)] border-[var(--color-border)]'
+                    }`}
+                    style={{ backgroundColor: !isOwnEntry ? (a.color || undefined) : undefined }}
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex flex-col gap-0.5 min-w-0">
-                        <span className="text-sm text-[var(--color-text-primary)] font-medium flex items-center flex-wrap gap-1">
-                          {isFreeform && useDynamicFields && customFields[0]
-                            ? `${customFields[0].label}: ${a.member_name}`
-                            : a.member_name}
-                          {a.time_sub && <span className="text-xs text-[var(--color-text-muted)] font-normal">({formatTimeSub(a.time_sub)})</span>}
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full grid place-items-center text-[13px] font-extrabold bg-[color-mix(in_srgb,var(--color-brand-primary)_12%,transparent)] text-[var(--color-brand-primary)] shrink-0">
+                        {a.member_name.slice(0, 1)}
+                      </div>
+                      <div className="min-w-0 flex-1 flex flex-col gap-0.5">
+                        <span className="text-sm text-[var(--color-text-primary)] font-bold flex items-center flex-wrap gap-1.5">
+                          {displayName}
+                          {a.time_sub && <span className="text-xs text-[var(--color-text-muted)] font-medium">({formatTimeSub(a.time_sub)})</span>}
                           {!isFreeform && isAdmin && !isSplitMode && (
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold truncate max-w-[72px] ${a.member_type === '50plus' ? 'bg-orange-100 text-orange-600' : 'bg-blue-50 text-blue-500'}`}>
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold truncate max-w-[72px] ${a.member_type === '50plus' ? 'bg-orange-100 text-orange-600' : 'bg-blue-50 text-blue-500'}`}>
                               {a.member_type === '50plus' ? typeLabels['50plus'] : typeLabels.member}
                             </span>
                           )}
+                          {isOwnEntry && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-[var(--color-brand-primary)]/15 text-[var(--color-brand-primary)]">나</span>
+                          )}
                           {a.is_locked && <span title="관리자에 의해 고정됨"><LockIcon size={12} className="inline -mt-0.5" /></span>}
                         </span>
-                        {isFreeform ? (
-                          <div className="flex flex-col gap-0.5 mt-0.5">
-                            {!useDynamicFields && a.customer_phone && (
-                              <span className="text-xs text-[var(--color-text-muted)]">연락처: {a.customer_phone}</span>
-                            )}
-                            {useDynamicFields && customFields.slice(1).map(f => {
-                              const val = a.extra_data?.[f.id]
-                              if (!val) return null
-                              const unit = getOptionUnit(f.options?.find(o => o.value === val)?.value_type)
-                              return <span key={f.id} className="text-xs text-[var(--color-text-muted)]">{f.label}: {val}{unit}</span>
-                            })}
-                            {a.note && <span className="text-xs text-[var(--color-text-muted)]">메모: {a.note}</span>}
-                          </div>
-                        ) : (
-                          <div className="flex flex-col gap-0.5 mt-0.5">
-                            {showExtraCustomFields && customFields.map(f => {
-                              const val = a.extra_data?.[f.id]
-                              if (!val) return null
-                              const unit = getOptionUnit(f.options?.find(o => o.value === val)?.value_type)
-                              return <span key={f.id} className="text-xs text-[var(--color-text-muted)]">{f.label}: {val}{unit}</span>
-                            })}
-                            {a.note && <span className="text-xs text-[var(--color-text-muted)]">메모: {a.note}</span>}
-                          </div>
-                        )}
                       </div>
                       {(canEdit || (onToggleLock && a.is_locked && isSuperAdmin)) && (
-                        <div className="flex gap-2 shrink-0">
+                        <div className="flex gap-0.5 shrink-0">
                           {canEdit && (
                             <>
-                              <button onClick={() => startEdit(a)} className="text-xs text-blue-500 hover:text-blue-600 font-medium transition-colors">수정</button>
-                              <button onClick={() => handleDelete(a.id)} className="text-xs text-red-400 hover:text-red-500 font-medium transition-colors">삭제</button>
+                              {!(ownAssignment && a.id === ownAssignment.id) && (
+                                <button onClick={() => startEdit(a)} className="text-xs font-bold text-[var(--color-text-muted)] px-2 py-1 rounded-lg hover:bg-[var(--color-surface-secondary)] hover:text-[var(--color-text-primary)] transition-colors">수정</button>
+                              )}
+                              <button onClick={() => handleDelete(a.id)} className="text-xs font-bold text-[var(--color-text-muted)] px-2 py-1 rounded-lg hover:bg-[var(--color-brand-primary)]/10 hover:text-[var(--color-brand-primary)] transition-colors">삭제</button>
                               {onToggleLock && isAdmin && (
-                                <button onClick={() => handleToggleLock(a.id, true)} className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] font-medium transition-colors"><LockIcon size={12} /> 고정</button>
+                                <button onClick={() => handleToggleLock(a.id, true)} className="flex items-center gap-1 text-xs font-bold text-[var(--color-text-muted)] px-2 py-1 rounded-lg hover:bg-[var(--color-surface-secondary)] hover:text-[var(--color-text-primary)] transition-colors"><LockIcon size={12} /> 고정</button>
                               )}
                             </>
                           )}
                           {onToggleLock && a.is_locked && isSuperAdmin && (
-                            <button onClick={() => handleToggleLock(a.id, false)} className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] font-medium transition-colors"><UnlockIcon size={12} /> 해제</button>
+                            <button onClick={() => handleToggleLock(a.id, false)} className="flex items-center gap-1 text-xs font-bold text-[var(--color-text-muted)] px-2 py-1 rounded-lg hover:bg-[var(--color-surface-secondary)] hover:text-[var(--color-text-primary)] transition-colors"><UnlockIcon size={12} /> 해제</button>
                           )}
                         </div>
                       )}
                     </div>
+                    {detailChips.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-2.5 pt-2.5 border-t border-dashed border-[var(--color-border-strong)]">
+                        {detailChips.map(c => (
+                          <span key={c.key} className="text-[11.5px] font-semibold text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] px-2 py-1 rounded-lg inline-flex gap-1 whitespace-nowrap">
+                            <b className="font-extrabold text-[var(--color-text-muted)]">{c.label}</b>{c.value}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )
               })}
@@ -543,21 +572,25 @@ export function SlotEditModal({
               <LockIcon size={14} />
               이 날짜는 전체 고정되어 새 등록이 불가합니다.
             </p>
+          ) : profile && ownAssignment && !editingId ? (
+            <p className="text-sm text-[var(--color-text-muted)] text-center py-3">
+              이미 등록된 내 스케줄입니다. 아래 버튼으로 수정할 수 있습니다.
+            </p>
           ) : profile && !isReadOnly ? (
             <>
               {/* Time slot selector */}
               {timeSubOptions && (
                 <div>
-                  <p className="text-xs font-medium text-[var(--color-text-muted)] mb-2">근무 시간</p>
+                  <p className="text-xs font-bold text-[var(--color-text-muted)] mb-2">근무 시간</p>
                   <div className="flex gap-1.5 flex-wrap">
                     {timeSubOptions.map(opt => (
                       <button
                         key={opt.value}
                         onClick={() => setTimeSub(timeSub === opt.value ? null : opt.value)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-200
+                        className={`px-3.5 h-9 rounded-xl text-[13px] font-bold border transition-all duration-200
                           ${timeSub === opt.value
-                            ? 'bg-[var(--color-brand-primary)] text-white border-[var(--color-brand-primary)]'
-                            : 'border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:border-blue-400'}`}
+                            ? 'bg-[var(--color-brand-primary)] text-white border-[var(--color-brand-primary)] shadow-[0_4px_10px_-6px_var(--color-brand-primary)]'
+                            : 'bg-[var(--color-surface)] border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:border-[var(--color-brand-primary)]/40'}`}
                       >
                         {opt.label}
                       </button>
@@ -566,44 +599,37 @@ export function SlotEditModal({
                 </div>
               )}
 
+              {/* 역할 분리 + 비회원/직접입력 모드: 등록된 회원에서 선택 (필수) */}
+              {isSplitMode && isAdmin && isFreeform && selectableProfiles.length > 0 && (
+                <div>
+                  <p className="text-xs font-bold text-[var(--color-text-muted)] mb-2">회원 선택</p>
+                  <select
+                    value={selectedUserId}
+                    onChange={e => {
+                      const id = e.target.value
+                      setSelectedUserId(id)
+                      const p = profiles.find(pr => pr.id === id)
+                      if (p && customFields[0]) {
+                        setFieldValues(prev => ({ ...prev, [customFields[0].id]: p.name }))
+                      }
+                    }}
+                    className={inputClass}
+                  >
+                    {selectableProfiles.map(p => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               {/* Input section */}
               {useDynamicFields ? (
                 /* 동적 커스텀 필드 */
                 <>
-                  {customFields.map(field => renderFieldInput(field))}
-                  <input
-                    value={note}
-                    onChange={e => setNote(e.target.value)}
-                    placeholder="메모 (선택)"
-                    maxLength={200}
-                    className={inputClass}
-                  />
-                </>
-              ) : isFreeform ? (
-                /* 레거시 직접입력 모드 (이름 + 연락처) */
-                <>
-                  <input
-                    value={freeformName}
-                    onChange={e => setFreeformName(e.target.value)}
-                    placeholder="이름 (필수)"
-                    maxLength={50}
-                    className={inputClass}
-                  />
-                  <input
-                    value={freeformPhone}
-                    onChange={e => {
-                      const formatted = formatPhone(e.target.value)
-                      setFreeformPhone(formatted)
-                      if (!formatted) setPhoneError(null)
-                      else if (!isValidPhone(formatted)) setPhoneError('연락처 형식이 올바르지 않습니다. (예: 010-1234-5678)')
-                      else setPhoneError(null)
-                    }}
-                    placeholder="연락처 (필수)"
-                    maxLength={20}
-                    className={inputClass}
-                  />
-                  {phoneError && (
-                    <p className="text-red-500 text-xs px-1">{phoneError}</p>
+                  {customFields.map((field, idx) =>
+                    idx === 0 && isSplitMode && isAdmin && selectableProfiles.length > 0
+                      ? null
+                      : renderFieldInput(field)
                   )}
                   <input
                     value={note}
@@ -617,11 +643,18 @@ export function SlotEditModal({
                 /* 회원선택 모드 */
                 <>
                   {isAdmin ? (
+                    // 역할 분리 + 비회원/직접입력 모드는 위쪽의 "회원 선택" 드롭다운에서 이미 처리됨
+                    (isFreeform && isSplitMode && selectableProfiles.length > 0) ? null : (
                     <div>
-                      <p className="text-xs font-medium text-[var(--color-text-muted)] mb-2">회원 선택</p>
+                      <p className="text-xs font-bold text-[var(--color-text-muted)] mb-2">회원 선택</p>
                       {lockedUserId ? (
-                        <div className="px-3 py-2.5 rounded-xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)] text-sm text-[var(--color-text-primary)] font-medium">
-                          {profiles.find(p => p.id === lockedUserId)?.name ?? '알 수 없음'}
+                        <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)]">
+                          <div className="w-8 h-8 rounded-full grid place-items-center text-[13px] font-extrabold bg-[color-mix(in_srgb,var(--color-brand-primary)_12%,transparent)] text-[var(--color-brand-primary)] shrink-0">
+                            {(profiles.find(p => p.id === lockedUserId)?.name ?? '?').slice(0, 1)}
+                          </div>
+                          <span className="text-sm text-[var(--color-text-primary)] font-bold">
+                            {profiles.find(p => p.id === lockedUserId)?.name ?? '알 수 없음'}
+                          </span>
                         </div>
                       ) : selectableProfiles.length === 0 ? (
                         <p className="text-xs text-[var(--color-text-muted)] py-2 text-center">
@@ -644,9 +677,14 @@ export function SlotEditModal({
                         </select>
                       )}
                     </div>
+                    )
                   ) : (
-                    <div className="px-3 py-2.5 rounded-xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)] text-sm text-[var(--color-text-primary)] font-medium">
-                      {profile.name}
+                    <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)]">
+                      <div className="w-8 h-8 rounded-full grid place-items-center text-[13px] font-extrabold bg-[color-mix(in_srgb,var(--color-brand-primary)_12%,transparent)] text-[var(--color-brand-primary)] shrink-0">
+                        {profile.name.slice(0, 1)}
+                      </div>
+                      <span className="text-sm text-[var(--color-text-primary)] font-bold">{profile.name}</span>
+                      <span className="ml-auto text-[11px] font-extrabold text-white bg-[var(--color-brand-primary)] px-2 py-0.5 rounded-full">나</span>
                     </div>
                   )}
                   {showExtraCustomFields && customFields.map(field => renderFieldInput(field))}
@@ -659,42 +697,6 @@ export function SlotEditModal({
                 </>
               )}
 
-              {error && (
-                <p className="text-red-500 text-xs bg-red-50 dark:bg-red-950/30 px-3 py-2 rounded-lg border border-red-200 dark:border-red-900/50">
-                  {error}
-                </p>
-              )}
-
-              <div className="flex gap-2">
-                {isAdmin && onToggleHighlight && !editingId && (
-                  <button
-                    onClick={onToggleHighlight}
-                    className={`flex-1 rounded-xl py-2.5 text-sm font-medium border transition-all duration-200 ${
-                      isHighlighted
-                        ? 'bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100'
-                        : 'border-[var(--color-border-strong)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)]'
-                    }`}
-                  >
-                    {isHighlighted ? '하이라이트 해제' : '빈 슬롯 알림'}
-                  </button>
-                )}
-                <button
-                  onClick={editingId ? handleUpdate : handleAdd}
-                  disabled={isAddDisabled}
-                  className="flex-1 bg-[var(--color-brand-primary)] text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50 transition-all duration-200 shadow-[0_2px_8px_rgba(37,99,235,0.25)]"
-                >
-                  {loading ? '저장 중...' : editingId ? '수정 완료' : '저장'}
-                </button>
-                {editingId ? (
-                  <button onClick={cancelEdit} className="flex-1 border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] rounded-xl py-2.5 text-sm font-medium hover:bg-[var(--color-surface-hover)] transition-all duration-200">
-                    취소
-                  </button>
-                ) : (
-                  <button onClick={onClose} className="flex-1 border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] rounded-xl py-2.5 text-sm font-medium hover:bg-[var(--color-surface-hover)] transition-all duration-200">
-                    닫기
-                  </button>
-                )}
-              </div>
             </>
           ) : profile && isReadOnly ? (
             <p className="text-sm text-[var(--color-text-muted)] text-center py-3">
@@ -706,6 +708,62 @@ export function SlotEditModal({
             </p>
           )}
         </div>
+
+        {profile && !isReadOnly && !ownLockedAssignment && !blockNewRegistration && (
+          <div className="px-5 py-3.5 border-t border-[var(--color-border)] flex flex-col gap-2.5 shrink-0">
+            {error && (
+              <p className="text-red-500 text-xs bg-red-50 dark:bg-red-950/30 px-3 py-2 rounded-lg border border-red-200 dark:border-red-900/50">
+                {error}
+              </p>
+            )}
+            <div className="flex gap-2">
+              {ownAssignment && !editingId ? (
+                <>
+                  <button
+                    onClick={() => startEdit(ownAssignment)}
+                    className="flex-1 h-11 bg-[var(--color-brand-primary)] text-white rounded-xl text-sm font-bold hover:bg-[var(--color-brand-primary-hover)] transition-all duration-200 shadow-[0_8px_18px_-10px_var(--color-brand-primary)]"
+                  >
+                    내 스케줄 수정
+                  </button>
+                  <button onClick={onClose} className="flex-1 h-11 bg-[var(--color-surface)] border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] rounded-xl text-sm font-bold hover:bg-[var(--color-surface-hover)] transition-all duration-200">
+                    닫기
+                  </button>
+                </>
+              ) : (
+                <>
+                  {isAdmin && onToggleHighlight && !editingId && (
+                    <button
+                      onClick={onToggleHighlight}
+                      className={`flex-1 h-11 rounded-xl text-sm font-bold border transition-all duration-200 ${
+                        isHighlighted
+                          ? 'bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100'
+                          : 'bg-[var(--color-surface)] border-[var(--color-border-strong)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)]'
+                      }`}
+                    >
+                      {isHighlighted ? '하이라이트 해제' : '빈 슬롯 알림'}
+                    </button>
+                  )}
+                  <button
+                    onClick={editingId ? handleUpdate : handleAdd}
+                    disabled={isAddDisabled}
+                    className="flex-1 h-11 bg-[var(--color-brand-primary)] text-white rounded-xl text-sm font-bold hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50 transition-all duration-200 shadow-[0_8px_18px_-10px_var(--color-brand-primary)]"
+                  >
+                    {loading ? '저장 중...' : editingId ? '수정 완료' : '저장'}
+                  </button>
+                  {editingId ? (
+                    <button onClick={cancelEdit} className="flex-1 h-11 bg-[var(--color-surface)] border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] rounded-xl text-sm font-bold hover:bg-[var(--color-surface-hover)] transition-all duration-200">
+                      취소
+                    </button>
+                  ) : (
+                    <button onClick={onClose} className="flex-1 h-11 bg-[var(--color-surface)] border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] rounded-xl text-sm font-bold hover:bg-[var(--color-surface-hover)] transition-all duration-200">
+                      닫기
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

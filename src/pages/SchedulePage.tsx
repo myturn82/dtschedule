@@ -5,7 +5,6 @@ import { useAuth } from '../hooks/useAuth'
 import { useTenant } from '../contexts/TenantContext'
 import { useSchedule } from '../hooks/useSchedule'
 import { useProfiles } from '../hooks/useProfiles'
-import type { ProfileWithRole } from '../hooks/useProfiles'
 import { useTenantRoles } from '../hooks/useTenantRoles'
 import { getCellState } from '../utils/cellState'
 import { getTimeSubOptions } from '../utils/timeSlots'
@@ -404,12 +403,14 @@ export function SchedulePage() {
       if (!memberRoleId || target.roleId !== memberRoleId) return
     }
 
+    // 비회원/직접입력 모드는 커스텀 필드(이름 등)를 직접 입력해야 하므로 모달을 거쳐야 함
+    const useDynamicFieldsHere = tenantMode === '비회원' && customFields.length > 0
+
     if (
-      tenantMode !== '비회원' &&
       tenantMode !== '회원개별' &&
+      !useDynamicFieldsHere &&
       !isPrivileged &&
-      profile &&
-      !getTimeSubOptions(target.timeSlot)
+      profile
     ) {
       const cs = getCellState(
         target.day, target.timeSlot, target.year, target.month,
@@ -422,11 +423,9 @@ export function SchedulePage() {
             ? cs.assignments.filter(a => a.role_id === target.roleId)
             : cs.assignments
           const remaining = cs.maxCapacity - roleAssigns.length
-          const roleProfileCount = target.roleId
-            ? (profiles as ProfileWithRole[]).filter(p => p.tenantRoleId === target.roleId).length
-            : 0
-          const shouldSkipPopup = cs.maxCapacity === 1 || remaining === 1 || roleProfileCount === 1
-          if (remaining > 0 && shouldSkipPopup) {
+          if (remaining > 0) {
+            const timeSubOptions = getTimeSubOptions(target.timeSlot)
+            const timeSub = timeSubOptions ? timeSubOptions[timeSubOptions.length - 1].value : undefined
             const err = await addAssignment({
               tenant_id: tenant!.id,
               year: target.year, month: target.month, day: target.day,
@@ -436,7 +435,7 @@ export function SchedulePage() {
               user_id: profile.id,
               role_id: target.roleId ?? null,
               note: undefined,
-              time_sub: undefined,
+              time_sub: timeSub,
               color: undefined,
               customer_name: null,
               customer_phone: null,
