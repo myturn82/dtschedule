@@ -117,16 +117,6 @@ export function SlotEditModal({
     }
   }, [isAdmin, editingId, singleProfileId])
 
-  // 역할분리 + 비회원/직접입력 모드: "회원 선택" 드롭다운 노출 시 첫 번째 회원을 기본 선택
-  useEffect(() => {
-    if (isAdmin && isSplitMode && isFreeform && !editingId && !selectedUserId && selectableProfiles.length > 0) {
-      const p = selectableProfiles[0]
-      setSelectedUserId(p.id)
-      if (customFields[0]) {
-        setFieldValues(prev => ({ ...prev, [customFields[0].id]: p.name }))
-      }
-    }
-  }, [isAdmin, isSplitMode, isFreeform, editingId, selectedUserId, selectableProfiles, customFields])
 
   function startEdit(a: Assignment) {
     setEditingId(a.id)
