@@ -399,7 +399,7 @@ export function SchedulePage() {
       return
     }
 
-    if (isSplitMode && tenantRole === 'member') {
+    if (isSplitMode && tenantRole === 'member' && tenantMode !== '비회원') {
       if (!memberRoleId || target.roleId !== memberRoleId) return
     }
 
@@ -682,6 +682,7 @@ export function SchedulePage() {
                 splitRoles={splitRoles}
                 isSplitMode={isSplitMode}
                 slotLabels={slotLabels}
+                canAdd={tenantMode !== '비회원' || isPrivileged}
                 onCellClick={handleCellClick}
                 displayAssignmentFilter={displayAssignmentFilter}
                 withdrawnUserIds={withdrawnUserIds}
