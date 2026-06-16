@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { DevFileLabel } from '../DevFileLabel'
 import { DEFAULT_MAX_CAPACITY } from '../../types'
 import type { SlotSetting, TimeSlot } from '../../types'
 import { shortSlotLabel } from '../../utils/timeSlots'
@@ -151,6 +152,7 @@ export function CapacityModal({ slotSettings, timeSlots, slotLabels = {}, onClos
         </div>
 
       </div>
+      <DevFileLabel file="CapacityModal.tsx" />
     </div>
   )
 }

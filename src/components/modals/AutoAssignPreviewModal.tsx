@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { DevFileLabel } from '../DevFileLabel'
 import type { ProposedAssignment, MemberPreference } from '../../utils/autoAssign'
 import type { TenantRole } from '../../types'
 import type { ProfileWithRole } from '../../hooks/useProfiles'
@@ -199,6 +200,7 @@ export function AutoAssignPreviewModal({ proposals, onConfirm, onClose, memberPr
           </button>
         </div>
       </div>
+      <DevFileLabel file="AutoAssignPreviewModal.tsx" />
     </div>
   )
 }

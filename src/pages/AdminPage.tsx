@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, Fragment } from 'react'
+import { DevFileLabel } from '../components/DevFileLabel'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useAdmin } from '../hooks/useAdmin'
@@ -100,7 +101,7 @@ const TAB_LABELS: Record<Tab, string> = {
   dates: '날짜 설정',
   settings: '조직 설정',
   legend: '범례 관리',
-  custom_fields: '입력 필드',
+  custom_fields: '커스텀 필드',
 }
 
 export function AdminPage() {
@@ -1689,7 +1690,7 @@ export function AdminPage() {
                 </div>
               </div>
             )}
-            {/* ── 입력 필드 관리 ── */}
+            {/* ── 커스텀 필드 관리 ── */}
             {tab === 'custom_fields' && (
               <div className="max-w-lg space-y-4">
                 <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-semibold">
@@ -1948,6 +1949,7 @@ export function AdminPage() {
           </>
         )}
       </div>
+      <DevFileLabel file="AdminPage.tsx" />
     </div>
   )
 }

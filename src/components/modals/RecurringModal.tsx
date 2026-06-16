@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
+import { DevFileLabel } from '../DevFileLabel'
 import { supabase } from '../../lib/supabase'
 import type { Profile, TenantRole, ScheduleRule, DateOverride, TenantMode, TenantAccessRole } from '../../types'
 import type { ProfileWithRole } from '../../hooks/useProfiles'
@@ -463,6 +464,7 @@ export function RecurringModal({
           </button>
         </div>
       </div>
+      <DevFileLabel file="RecurringModal.tsx" />
     </div>
   )
 }

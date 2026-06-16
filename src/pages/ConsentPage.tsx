@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { DevFileLabel } from '../components/DevFileLabel'
 import { useNavigate } from 'react-router-dom'
 import { ScheduleBackground } from '../components/auth/ScheduleBackground'
 
@@ -107,6 +108,7 @@ export function ConsentPage() {
           </div>
         </>
       )}
+      <DevFileLabel file="ConsentPage.tsx" />
     </ScheduleBackground>
   )
 }

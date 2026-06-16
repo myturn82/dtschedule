@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { DevFileLabel } from '../DevFileLabel'
 import { supabase } from '../../lib/supabase'
 
 interface TenantRole { id: string; name: string; display_order: number }
@@ -201,6 +202,7 @@ export function JoinOrgModal({ userId, onClose, onSuccess }: Props) {
           </>
         )}
       </div>
+      <DevFileLabel file="JoinOrgModal.tsx" />
     </div>
   )
 }

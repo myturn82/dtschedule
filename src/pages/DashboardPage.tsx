@@ -1,7 +1,9 @@
 import { useMemo, useState, useEffect } from 'react'
+import { DevFileLabel } from '../components/DevFileLabel'
 import { fmtNumber } from '../lib/format'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { useCustomerAdmin } from '../hooks/useCustomerAdmin'
 import { useTenant } from '../contexts/TenantContext'
 import { supabase } from '../lib/supabase'
 import { useDashboard } from '../hooks/useDashboard'
@@ -14,11 +16,24 @@ import type { AssignmentSummary } from '../hooks/useDashboard'
 
 const WIDGET_COLORS = ['#4f46e5','#06b6d4','#f59e0b','#10b981','#f43f5e','#8b5cf6','#ec4899','#14b8a6','#f97316','#64748b']
 
+interface WidgetDataPoint {
+  label: string
+  value: number      // 차트 스케일링에 사용 (COUNT: 건수, SUM/AVG: 집계값)
+  count: number      // 항상 배정 건수
+  storedSum: number | null  // 표시할 저장값 (COUNT: 옵션 금액 합계, SUM/AVG: 집계값)
+  unit: string
+}
+
+function fmtWidgetCount(count: number, storedSum: number | null, unit: string): string {
+  if (storedSum === null) return `${count}건`
+  return `${count}건(${fmtNumber(storedSum)}${unit})`
+}
+
 function computeWidgetData(
   widget: DashboardWidgetConfig,
   assignments: AssignmentSummary[],
   fields: CustomFieldDef[]
-): { label: string; value: number }[] {
+): WidgetDataPoint[] {
   const groupField = fields.find(f => f.id === widget.groupByFieldId)
   if (!groupField) return []
   const groups = new Map<string, AssignmentSummary[]>()
@@ -40,38 +55,50 @@ function computeWidgetData(
       if (groupField.type === 'checkbox') label = key === 'true' ? '예' : '아니오'
       else if (groupField.options) label = groupField.options.find(o => o.value === key)?.name ?? key
       let value: number
+      let storedSum: number | null = null
+      let unit = ''
       if (widget.aggregateOp === 'COUNT') {
         value = items.length
+        const option = groupField.options?.find(o => o.value === key)
+        if (option?.value_type && option.value_type !== 'none') {
+          const optionNumeric = Number(option.value)
+          if (!isNaN(optionNumeric)) {
+            storedSum = items.length * optionNumeric
+            unit = getOptionUnit(option.value_type)
+          }
+        }
       } else if (widget.aggregateFieldId) {
         const nums = items
           .map(a => Number(a.extra_data?.[widget.aggregateFieldId!]))
           .filter(n => !isNaN(n))
-        value = nums.length === 0 ? 0
+        const aggValue = nums.length === 0 ? 0
           : widget.aggregateOp === 'SUM'
             ? nums.reduce((s, n) => s + n, 0)
             : Math.round(nums.reduce((s, n) => s + n, 0) / nums.length * 10) / 10
+        value = aggValue
+        storedSum = aggValue
       } else {
         value = items.length
       }
-      return { label, value }
+      return { label, value, count: items.length, storedSum, unit }
     })
     .filter(d => d.value > 0)
     .sort((a, b) => b.value - a.value)
 }
 
-function BarChart({ data }: { data: { label: string; value: number; color: string }[] }) {
+function BarChart({ data }: { data: (WidgetDataPoint & { color: string })[] }) {
   const max = Math.max(...data.map(d => d.value), 1)
   return (
     <div className="space-y-2.5">
       {data.map((d, i) => (
-        <div key={i} className="grid items-center gap-2" style={{ gridTemplateColumns: '120px 1fr 56px' }}>
-          <span className="text-[12.5px] font-semibold text-[var(--color-text-secondary)] truncate">{d.label}</span>
+        <div key={i} className="grid items-center gap-2" style={{ gridTemplateColumns: 'minmax(0,80px) 1fr auto' }}>
+          <span className="text-[12px] font-semibold text-[var(--color-text-secondary)] truncate">{d.label}</span>
           <div className="h-[10px] rounded-full bg-[var(--color-surface-secondary)] border border-[var(--color-border)] overflow-hidden">
             <div className="h-full rounded-full transition-[width] duration-700"
               style={{ width: `${(d.value / max) * 100}%`, background: d.color }} />
           </div>
-          <span className="text-[12px] tabular-nums text-right font-mono text-[var(--color-text-muted)]">
-            {d.value.toLocaleString()}
+          <span className="text-[11px] tabular-nums text-right font-mono text-[var(--color-text-muted)] shrink-0 max-w-[130px] break-all">
+            {fmtWidgetCount(d.count, d.storedSum, d.unit)}
           </span>
         </div>
       ))}
@@ -79,7 +106,7 @@ function BarChart({ data }: { data: { label: string; value: number; color: strin
   )
 }
 
-function PieChart({ data }: { data: { label: string; value: number; color: string }[] }) {
+function PieChart({ data }: { data: (WidgetDataPoint & { color: string })[] }) {
   const total = data.reduce((s, d) => s + d.value, 0)
   if (!total) return null
   const cx = 70, cy = 70, r = 60
@@ -107,13 +134,13 @@ function PieChart({ data }: { data: { label: string; value: number; color: strin
       </svg>
       <div className="space-y-1.5 flex-1 min-w-0">
         {data.map((d, i) => (
-          <div key={i} className="flex items-center gap-2 text-sm min-w-0">
+          <div key={i} className="flex items-center gap-2 min-w-0">
             <span className="w-3 h-3 rounded-sm shrink-0" style={{ background: d.color }} />
-            <span className="text-[var(--color-text-secondary)] truncate flex-1">{d.label}</span>
-            <span className="font-mono font-bold text-[var(--color-text-primary)] shrink-0">{d.value.toLocaleString()}</span>
-            <span className="text-[11px] text-[var(--color-text-muted)] shrink-0">
-              ({Math.round(d.value / total * 100)}%)
-            </span>
+            <span className="text-[13px] text-[var(--color-text-secondary)] truncate flex-1 min-w-0">{d.label}</span>
+            <div className="shrink-0 text-right leading-tight">
+              <div className="text-[12px] font-mono font-bold text-[var(--color-text-primary)]">{fmtWidgetCount(d.count, d.storedSum, d.unit)}</div>
+              <div className="text-[10px] text-[var(--color-text-muted)]">({Math.round(d.value / total * 100)}%)</div>
+            </div>
           </div>
         ))}
       </div>
@@ -121,20 +148,22 @@ function PieChart({ data }: { data: { label: string; value: number; color: strin
   )
 }
 
-function TableChart({ data }: { data: { label: string; value: number; color: string }[] }) {
+function TableChart({ data }: { data: (WidgetDataPoint & { color: string })[] }) {
   const total = data.reduce((s, d) => s + d.value, 0)
   return (
     <div>
       {data.map((d, i) => (
         <div key={i} className="flex items-center gap-3 py-2.5 border-b border-[var(--color-border)] last:border-0">
           <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: d.color }} />
-          <span className="text-sm text-[var(--color-text-secondary)] flex-1 truncate">{d.label}</span>
-          <span className="text-[12px] text-[var(--color-text-muted)]">
-            {total > 0 ? Math.round(d.value / total * 100) : 0}%
-          </span>
-          <span className="text-sm font-bold font-mono text-[var(--color-text-primary)] w-16 text-right">
-            {d.value.toLocaleString()}
-          </span>
+          <span className="text-sm text-[var(--color-text-secondary)] flex-1 truncate min-w-0">{d.label}</span>
+          <div className="shrink-0 text-right leading-tight">
+            <div className="text-[12px] font-bold font-mono text-[var(--color-text-primary)]">
+              {fmtWidgetCount(d.count, d.storedSum, d.unit)}
+            </div>
+            <div className="text-[10px] text-[var(--color-text-muted)]">
+              {total > 0 ? Math.round(d.value / total * 100) : 0}%
+            </div>
+          </div>
         </div>
       ))}
     </div>
@@ -163,7 +192,7 @@ function CustomWidgetCard({ widget, assignments, customFields, isAdmin, onEdit, 
       <div className="flex items-start justify-between mb-4 gap-2">
         <div className="min-w-0">
           <h2 className="text-[15px] font-bold tracking-tight text-[var(--color-text-primary)] truncate">{widget.title}</h2>
-          <p className="text-[12px] text-[var(--color-text-muted)] mt-0.5">{aggLabel}</p>
+          <p className="text-[12px] text-[var(--color-text-muted)] mt-0.5 truncate">{aggLabel}</p>
         </div>
         {isAdmin && (
           <div className="flex gap-1 shrink-0">
@@ -183,14 +212,20 @@ function CustomWidgetCard({ widget, assignments, customFields, isAdmin, onEdit, 
       ) : (
         <TableChart data={colored} />
       )}
-      {colored.length > 0 && (
-        <div className="mt-3 flex items-center justify-between px-3 py-2 rounded-lg bg-[var(--color-surface-secondary)] border border-[var(--color-border)]">
-          <span className="text-[12px] text-[var(--color-text-muted)] font-medium">합계</span>
-          <span className="text-[13px] font-bold font-mono text-[var(--color-text-primary)]">
-            {colored.reduce((s, d) => s + d.value, 0).toLocaleString()}
-          </span>
-        </div>
-      )}
+      {colored.length > 0 && (() => {
+        const totalCount = colored.reduce((s, d) => s + d.count, 0)
+        const hasStoredSum = colored.some(d => d.storedSum !== null)
+        const totalStoredSum = hasStoredSum ? colored.reduce((s, d) => s + (d.storedSum ?? 0), 0) : null
+        const unit = colored[0]?.unit ?? ''
+        return (
+          <div className="mt-3 flex items-center justify-between px-3 py-2 rounded-lg bg-[var(--color-surface-secondary)] border border-[var(--color-border)]">
+            <span className="text-[12px] text-[var(--color-text-muted)] font-medium">합계</span>
+            <span className="text-[13px] font-bold font-mono text-[var(--color-text-primary)]">
+              {fmtWidgetCount(totalCount, totalStoredSum, unit)}
+            </span>
+          </div>
+        )
+      })()}
     </section>
   )
 }
@@ -219,6 +254,7 @@ const AVATAR_TINTS = [
 
 export function DashboardPage() {
   const { profile } = useAuth()
+  const { isCustomerAdmin } = useCustomerAdmin()
   const navigate = useNavigate()
   const { tenant, memberships, slotLabels, customFields } = useTenant()
 
@@ -467,7 +503,7 @@ export function DashboardPage() {
   }, [slotStats, effectiveCap])
 
   const currentMembership = memberships.find(m => m.tenant_id === tenant?.id)
-  const isAdmin = currentMembership?.role === 'admin'
+  const isAdmin = currentMembership?.role === 'admin' || !!profile?.is_super_admin || isCustomerAdmin
 
   async function handleWithdrawalRequest() {
     if (!confirm('정말 이 조직에서 탈퇴를 신청하시겠습니까?\n관리자 승인 후 처리됩니다.')) return
@@ -1193,6 +1229,7 @@ export function DashboardPage() {
           onClose={() => { setShowWidgetModal(false); setEditingWidget(null) }}
         />
       )}
+      <DevFileLabel file="DashboardPage.tsx" />
     </div>
   )
 }

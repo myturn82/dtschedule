@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { DevFileLabel } from '../DevFileLabel'
 import { supabase } from '../../lib/supabase'
 import { isValidPhone, formatPhone } from '../../lib/phone'
 
@@ -100,6 +101,7 @@ export function StartServiceModal({ userId, onClose, onSuccess }: Props) {
           </button>
         </div>
       </div>
+      <DevFileLabel file="StartServiceModal.tsx" />
     </div>
   )
 }

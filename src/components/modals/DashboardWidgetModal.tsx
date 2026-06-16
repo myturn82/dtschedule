@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { DevFileLabel } from '../DevFileLabel'
 import type { CustomFieldDef, DashboardWidgetConfig, WidgetAggOp, WidgetChartType } from '../../types'
 
 interface Props {
@@ -81,7 +82,7 @@ export function DashboardWidgetModal({ customFields, existing, onSave, onClose }
           </label>
           {groupByFields.length === 0 ? (
             <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-              그룹화 가능한 필드가 없습니다. 입력필드 탭에서 드롭다운·라디오·체크박스 필드를 추가하세요.
+              그룹화 가능한 필드가 없습니다. 커스텀 필드 탭에서 드롭다운·라디오·체크박스 필드를 추가하세요.
             </p>
           ) : (
             <select
@@ -162,6 +163,7 @@ export function DashboardWidgetModal({ customFields, existing, onSave, onClose }
           </button>
         </div>
       </div>
+      <DevFileLabel file="DashboardWidgetModal.tsx" />
     </div>
   )
 }

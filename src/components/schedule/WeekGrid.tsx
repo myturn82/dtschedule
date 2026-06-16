@@ -98,7 +98,7 @@ export function WeekGrid({
               <button
                 key={i}
                 onClick={() => onDateHeaderClick?.(d)}
-                className={`border-l border-[var(--color-border)] px-1 pt-2 pb-1 text-center transition-colors hover:bg-[var(--color-surface-hover)] ${
+                className={`border-l border-[var(--color-border)] px-1 pt-1 pb-0.5 sm:pt-2 sm:pb-1 text-center transition-colors hover:bg-[var(--color-surface-hover)] ${
                   isSelected ? 'bg-[var(--color-brand-primary)]/8' : ''
                 }`}
               >
@@ -116,13 +116,14 @@ export function WeekGrid({
 
                 {/* Role sub-headers */}
                 {activeRoles.length > 0 && (
-                  <div className="mt-1.5 grid" style={{ gridTemplateColumns: `repeat(${activeRoles.length}, 1fr)` }}>
+                  <div className="mt-1.5 grid overflow-hidden" style={{ gridTemplateColumns: `repeat(${activeRoles.length}, 1fr)` }}>
                     {activeRoles.map((role, ri) => (
                       <div
                         key={role.id}
-                        className={`text-[8px] font-medium text-[var(--color-text-muted)] truncate py-0.5 ${
+                        className={`text-[8px] font-medium text-[var(--color-text-muted)] truncate py-0.5 min-w-0 ${
                           ri > 0 ? 'pl-1 border-l border-dashed border-[var(--color-border-strong)]' : ''
                         }`}
+                        title={role.name}
                       >
                         {role.name}
                       </div>
@@ -145,7 +146,7 @@ export function WeekGrid({
               style={{ gridTemplateColumns: `${timeColW}px repeat(7, 1fr)`, minHeight: 52 }}
             >
               {/* Time label */}
-              <div className="px-1.5 py-1.5 flex flex-col justify-center items-center text-center border-r border-[var(--color-border)]">
+              <div className="px-1 py-1 sm:px-1.5 sm:py-1.5 flex flex-col justify-center items-center text-center border-r border-[var(--color-border)]">
                 <span className="text-[9px] font-medium text-[var(--color-text-secondary)] leading-snug break-all">
                   {slotLabels[slot] ?? (
                     <>
@@ -220,7 +221,7 @@ export function WeekGrid({
                               if (!canClick) return
                               onCellClick({ year: y, month: m, day, timeSlot: slot, memberType: 'member', roleId: role.id })
                             }}
-                            className={`flex flex-col items-center justify-center gap-0.5 p-1 transition-colors ${
+                            className={`flex flex-col items-center justify-center gap-0.5 p-0.5 sm:p-1 transition-colors ${
                               ri > 0 ? 'border-l border-dashed border-[var(--color-border-strong)]' : ''
                             } ${canClick ? (roleAssigns.length > 0 ? 'group hover:brightness-95' : 'group hover:bg-[var(--color-surface-hover)]') : 'cursor-default'}`}
                             style={{ background: roleAssigns.length > 0 ? tint.bg : undefined }}

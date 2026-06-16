@@ -207,7 +207,7 @@ export function DayView({
                     const roleAssigns = visible.filter(a => a.role_id === role.id)
                     return (
                       <div key={role.id} className="p-4 flex flex-col gap-2 min-w-0 bg-[var(--color-surface)]">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-muted)]">
+                        <span className="block text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-muted)] truncate" title={role.name}>
                           {role.name}
                         </span>
                         {roleAssigns.map(a => (
