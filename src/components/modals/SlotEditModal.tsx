@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { DevFileLabel } from '../DevFileLabel'
 import type { Assignment, CellState, ModalTarget, Profile, TenantRole, MemberType, CustomFieldDef, TenantMode } from '../../types'
 import { getOptionUnit } from '../../types'
 import { parseSlotLabel, getTimeSubOptions, formatTimeSub } from '../../utils/timeSlots'
@@ -865,6 +866,7 @@ export function SlotEditModal({
           </div>
         )}
       </div>
+      <DevFileLabel file="SlotEditModal.tsx" />
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { DevFileLabel } from '../components/DevFileLabel'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
@@ -711,6 +712,7 @@ export function AuthPage() {
           </div>
         </>
       )}
+      <DevFileLabel file="AuthPage.tsx" />
     </ScheduleBackground>
   )
 }

@@ -19,6 +19,7 @@ import { AuthPage }     from './pages/AuthPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { useDarkMode } from './hooks/useDarkMode'
 import { InstallBanner } from './components/InstallBanner'
+import { DevFileLabelDisplay } from './components/DevFileLabel'
 
 function AppRoutes() {
   useDarkMode()
@@ -112,8 +113,8 @@ function AppRoutes() {
       } />
       <Route path="/schedule" element={<SchedulePage />} />
       <Route path="/dashboard" element={
-        (tenantRole === 'admin' || profile?.is_super_admin) &&
-        (profile?.is_super_admin || tenantPlan === 'business')
+        (tenantRole === 'admin' || profile?.is_super_admin || isCustomerAdmin) &&
+        (profile?.is_super_admin || isCustomerAdmin || tenantPlan === 'business')
           ? <DashboardPage />
           : <Navigate to="/" replace />
       } />
@@ -139,6 +140,7 @@ export default function App() {
           <TenantProvider>
             <AppRoutes />
             <InstallBanner />
+            <DevFileLabelDisplay />
           </TenantProvider>
         </PlanLimitsProvider>
       </AuthProvider>

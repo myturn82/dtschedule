@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { DevFileLabel } from '../components/DevFileLabel'
 import { useAuth } from '../hooks/useAuth'
 import { useTenant } from '../contexts/TenantContext'
 import { supabase } from '../lib/supabase'
@@ -405,6 +406,7 @@ export function PendingPage() {
           </div>
         </>
       )}
+      <DevFileLabel file="PendingPage.tsx" />
     </ScheduleBackground>
   )
 }

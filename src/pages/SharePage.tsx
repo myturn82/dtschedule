@@ -1,4 +1,5 @@
 import { useSearchParams } from 'react-router-dom'
+import { DevFileLabel } from '../components/DevFileLabel'
 import { useSchedule } from '../hooks/useSchedule'
 import { useTenant } from '../contexts/TenantContext'
 import { ScheduleHeader } from '../components/schedule/ScheduleHeader'
@@ -36,6 +37,7 @@ export function SharePage() {
           />
         )}
       </div>
+      <DevFileLabel file="SharePage.tsx" />
     </div>
   )
 }

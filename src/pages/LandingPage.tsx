@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { DevFileLabel } from '../components/DevFileLabel'
 import { ScheduleBackground } from '../components/auth/ScheduleBackground'
 
 export function LandingPage() {
@@ -71,6 +72,7 @@ export function LandingPage() {
           </button>
         </div>
       </div>
+      <DevFileLabel file="LandingPage.tsx" />
     </ScheduleBackground>
   )
 }

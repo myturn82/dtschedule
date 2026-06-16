@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useCustomerAdmin } from '../hooks/useCustomerAdmin'
 import type { Tenant, Customer } from '../types'
 import { LogoIcon } from '../components/Logo'
+import { DevFileLabel } from '../components/DevFileLabel'
 
 function getGreeting() {
   const h = new Date().getHours()
@@ -542,6 +543,7 @@ export function TenantSelectPage() {
         <span style={{ width: 3, height: 3, borderRadius: '50%', background: '#B8BBC2', flexShrink: 0 }} />
         <span className="tsp-foot-mail" style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11.5 }}>{displayEmail}</span>
       </footer>
+      <DevFileLabel file="TenantSelectPage.tsx" />
     </div>
   )
 

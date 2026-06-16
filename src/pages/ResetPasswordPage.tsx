@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { DevFileLabel } from '../components/DevFileLabel'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { ScheduleBackground } from '../components/auth/ScheduleBackground'
@@ -112,6 +113,7 @@ export function ResetPasswordPage() {
           </>
         )}
       </div>
+      <DevFileLabel file="ResetPasswordPage.tsx" />
     </ScheduleBackground>
   )
 }

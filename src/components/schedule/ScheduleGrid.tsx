@@ -186,7 +186,7 @@ export function ScheduleGrid({
   // vol+plus 2-column split: only when indicator_bar roles exist (team leader bar shown in vol column)
   const showVolPlusSplit = indicatorBarRoles.length > 0
 
-  const thBase = 'border border-[var(--color-border-table)] px-0.5 sm:px-2 py-1 text-[9px] sm:text-xs font-semibold text-center'
+  const thBase = 'border border-[var(--color-border-table)] px-0.5 sm:px-2 py-0.5 sm:py-1 text-[9px] sm:text-xs font-semibold text-center'
   const thTime = `${thBase} bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] sticky left-0 z-10 w-10 sm:w-20 whitespace-nowrap`
 
   function getDayColSpan(dow: number): number {
@@ -271,9 +271,9 @@ export function ScheduleGrid({
                       splitRoles.map(role => (
                         <td
                           key={`${dowIdx}-${role.id}`}
-                          className="border border-[var(--color-border-table)] text-center text-[7px] sm:text-[9px] font-semibold bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] px-0.5 py-0.5"
+                          className="border border-[var(--color-border-table)] text-center text-[7px] sm:text-[9px] font-semibold bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] px-0.5 py-0.5 overflow-hidden"
                         >
-                          {day ? role.name : ''}
+                          <span className="block truncate" title={day ? role.name : ''}>{day ? role.name : ''}</span>
                         </td>
                       ))
                     )}
@@ -283,7 +283,7 @@ export function ScheduleGrid({
                 {/* Time slot rows */}
                 {timeSlots.map((slot, slotIdx) => (
                   <tr key={slot}>
-                    <td className="border border-[var(--color-border-table)] bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] px-0.5 sm:px-1 py-1 text-[9px] sm:text-[10px] font-medium text-center sticky left-0 z-10 w-10 sm:w-20 whitespace-nowrap overflow-hidden font-mono-num">
+                    <td className="border border-[var(--color-border-table)] bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] px-0.5 sm:px-1 py-0.5 sm:py-1 text-[9px] sm:text-[10px] font-medium text-center sticky left-0 z-10 w-10 sm:w-20 whitespace-nowrap overflow-hidden font-mono-num">
                       <span className="block truncate" title={rangeSlotLabel(slot)}>
                         {slotLabels[slot] ?? (
                           <>

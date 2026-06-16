@@ -217,6 +217,43 @@ useEffect(() => {
 
 ---
 
+## 개발환경 파일명 표시 규칙
+
+로컬 개발 환경에서 현재 화면이 어느 파일인지 바로 알 수 있도록,
+새로운 페이지 또는 모달을 만들 때 반드시 `DevFileLabel`을 추가한다.
+
+### 동작 방식
+
+- `src/components/DevFileLabel.tsx`의 `DevFileLabel` 컴포넌트를 사용한다.
+- `import.meta.env.DEV`가 `true`일 때만 동작하므로 프로덕션 빌드에는 영향 없다.
+- `DevFileLabelDisplay`는 `App.tsx`에 전역으로 한 번만 등록되어 있으며, 모달이 열리면 자동으로 해당 파일명으로 전환된다.
+
+### 적용 방법
+
+```tsx
+// 1. import 추가
+import { DevFileLabel } from '../components/DevFileLabel'
+
+// 2. JSX 닫는 태그 바로 앞에 삽입
+export function MyNewPage() {
+  return (
+    <div>
+      {/* ... */}
+      <DevFileLabel file="MyNewPage.tsx" />
+    </div>
+  )
+}
+```
+
+### 규칙
+
+1. **새 페이지(`src/pages/*.tsx`)** — 최상위 반환 div의 닫는 태그 바로 앞에 추가한다.
+2. **새 모달(`src/components/modals/*.tsx`)** — 백드롭 div의 닫는 태그 바로 앞에 추가한다.
+3. **파일명은 실제 파일명과 정확히 일치**시킨다 (`file="MyModal.tsx"`).
+4. `pointer-events`, `z-index` 등 스타일은 컴포넌트 내부에서 처리하므로 별도 지정 불필요.
+
+---
+
 ## 데이터 표시 포맷팅 규칙
 
 모든 데이터 **표시** 포맷팅은 `src/lib/format.ts`의 함수를 사용한다.

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { DevFileLabel } from '../components/DevFileLabel'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
@@ -947,6 +948,7 @@ export function SuperAdminPage() {
           </div>
         </>
       )}
+      <DevFileLabel file="SuperAdminPage.tsx" />
     </div>
   )
 }

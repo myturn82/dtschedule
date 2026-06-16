@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { DevFileLabel } from '../DevFileLabel'
 import type { Assignment, Profile, TimeSlot } from '../../types'
 
 interface Props {
@@ -252,6 +253,7 @@ export function HolidayNoteModal({
           </div>
         </div>
       </div>
+      <DevFileLabel file="HolidayNoteModal.tsx" />
     </div>
   )
 }

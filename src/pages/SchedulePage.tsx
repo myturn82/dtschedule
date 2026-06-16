@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
+import { DevFileLabel } from '../components/DevFileLabel'
 import { useAssignmentSnapshot, type SnapshotInfo, type SnapshotScope } from '../hooks/useAssignmentSnapshot'
 import { useSlotHighlights } from '../hooks/useSlotHighlights'
 import { useAuth } from '../hooks/useAuth'
@@ -605,9 +606,9 @@ export function SchedulePage() {
         </div>
       )}
       {/* Main content */}
-      <main className="px-2 py-2 sm:px-4 sm:py-3">
-        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-[var(--shadow-lg)] overflow-hidden animate-fade-up">
-          <div className="px-3 py-3 sm:px-5 sm:py-4 border-b border-[var(--color-border)]">
+      <main className="sm:px-4 sm:py-3">
+        <div className="bg-[var(--color-surface)] sm:border sm:border-[var(--color-border)] sm:rounded-2xl sm:shadow-[var(--shadow-lg)] overflow-hidden animate-fade-up">
+          <div className="px-2 py-2 sm:px-5 sm:py-4 border-b border-[var(--color-border)]">
             <ScheduleHeader
               year={year} month={month} day={day}
               title={tenant?.settings?.title || tenant?.name}
@@ -1048,6 +1049,7 @@ export function SchedulePage() {
           {directRegMsg}
         </div>
       )}
+      <DevFileLabel file="SchedulePage.tsx" />
     </div>
   )
 }
