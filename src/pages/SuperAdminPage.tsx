@@ -65,7 +65,7 @@ export function SuperAdminPage() {
   const [deleteNameInput, setDeleteNameInput] = useState('')
 
   // Mode change warning modal
-  const [pendingModeChange, setPendingModeChange] = useState<{ tenant: Tenant; from: TenantMode; to: TenantMode; unassignedCount?: number } | null>(null)
+  const [pendingModeChange, setPendingModeChange] = useState<{ tenant: Tenant; from: TenantMode; to: TenantMode; blocked?: boolean } | null>(null)
 
   // Pending admin approvals
   const [pendingAdmins, setPendingAdmins] = useState<Profile[]>([])
@@ -489,14 +489,13 @@ export function SuperAdminPage() {
   async function handleModeChange(tenant: Tenant, newMode: TenantMode) {
     const fromMode = displayMode(tenant.settings?.tenant_mode)
     if (newMode === fromMode) return
-    let unassignedCount: number | undefined
-    if (fromMode === '비회원' && (newMode === '회원개별' || newMode === '회원공유')) {
-      const { count } = await supabase.from('assignments')
-        .select('*', { count: 'exact', head: true })
-        .eq('tenant_id', tenant.id).is('user_id', null)
-      unassignedCount = count ?? 0
+    // 회원(공유/개별) ↔ 비회원 간 전환은 배정 데이터 구조가 달라 차단
+    const isCrossCategory = (fromMode === '비회원') !== (newMode === '비회원')
+    if (isCrossCategory) {
+      setPendingModeChange({ tenant, from: fromMode, to: newMode, blocked: true })
+      return
     }
-    setPendingModeChange({ tenant, from: fromMode, to: newMode, unassignedCount })
+    setPendingModeChange({ tenant, from: fromMode, to: newMode })
   }
 
   const selectedCustomer = customers.find(c => c.id === selectedCustomerId) ?? customers[0] ?? null
@@ -869,42 +868,47 @@ export function SuperAdminPage() {
       {pendingModeChange && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] p-6 w-full max-w-sm space-y-4 shadow-xl">
-            <h3 className="font-bold text-[var(--color-text-primary)] text-lg">운영 모드 변경</h3>
+            <h3 className="font-bold text-[var(--color-text-primary)] text-lg">
+              {pendingModeChange.blocked ? '모드 변경 불가' : '운영 모드 변경'}
+            </h3>
             <p className="text-sm text-[var(--color-text-secondary)]">
-              <span className="font-semibold text-[var(--color-text-primary)]">{pendingModeChange.tenant.name}</span>의 모드를{' '}
+              <span className="font-semibold text-[var(--color-text-primary)]">{pendingModeChange.tenant.name}</span>의 모드{' '}
               <span className="font-semibold">{pendingModeChange.from}</span> →{' '}
-              <span className="font-semibold text-[var(--color-brand-primary)]">{pendingModeChange.to}</span>으로 변경합니다.
+              <span className="font-semibold text-[var(--color-brand-primary)]">{pendingModeChange.to}</span>
             </p>
-            <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-xs text-amber-700 dark:text-amber-400 space-y-1">
-              {pendingModeChange.to === '비회원' && (
-                <p>기존 회원 배정이 화면에 남아 비회원 직접입력 데이터와 혼재될 수 있습니다.</p>
-              )}
-              {pendingModeChange.from === '비회원' && pendingModeChange.to === '회원개별' && (
-                <p>기존 비회원 배정 <strong>{pendingModeChange.unassignedCount ?? 0}건</strong>은 일반 회원 화면에서 숨겨집니다. 관리자는 계속 볼 수 있습니다.</p>
-              )}
-              {pendingModeChange.from === '비회원' && pendingModeChange.to === '회원공유' && (
-                <p>기존 비회원 배정 <strong>{pendingModeChange.unassignedCount ?? 0}건</strong>이 공개 스케줄에 표시됩니다.</p>
-              )}
-              {pendingModeChange.from !== '비회원' && pendingModeChange.to === '회원개별' && (
-                <p>각 회원은 자신의 배정만 볼 수 있습니다. 기존 배정은 그대로 유지됩니다.</p>
-              )}
-              {pendingModeChange.from !== '비회원' && pendingModeChange.to === '회원공유' && (
-                <p>기존 배정 데이터는 그대로 유지됩니다.</p>
-              )}
-            </div>
+
+            {pendingModeChange.blocked ? (
+              <div className="p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-xs text-red-700 dark:text-red-400 space-y-1">
+                <p className="font-semibold">직접 전환이 지원되지 않습니다.</p>
+                <p>회원 모드(회원공유/회원개별)와 비회원 모드는 배정 데이터 구조가 달라 전환 시 기존 데이터가 혼재됩니다.</p>
+                <p className="mt-1">전환이 필요하다면 기존 배정 데이터를 모두 삭제한 후 진행하세요.</p>
+              </div>
+            ) : (
+              <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-xs text-amber-700 dark:text-amber-400 space-y-1">
+                {pendingModeChange.to === '회원개별' && (
+                  <p>각 회원은 자신의 배정만 볼 수 있습니다. 기존 배정은 그대로 유지됩니다.</p>
+                )}
+                {pendingModeChange.to === '회원공유' && (
+                  <p>기존 배정 데이터는 그대로 유지됩니다.</p>
+                )}
+              </div>
+            )}
+
             <div className="flex gap-2 pt-1">
-              <button
-                disabled={modeSaving}
-                onClick={confirmModeChange}
-                className="flex-1 px-4 py-2 rounded-xl bg-[var(--color-brand-primary)] text-white text-sm font-medium hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40"
-              >
-                {modeSaving ? '저장 중...' : '변경 적용'}
-              </button>
+              {!pendingModeChange.blocked && (
+                <button
+                  disabled={modeSaving}
+                  onClick={confirmModeChange}
+                  className="flex-1 px-4 py-2 rounded-xl bg-[var(--color-brand-primary)] text-white text-sm font-medium hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40"
+                >
+                  {modeSaving ? '저장 중...' : '변경 적용'}
+                </button>
+              )}
               <button
                 onClick={() => setPendingModeChange(null)}
-                className="flex-1 px-4 py-2 rounded-xl border border-[var(--color-border)] text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]"
+                className={`px-4 py-2 rounded-xl border border-[var(--color-border)] text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] ${pendingModeChange.blocked ? 'w-full' : 'flex-1'}`}
               >
-                취소
+                {pendingModeChange.blocked ? '확인' : '취소'}
               </button>
             </div>
           </div>
