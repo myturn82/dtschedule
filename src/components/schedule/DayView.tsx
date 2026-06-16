@@ -28,6 +28,7 @@ interface Props {
   splitRoles?: TenantRole[]
   isSplitMode?: boolean
   slotLabels?: Record<string, string>
+  canAdd?: boolean
   onCellClick: (target: ModalTarget) => void
   displayAssignmentFilter?: (a: Assignment) => boolean
   withdrawnUserIds?: Set<string>
@@ -85,7 +86,7 @@ function AssignButton({ onClick }: { onClick: () => void }) {
 export function DayView({
   year, month, day, timeSlots, assignments, slotSettings, scheduleRules, dateOverrides,
   profile: _profile, splitRoles = [], isSplitMode = false, slotLabels = {},
-  onCellClick, displayAssignmentFilter, withdrawnUserIds,
+  canAdd = true, onCellClick, displayAssignmentFilter, withdrawnUserIds,
 }: Props) {
   const dow = new Date(year, month - 1, day).getDay()
 
@@ -212,7 +213,7 @@ export function DayView({
                         {roleAssigns.map(a => (
                           <PersonChip key={a.id} a={a} withdrawnUserIds={withdrawnUserIds} onClick={() => onCellClick({ year, month, day, timeSlot: slot, memberType: 'member', roleId: role.id })} />
                         ))}
-                        <AssignButton onClick={() => onCellClick({ year, month, day, timeSlot: slot, memberType: 'member', roleId: role.id })} />
+                        {canAdd && <AssignButton onClick={() => onCellClick({ year, month, day, timeSlot: slot, memberType: 'member', roleId: role.id })} />}
                       </div>
                     )
                   })}
@@ -222,7 +223,7 @@ export function DayView({
                   {visible.map(a => (
                     <PersonChip key={a.id} a={a} withdrawnUserIds={withdrawnUserIds} onClick={() => onCellClick({ year, month, day, timeSlot: slot, memberType: 'member' })} />
                   ))}
-                  <AssignButton onClick={() => onCellClick({ year, month, day, timeSlot: slot, memberType: 'member' })} />
+                  {canAdd && <AssignButton onClick={() => onCellClick({ year, month, day, timeSlot: slot, memberType: 'member' })} />}
                 </div>
               )}
             </div>
