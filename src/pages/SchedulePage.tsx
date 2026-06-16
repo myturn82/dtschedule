@@ -26,7 +26,8 @@ import { AutoAssignPreviewModal } from '../components/modals/AutoAssignPreviewMo
 import { computeAutoAssignments } from '../utils/autoAssign'
 import { exportMonthScheduleToExcel, exportMonthScheduleToCsv, exportMonthScheduleToDocx, exportMonthScheduleToPdf } from '../utils/exportSchedule'
 import type { ProposedAssignment } from '../utils/autoAssign'
-import type { ModalTarget, ViewType, TenantMode, Assignment, DateOverride } from '../types'
+import type { ModalTarget, ViewType, TenantMode, Assignment, DateOverride, CustomFieldDef, CustomFieldOption } from '../types'
+import { supabase } from '../lib/supabase'
 
 // 날짜 단위 잠금(date_overrides.is_locked) 기준으로 고정/해제 대상이 있는지 확인
 function hasDateLockTarget(dateOverrides: DateOverride[], dates: string[], locked: boolean): boolean {
@@ -75,12 +76,32 @@ export function SchedulePage() {
 
   const { profile } = useAuth()
   const { tenant, tenantRole, memberships, timeSlots, slotLabels, legendItems, customFields, typeLabels } = useTenant()
+
+  // 최신 커스텀 필드를 DB에서 직접 조회 (TenantContext stale 방지)
+  const [freshCustomFields, setFreshCustomFields] = useState<CustomFieldDef[] | null>(null)
+  useEffect(() => {
+    if (!tenant?.id) return
+    let cancelled = false
+    supabase.from('tenants').select('settings').eq('id', tenant.id).single()
+      .then(({ data }) => {
+        if (cancelled) return
+        const raw = (data?.settings?.custom_fields ?? []) as CustomFieldDef[]
+        setFreshCustomFields(raw.map(f => ({
+          ...f,
+          options: f.options?.map((opt): CustomFieldOption =>
+            typeof opt === 'string' ? { name: opt, value: opt } : opt
+          ),
+        })))
+      })
+    return () => { cancelled = true }
+  }, [tenant?.id])
+  const effectiveCustomFields = freshCustomFields ?? customFields
+
   const memberRoleId = memberships.find(m => m.tenant_id === tenant?.id)?.role_id ?? null
   const isPrivileged = profile?.is_super_admin || tenantRole === 'admin'
   const rawMode = tenant?.settings?.tenant_mode ?? '회원선택'
   const tenantMode: TenantMode =
     rawMode === '회원선택' ? '회원공유' :
-    rawMode === '직접입력' ? '비회원' :
     rawMode as TenantMode
 
   const { highlightSet: highlightedSlots, loadHighlights, toggleHighlight, clearAndSnapshotHighlights, restoreHighlights } = useSlotHighlights(tenant?.id ?? '')
@@ -403,8 +424,8 @@ export function SchedulePage() {
       if (!memberRoleId || target.roleId !== memberRoleId) return
     }
 
-    // 비회원/직접입력 모드는 커스텀 필드(이름 등)를 직접 입력해야 하므로 모달을 거쳐야 함
-    const useDynamicFieldsHere = tenantMode === '비회원' && customFields.length > 0
+    // 비회원 모드는 커스텀 필드(이름 등)를 직접 입력해야 하므로 모달을 거쳐야 함
+    const useDynamicFieldsHere = tenantMode === '비회원' && effectiveCustomFields.length > 0
 
     if (
       tenantMode !== '회원개별' &&
@@ -703,7 +724,7 @@ export function SchedulePage() {
           isSplitMode={isSplitMode}
           tenantRoles={tenantRoles}
           tenantMode={tenantMode}
-          customFields={customFields}
+          customFields={effectiveCustomFields}
           slotLabels={slotLabels}
           typeLabels={typeLabels}
           onClose={() => setModalTarget(null)}

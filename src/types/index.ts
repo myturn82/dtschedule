@@ -33,17 +33,38 @@ export interface CustomFieldOption {
   value_type?: OptionValueType;
 }
 
+export type CustomFieldType = 'text' | 'number' | 'select' | 'radio' | 'checkbox' | 'checkbox_group' | 'phone' | 'account_number'
+
+/** options를 가지는 타입 */
+export const FIELD_TYPES_WITH_OPTIONS: CustomFieldType[] = ['select', 'radio', 'checkbox_group']
+/** show_in_dashboard를 지원하는 타입 */
+export const FIELD_TYPES_WITH_DASHBOARD: CustomFieldType[] = ['select', 'radio', 'checkbox_group', 'checkbox']
+
 export interface CustomFieldDef {
   id: string;
   label: string;
-  type: 'text' | 'select';
+  type: CustomFieldType;
   required: boolean;
-  options?: CustomFieldOption[];
-  placeholder?: string;
-  show_in_dashboard?: boolean;
+  options?: CustomFieldOption[];  // select, radio, checkbox_group
+  placeholder?: string;           // text, number, select
+  show_in_dashboard?: boolean;    // select, radio, checkbox_group, checkbox
+  min?: number;                   // number 전용
+  max?: number;                   // number 전용
 }
 
 export type TenantMode = '회원공유' | '회원개별' | '비회원';
+
+export type WidgetAggOp = 'COUNT' | 'SUM' | 'AVG'
+export type WidgetChartType = 'bar' | 'pie' | 'table'
+
+export interface DashboardWidgetConfig {
+  id: string
+  title: string
+  groupByFieldId: string       // select/radio/checkbox/checkbox_group field id
+  aggregateOp: WidgetAggOp
+  aggregateFieldId?: string    // number field id (required for SUM/AVG)
+  chartType: WidgetChartType
+}
 
 export interface TenantSettings {
   open_from: string;               // 'HH:MM'
@@ -54,10 +75,11 @@ export interface TenantSettings {
   theme_color?: string;            // '#RRGGBB'
   timezone: string;                // IANA tz, e.g. 'Asia/Seoul'
   locale: string;                  // e.g. 'ko-KR'
-  tenant_mode?: TenantMode | '직접입력' | '회원선택';
+  tenant_mode?: TenantMode | '회원선택';
   slot_labels?: Record<string, string>;
   legend_items?: LegendItem[];
   custom_fields?: CustomFieldDef[];
+  dashboard_widgets?: DashboardWidgetConfig[];
   volunteer_label?: string;
   plus_label?: string;
   role_ratios?: Record<string, number>; // roleId → 퍼센트, 합계 100

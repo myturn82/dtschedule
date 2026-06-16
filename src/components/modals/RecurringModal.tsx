@@ -7,7 +7,7 @@ import { parseSlotLabel } from '../../utils/timeSlots'
 
 interface Props {
   tenantId: string
-  tenantMode: TenantMode | '직접입력' | '회원선택'
+  tenantMode: TenantMode | '회원선택'
   timeSlots: string[]
   slotLabels: Record<string, string>
   scheduleRules: ScheduleRule[]
@@ -33,7 +33,7 @@ export function RecurringModal({
   onClose, onSuccess,
 }: Props) {
   const isAdmin = profile?.is_super_admin || tenantRole === 'admin'
-  const isFreeform = tenantMode === '비회원' || tenantMode === '직접입력'
+  const isFreeform = tenantMode === '비회원'
 
   // Regular member's role (looked up from profiles list)
   const myRoleId = !isAdmin

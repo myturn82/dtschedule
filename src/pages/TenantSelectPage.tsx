@@ -42,7 +42,7 @@ const TINTS = [
 const MODE_LABELS: Record<string, string> = {
   '회원공유': '회원공유', '회원선택': '회원공유',
   '회원개별': '회원개별',
-  '비회원': '비회원', '직접입력': '비회원',
+  '비회원': '비회원',
 }
 
 interface OrgCardProps {

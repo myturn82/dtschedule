@@ -6,6 +6,7 @@ import { useProfiles } from '../../hooks/useProfiles'
 import type { ProfileWithRole } from '../../hooks/useProfiles'
 import { LockIcon, UnlockIcon } from '../icons/LockIcons'
 import { fmtPhone } from '../../lib/format'
+import { formatPhone, isValidPhone } from '../../lib/phone'
 
 interface Props {
   target: ModalTarget
@@ -16,7 +17,7 @@ interface Props {
   splitRoles?: TenantRole[]
   isSplitMode?: boolean
   tenantRoles?: TenantRole[]
-  tenantMode?: TenantMode | '직접입력' | '회원선택'
+  tenantMode?: TenantMode | '회원선택'
   customFields?: CustomFieldDef[]
   slotLabels?: Record<string, string>
   typeLabels?: { member: string; '50plus': string }
@@ -45,7 +46,7 @@ export function SlotEditModal({
   const isReadOnly = !isAdmin && (tenantMode === '회원개별' || tenantMode === '비회원')
   const profileType: MemberType = 'member'
 
-  const isFreeform = tenantMode === '비회원' || tenantMode === '직접입력'
+  const isFreeform = tenantMode === '비회원'
   const useDynamicFields = isFreeform && customFields.length > 0
   // 회원공유/회원개별 모드에서도 관리자콘솔에 등록된 커스텀 필드를 추가 입력으로 노출
   const showExtraCustomFields = !isFreeform && customFields.length > 0
@@ -157,9 +158,20 @@ export function SlotEditModal({
     if (useDynamicFields) {
       // 동적 필드 유효성 검사
       for (const field of customFields) {
-        if (field.required && !fieldValues[field.id]?.trim()) {
+        if (field.required && !isFieldFilled(field)) {
           setError(`"${field.label}"은(는) 필수 항목입니다`)
           return
+        }
+        if (field.type === 'number') {
+          const num = Number(fieldValues[field.id])
+          if (fieldValues[field.id]?.trim() && field.min !== undefined && num < field.min) { setError(`"${field.label}"은(는) ${field.min} 이상이어야 합니다`); return }
+          if (fieldValues[field.id]?.trim() && field.max !== undefined && num > field.max) { setError(`"${field.label}"은(는) ${field.max} 이하이어야 합니다`); return }
+        }
+        if (field.type === 'phone' && fieldValues[field.id]?.trim()) {
+          if (!isValidPhone(fieldValues[field.id])) { setError(`"${field.label}"의 전화번호 형식이 올바르지 않습니다 (예: 010-1234-5678)`); return }
+        }
+        if (field.type === 'account_number' && fieldValues[field.id]?.trim()) {
+          if (fieldValues[field.id].replace(/\D/g, '').length < 8) { setError(`"${field.label}"의 계좌번호는 숫자 8자리 이상이어야 합니다`); return }
         }
       }
       const nameFieldId = customFields[0].id
@@ -168,7 +180,8 @@ export function SlotEditModal({
       // 첫 번째 필드 제외 나머지 extra_data에 저장
       const rest: Record<string, string> = {}
       customFields.slice(1).forEach(f => {
-        if (fieldValues[f.id]?.trim()) rest[f.id] = fieldValues[f.id].trim()
+        const v = fieldValues[f.id]
+        if (v !== undefined && v !== '') rest[f.id] = v.trim ? v.trim() : v
       })
       if (Object.keys(rest).length > 0) extraData = rest
       if (isAdmin && isSplitMode && selectedUserId) userId = selectedUserId
@@ -180,14 +193,26 @@ export function SlotEditModal({
 
     if (showExtraCustomFields) {
       for (const field of customFields) {
-        if (field.required && !fieldValues[field.id]?.trim()) {
+        if (field.required && !isFieldFilled(field)) {
           setError(`"${field.label}"은(는) 필수 항목입니다`)
           return
+        }
+        if (field.type === 'number') {
+          const num = Number(fieldValues[field.id])
+          if (fieldValues[field.id]?.trim() && field.min !== undefined && num < field.min) { setError(`"${field.label}"은(는) ${field.min} 이상이어야 합니다`); return }
+          if (fieldValues[field.id]?.trim() && field.max !== undefined && num > field.max) { setError(`"${field.label}"은(는) ${field.max} 이하이어야 합니다`); return }
+        }
+        if (field.type === 'phone' && fieldValues[field.id]?.trim()) {
+          if (!isValidPhone(fieldValues[field.id])) { setError(`"${field.label}"의 전화번호 형식이 올바르지 않습니다 (예: 010-1234-5678)`); return }
+        }
+        if (field.type === 'account_number' && fieldValues[field.id]?.trim()) {
+          if (fieldValues[field.id].replace(/\D/g, '').length < 8) { setError(`"${field.label}"의 계좌번호는 숫자 8자리 이상이어야 합니다`); return }
         }
       }
       const rest: Record<string, string> = {}
       customFields.forEach(f => {
-        if (fieldValues[f.id]?.trim()) rest[f.id] = fieldValues[f.id].trim()
+        const v = fieldValues[f.id]
+        if (v !== undefined && v !== '') rest[f.id] = v.trim ? v.trim() : v
       })
       if (Object.keys(rest).length > 0) extraData = rest
     }
@@ -225,9 +250,20 @@ export function SlotEditModal({
 
     if (useDynamicFields) {
       for (const field of customFields) {
-        if (field.required && !fieldValues[field.id]?.trim()) {
+        if (field.required && !isFieldFilled(field)) {
           setError(`"${field.label}"은(는) 필수 항목입니다`)
           return
+        }
+        if (field.type === 'number') {
+          const num = Number(fieldValues[field.id])
+          if (fieldValues[field.id]?.trim() && field.min !== undefined && num < field.min) { setError(`"${field.label}"은(는) ${field.min} 이상이어야 합니다`); return }
+          if (fieldValues[field.id]?.trim() && field.max !== undefined && num > field.max) { setError(`"${field.label}"은(는) ${field.max} 이하이어야 합니다`); return }
+        }
+        if (field.type === 'phone' && fieldValues[field.id]?.trim()) {
+          if (!isValidPhone(fieldValues[field.id])) { setError(`"${field.label}"의 전화번호 형식이 올바르지 않습니다 (예: 010-1234-5678)`); return }
+        }
+        if (field.type === 'account_number' && fieldValues[field.id]?.trim()) {
+          if (fieldValues[field.id].replace(/\D/g, '').length < 8) { setError(`"${field.label}"의 계좌번호는 숫자 8자리 이상이어야 합니다`); return }
         }
       }
       const nameFieldId = customFields[0].id
@@ -235,7 +271,8 @@ export function SlotEditModal({
       if (!name) return
       const rest: Record<string, string> = {}
       customFields.slice(1).forEach(f => {
-        if (fieldValues[f.id]?.trim()) rest[f.id] = fieldValues[f.id].trim()
+        const v = fieldValues[f.id]
+        if (v !== undefined && v !== '') rest[f.id] = v.trim ? v.trim() : v
       })
       if (Object.keys(rest).length > 0) extraData = rest
     } else {
@@ -245,14 +282,26 @@ export function SlotEditModal({
 
     if (showExtraCustomFields) {
       for (const field of customFields) {
-        if (field.required && !fieldValues[field.id]?.trim()) {
+        if (field.required && !isFieldFilled(field)) {
           setError(`"${field.label}"은(는) 필수 항목입니다`)
           return
+        }
+        if (field.type === 'number') {
+          const num = Number(fieldValues[field.id])
+          if (fieldValues[field.id]?.trim() && field.min !== undefined && num < field.min) { setError(`"${field.label}"은(는) ${field.min} 이상이어야 합니다`); return }
+          if (fieldValues[field.id]?.trim() && field.max !== undefined && num > field.max) { setError(`"${field.label}"은(는) ${field.max} 이하이어야 합니다`); return }
+        }
+        if (field.type === 'phone' && fieldValues[field.id]?.trim()) {
+          if (!isValidPhone(fieldValues[field.id])) { setError(`"${field.label}"의 전화번호 형식이 올바르지 않습니다 (예: 010-1234-5678)`); return }
+        }
+        if (field.type === 'account_number' && fieldValues[field.id]?.trim()) {
+          if (fieldValues[field.id].replace(/\D/g, '').length < 8) { setError(`"${field.label}"의 계좌번호는 숫자 8자리 이상이어야 합니다`); return }
         }
       }
       const rest: Record<string, string> = {}
       customFields.forEach(f => {
-        if (fieldValues[f.id]?.trim()) rest[f.id] = fieldValues[f.id].trim()
+        const v = fieldValues[f.id]
+        if (v !== undefined && v !== '') rest[f.id] = v.trim ? v.trim() : v
       })
       if (Object.keys(rest).length > 0) extraData = rest
     }
@@ -296,7 +345,7 @@ export function SlotEditModal({
 
   // 이미 본인 배정이 있으면 새로 등록 대신 수정 모드로 진입하도록 안내
   // - 동적 필드 없는 경우: member_name 일치로 본인 배정 탐지
-  // - 직접입력(useDynamicFields) 모드: user_id로 본인 배정 탐지
+  // - 비회원(useDynamicFields) 모드: user_id로 본인 배정 탐지
   const ownAssignment = !isAdmin
     ? useDynamicFields
       ? displayedAssignments.find(a => !!profile?.id && a.user_id === profile.id && !a.is_locked)
@@ -308,9 +357,9 @@ export function SlotEditModal({
 
   const isAddDisabled = loading || (() => {
     if (useDynamicFields) {
-      return customFields.some(f => f.required && !fieldValues[f.id]?.trim())
+      return customFields.some(f => f.required && !isFieldFilled(f))
     }
-    if (showExtraCustomFields && customFields.some(f => f.required && !fieldValues[f.id]?.trim())) {
+    if (showExtraCustomFields && customFields.some(f => f.required && !isFieldFilled(f))) {
       return true
     }
     return !selectedUserId
@@ -318,7 +367,14 @@ export function SlotEditModal({
 
   const inputClass = 'w-full min-w-0 h-11 border border-[var(--color-border-strong)] rounded-xl px-3 text-sm font-medium bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 focus:border-[var(--color-brand-primary)]/50 focus:bg-[var(--color-surface)] transition-all duration-200'
 
+  function isFieldFilled(field: CustomFieldDef): boolean {
+    const val = fieldValues[field.id] ?? ''
+    if (field.type === 'checkbox') return val === 'true'
+    return val.trim() !== ''
+  }
+
   function renderFieldInput(field: CustomFieldDef) {
+    const val = fieldValues[field.id] ?? ''
     return (
       <div key={field.id}>
         <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
@@ -326,7 +382,7 @@ export function SlotEditModal({
         </label>
         {field.type === 'select' && (field.options?.length ?? 0) > 0 ? (
           <select
-            value={fieldValues[field.id] ?? ''}
+            value={val}
             onChange={e => setFieldValues(prev => ({ ...prev, [field.id]: e.target.value }))}
             className={inputClass}
           >
@@ -335,10 +391,89 @@ export function SlotEditModal({
               <option key={opt.value} value={opt.value}>{opt.name}</option>
             ))}
           </select>
+        ) : field.type === 'number' ? (
+          <input
+            type="number"
+            value={val}
+            onChange={e => setFieldValues(prev => ({ ...prev, [field.id]: e.target.value }))}
+            placeholder={field.placeholder || ''}
+            min={field.min}
+            max={field.max}
+            className={inputClass}
+          />
+        ) : field.type === 'radio' && (field.options?.length ?? 0) > 0 ? (
+          <div className="flex gap-4 flex-wrap py-1">
+            {field.options!.map(opt => (
+              <label key={opt.value} className="flex items-center gap-1.5 text-sm text-[var(--color-text-secondary)] cursor-pointer">
+                <input
+                  type="radio"
+                  name={`field-${field.id}`}
+                  value={opt.value}
+                  checked={val === opt.value}
+                  onChange={() => setFieldValues(prev => ({ ...prev, [field.id]: opt.value }))}
+                  className="accent-[var(--color-brand-primary)]"
+                />
+                {opt.name}
+              </label>
+            ))}
+          </div>
+        ) : field.type === 'checkbox' ? (
+          <label className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)] cursor-pointer py-1">
+            <input
+              type="checkbox"
+              checked={val === 'true'}
+              onChange={e => setFieldValues(prev => ({ ...prev, [field.id]: e.target.checked ? 'true' : 'false' }))}
+              className="accent-[var(--color-brand-primary)] w-4 h-4"
+            />
+            {field.label}
+          </label>
+        ) : field.type === 'checkbox_group' && (field.options?.length ?? 0) > 0 ? (
+          (() => {
+            const selected = new Set(val.split(',').filter(Boolean))
+            return (
+              <div className="flex gap-4 flex-wrap py-1">
+                {field.options!.map(opt => (
+                  <label key={opt.value} className="flex items-center gap-1.5 text-sm text-[var(--color-text-secondary)] cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selected.has(opt.value)}
+                      onChange={() => {
+                        const next = new Set(selected)
+                        if (next.has(opt.value)) next.delete(opt.value)
+                        else next.add(opt.value)
+                        setFieldValues(prev => ({ ...prev, [field.id]: [...next].join(',') }))
+                      }}
+                      className="accent-[var(--color-brand-primary)]"
+                    />
+                    {opt.name}
+                  </label>
+                ))}
+              </div>
+            )
+          })()
+        ) : field.type === 'phone' ? (
+          <input
+            type="tel"
+            value={val}
+            onChange={e => setFieldValues(prev => ({ ...prev, [field.id]: formatPhone(e.target.value) }))}
+            placeholder={field.placeholder || '010-0000-0000'}
+            maxLength={14}
+            className={inputClass}
+          />
+        ) : field.type === 'account_number' ? (
+          <input
+            type="text"
+            inputMode="numeric"
+            value={val}
+            onChange={e => setFieldValues(prev => ({ ...prev, [field.id]: e.target.value.replace(/[^\d-]/g, '').slice(0, 25) }))}
+            placeholder={field.placeholder || '계좌번호 입력 (숫자)'}
+            maxLength={25}
+            className={inputClass}
+          />
         ) : (
           <input
             type="text"
-            value={fieldValues[field.id] ?? ''}
+            value={val}
             onChange={e => {
               setFieldValues(prev => ({ ...prev, [field.id]: e.target.value }))
               if (isAdmin && isSplitMode && field.id === customFields[0]?.id) setSelectedUserId('')
