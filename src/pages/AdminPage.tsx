@@ -1592,7 +1592,7 @@ export function AdminPage() {
                         </select>
                       </div>
                       <button type="button" onClick={handleAddSlot}
-                        className="px-3 py-1.5 text-sm font-semibold border border-[var(--color-brand-primary)] text-[var(--color-brand-primary)] rounded-lg hover:bg-[var(--color-surface-hover)]">
+                        className="px-3 py-px text-xs font-semibold border border-[var(--color-brand-primary)] text-[var(--color-brand-primary)] rounded-lg hover:bg-[var(--color-surface-hover)]">
                         + 추가
                       </button>
                     </div>

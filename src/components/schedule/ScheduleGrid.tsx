@@ -338,7 +338,7 @@ export function ScheduleGrid({
                                   key={gi}
                                   style={{
                                     flex: group.count,
-                                    minHeight: `${group.count * 2}rem`,
+                                    minHeight: `${group.count * (group.note ? 2 : 1.25)}rem`,
                                     backgroundColor: group.note?.member_name || (group.note ? 'rgba(255,255,255,0.55)' : undefined),
                                   }}
                                   onClick={isAdmin && onHolidayCellClick
