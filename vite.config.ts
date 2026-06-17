@@ -22,7 +22,7 @@ export default defineConfig({
         short_name: 'DT스케줄',
         description: '다이나믹팀스케줄 - 멀티테넌트 시간대별 인원 배정 플랫폼',
         theme_color: '#14171C',
-        background_color: '#F4F1EA',
+        background_color: '#E05A3A',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',
@@ -41,7 +41,13 @@ export default defineConfig({
             purpose: 'any',
           },
           {
-            src: '/icons/icon-512.png',
+            src: '/icons/icon-maskable-192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
+          {
+            src: '/icons/icon-maskable-512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable',
