@@ -986,6 +986,16 @@ export function AdminPage() {
                             <tr>
                               <td colSpan={5} className="px-4 pb-3">
                                 <div className="mt-2 p-3 rounded-xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)] space-y-3">
+                                  {/* 이메일 */}
+                                  <div>
+                                    <p className="text-[10px] font-semibold text-[var(--color-text-muted)] mb-1.5">이메일</p>
+                                    <input
+                                      type="email"
+                                      readOnly
+                                      value={m.profile?.email ?? ''}
+                                      className="w-full border border-[var(--color-border)] rounded-lg px-2 py-1.5 text-xs bg-[var(--color-surface)] text-[var(--color-text-muted)] cursor-default focus:outline-none select-all"
+                                    />
+                                  </div>
                                   {/* 가능 요일 */}
                                   <div>
                                     <p className="text-[10px] font-semibold text-[var(--color-text-muted)] mb-1.5">가능 요일 (미선택 = 모든 요일)</p>
