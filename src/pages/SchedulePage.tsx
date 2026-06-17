@@ -626,8 +626,8 @@ export function SchedulePage() {
               viewType={viewType}
               onViewTypeChange={setViewType}
               weekDays={weekDays}
-              onPrev={() => viewType === 'month' ? prevMonth() : shiftDate(viewType === 'week' ? -7 : -1)}
-              onNext={() => viewType === 'month' ? nextMonth() : shiftDate(viewType === 'week' ? 7 : 1)}
+              onPrev={() => { setSwipeAnim('prev'); setAnimKey(k => k + 1); viewType === 'month' ? prevMonth() : shiftDate(viewType === 'week' ? -7 : -1) }}
+              onNext={() => { setSwipeAnim('next'); setAnimKey(k => k + 1); viewType === 'month' ? nextMonth() : shiftDate(viewType === 'week' ? 7 : 1) }}
             />
             <Legend legendItems={legendItems} />
           </div>
