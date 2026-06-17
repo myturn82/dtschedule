@@ -286,18 +286,23 @@ export function SchedulePage() {
   }, [excelMode, cellSel, selRange, copyBuf, isPrivileged, timeSlots, year, month, scheduleRules, slotSettings, dateOverrides, assignments, addAssignment, tenant])
 
   const swipeTouchStartX = useRef<number | null>(null)
+  const swipeTouchStartY = useRef<number | null>(null)
   function handleTouchStart(e: React.TouchEvent) {
-    if (e.touches.length !== 1) { swipeTouchStartX.current = null; return }
+    if (e.touches.length !== 1) { swipeTouchStartX.current = null; swipeTouchStartY.current = null; return }
     swipeTouchStartX.current = e.touches[0].clientX
+    swipeTouchStartY.current = e.touches[0].clientY
   }
   function handleTouchMove(e: React.TouchEvent) {
-    if (e.touches.length > 1) swipeTouchStartX.current = null
+    if (e.touches.length > 1) { swipeTouchStartX.current = null; swipeTouchStartY.current = null }
   }
   function handleTouchEnd(e: React.TouchEvent) {
     if (swipeTouchStartX.current === null) return
     const dx = e.changedTouches[0].clientX - swipeTouchStartX.current
+    const dy = e.changedTouches[0].clientY - (swipeTouchStartY.current ?? 0)
     swipeTouchStartX.current = null
-    if (Math.abs(dx) < 50) return
+    swipeTouchStartY.current = null
+    // 수평 이동이 수직 이동의 2배 이상일 때만 스와이프로 인식 (약 27도 이내)
+    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 2) return
     const dir = dx < 0 ? 'next' : 'prev'
     setSwipeAnim(dir)
     setAnimKey(k => k + 1)
