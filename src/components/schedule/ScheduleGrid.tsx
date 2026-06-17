@@ -332,19 +332,19 @@ export function ScheduleGrid({
                             className="border border-[var(--color-border-table)] p-0 bg-schedule-close text-center"
                             style={{ height: '1px' }}
                           >
-                            <div className="flex flex-col h-full w-full items-center">
+                            <div className="flex flex-col h-full w-full">
                               {slotGroups.map((group, gi) => (
                                 <div
                                   key={gi}
                                   style={{
                                     flex: group.count,
                                     minHeight: `${group.count * (group.note ? 2 : 1.25)}rem`,
-                                    backgroundColor: group.note?.member_name || (group.note ? 'rgba(255,255,255,0.55)' : undefined),
+                                    backgroundColor: group.note?.member_name || (group.note ? 'rgba(255,255,255,0.9)' : undefined),
                                   }}
                                   onClick={isAdmin && onHolidayCellClick
                                     ? (e) => { e.stopPropagation(); onHolidayCellClick(day, group.startHour, group.endHour) }
                                     : undefined}
-                                  className={`flex flex-col items-center justify-center px-0.5 py-0.5 text-center
+                                  className={`w-full flex flex-col items-center justify-center px-0.5 py-0.5 text-center
                                     ${isAdmin && onHolidayCellClick ? 'cursor-pointer hover:brightness-95 transition-all duration-150' : ''}`}
                                 >
                                   {!group.note ? (
