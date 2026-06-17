@@ -72,6 +72,8 @@ export function SchedulePage() {
   const [showRestoreConfirm, setShowRestoreConfirm] = useState(false)
 
   const [filterMemberId, setFilterMemberId] = useState<string | null>(null)
+  const [swipeAnim, setSwipeAnim] = useState<'next' | 'prev' | null>(null)
+  const [animKey, setAnimKey] = useState(0)
 
   const pad2 = (n: number) => String(n).padStart(2, '0')
 
@@ -285,13 +287,20 @@ export function SchedulePage() {
 
   const swipeTouchStartX = useRef<number | null>(null)
   function handleTouchStart(e: React.TouchEvent) {
+    if (e.touches.length !== 1) { swipeTouchStartX.current = null; return }
     swipeTouchStartX.current = e.touches[0].clientX
+  }
+  function handleTouchMove(e: React.TouchEvent) {
+    if (e.touches.length > 1) swipeTouchStartX.current = null
   }
   function handleTouchEnd(e: React.TouchEvent) {
     if (swipeTouchStartX.current === null) return
     const dx = e.changedTouches[0].clientX - swipeTouchStartX.current
     swipeTouchStartX.current = null
     if (Math.abs(dx) < 50) return
+    const dir = dx < 0 ? 'next' : 'prev'
+    setSwipeAnim(dir)
+    setAnimKey(k => k + 1)
     if (dx < 0) {
       viewType === 'month' ? nextMonth() : shiftDate(viewType === 'week' ? 7 : 1)
     } else {
@@ -488,7 +497,7 @@ export function SchedulePage() {
   const menuItemCls = 'w-full text-left px-3 py-2 text-sm rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors'
 
   return (
-    <div className="min-h-[100dvh] bg-[var(--color-bg)]" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+    <div className="min-h-[100dvh] bg-[var(--color-bg)]" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
       <AppHeader
         leftSlot={<FilterBar value={highlightName} onChange={setHighlightName} />}
         memberSelectSlot={memberSelectEl}
@@ -624,7 +633,7 @@ export function SchedulePage() {
           </div>
 
           {excelMode && (
-            <div className="mx-1.5 sm:mx-3 mt-2 mb-0 flex items-center gap-2 px-3 py-2 rounded-xl bg-[color-mix(in_srgb,var(--color-brand-primary)_10%,transparent)] border border-[var(--color-brand-primary)]/30 text-sm text-[var(--color-brand-primary)]">
+            <div className="sm:mx-3 mt-2 mb-0 flex items-center gap-2 px-3 py-2 sm:rounded-xl bg-[color-mix(in_srgb,var(--color-brand-primary)_10%,transparent)] border border-[var(--color-brand-primary)]/30 text-sm text-[var(--color-brand-primary)]">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
               <span className="flex-1 font-semibold text-xs">엑셀 모드 — 클릭으로 셀 선택, Shift+클릭으로 범위, Ctrl+C/V 복사·붙여넣기</span>
               {copyBuf && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[var(--color-brand-primary)] text-white">복사됨</span>}
@@ -634,7 +643,12 @@ export function SchedulePage() {
               >✕</button>
             </div>
           )}
-          <div className="p-1.5 sm:p-3">
+          <div className="sm:p-3 overflow-hidden">
+            <div
+              key={animKey}
+              className={swipeAnim === 'next' ? 'animate-page-next' : swipeAnim === 'prev' ? 'animate-page-prev' : ''}
+              onAnimationEnd={() => setSwipeAnim(null)}
+            >
             {loading ? (
               <div className="flex flex-col items-center justify-center h-64 gap-3">
                 <div className="w-8 h-8 border-2 border-[var(--color-brand-primary)] border-t-transparent rounded-full animate-spin" />
@@ -710,6 +724,7 @@ export function SchedulePage() {
                 withdrawnUserIds={withdrawnUserIds}
               />
             )}
+            </div>
           </div>
         </div>
       </main>
