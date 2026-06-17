@@ -754,97 +754,128 @@ export function AdminPage() {
             {/* ── 회원 관리 ── */}
             {tab === 'members' && (
               <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-semibold">회원 ({members.filter(m => m.is_approved).length}명)</p>
+                {/* 페이지 헤더 */}
+                <header className="mb-5">
+                  <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10 px-3 py-[5px] rounded-full">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    조직 설정 · 회원 관리
+                  </span>
+                  <h2 className="mt-3 mb-1.5 text-[clamp(22px,5vw,27px)] font-extrabold tracking-tight text-[var(--color-text-primary)]">회원 관리</h2>
+                  <p className="text-[14px] font-medium text-[var(--color-text-muted)] leading-relaxed max-w-[52ch]">
+                    조직 회원을 조회하고 역할·권한을 설정하거나 새 회원을 추가합니다.
+                  </p>
+                  <span className="mt-3.5 inline-flex items-center gap-1.5 text-[12.5px] font-bold text-[var(--color-text-secondary)]">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 17l9 5 9-5" opacity="0.5"/></svg>
+                    승인 회원 <b className="text-[var(--color-brand-primary)] font-extrabold">{members.filter(m => m.is_approved).length}</b>명
                     {(() => { const n = members.filter(m => !m.is_approved).length; return n > 0 ? (
-                      <button onClick={() => setTab('pending')} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors">
+                      <button onClick={() => setTab('pending')} className="ml-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors">
                         승인대기 {n}건 →
                       </button>
                     ) : null })()}
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => { setShowDirectCreate(v => !v); setShowAddMember(false) }}
-                      className="px-3 py-1.5 text-xs font-medium border border-orange-400 text-orange-600 rounded-lg hover:bg-orange-50"
-                    >
-                      + 직접 등록
-                    </button>
-                    <button
-                      onClick={() => { setShowAddMember(v => !v); setShowDirectCreate(false) }}
-                      className="px-3 py-1.5 text-xs font-medium bg-[var(--color-brand-primary)] text-white rounded-lg hover:bg-[var(--color-brand-primary-hover)]"
-                    >
-                      + 회원 추가
-                    </button>
-                  </div>
+                  </span>
+                </header>
+
+                {/* 회원 추가 / 직접 등록 버튼 */}
+                <div className="flex gap-2 mb-4">
+                  <button
+                    onClick={() => { setShowDirectCreate(v => !v); setShowAddMember(false) }}
+                    className="px-3 py-1.5 text-xs font-medium border border-orange-400 text-orange-600 rounded-lg hover:bg-orange-50"
+                  >
+                    + 직접 등록
+                  </button>
+                  <button
+                    onClick={() => { setShowAddMember(v => !v); setShowDirectCreate(false) }}
+                    className="px-3 py-1.5 text-xs font-medium bg-[var(--color-brand-primary)] text-white rounded-lg hover:bg-[var(--color-brand-primary-hover)]"
+                  >
+                    + 회원 추가
+                  </button>
                 </div>
 
                 {showDirectCreate && (
-                  <form onSubmit={handleDirectCreate} className="mb-4 p-4 bg-[var(--color-surface)] rounded-xl shadow space-y-3">
-                    <p className="text-xs font-semibold text-orange-600">
-                      직접 등록 — 이메일 인증 없이 계정을 생성하고 이 조직에 자동으로 추가합니다
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="mb-4 border-[1.5px] border-dashed border-orange-300 rounded-[18px] bg-orange-50/50 dark:bg-orange-900/10" style={{ padding: '13px' }}>
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="w-9 h-9 rounded-[11px] bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                      </span>
                       <div>
-                        <label className="block text-xs text-[var(--color-text-muted)] mb-1">이름 *</label>
-                        <input type="text" required value={directForm.name}
-                          onChange={e => setDirectForm(p => ({ ...p, name: e.target.value }))}
-                          placeholder="홍길동" className={inputCls + ' w-full'} />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-[var(--color-text-muted)] mb-1">이메일 *</label>
-                        <input type="email" required value={directForm.email}
-                          onChange={e => setDirectForm(p => ({ ...p, email: e.target.value }))}
-                          placeholder="test@example.com" className={inputCls + ' w-full'} />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-[var(--color-text-muted)] mb-1">비밀번호 * (6자 이상)</label>
-                        <input type="password" required minLength={6} value={directForm.password}
-                          onChange={e => setDirectForm(p => ({ ...p, password: e.target.value }))}
-                          placeholder="••••••" className={inputCls + ' w-full'} />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-[var(--color-text-muted)] mb-1">역할</label>
-                        <select value={directForm.roleId}
-                          onChange={e => setDirectForm(p => ({ ...p, roleId: e.target.value }))}
-                          className={inputCls + ' w-full'}>
-                          <option value="">미지정</option>
-                          {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-                        </select>
+                        <p className="m-0 text-[15px] font-extrabold tracking-tight text-[var(--color-text-primary)]">직접 등록</p>
+                        <p className="m-0 mt-0.5 text-[12.5px] font-medium text-[var(--color-text-muted)]">이메일 인증 없이 계정을 생성하고 이 조직에 자동으로 추가합니다</p>
                       </div>
                     </div>
-                    <div className="flex gap-2 pt-1">
-                      <button type="submit" disabled={directSaving}
-                        className="px-4 py-1.5 bg-orange-500 text-white text-sm rounded-lg hover:bg-orange-600 disabled:opacity-50">
-                        {directSaving ? '생성 중...' : '계정 생성'}
-                      </button>
-                      <button type="button" onClick={() => setShowDirectCreate(false)}
-                        className="px-4 py-1.5 border border-[var(--color-border-strong)] text-sm rounded-lg text-[var(--color-text-muted)]">
-                        취소
-                      </button>
-                    </div>
-                  </form>
+                    <form onSubmit={handleDirectCreate} className="space-y-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">이름 *</label>
+                          <input type="text" required value={directForm.name}
+                            onChange={e => setDirectForm(p => ({ ...p, name: e.target.value }))}
+                            placeholder="홍길동" className={inputCls + ' w-full mt-1'} />
+                        </div>
+                        <div>
+                          <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">이메일 *</label>
+                          <input type="email" required value={directForm.email}
+                            onChange={e => setDirectForm(p => ({ ...p, email: e.target.value }))}
+                            placeholder="test@example.com" className={inputCls + ' w-full mt-1'} />
+                        </div>
+                        <div>
+                          <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">비밀번호 * (6자 이상)</label>
+                          <input type="password" required minLength={6} value={directForm.password}
+                            onChange={e => setDirectForm(p => ({ ...p, password: e.target.value }))}
+                            placeholder="••••••" className={inputCls + ' w-full mt-1'} />
+                        </div>
+                        <div>
+                          <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">역할</label>
+                          <select value={directForm.roleId}
+                            onChange={e => setDirectForm(p => ({ ...p, roleId: e.target.value }))}
+                            className={inputCls + ' w-full mt-1'}>
+                            <option value="">미지정</option>
+                            {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 pt-1">
+                        <button type="submit" disabled={directSaving}
+                          className="px-4 py-1.5 bg-orange-500 text-white text-sm rounded-lg hover:bg-orange-600 disabled:opacity-50">
+                          {directSaving ? '생성 중...' : '계정 생성'}
+                        </button>
+                        <button type="button" onClick={() => setShowDirectCreate(false)}
+                          className="px-4 py-1.5 border border-[var(--color-border-strong)] text-sm rounded-lg text-[var(--color-text-muted)]">
+                          취소
+                        </button>
+                      </div>
+                    </form>
+                  </div>
                 )}
 
                 {showAddMember && (
-                  <form onSubmit={handleAddMember} className="mb-4 p-4 bg-[var(--color-surface)] rounded-xl shadow flex gap-2 items-end flex-wrap">
-                    <div className="flex-1 min-w-48">
-                      <label className="block text-xs text-[var(--color-text-muted)] mb-1">이메일</label>
-                      <input type="email" value={addEmail} onChange={e => setAddEmail(e.target.value)}
-                        placeholder="member@example.com" required className={inputCls + ' w-full'} />
+                  <div className="mb-4 border-[1.5px] border-dashed border-[var(--color-border-strong)] rounded-[18px] bg-[var(--color-surface-secondary)]" style={{ padding: '13px' }}>
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="w-9 h-9 rounded-[11px] bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] flex items-center justify-center shrink-0">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                      </span>
+                      <div>
+                        <p className="m-0 text-[15px] font-extrabold tracking-tight text-[var(--color-text-primary)]">회원 추가</p>
+                        <p className="m-0 mt-0.5 text-[12.5px] font-medium text-[var(--color-text-muted)]">이미 가입된 계정을 이메일로 조직에 초대합니다</p>
+                      </div>
                     </div>
-                    <button type="submit" disabled={saving}
-                      className="px-4 py-1.5 bg-[var(--color-brand-primary)] text-white text-sm rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50">
-                      {saving ? '추가 중...' : '추가'}
-                    </button>
-                    <button type="button" onClick={() => setShowAddMember(false)}
-                      className="px-4 py-1.5 border border-[var(--color-border-strong)] text-sm rounded-lg text-[var(--color-text-muted)]">
-                      취소
-                    </button>
-                  </form>
+                    <form onSubmit={handleAddMember} className="flex gap-2 items-end flex-wrap">
+                      <div className="flex-1 min-w-48">
+                        <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">이메일</label>
+                        <input type="email" value={addEmail} onChange={e => setAddEmail(e.target.value)}
+                          placeholder="member@example.com" required className={inputCls + ' w-full mt-1'} />
+                      </div>
+                      <button type="submit" disabled={saving}
+                        className="px-4 py-1.5 bg-[var(--color-brand-primary)] text-white text-sm rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50">
+                        {saving ? '추가 중...' : '추가'}
+                      </button>
+                      <button type="button" onClick={() => setShowAddMember(false)}
+                        className="px-4 py-1.5 border border-[var(--color-border-strong)] text-sm rounded-lg text-[var(--color-text-muted)]">
+                        취소
+                      </button>
+                    </form>
+                  </div>
                 )}
 
-                <div className="bg-[var(--color-surface)] rounded-xl shadow">
+                <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow-sm">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
@@ -1013,57 +1044,64 @@ export function AdminPage() {
             {/* ── 승인 대기 ── */}
             {tab === 'pending' && (
               <div className="max-w-lg">
-                <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-semibold mb-3">승인 대기 회원</p>
+                {/* 페이지 헤더 */}
+                <header className="mb-5">
+                  <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10 px-3 py-[5px] rounded-full">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    조직 설정 · 승인 대기
+                  </span>
+                  <h2 className="mt-3 mb-1.5 text-[clamp(22px,5vw,27px)] font-extrabold tracking-tight text-[var(--color-text-primary)]">승인 대기</h2>
+                  <p className="text-[14px] font-medium text-[var(--color-text-muted)] leading-relaxed max-w-[52ch]">
+                    가입 신청을 한 회원을 검토하고 승인 또는 거절합니다.
+                  </p>
+                  <span className="mt-3.5 inline-flex items-center gap-1.5 text-[12.5px] font-bold text-[var(--color-text-secondary)]">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 17l9 5 9-5" opacity="0.5"/></svg>
+                    대기 <b className="text-[var(--color-brand-primary)] font-extrabold">{members.filter(m => !m.is_approved).length}</b>명
+                  </span>
+                </header>
+
                 {(() => {
                   const pendingMembers = members.filter(m => !m.is_approved)
                   if (pendingMembers.length === 0) {
                     return <p className="text-sm text-[var(--color-text-muted)] px-4 py-6 text-center">승인 대기 중인 회원이 없습니다.</p>
                   }
                   return (
-                    <div className="bg-[var(--color-surface)] rounded-xl shadow overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
-                            <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">이름</th>
-                            <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)] hidden sm:table-cell">이메일</th>
-                            <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">역할</th>
-                            <th className="px-4 py-3"></th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-[var(--color-border)]">
-                          {pendingMembers.map(m => (
-                            <tr key={m.user_id} className="hover:bg-[var(--color-surface-hover)]">
-                              <td className="px-4 py-3 font-medium text-[var(--color-text-primary)]">{m.profile?.name ?? '-'}</td>
-                              <td className="px-4 py-3 text-[var(--color-text-muted)] hidden sm:table-cell text-xs">{m.profile?.email ?? '-'}</td>
-                              <td className="px-4 py-3 text-xs text-[var(--color-text-secondary)]">{m.tenant_role?.name ?? '-'}</td>
-                              <td className="px-2 py-2 sm:px-4 sm:py-3">
-                                <div className="flex gap-2">
-                                  <button
-                                    onClick={async () => {
-                                      const err = await approveUser(m.user_id)
-                                      if (err) msg(err, true)
-                                      else msg(`${m.profile?.name ?? '회원'}을(를) 승인했습니다.`)
-                                    }}
-                                    className="px-3 py-1 text-xs font-medium rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors"
-                                  >
-                                    승인
-                                  </button>
-                                  <button
-                                    onClick={async () => {
-                                      if (!confirm(`"${m.profile?.name ?? '회원'}"을(를) 거절하고 조직에서 제외할까요?`)) return
-                                      const err = await removeMember(m.user_id)
-                                      if (err) msg(err, true)
-                                    }}
-                                    className="px-3 py-1 text-xs font-medium rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
-                                  >
-                                    거절
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                    <div className="flex flex-col gap-2.5">
+                      {pendingMembers.map(m => (
+                        <div key={m.user_id} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-sm hover:border-[var(--color-border-strong)] hover:shadow-md transition-all" style={{ padding: '13px' }}>
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="text-[15px] font-bold text-[var(--color-text-primary)] truncate">{m.profile?.name ?? '-'}</p>
+                              <p className="text-[12.5px] text-[var(--color-text-muted)] mt-0.5 truncate">{m.profile?.email ?? '-'}</p>
+                              {m.tenant_role?.name && (
+                                <p className="text-[11.5px] text-[var(--color-text-secondary)] mt-0.5">{m.tenant_role.name}</p>
+                              )}
+                            </div>
+                            <div className="flex gap-2 shrink-0">
+                              <button
+                                onClick={async () => {
+                                  const err = await approveUser(m.user_id)
+                                  if (err) msg(err, true)
+                                  else msg(`${m.profile?.name ?? '회원'}을(를) 승인했습니다.`)
+                                }}
+                                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors"
+                              >
+                                승인
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  if (!confirm(`"${m.profile?.name ?? '회원'}"을(를) 거절하고 조직에서 제외할까요?`)) return
+                                  const err = await removeMember(m.user_id)
+                                  if (err) msg(err, true)
+                                }}
+                                className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
+                              >
+                                거절
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   )
                 })()}
@@ -1074,33 +1112,37 @@ export function AdminPage() {
                   if (!withdrawalPending.length) return null
                   return (
                     <div className="mt-6">
-                      <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-semibold mb-3">
-                        탈퇴 신청 ({withdrawalPending.length}건)
-                      </p>
-                      <div className="space-y-2">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="h-px flex-1 bg-[var(--color-border)]" />
+                        <span className="text-[11px] font-bold text-[var(--color-text-muted)] tracking-[0.4px] uppercase">탈퇴 신청 ({withdrawalPending.length}건)</span>
+                        <div className="h-px flex-1 bg-[var(--color-border)]" />
+                      </div>
+                      <div className="flex flex-col gap-2.5">
                         {withdrawalPending.map(m => (
-                          <div key={m.id} className="flex items-center justify-between px-4 py-3 rounded-xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)]">
-                            <div>
-                              <p className="text-sm font-medium text-[var(--color-text-primary)]">{m.profile?.name}</p>
-                              <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
-                                신청일: {m.withdrawal_requested_at
-                                  ? new Date(m.withdrawal_requested_at).toLocaleDateString('ko-KR')
-                                  : '-'}
-                              </p>
-                            </div>
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => approveWithdrawal(m.user_id)}
-                                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors"
-                              >
-                                승인
-                              </button>
-                              <button
-                                onClick={() => rejectWithdrawal(m.user_id)}
-                                className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
-                              >
-                                거절
-                              </button>
+                          <div key={m.id} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-sm hover:border-[var(--color-border-strong)] hover:shadow-md transition-all" style={{ padding: '13px' }}>
+                            <div className="flex items-center justify-between gap-3">
+                              <div>
+                                <p className="text-[15px] font-bold text-[var(--color-text-primary)]">{m.profile?.name}</p>
+                                <p className="text-[12.5px] text-[var(--color-text-muted)] mt-0.5">
+                                  신청일: {m.withdrawal_requested_at
+                                    ? new Date(m.withdrawal_requested_at).toLocaleDateString('ko-KR')
+                                    : '-'}
+                                </p>
+                              </div>
+                              <div className="flex gap-2 shrink-0">
+                                <button
+                                  onClick={() => approveWithdrawal(m.user_id)}
+                                  className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors"
+                                >
+                                  승인
+                                </button>
+                                <button
+                                  onClick={() => rejectWithdrawal(m.user_id)}
+                                  className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
+                                >
+                                  거절
+                                </button>
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -1114,142 +1156,170 @@ export function AdminPage() {
             {/* ── 역할 관리 ── */}
             {tab === 'roles' && (
               <div className="max-w-lg">
-                <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-semibold mb-3">역할 목록</p>
-                <div className="bg-[var(--color-surface)] rounded-xl shadow mb-4">
+                {/* 페이지 헤더 */}
+                <header className="mb-5">
+                  <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10 px-3 py-[5px] rounded-full">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                    조직 설정 · 역할 관리
+                  </span>
+                  <h2 className="mt-3 mb-1.5 text-[clamp(22px,5vw,27px)] font-extrabold tracking-tight text-[var(--color-text-primary)]">역할 관리</h2>
+                  <p className="text-[14px] font-medium text-[var(--color-text-muted)] leading-relaxed max-w-[52ch]">
+                    조직의 역할을 정의하고 셀 분리·바 표시·순서를 설정합니다.
+                  </p>
+                  <span className="mt-3.5 inline-flex items-center gap-1.5 text-[12.5px] font-bold text-[var(--color-text-secondary)]">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 17l9 5 9-5" opacity="0.5"/></svg>
+                    역할 <b className="text-[var(--color-brand-primary)] font-extrabold">{roles.length}</b>개
+                  </span>
+                </header>
+
+                {/* 역할 카드 목록 */}
+                <div className="flex flex-col gap-2.5 mb-4">
                   {roles.length === 0 ? (
-                    <p className="text-sm text-[var(--color-text-muted)] px-4 py-6 text-center">등록된 역할이 없습니다.</p>
+                    <p className="text-sm text-[var(--color-text-muted)] py-6 text-center">등록된 역할이 없습니다.</p>
                   ) : (
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
-                          <th className="text-left px-2 py-2 sm:px-4 sm:py-3 text-xs font-semibold text-[var(--color-text-muted)]">역할명</th>
-                          <th className="text-left px-2 py-2 sm:px-4 sm:py-3 text-xs font-semibold text-[var(--color-text-muted)]">셀분리</th>
-                          <th className="text-left px-2 py-2 sm:px-4 sm:py-3 text-xs font-semibold text-[var(--color-text-muted)]">바표시</th>
-                          <th className="px-2 py-2 sm:px-4 sm:py-3"></th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[var(--color-border)]">
-                        {[...roles].sort((a, b) => a.display_order - b.display_order).map((r, idx, sortedRoles) => (
-                          <tr key={r.id} className="hover:bg-[var(--color-surface-hover)]">
-                            <td className="px-2 py-2 sm:px-4 sm:py-3">
-                              {editingRoleId === r.id ? (
-                                <div className="flex items-center gap-1.5">
-                                  <input
-                                    value={editRoleName}
-                                    onChange={e => setEditRoleName(e.target.value)}
-                                    onKeyDown={async e => {
-                                      if (e.key === 'Enter') {
-                                        if (!editRoleName.trim()) return
-                                        const err = await updateRole(r.id, { name: editRoleName.trim() })
-                                        if (err) msg(err, true)
-                                        else setEditingRoleId(null)
-                                      }
-                                      if (e.key === 'Escape') setEditingRoleId(null)
-                                    }}
-                                    className={inputCls + ' w-32 text-sm py-1'}
-                                    autoFocus
-                                  />
-                                  <button type="button"
-                                    onClick={async () => {
+                    [...roles].sort((a, b) => a.display_order - b.display_order).map((r, idx, sortedRoles) => (
+                      <div key={r.id} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-sm hover:border-[var(--color-border-strong)] hover:shadow-md transition-all" style={{ padding: '13px' }}>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {/* 역할명 */}
+                          <div className="flex-1 min-w-[120px]">
+                            {editingRoleId === r.id ? (
+                              <div className="flex items-center gap-1.5">
+                                <input
+                                  value={editRoleName}
+                                  onChange={e => setEditRoleName(e.target.value)}
+                                  onKeyDown={async e => {
+                                    if (e.key === 'Enter') {
                                       if (!editRoleName.trim()) return
                                       const err = await updateRole(r.id, { name: editRoleName.trim() })
                                       if (err) msg(err, true)
                                       else setEditingRoleId(null)
-                                    }}
-                                    className="px-2 py-1 text-xs bg-[var(--color-brand-primary)] text-white rounded hover:bg-[var(--color-brand-primary-hover)]">
-                                    저장
-                                  </button>
-                                  <button type="button" onClick={() => setEditingRoleId(null)}
-                                    className="px-2 py-1 text-xs border border-[var(--color-border-strong)] rounded hover:bg-[var(--color-surface-hover)]">
-                                    취소
-                                  </button>
-                                </div>
-                              ) : (
-                                <button type="button"
-                                  onClick={() => { setEditingRoleId(r.id); setEditRoleName(r.name) }}
-                                  className="font-medium text-[var(--color-text-primary)] hover:text-[var(--color-brand-primary)] text-left">
-                                  {r.name}
-                                </button>
-                              )}
-                            </td>
-                            <td className="px-2 py-2 sm:px-4 sm:py-3">
-                              <button
-                                onClick={async () => {
-                                  const err = await updateRole(r.id, { split_cell: !r.split_cell })
-                                  if (err) msg(err, true)
-                                }}
-                                className={`inline-flex px-2 py-0.5 rounded text-xs font-medium cursor-pointer transition-colors
-                                  ${r.split_cell
-                                    ? 'bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary)]/20'
-                                    : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)]'}`}
-                              >
-                                {r.split_cell ? '분리' : '미분리'}
-                              </button>
-                            </td>
-                            <td className="px-2 py-2 sm:px-4 sm:py-3">
-                              <button
-                                onClick={async () => {
-                                  const err = await updateRole(r.id, { indicator_bar: !r.indicator_bar })
-                                  if (err) msg(err, true)
-                                }}
-                                title="셀 분리 대신 좌측 컬러 바로 표시"
-                                className={`inline-flex px-2 py-0.5 rounded text-xs font-medium cursor-pointer transition-colors
-                                  ${r.indicator_bar
-                                    ? 'bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400'
-                                    : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)]'}`}
-                              >
-                                {r.indicator_bar ? '바 표시' : '바 없음'}
-                              </button>
-                            </td>
-                            <td className="px-2 py-2 sm:px-4 sm:py-3">
-                              <div className="flex gap-1 items-center">
-                                <button type="button" onClick={() => moveRole(r.id, -1)} disabled={idx === 0}
-                                  className="px-1.5 py-1 text-xs border border-[var(--color-border)] rounded hover:bg-[var(--color-surface-hover)] disabled:opacity-30">↑</button>
-                                <button type="button" onClick={() => moveRole(r.id, 1)} disabled={idx === sortedRoles.length - 1}
-                                  className="px-1.5 py-1 text-xs border border-[var(--color-border)] rounded hover:bg-[var(--color-surface-hover)] disabled:opacity-30">↓</button>
-                                <button
-                                  onClick={async () => {
-                                    const { count } = await supabase.from('assignments')
-                                      .select('*', { count: 'exact', head: true })
-                                      .eq('tenant_id', adminTenantId).eq('role_id', r.id)
-                                    const warningMsg = (count ?? 0) > 0
-                                      ? `"${r.name}" 역할을 삭제할까요?\n\n이 역할로 등록된 배정 ${count}건의 역할 정보가 사라집니다. 배정 데이터는 보존됩니다.`
-                                      : `"${r.name}" 역할을 삭제할까요?`
-                                    if (!confirm(warningMsg)) return
-                                    const err = await deleteRole(r.id)
-                                    if (err) msg(err, true)
+                                    }
+                                    if (e.key === 'Escape') setEditingRoleId(null)
                                   }}
-                                  className="px-2 py-1 text-xs text-red-600 border border-red-200 rounded hover:bg-red-50"
-                                >
-                                  삭제
+                                  className={inputCls + ' w-32 text-sm py-1'}
+                                  autoFocus
+                                />
+                                <button type="button"
+                                  onClick={async () => {
+                                    if (!editRoleName.trim()) return
+                                    const err = await updateRole(r.id, { name: editRoleName.trim() })
+                                    if (err) msg(err, true)
+                                    else setEditingRoleId(null)
+                                  }}
+                                  className="px-2 py-1 text-xs bg-[var(--color-brand-primary)] text-white rounded-lg hover:bg-[var(--color-brand-primary-hover)]">
+                                  저장
+                                </button>
+                                <button type="button" onClick={() => setEditingRoleId(null)}
+                                  className="px-2 py-1 text-xs border border-[var(--color-border-strong)] rounded-lg hover:bg-[var(--color-surface-hover)]">
+                                  취소
                                 </button>
                               </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                            ) : (
+                              <button type="button"
+                                onClick={() => { setEditingRoleId(r.id); setEditRoleName(r.name) }}
+                                className="text-[15px] font-bold text-[var(--color-text-primary)] hover:text-[var(--color-brand-primary)] text-left transition-colors">
+                                {r.name}
+                              </button>
+                            )}
+                          </div>
+                          {/* 셀분리 토글 */}
+                          <button
+                            onClick={async () => {
+                              const err = await updateRole(r.id, { split_cell: !r.split_cell })
+                              if (err) msg(err, true)
+                            }}
+                            className={`inline-flex px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-colors
+                              ${r.split_cell
+                                ? 'bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary)]/20'
+                                : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)]'}`}
+                          >
+                            {r.split_cell ? '분리' : '미분리'}
+                          </button>
+                          {/* 바표시 토글 */}
+                          <button
+                            onClick={async () => {
+                              const err = await updateRole(r.id, { indicator_bar: !r.indicator_bar })
+                              if (err) msg(err, true)
+                            }}
+                            title="셀 분리 대신 좌측 컬러 바로 표시"
+                            className={`inline-flex px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-colors
+                              ${r.indicator_bar
+                                ? 'bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400'
+                                : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)]'}`}
+                          >
+                            {r.indicator_bar ? '바 표시' : '바 없음'}
+                          </button>
+                          {/* 순서 */}
+                          <div className="flex gap-1 items-center ml-auto shrink-0">
+                            <button type="button" onClick={() => moveRole(r.id, -1)} disabled={idx === 0}
+                              className="w-7 h-7 flex items-center justify-center text-xs border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-surface-hover)] disabled:opacity-30 text-[var(--color-text-muted)]">
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                            </button>
+                            <button type="button" onClick={() => moveRole(r.id, 1)} disabled={idx === sortedRoles.length - 1}
+                              className="w-7 h-7 flex items-center justify-center text-xs border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-surface-hover)] disabled:opacity-30 text-[var(--color-text-muted)]">
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+                            </button>
+                            <button
+                              onClick={async () => {
+                                const { count } = await supabase.from('assignments')
+                                  .select('*', { count: 'exact', head: true })
+                                  .eq('tenant_id', adminTenantId).eq('role_id', r.id)
+                                const warningMsg = (count ?? 0) > 0
+                                  ? `"${r.name}" 역할을 삭제할까요?\n\n이 역할로 등록된 배정 ${count}건의 역할 정보가 사라집니다. 배정 데이터는 보존됩니다.`
+                                  : `"${r.name}" 역할을 삭제할까요?`
+                                if (!confirm(warningMsg)) return
+                                const err = await deleteRole(r.id)
+                                if (err) msg(err, true)
+                              }}
+                              className="px-2.5 py-1 text-xs font-semibold text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                            >
+                              삭제
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
                   )}
                 </div>
 
-                <form onSubmit={handleAddRole} className="bg-[var(--color-surface)] rounded-xl shadow p-4 space-y-3">
-                  <p className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">역할 추가</p>
-                  <div>
-                    <label className="block text-xs text-[var(--color-text-muted)] mb-1">역할명</label>
-                    <input type="text" value={newRoleName} onChange={e => setNewRoleName(e.target.value)}
-                      placeholder="예: 팀장" maxLength={30} className={inputCls + ' w-full'} required />
+                {/* 새 항목 구분선 */}
+                <div className="flex items-center gap-3 my-6">
+                  <div className="h-px flex-1 bg-[var(--color-border)]" />
+                  <span className="text-[11px] font-bold text-[var(--color-text-muted)] tracking-[0.4px] uppercase">새 역할</span>
+                  <div className="h-px flex-1 bg-[var(--color-border)]" />
+                </div>
+
+                {/* 역할 추가 폼 (점선 카드) */}
+                <form onSubmit={handleAddRole}
+                  className="border-[1.5px] border-dashed border-[var(--color-border-strong)] rounded-[18px] bg-[var(--color-surface-secondary)]"
+                  style={{ padding: '13px' }}>
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="w-9 h-9 rounded-[11px] bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] flex items-center justify-center shrink-0">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                    </span>
+                    <div>
+                      <p className="m-0 text-[15px] font-extrabold tracking-tight text-[var(--color-text-primary)]">역할 추가</p>
+                      <p className="m-0 mt-0.5 text-[12.5px] font-medium text-[var(--color-text-muted)]">새로운 역할을 정의합니다</p>
+                    </div>
                   </div>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={newRoleSplitCell} onChange={e => setNewRoleSplitCell(e.target.checked)}
-                      className="rounded border-[var(--color-border-strong)] accent-[var(--color-brand-primary)]" />
-                    <span className="text-sm text-[var(--color-text-secondary)]">셀 분리 (역할별 별도 컬럼)</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={newRoleIndicatorBar} onChange={e => setNewRoleIndicatorBar(e.target.checked)}
-                      className="rounded border-[var(--color-border-strong)] accent-[var(--color-brand-primary)]" />
-                    <span className="text-sm text-[var(--color-text-secondary)]">바 표시 (좌측 컬러 바로 표시)</span>
-                  </label>
-                  <button type="submit" className="px-4 py-1.5 bg-[var(--color-brand-primary)] text-white text-sm rounded-lg hover:bg-[var(--color-brand-primary-hover)]">추가</button>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">역할명</label>
+                      <input type="text" value={newRoleName} onChange={e => setNewRoleName(e.target.value)}
+                        placeholder="예: 팀장" maxLength={30} className={inputCls + ' w-full mt-1'} required />
+                    </div>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={newRoleSplitCell} onChange={e => setNewRoleSplitCell(e.target.checked)}
+                        className="rounded border-[var(--color-border-strong)] accent-[var(--color-brand-primary)]" />
+                      <span className="text-sm text-[var(--color-text-secondary)]">셀 분리 (역할별 별도 컬럼)</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={newRoleIndicatorBar} onChange={e => setNewRoleIndicatorBar(e.target.checked)}
+                        className="rounded border-[var(--color-border-strong)] accent-[var(--color-brand-primary)]" />
+                      <span className="text-sm text-[var(--color-text-secondary)]">바 표시 (좌측 컬러 바로 표시)</span>
+                    </label>
+                    <button type="submit" className="px-4 py-1.5 bg-[var(--color-brand-primary)] text-white text-sm font-semibold rounded-lg hover:bg-[var(--color-brand-primary-hover)]">추가</button>
+                  </div>
                 </form>
               </div>
             )}
@@ -1257,12 +1327,25 @@ export function AdminPage() {
             {/* ── 스케줄 규칙 ── */}
             {tab === 'rules' && (
               <div>
-                <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-semibold mb-3">요일별 운영 규칙</p>
+                {/* 페이지 헤더 */}
+                <header className="mb-5">
+                  <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10 px-3 py-[5px] rounded-full">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01"/></svg>
+                    조직 설정 · 스케줄 규칙
+                  </span>
+                  <h2 className="mt-3 mb-1.5 text-[clamp(22px,5vw,27px)] font-extrabold tracking-tight text-[var(--color-text-primary)]">스케줄 규칙</h2>
+                  <p className="text-[14px] font-medium text-[var(--color-text-muted)] leading-relaxed max-w-[52ch]">
+                    요일별·시간대별 운영 여부를 설정합니다. 버튼 클릭 시 즉시 저장됩니다.
+                  </p>
+                </header>
 
                 {/* Missing rules banner */}
                 {adminTimeSlots.some(slot => !scheduleRules.some(r => r.time_slot === slot)) && (
-                  <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center justify-between gap-3">
-                    <span className="text-sm text-yellow-700">일부 슬롯에 규칙이 없습니다. 규칙을 생성해 주세요.</span>
+                  <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-2xl flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="text-amber-600 shrink-0"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                      <span className="text-sm font-medium text-amber-700 dark:text-amber-300">일부 슬롯에 규칙이 없습니다. 규칙을 생성해 주세요.</span>
+                    </div>
                     <button
                       type="button"
                       disabled={saving}
@@ -1273,14 +1356,14 @@ export function AdminPage() {
                         if (err) msg(err, true)
                         else msg('규칙이 생성됐습니다.')
                       }}
-                      className="shrink-0 px-3 py-1.5 text-xs font-medium bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50"
+                      className="shrink-0 px-3 py-1.5 text-xs font-semibold bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50"
                     >
                       {saving ? '생성 중...' : '전체 규칙 생성'}
                     </button>
                   </div>
                 )}
 
-                <div className="bg-[var(--color-surface)] rounded-xl shadow overflow-x-auto">
+                <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow-sm overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
@@ -1303,7 +1386,7 @@ export function AdminPage() {
                                     const err = await toggleScheduleRule(rule.id, rule.is_open)
                                     if (err) msg(err, true)
                                   }}
-                                    className={`px-2.5 py-0.5 rounded text-xs font-medium transition-colors ${rule.is_open ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)]'}`}>
+                                    className={`px-2.5 py-0.5 rounded-lg text-xs font-semibold transition-colors ${rule.is_open ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)]'}`}>
                                     {rule.is_open ? '운영' : '미운영'}
                                   </button>
                                 ) : <span className="text-[var(--color-border-strong)]">-</span>}
@@ -1315,89 +1398,112 @@ export function AdminPage() {
                     </tbody>
                   </table>
                 </div>
-                <p className="mt-2 text-xs text-[var(--color-text-muted)]">버튼 클릭 시 즉시 저장됩니다.</p>
               </div>
             )}
 
             {/* ── 날짜 설정 ── */}
             {tab === 'dates' && (
-              <div className="space-y-6">
-                <div>
-                  <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-semibold mb-3">날짜 추가</p>
-                  <form onSubmit={handleDateSubmit} className="bg-[var(--color-surface)] rounded-xl shadow p-4">
-                    <div className="flex flex-wrap gap-3 items-end">
-                      <div>
-                        <label className="block text-xs text-[var(--color-text-muted)] mb-1">날짜</label>
-                        <input type="date" value={dateForm.date} onChange={e => setDateForm(f => ({ ...f, date: e.target.value }))} required className={inputCls} />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-[var(--color-text-muted)] mb-1">유형</label>
-                        <select value={dateForm.type} onChange={e => setDateForm(f => ({ ...f, type: e.target.value as 'holiday' | 'special' }))} className={inputCls}>
-                          <option value="holiday">휴관일</option>
-                          <option value="special">특별 운영일</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs text-[var(--color-text-muted)] mb-1">레이블 (선택)</label>
-                        <input type="text" value={dateForm.label} onChange={e => setDateForm(f => ({ ...f, label: e.target.value }))} placeholder="예: 추석연휴" maxLength={100} className={inputCls + ' w-36'} />
-                      </div>
-                      <button type="submit" disabled={saving} className="px-4 py-1.5 bg-[var(--color-brand-primary)] text-white text-sm rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50">
-                        {saving ? '저장 중...' : '추가'}
-                      </button>
+              <div className="max-w-lg space-y-6">
+                {/* 페이지 헤더 */}
+                <header className="mb-5">
+                  <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10 px-3 py-[5px] rounded-full">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><circle cx="9" cy="16" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="16" r="1" fill="currentColor" stroke="none"/></svg>
+                    조직 설정 · 날짜 설정
+                  </span>
+                  <h2 className="mt-3 mb-1.5 text-[clamp(22px,5vw,27px)] font-extrabold tracking-tight text-[var(--color-text-primary)]">날짜 설정</h2>
+                  <p className="text-[14px] font-medium text-[var(--color-text-muted)] leading-relaxed max-w-[52ch]">
+                    휴관일·특별 운영일 등 특정 날짜에 대한 예외 설정을 관리합니다.
+                  </p>
+                  <span className="mt-3.5 inline-flex items-center gap-1.5 text-[12.5px] font-bold text-[var(--color-text-secondary)]">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 17l9 5 9-5" opacity="0.5"/></svg>
+                    설정 <b className="text-[var(--color-brand-primary)] font-extrabold">{dateOverrides.length}</b>건
+                  </span>
+                </header>
+
+                {/* 날짜 추가 폼 (점선 카드) */}
+                <form onSubmit={handleDateSubmit}
+                  className="border-[1.5px] border-dashed border-[var(--color-border-strong)] rounded-[18px] bg-[var(--color-surface-secondary)]"
+                  style={{ padding: '13px' }}>
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="w-9 h-9 rounded-[11px] bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] flex items-center justify-center shrink-0">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                    </span>
+                    <div>
+                      <p className="m-0 text-[15px] font-extrabold tracking-tight text-[var(--color-text-primary)]">날짜 추가</p>
+                      <p className="m-0 mt-0.5 text-[12.5px] font-medium text-[var(--color-text-muted)]">휴관일 또는 특별 운영일을 등록합니다</p>
                     </div>
-                  </form>
-                </div>
-                <div>
-                  <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-semibold mb-3">설정된 날짜 ({dateOverrides.length}건)</p>
-                  {dateOverrides.length === 0 ? <p className="text-sm text-[var(--color-text-muted)]">설정된 날짜가 없습니다.</p> : (
-                    <div className="bg-[var(--color-surface)] rounded-xl shadow overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
-                            <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">날짜</th>
-                            <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">유형</th>
-                            <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">레이블</th>
-                            <th className="px-4 py-3"></th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-[var(--color-border)]">
-                          {dateOverrides.map(d => (
-                            <tr key={d.id} className="hover:bg-[var(--color-surface-hover)]">
-                              <td className="px-4 py-3 font-medium text-[var(--color-text-primary)]">{d.date}</td>
-                              <td className="px-2 py-2 sm:px-4 sm:py-3">
-                                <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${d.is_holiday ? 'bg-red-100 text-red-700' : 'bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)]'}`}>
-                                  {d.is_holiday ? '휴관일' : '특별운영'}
-                                </span>
-                              </td>
-                              <td className="px-4 py-3 text-[var(--color-text-muted)]">{d.label ?? '-'}</td>
-                              <td className="px-2 py-2 sm:px-4 sm:py-3">
-                                <button onClick={async () => { const err = await deleteDateOverride(d.id); if (err) msg(err, true) }}
-                                  className="px-2.5 py-1 text-xs text-red-600 border border-red-200 rounded hover:bg-red-50">
-                                  삭제
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                  </div>
+                  <div className="flex flex-wrap gap-3 items-end">
+                    <div>
+                      <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">날짜</label>
+                      <input type="date" value={dateForm.date} onChange={e => setDateForm(f => ({ ...f, date: e.target.value }))} required className={inputCls + ' block mt-1'} />
                     </div>
-                  )}
-                </div>
+                    <div>
+                      <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">유형</label>
+                      <select value={dateForm.type} onChange={e => setDateForm(f => ({ ...f, type: e.target.value as 'holiday' | 'special' }))} className={inputCls + ' block mt-1'}>
+                        <option value="holiday">휴관일</option>
+                        <option value="special">특별 운영일</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">레이블 (선택)</label>
+                      <input type="text" value={dateForm.label} onChange={e => setDateForm(f => ({ ...f, label: e.target.value }))} placeholder="예: 추석연휴" maxLength={100} className={inputCls + ' block mt-1 w-36'} />
+                    </div>
+                    <button type="submit" disabled={saving} className="px-4 py-1.5 bg-[var(--color-brand-primary)] text-white text-sm font-semibold rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50">
+                      {saving ? '저장 중...' : '추가'}
+                    </button>
+                  </div>
+                </form>
+
+                {/* 날짜 목록 */}
+                {dateOverrides.length === 0 ? (
+                  <p className="text-sm text-[var(--color-text-muted)]">설정된 날짜가 없습니다.</p>
+                ) : (
+                  <div className="flex flex-col gap-2.5">
+                    {dateOverrides.map(d => (
+                      <div key={d.id} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-sm hover:border-[var(--color-border-strong)] hover:shadow-md transition-all" style={{ padding: '13px' }}>
+                        <div className="flex items-center gap-3">
+                          <span className={`shrink-0 inline-flex px-2.5 py-1 rounded-lg text-xs font-semibold ${d.is_holiday ? 'bg-red-100 text-red-700' : 'bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)]'}`}>
+                            {d.is_holiday ? '휴관일' : '특별운영'}
+                          </span>
+                          <span className="text-[15px] font-bold text-[var(--color-text-primary)]">{d.date}</span>
+                          {d.label && <span className="text-[13px] text-[var(--color-text-muted)] flex-1 truncate">{d.label}</span>}
+                          <button onClick={async () => { const err = await deleteDateOverride(d.id); if (err) msg(err, true) }}
+                            className="ml-auto shrink-0 px-2.5 py-1 text-xs font-semibold text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors">
+                            삭제
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
             {/* ── 조직 설정 ── */}
             {tab === 'settings' && (
               <form onSubmit={handleSettingsSave} className="max-w-lg space-y-6">
-                <div className="bg-[var(--color-surface)] rounded-xl shadow p-5 space-y-4">
-                  <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-semibold">기본 정보</p>
+                {/* 페이지 헤더 */}
+                <header className="mb-5">
+                  <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10 px-3 py-[5px] rounded-full">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+                    조직 설정 · 기본 설정
+                  </span>
+                  <h2 className="mt-3 mb-1.5 text-[clamp(22px,5vw,27px)] font-extrabold tracking-tight text-[var(--color-text-primary)]">조직 설정</h2>
+                  <p className="text-[14px] font-medium text-[var(--color-text-muted)] leading-relaxed max-w-[52ch]">
+                    조직 이름·타이틀·테마 색상·타임슬롯·역할 비율을 설정합니다.
+                  </p>
+                </header>
+
+                <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow-sm p-5 space-y-4">
+                  <p className="text-[12px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">기본 정보</p>
                   <div>
-                    <label className="block text-xs text-[var(--color-text-muted)] mb-1">조직명</label>
-                    <input type="text" value={settingsName} onChange={e => setSettingsName(e.target.value)} maxLength={50} className={inputCls + ' w-full'} />
+                    <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">조직명</label>
+                    <input type="text" value={settingsName} onChange={e => setSettingsName(e.target.value)} maxLength={50} className={inputCls + ' w-full mt-1'} />
                   </div>
                   <div>
-                    <label className="block text-xs text-[var(--color-text-muted)] mb-1">페이지 타이틀</label>
-                    <input type="text" value={settingsTitle} onChange={e => setSettingsTitle(e.target.value)} maxLength={50} className={inputCls + ' w-full'} />
+                    <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">페이지 타이틀</label>
+                    <input type="text" value={settingsTitle} onChange={e => setSettingsTitle(e.target.value)} maxLength={50} className={inputCls + ' w-full mt-1'} />
                   </div>
                   <div>
                     <button
@@ -1452,17 +1558,17 @@ export function AdminPage() {
                   </div>
                 </div>
 
-                <div className="bg-[var(--color-surface)] rounded-xl shadow p-5 space-y-4">
-                  <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-semibold">타임슬롯</p>
+                <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow-sm p-5 space-y-4">
+                  <p className="text-[12px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">타임슬롯</p>
 
                   {/* Templates */}
                   <div>
-                    <p className="text-xs text-[var(--color-text-muted)] mb-2">템플릿 적용</p>
+                    <p className="text-[12px] font-bold text-[var(--color-text-secondary)] mb-2">템플릿 적용</p>
                     <div className="flex gap-2 flex-wrap">
                       {SLOT_TEMPLATES.map(t => (
                         <button key={t.label} type="button"
                           onClick={() => setSlotList(t.slots)}
-                          className="px-3 py-1.5 text-xs rounded-lg border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:border-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary)] hover:bg-[var(--color-surface-hover)] transition-colors">
+                          className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:border-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary)] hover:bg-[var(--color-surface-hover)] transition-colors">
                           {t.label}
                         </button>
                       ))}
@@ -1471,22 +1577,22 @@ export function AdminPage() {
 
                   {/* Manual add */}
                   <div>
-                    <p className="text-xs text-[var(--color-text-muted)] mb-2">직접 추가</p>
+                    <p className="text-[12px] font-bold text-[var(--color-text-secondary)] mb-2">직접 추가</p>
                     <div className="flex items-end gap-2 flex-wrap">
                       <div>
-                        <label className="block text-xs text-[var(--color-text-muted)] mb-1">시작</label>
-                        <select value={slotStart} onChange={e => setSlotStart(Number(e.target.value))} className={inputCls}>
+                        <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">시작</label>
+                        <select value={slotStart} onChange={e => setSlotStart(Number(e.target.value))} className={inputCls + ' block mt-1'}>
                           {START_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                         </select>
                       </div>
                       <div>
-                        <label className="block text-xs text-[var(--color-text-muted)] mb-1">종료</label>
-                        <select value={slotEnd} onChange={e => setSlotEnd(Number(e.target.value))} className={inputCls}>
+                        <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">종료</label>
+                        <select value={slotEnd} onChange={e => setSlotEnd(Number(e.target.value))} className={inputCls + ' block mt-1'}>
                           {END_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                         </select>
                       </div>
                       <button type="button" onClick={handleAddSlot}
-                        className="px-3 py-1.5 text-sm border border-[var(--color-brand-primary)] text-[var(--color-brand-primary)] rounded-lg hover:bg-[var(--color-surface-hover)]">
+                        className="px-3 py-1.5 text-sm font-semibold border border-[var(--color-brand-primary)] text-[var(--color-brand-primary)] rounded-lg hover:bg-[var(--color-surface-hover)]">
                         + 추가
                       </button>
                     </div>
@@ -1497,8 +1603,8 @@ export function AdminPage() {
                   ) : (
                     <ul className="space-y-1.5">
                       {slotList.map(slot => (
-                        <li key={slot} className="grid grid-cols-[auto_1fr_auto] items-center gap-2 px-3 py-2 bg-[var(--color-surface-secondary)] rounded-lg">
-                          <span className="text-sm text-[var(--color-text-secondary)] whitespace-nowrap shrink-0">{parseSlotLabel(slot)}</span>
+                        <li key={slot} className="grid grid-cols-[auto_1fr_auto] items-center gap-2 px-3 py-2 bg-[var(--color-surface-secondary)] rounded-xl border border-[var(--color-border)]">
+                          <span className="text-sm font-semibold text-[var(--color-text-secondary)] whitespace-nowrap shrink-0">{parseSlotLabel(slot)}</span>
                           <input
                             type="text"
                             placeholder="레이블 (예: 점심시간)"
@@ -1514,7 +1620,7 @@ export function AdminPage() {
                           <button type="button" onClick={() => {
                             setSlotList(prev => prev.filter(s => s !== slot))
                             setSlotLabels(prev => { const n = { ...prev }; delete n[slot]; return n })
-                          }} className="text-xs text-red-500 hover:text-red-700 shrink-0">삭제</button>
+                          }} className="text-xs font-semibold text-red-500 hover:text-red-700 shrink-0">삭제</button>
                         </li>
                       ))}
                     </ul>
@@ -1522,45 +1628,43 @@ export function AdminPage() {
                 </div>
 
                 {roles.length > 0 && (
-                  <div className="bg-[var(--color-surface)] rounded-xl shadow p-5">
-                    <div className="pt-0 border-t-0">
-                      <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-semibold mb-3">
-                        자동배정 역할 비율 (합계 100%)
+                  <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow-sm p-5">
+                    <p className="text-[12px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
+                      자동배정 역할 비율 (합계 100%)
+                    </p>
+                    <div className="space-y-2">
+                      {roles.map(role => (
+                        <div key={role.id} className="flex items-center gap-3">
+                          <span className="text-sm font-medium text-[var(--color-text-secondary)] w-32 shrink-0">{role.name}</span>
+                          <input
+                            type="number" min={0} max={100}
+                            value={roleRatios[role.id] ?? 0}
+                            onChange={e => setRoleRatios(prev => ({ ...prev, [role.id]: parseInt(e.target.value, 10) || 0 }))}
+                            className="w-16 border border-[var(--color-border-strong)] rounded-lg px-2 py-1 text-sm text-center bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none"
+                          />
+                          <span className="text-xs text-[var(--color-text-muted)]">%</span>
+                        </div>
+                      ))}
+                      <p className="text-xs text-[var(--color-text-muted)]">
+                        합계: {Object.values(roleRatios).reduce((s, v) => s + v, 0)}%
+                        {Object.keys(roleRatios).length > 0 && Object.values(roleRatios).reduce((s, v) => s + v, 0) !== 100
+                          ? <span className="text-red-500 ml-1">(100%이 아닙니다)</span>
+                          : null}
                       </p>
-                      <div className="space-y-2">
-                        {roles.map(role => (
-                          <div key={role.id} className="flex items-center gap-3">
-                            <span className="text-sm text-[var(--color-text-secondary)] w-32 shrink-0">{role.name}</span>
-                            <input
-                              type="number" min={0} max={100}
-                              value={roleRatios[role.id] ?? 0}
-                              onChange={e => setRoleRatios(prev => ({ ...prev, [role.id]: parseInt(e.target.value, 10) || 0 }))}
-                              className="w-16 border border-[var(--color-border-strong)] rounded-lg px-2 py-1 text-sm text-center bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none"
-                            />
-                            <span className="text-xs text-[var(--color-text-muted)]">%</span>
-                          </div>
-                        ))}
-                        <p className="text-xs text-[var(--color-text-muted)]">
-                          합계: {Object.values(roleRatios).reduce((s, v) => s + v, 0)}%
-                          {Object.keys(roleRatios).length > 0 && Object.values(roleRatios).reduce((s, v) => s + v, 0) !== 100
-                            ? <span className="text-red-500 ml-1">(100%이 아닙니다)</span>
-                            : null}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={handleRatioSave}
-                        disabled={ratioSaving}
-                        className="mt-3 px-4 py-2 text-sm font-semibold rounded-xl bg-[var(--color-brand-primary)] text-white hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50"
-                      >
-                        {ratioSaving ? '저장 중...' : '비율 저장'}
-                      </button>
                     </div>
+                    <button
+                      type="button"
+                      onClick={handleRatioSave}
+                      disabled={ratioSaving}
+                      className="mt-3 px-4 py-2 text-sm font-semibold rounded-xl bg-[var(--color-brand-primary)] text-white hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50"
+                    >
+                      {ratioSaving ? '저장 중...' : '비율 저장'}
+                    </button>
                   </div>
                 )}
 
                 <button type="submit" disabled={saving}
-                  className="px-5 py-2 bg-[var(--color-brand-primary)] text-white text-sm rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50">
+                  className="px-5 py-2 bg-[var(--color-brand-primary)] text-white text-sm font-semibold rounded-xl hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50">
                   {saving ? '저장 중...' : '저장'}
                 </button>
               </form>
@@ -1569,20 +1673,33 @@ export function AdminPage() {
             {/* ── 범례 관리 ── */}
             {tab === 'legend' && (
               <div className="max-w-lg space-y-4">
-                <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-semibold">
-                  범례 항목 ({legendItems.length}개) — 추가/삭제 즉시 저장됩니다
-                </p>
+                {/* 페이지 헤더 */}
+                <header className="mb-5">
+                  <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10 px-3 py-[5px] rounded-full">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                    조직 설정 · 범례 관리
+                  </span>
+                  <h2 className="mt-3 mb-1.5 text-[clamp(22px,5vw,27px)] font-extrabold tracking-tight text-[var(--color-text-primary)]">범례 관리</h2>
+                  <p className="text-[14px] font-medium text-[var(--color-text-muted)] leading-relaxed max-w-[52ch]">
+                    스케줄 화면에 표시될 범례 항목을 관리합니다. 추가·삭제 즉시 저장됩니다.
+                  </p>
+                  <span className="mt-3.5 inline-flex items-center gap-1.5 text-[12.5px] font-bold text-[var(--color-text-secondary)]">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 17l9 5 9-5" opacity="0.5"/></svg>
+                    범례 <b className="text-[var(--color-brand-primary)] font-extrabold">{legendItems.length}</b>개
+                  </span>
+                </header>
 
                 {legendItems.length === 0 && (
-                  <p className="text-xs text-[var(--color-text-muted)]">항목이 없으면 기본 범례가 표시됩니다.</p>
+                  <p className="text-[13px] text-[var(--color-text-muted)]">항목이 없으면 기본 범례가 표시됩니다.</p>
                 )}
 
-                <ul className="space-y-2">
+                {/* 범례 카드 목록 */}
+                <div className="flex flex-col gap-2.5">
                   {legendItems.map((item, idx) => {
                     const isEditing = editingLegendId === item.id
                     const s = LEGEND_COLOR_STYLES[isEditing ? editLegendColor : item.color]
                     return (
-                      <li key={item.id} className={`rounded-lg border p-2.5 ${s.bg} ${s.border}`}>
+                      <div key={item.id} className={`bg-[var(--color-surface)] border rounded-2xl shadow-sm hover:shadow-md transition-all ${s.border}`} style={{ padding: '13px' }}>
                         {isEditing ? (
                           <div className="flex gap-2 flex-wrap items-end">
                             <input
@@ -1615,70 +1732,90 @@ export function AdminPage() {
                             </select>
                             <button type="button" onClick={saveLegendEdit}
                               disabled={!editLegendIcon.trim() || !editLegendLabel.trim()}
-                              className="px-3 py-1 text-xs bg-[var(--color-brand-primary)] text-white rounded hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40 shrink-0">
+                              className="px-3 py-1.5 text-xs font-semibold bg-[var(--color-brand-primary)] text-white rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40 shrink-0">
                               저장
                             </button>
                             <button type="button" onClick={() => setEditingLegendId(null)}
-                              className="px-3 py-1 text-xs border border-[var(--color-border-strong)] rounded hover:bg-[var(--color-surface-hover)] shrink-0">
+                              className="px-3 py-1.5 text-xs font-semibold border border-[var(--color-border-strong)] rounded-lg hover:bg-[var(--color-surface-hover)] shrink-0">
                               취소
                             </button>
                           </div>
                         ) : (
-                          <div className="flex items-center gap-2">
-                            <span className={`text-[11px] font-bold ${s.icon}`}>{item.icon}</span>
-                            <span className="text-xs text-[var(--color-text-secondary)] font-medium flex-1">{item.label}</span>
+                          <div className="flex items-center gap-2.5">
+                            <span className={`text-sm font-bold select-none ${s.icon}`}>{item.icon}</span>
+                            <span className="text-[13.5px] font-semibold text-[var(--color-text-secondary)] flex-1">{item.label}</span>
                             <div className="flex gap-1 shrink-0">
                               <button type="button" onClick={() => moveLegendItem(item.id, -1)} disabled={idx === 0}
-                                className="px-1.5 py-1 text-xs border border-[var(--color-border-strong)] rounded hover:bg-[var(--color-surface-hover)] disabled:opacity-30">↑</button>
+                                className="w-7 h-7 flex items-center justify-center border border-[var(--color-border-strong)] rounded-lg hover:bg-[var(--color-surface-hover)] disabled:opacity-30 text-[var(--color-text-muted)]">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                              </button>
                               <button type="button" onClick={() => moveLegendItem(item.id, 1)} disabled={idx === legendItems.length - 1}
-                                className="px-1.5 py-1 text-xs border border-[var(--color-border-strong)] rounded hover:bg-[var(--color-surface-hover)] disabled:opacity-30">↓</button>
+                                className="w-7 h-7 flex items-center justify-center border border-[var(--color-border-strong)] rounded-lg hover:bg-[var(--color-surface-hover)] disabled:opacity-30 text-[var(--color-text-muted)]">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+                              </button>
                             </div>
                             <button type="button" onClick={() => startEditLegend(item)}
-                              className="px-2 py-1 text-xs border border-[var(--color-border-strong)] rounded hover:bg-[var(--color-surface-hover)] shrink-0">
+                              className="px-2.5 py-1 text-xs font-semibold border border-[var(--color-border-strong)] rounded-lg hover:bg-[var(--color-surface-hover)] shrink-0">
                               수정
                             </button>
                             <button type="button" onClick={() => removeLegendItem(item.id)}
-                              className="px-2 py-1 text-xs text-red-600 border border-red-200 rounded hover:bg-red-50 shrink-0">
+                              className="px-2.5 py-1 text-xs font-semibold text-red-600 border border-red-200 rounded-lg hover:bg-red-50 shrink-0">
                               삭제
                             </button>
                           </div>
                         )}
-                      </li>
+                      </div>
                     )
                   })}
-                </ul>
+                </div>
 
-                <div className="bg-[var(--color-surface)] rounded-xl shadow p-4 space-y-3">
-                  <p className="text-xs font-semibold text-[var(--color-text-muted)]">새 항목 추가</p>
+                {/* 새 항목 구분선 */}
+                <div className="flex items-center gap-3 my-6">
+                  <div className="h-px flex-1 bg-[var(--color-border)]" />
+                  <span className="text-[11px] font-bold text-[var(--color-text-muted)] tracking-[0.4px] uppercase">새 항목</span>
+                  <div className="h-px flex-1 bg-[var(--color-border)]" />
+                </div>
+
+                {/* 새 항목 추가 폼 (점선 카드) */}
+                <div className="border-[1.5px] border-dashed border-[var(--color-border-strong)] rounded-[18px] bg-[var(--color-surface-secondary)]" style={{ padding: '13px' }}>
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="w-9 h-9 rounded-[11px] bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] flex items-center justify-center shrink-0">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                    </span>
+                    <div>
+                      <p className="m-0 text-[15px] font-extrabold tracking-tight text-[var(--color-text-primary)]">새 항목 추가</p>
+                      <p className="m-0 mt-0.5 text-[12.5px] font-medium text-[var(--color-text-muted)]">아이콘·레이블·색상을 입력하세요</p>
+                    </div>
+                  </div>
                   <div className="flex gap-2 flex-wrap items-end">
                     <div>
-                      <label className="block text-xs text-[var(--color-text-muted)] mb-1">아이콘</label>
+                      <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">아이콘</label>
                       <input
                         type="text"
                         maxLength={2}
                         value={newLegendIcon}
                         onChange={e => setNewLegendIcon(e.target.value)}
                         placeholder="☀"
-                        className={inputCls + ' w-14 text-center'}
+                        className={inputCls + ' block mt-1 w-14 text-center'}
                       />
                     </div>
                     <div className="flex-1 min-w-40">
-                      <label className="block text-xs text-[var(--color-text-muted)] mb-1">레이블</label>
+                      <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">레이블</label>
                       <input
                         type="text"
                         value={newLegendLabel}
                         onChange={e => setNewLegendLabel(e.target.value)}
                         placeholder="점심시간 (10~18시)"
                         maxLength={50}
-                        className={inputCls + ' w-full'}
+                        className={inputCls + ' block mt-1 w-full'}
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-[var(--color-text-muted)] mb-1">색상</label>
+                      <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">색상</label>
                       <select
                         value={newLegendColor}
                         onChange={e => setNewLegendColor(e.target.value as LegendColor)}
-                        className={inputCls}
+                        className={inputCls + ' block mt-1'}
                       >
                         <option value="amber">주황</option>
                         <option value="pink">분홍</option>
@@ -1695,9 +1832,10 @@ export function AdminPage() {
                       type="button"
                       onClick={addLegendItem}
                       disabled={!newLegendIcon.trim() || !newLegendLabel.trim()}
-                      className="px-4 py-1.5 text-sm bg-[var(--color-brand-primary)] text-white rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40"
+                      className="inline-flex items-center gap-1.5 h-[34px] px-4 bg-[var(--color-brand-primary)] text-white text-sm font-bold rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40 transition-colors"
                     >
-                      + 추가
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                      추가
                     </button>
                   </div>
                 </div>
