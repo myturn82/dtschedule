@@ -139,11 +139,15 @@ export function WeekGrid({
         {timeSlots.map(slot => {
           const [slotStartNum] = slot.split('-').map(Number)
           const isMoon = slotStartNum >= 20
+          const isRowClosed = weekDays.every(d => {
+            const cs = getCellState(d.getDate(), slot, d.getFullYear(), d.getMonth() + 1, scheduleRules, slotSettings, dateOverrides, assignments)
+            return cs.isBreaktime || cs.isClosed || cs.isHoliday
+          })
           return (
             <div
               key={slot}
               className={`grid border-t border-[var(--color-border)] ${isMoon ? 'bg-[oklch(0.99_0.005_280)]' : ''}`}
-              style={{ gridTemplateColumns: `${timeColW}px repeat(7, 1fr)`, minHeight: 52 }}
+              style={{ gridTemplateColumns: `${timeColW}px repeat(7, 1fr)`, minHeight: isRowClosed ? 28 : 52 }}
             >
               {/* Time label */}
               <div className="px-1 py-1 sm:px-1.5 sm:py-1.5 flex flex-col justify-center items-center text-center border-r border-[var(--color-border)]">

@@ -287,10 +287,23 @@ export function SchedulePage() {
 
   const swipeTouchStartX = useRef<number | null>(null)
   const swipeTouchStartY = useRef<number | null>(null)
+  const swipeScrollableEl = useRef<HTMLElement | null>(null)
+
+  function findHScrollable(target: EventTarget | null): HTMLElement | null {
+    let node = target as HTMLElement | null
+    while (node && node !== document.body) {
+      const ox = window.getComputedStyle(node).overflowX
+      if ((ox === 'auto' || ox === 'scroll') && node.scrollWidth > node.clientWidth) return node
+      node = node.parentElement
+    }
+    return null
+  }
+
   function handleTouchStart(e: React.TouchEvent) {
     if (e.touches.length !== 1) { swipeTouchStartX.current = null; swipeTouchStartY.current = null; return }
     swipeTouchStartX.current = e.touches[0].clientX
     swipeTouchStartY.current = e.touches[0].clientY
+    swipeScrollableEl.current = findHScrollable(e.touches[0].target)
   }
   function handleTouchMove(e: React.TouchEvent) {
     if (e.touches.length > 1) { swipeTouchStartX.current = null; swipeTouchStartY.current = null }
@@ -303,6 +316,12 @@ export function SchedulePage() {
     swipeTouchStartY.current = null
     // 수평 이동이 수직 이동의 2배 이상일 때만 스와이프로 인식 (약 27도 이내)
     if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 2) return
+    // 가로 스크롤 가능 영역에서 스크롤 방향으로 이동 중이면 네비게이션 무시
+    const sc = swipeScrollableEl.current
+    if (sc) {
+      if (dx < 0 && sc.scrollLeft + sc.clientWidth < sc.scrollWidth - 5) return
+      if (dx > 0 && sc.scrollLeft > 5) return
+    }
     const dir = dx < 0 ? 'next' : 'prev'
     setSwipeAnim(dir)
     setAnimKey(k => k + 1)
@@ -622,7 +641,7 @@ export function SchedulePage() {
       {/* Main content */}
       <main className="sm:px-4 sm:py-3">
         <div className="bg-[var(--color-surface)] sm:border sm:border-[var(--color-border)] sm:rounded-2xl sm:shadow-[var(--shadow-lg)] overflow-hidden animate-fade-up">
-          <div className="px-2 py-2 sm:px-5 sm:py-4 border-b border-[var(--color-border)]">
+          <div className="px-2 py-2 sm:px-5 sm:py-4 sm:border-b sm:border-[var(--color-border)]">
             <ScheduleHeader
               year={year} month={month} day={day}
               title={tenant?.settings?.title || tenant?.name}

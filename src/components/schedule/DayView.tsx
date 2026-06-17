@@ -109,7 +109,7 @@ export function DayView({
   })
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 px-2 sm:px-0">
       {/* Section header */}
       <div className="flex items-baseline justify-between px-1 pb-1 flex-wrap gap-2">
         <h2 className="text-[15px] font-bold text-[var(--color-text-secondary)] tracking-tight">
