@@ -845,7 +845,7 @@ export function SchedulePage() {
           profile={profile}
           tenantRole={tenantRole}
           profiles={profiles}
-          splitRoles={splitRoles}
+          splitRoles={[...splitRoles, ...indicatorBarRoles]}
           isSplitMode={isSplitMode}
           initialYear={year}
           initialMonth={month}
