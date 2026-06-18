@@ -59,7 +59,7 @@ export function Legend({ legendItems }: Props) {
       </div>
       {/* 항목: 모바일 토글, 데스크탑 항상 표시 */}
       <div className={`flex-wrap items-center gap-2 mt-1.5 ${expanded ? 'flex' : 'hidden'} sm:flex`}>
-        {items.map(({ id, label, color }) => {
+        {items.map(({ id, icon, label, color }) => {
           const s = LEGEND_COLOR_STYLES[color]
           const dot = DOT_COLORS[color]
           return (
@@ -67,7 +67,11 @@ export function Legend({ legendItems }: Props) {
               key={id}
               className={`inline-flex items-center gap-1.5 px-2.5 py-[6px] rounded-full text-[12px] font-medium whitespace-nowrap ${s.bg} border ${s.border} ${s.icon}`}
             >
-              <span className="w-2 h-2 rounded-full shrink-0 flex-none" style={{ background: dot }} />
+              {icon ? (
+                <span className="text-sm leading-none select-none">{icon}</span>
+              ) : (
+                <span className="w-2 h-2 rounded-full shrink-0 flex-none" style={{ background: dot }} />
+              )}
               <span>{label}</span>
             </span>
           )

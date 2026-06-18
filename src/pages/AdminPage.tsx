@@ -60,7 +60,7 @@ function LegendIconPicker({ value, onChange }: { value: string; onChange: (v: st
                 onClick={() => { onChange(opt.value); setOpen(false) }}
                 className={`h-8 rounded-lg flex items-center justify-center text-base select-none hover:bg-[var(--color-surface-hover)] ${value === opt.value ? 'bg-[color-mix(in_srgb,var(--color-brand-primary)_12%,transparent)] ring-1 ring-[var(--color-brand-primary)]' : ''}`}
               >
-                {opt.value || <span className="text-[10px] text-[var(--color-text-muted)]">∅</span>}
+                {opt.value || <span className="text-[10px] text-[var(--color-text-muted)]">{opt.label}</span>}
               </button>
             ))}
           </div>
