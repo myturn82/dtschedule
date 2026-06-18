@@ -74,7 +74,7 @@ export function WeekGrid({
   const minTotalW = timeColW + 7 * dayColMinW
 
   return (
-    <div className="overflow-x-auto -mx-1 sm:mx-0 rounded-xl border border-[var(--color-border)]">
+    <div className="overflow-x-auto -mx-1 framed:mx-0 rounded-xl border border-[var(--color-border)]">
       <div style={{ minWidth: minTotalW }}>
 
         {/* ── Day header row ── */}
