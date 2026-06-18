@@ -2,6 +2,8 @@ import { useNavigate } from 'react-router-dom'
 import { DevFileLabel } from '../components/DevFileLabel'
 import { ScheduleBackground } from '../components/auth/ScheduleBackground'
 
+const pointStyle = { color: '#E05A3A', fontWeight: 700 }
+
 export function LandingPage() {
   const navigate = useNavigate()
 
@@ -32,14 +34,16 @@ export function LandingPage() {
           fontSize: 28, lineHeight: 1.22, letterSpacing: '-0.8px', fontWeight: 700,
           color: '#14171C', margin: '0 0 12px',
         }}>
-          단 한 장의 캘린더로<br />끝내는 팀원 관리
+          엑셀과 문서로 매번 지우고 다시 쓰던 번거로움 끝,<br />
+          팀 스케줄의 모든 과정을 데이터화하다
         </h1>
 
         {/* Subtext */}
         <p style={{
           fontSize: 14, color: '#6B7280', lineHeight: 1.6, margin: '0 0 28px',
         }}>
-          조직 개설부터 스케줄 공유까지<br />엑셀보다 빠르게 시작하세요.
+          <span style={pointStyle}>역할별 자동 배정</span>과 <span style={pointStyle}>반복 등록</span>으로 짜여진 스케줄은 <span style={pointStyle}>실시간</span>으로 공유되며, <span style={pointStyle}>전체 고정 및 초기화</span>로 유연하게 제어됩니다.<br />
+          필요한 데이터를 추출하는 <span style={pointStyle}>문서 다운로드</span>와 <span style={pointStyle}>맞춤형 통계 위젯</span>으로 우리 팀의 오늘을 스마트하게 관리하세요.
         </p>
 
         {/* CTA buttons */}
