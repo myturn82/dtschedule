@@ -16,6 +16,29 @@ import { displayMode } from '../lib/tenantMode'
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
 const HEX_COLOR_RE = /^#[0-9A-Fa-f]{6}$/
 
+const LEGEND_ICON_OPTIONS: { value: string; label: string }[] = [
+  { value: '⭐', label: '별' },
+  { value: '🔥', label: '인기' },
+  { value: '✅', label: '완료' },
+  { value: '❗', label: '주의' },
+  { value: '⚠️', label: '경고' },
+  { value: '🆕', label: '신규' },
+  { value: '🔒', label: '잠금' },
+  { value: '📌', label: '고정' },
+  { value: '🎯', label: '목표' },
+  { value: '💡', label: '안내' },
+  { value: '🎉', label: '이벤트' },
+  { value: '👑', label: 'VIP' },
+  { value: '🏆', label: '우수' },
+  { value: '🍀', label: '특별' },
+  { value: '🌙', label: '야간' },
+  { value: '☀️', label: '주간' },
+  { value: '🚨', label: '긴급' },
+  { value: '💯', label: '만점' },
+  { value: '🔔', label: '알림' },
+  { value: '📍', label: '위치' },
+]
+
 const FIELD_TYPE_DEFS: { value: CustomFieldType; label: string; badgeCls: string }[] = [
   { value: 'text',          label: '텍스트',   badgeCls: 'bg-slate-100 text-slate-600' },
   { value: 'number',        label: '숫자',     badgeCls: 'bg-blue-100 text-blue-700' },
@@ -1712,12 +1735,15 @@ export function AdminPage() {
                       <div key={item.id} className={`bg-[var(--color-surface)] border rounded-2xl shadow-sm hover:shadow-md transition-all ${s.border}`} style={{ padding: '13px' }}>
                         {isEditing ? (
                           <div className="flex gap-2 flex-wrap items-end">
-                            <input
-                              type="text" maxLength={2}
+                            <select
                               value={editLegendIcon}
                               onChange={e => setEditLegendIcon(e.target.value)}
-                              className={inputCls + ' w-14 text-center'}
-                            />
+                              className={inputCls + ' w-20 text-center'}
+                            >
+                              {LEGEND_ICON_OPTIONS.map(opt => (
+                                <option key={opt.value} value={opt.value}>{opt.value} {opt.label}</option>
+                              ))}
+                            </select>
                             <input
                               type="text"
                               value={editLegendLabel}
@@ -1795,20 +1821,22 @@ export function AdminPage() {
                     </span>
                     <div>
                       <p className="m-0 text-[15px] font-extrabold tracking-tight text-[var(--color-text-primary)]">새 항목 추가</p>
-                      <p className="m-0 mt-0.5 text-[12.5px] font-medium text-[var(--color-text-muted)]">아이콘·레이블·색상을 입력하세요</p>
+                      <p className="m-0 mt-0.5 text-[12.5px] font-medium text-[var(--color-text-muted)]">아이콘·색상을 선택하고 레이블을 입력하세요</p>
                     </div>
                   </div>
                   <div className="flex gap-2 flex-wrap items-end">
                     <div>
                       <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">아이콘</label>
-                      <input
-                        type="text"
-                        maxLength={2}
+                      <select
                         value={newLegendIcon}
                         onChange={e => setNewLegendIcon(e.target.value)}
-                        placeholder="☀"
-                        className={inputCls + ' block mt-1 w-14 text-center'}
-                      />
+                        className={inputCls + ' block mt-1 w-20 text-center'}
+                      >
+                        <option value="">선택</option>
+                        {LEGEND_ICON_OPTIONS.map(opt => (
+                          <option key={opt.value} value={opt.value}>{opt.value} {opt.label}</option>
+                        ))}
+                      </select>
                     </div>
                     <div className="flex-1 min-w-40">
                       <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">레이블</label>
