@@ -1739,6 +1739,7 @@ export function AdminPage() {
                               <option value="red">빨강</option>
                               <option value="slate">회색</option>
                               <option value="indigo">남색</option>
+                              <option value="black">검정</option>
                             </select>
                             <button type="button" onClick={saveLegendEdit}
                               disabled={!editLegendIcon.trim() || !editLegendLabel.trim()}
@@ -1836,6 +1837,7 @@ export function AdminPage() {
                         <option value="red">빨강</option>
                         <option value="slate">회색</option>
                         <option value="indigo">남색</option>
+                        <option value="black">검정</option>
                       </select>
                     </div>
                     <button
