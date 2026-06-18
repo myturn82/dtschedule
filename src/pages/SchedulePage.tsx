@@ -631,7 +631,7 @@ export function SchedulePage() {
         )}
       />
       {memberNotice && (
-        <div className="flex items-center justify-between gap-2 mx-3 mt-2 sm:mx-5 px-3 py-2 rounded-xl bg-blue-50 border border-blue-200 text-sm text-blue-700">
+        <div className="flex items-center justify-between gap-2 mx-3 mt-2 framed:mx-5 px-3 py-2 rounded-xl bg-blue-50 border border-blue-200 text-sm text-blue-700">
           <span>{memberNotice}</span>
           <button onClick={() => setMemberNotice(null)} className="shrink-0 text-blue-400 hover:text-blue-600 transition-colors">
             <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 5l10 10M15 5L5 15"/></svg>
@@ -639,9 +639,9 @@ export function SchedulePage() {
         </div>
       )}
       {/* Main content */}
-      <main className="sm:px-4 sm:py-3">
-        <div className="bg-[var(--color-surface)] sm:border sm:border-[var(--color-border)] sm:rounded-2xl sm:shadow-[var(--shadow-lg)] overflow-hidden animate-fade-up">
-          <div className="px-2 py-2 sm:px-5 sm:py-4 sm:border-b sm:border-[var(--color-border)]">
+      <main className="framed:px-4 framed:py-3">
+        <div className="bg-[var(--color-surface)] framed:border framed:border-[var(--color-border)] framed:rounded-2xl framed:shadow-[var(--shadow-lg)] overflow-hidden animate-fade-up">
+          <div className="px-2 py-2 framed:px-5 framed:py-4 framed:border-b framed:border-[var(--color-border)]">
             <ScheduleHeader
               year={year} month={month} day={day}
               title={tenant?.settings?.title || tenant?.name}
@@ -657,7 +657,7 @@ export function SchedulePage() {
           </div>
 
           {excelMode && (
-            <div className="sm:mx-3 mt-2 mb-0 flex items-center gap-2 px-3 py-2 sm:rounded-xl bg-[color-mix(in_srgb,var(--color-brand-primary)_10%,transparent)] border border-[var(--color-brand-primary)]/30 text-sm text-[var(--color-brand-primary)]">
+            <div className="framed:mx-3 mt-2 mb-0 flex items-center gap-2 px-3 py-2 framed:rounded-xl bg-[color-mix(in_srgb,var(--color-brand-primary)_10%,transparent)] border border-[var(--color-brand-primary)]/30 text-sm text-[var(--color-brand-primary)]">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
               <span className="flex-1 font-semibold text-xs">엑셀 모드 — 클릭으로 셀 선택, Shift+클릭으로 범위, Ctrl+C/V 복사·붙여넣기</span>
               {copyBuf && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[var(--color-brand-primary)] text-white">복사됨</span>}
@@ -667,7 +667,7 @@ export function SchedulePage() {
               >✕</button>
             </div>
           )}
-          <div className="sm:p-3 overflow-hidden">
+          <div className="framed:p-3 overflow-hidden">
             <div
               key={animKey}
               className={swipeAnim === 'next' ? 'animate-page-next' : swipeAnim === 'prev' ? 'animate-page-prev' : ''}
