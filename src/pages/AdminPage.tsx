@@ -1739,7 +1739,7 @@ export function AdminPage() {
                             <select
                               value={editLegendIcon}
                               onChange={e => setEditLegendIcon(e.target.value)}
-                              className={inputCls + ' w-20 text-center'}
+                              className={inputCls + ' w-20 text-center [text-align-last:center]'}
                             >
                               {LEGEND_ICON_OPTIONS.map(opt => (
                                 <option key={opt.value} value={opt.value}>{opt.value || opt.label}</option>
@@ -1831,7 +1831,7 @@ export function AdminPage() {
                       <select
                         value={newLegendIcon}
                         onChange={e => setNewLegendIcon(e.target.value)}
-                        className={inputCls + ' block mt-1 w-20 text-center'}
+                        className={inputCls + ' block mt-1 w-20 text-center [text-align-last:center]'}
                       >
                         {LEGEND_ICON_OPTIONS.map(opt => (
                           <option key={opt.value} value={opt.value}>{opt.value || opt.label}</option>
