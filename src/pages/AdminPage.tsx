@@ -17,26 +17,27 @@ const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
 const HEX_COLOR_RE = /^#[0-9A-Fa-f]{6}$/
 
 const LEGEND_ICON_OPTIONS: { value: string; label: string }[] = [
-  { value: '⭐', label: '별' },
-  { value: '🔥', label: '인기' },
-  { value: '✅', label: '완료' },
-  { value: '❗', label: '주의' },
-  { value: '⚠️', label: '경고' },
-  { value: '🆕', label: '신규' },
-  { value: '🔒', label: '잠금' },
-  { value: '📌', label: '고정' },
-  { value: '🎯', label: '목표' },
-  { value: '💡', label: '안내' },
-  { value: '🎉', label: '이벤트' },
-  { value: '👑', label: 'VIP' },
-  { value: '🏆', label: '우수' },
-  { value: '🍀', label: '특별' },
-  { value: '🌙', label: '야간' },
-  { value: '☀️', label: '주간' },
-  { value: '🚨', label: '긴급' },
-  { value: '💯', label: '만점' },
-  { value: '🔔', label: '알림' },
-  { value: '📍', label: '위치' },
+  { value: '', label: '없음' },
+  { value: '★', label: '별표' },
+  { value: '☆', label: '별표(연하게)' },
+  { value: '●', label: '채움 원' },
+  { value: '○', label: '빈 원' },
+  { value: '■', label: '채움 사각' },
+  { value: '□', label: '빈 사각' },
+  { value: '◆', label: '채움 다이아' },
+  { value: '◇', label: '빈 다이아' },
+  { value: '▲', label: '채움 삼각' },
+  { value: '△', label: '빈 삼각' },
+  { value: '▶', label: '진행' },
+  { value: '➤', label: '화살표' },
+  { value: '✓', label: '체크' },
+  { value: '✕', label: '엑스' },
+  { value: '⚠', label: '주의' },
+  { value: '‼', label: '긴급' },
+  { value: '☑', label: '완료' },
+  { value: '✦', label: '포인트' },
+  { value: '※', label: '참고' },
+  { value: '◎', label: '주목' },
 ]
 
 const FIELD_TYPE_DEFS: { value: CustomFieldType; label: string; badgeCls: string }[] = [
@@ -337,7 +338,7 @@ export function AdminPage() {
   }
 
   async function addLegendItem() {
-    if (!newLegendIcon.trim() || !newLegendLabel.trim() || !adminTenantId) return
+    if (!newLegendLabel.trim() || !adminTenantId) return
     const newItem: LegendItem = {
       id: Date.now().toString(),
       icon: newLegendIcon.trim(),
@@ -379,7 +380,7 @@ export function AdminPage() {
   }
 
   async function saveLegendEdit() {
-    if (!editingLegendId || !editLegendIcon.trim() || !editLegendLabel.trim() || !adminTenantId) return
+    if (!editingLegendId || !editLegendLabel.trim() || !adminTenantId) return
     const next = legendItems.map(i =>
       i.id === editingLegendId
         ? { ...i, icon: editLegendIcon.trim(), label: editLegendLabel.trim(), color: editLegendColor }
@@ -1741,7 +1742,7 @@ export function AdminPage() {
                               className={inputCls + ' w-20 text-center'}
                             >
                               {LEGEND_ICON_OPTIONS.map(opt => (
-                                <option key={opt.value} value={opt.value}>{opt.value} {opt.label}</option>
+                                <option key={opt.value} value={opt.value}>{opt.value || opt.label}</option>
                               ))}
                             </select>
                             <input
@@ -1768,7 +1769,7 @@ export function AdminPage() {
                               <option value="black">검정</option>
                             </select>
                             <button type="button" onClick={saveLegendEdit}
-                              disabled={!editLegendIcon.trim() || !editLegendLabel.trim()}
+                              disabled={!editLegendLabel.trim()}
                               className="px-3 py-1.5 text-xs font-semibold bg-[var(--color-brand-primary)] text-white rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40 shrink-0">
                               저장
                             </button>
@@ -1832,9 +1833,8 @@ export function AdminPage() {
                         onChange={e => setNewLegendIcon(e.target.value)}
                         className={inputCls + ' block mt-1 w-20 text-center'}
                       >
-                        <option value="">선택</option>
                         {LEGEND_ICON_OPTIONS.map(opt => (
-                          <option key={opt.value} value={opt.value}>{opt.value} {opt.label}</option>
+                          <option key={opt.value} value={opt.value}>{opt.value || opt.label}</option>
                         ))}
                       </select>
                     </div>
@@ -1871,7 +1871,7 @@ export function AdminPage() {
                     <button
                       type="button"
                       onClick={addLegendItem}
-                      disabled={!newLegendIcon.trim() || !newLegendLabel.trim()}
+                      disabled={!newLegendLabel.trim()}
                       className="inline-flex items-center gap-1.5 h-[34px] px-4 bg-[var(--color-brand-primary)] text-white text-sm font-bold rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40 transition-colors"
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
