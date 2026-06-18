@@ -14,6 +14,7 @@ export const LEGEND_COLOR_STYLES: Record<LegendColor, { bg: string; border: stri
   purple: { bg: 'bg-purple-50 dark:bg-purple-950/20', border: 'border-purple-200 dark:border-purple-900/60', icon: 'text-purple-500' },
   red:    { bg: 'bg-red-50 dark:bg-red-950/20',       border: 'border-red-200 dark:border-red-900/60',       icon: 'text-red-500' },
   indigo: { bg: 'bg-indigo-50 dark:bg-indigo-950/20', border: 'border-indigo-200 dark:border-indigo-900/60', icon: 'text-indigo-500' },
+  black:  { bg: 'bg-zinc-100 dark:bg-zinc-800/40',    border: 'border-zinc-300 dark:border-zinc-700',        icon: 'text-zinc-900 dark:text-zinc-200' },
 }
 
 const DOT_COLORS: Record<LegendColor, string> = {
@@ -26,6 +27,7 @@ const DOT_COLORS: Record<LegendColor, string> = {
   purple: '#A855F7',
   red:    '#EF4444',
   indigo: '#6366F1',
+  black:  '#000000',
 }
 
 interface Props {
