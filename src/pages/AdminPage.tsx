@@ -40,6 +40,36 @@ const LEGEND_ICON_OPTIONS: { value: string; label: string }[] = [
   { value: '◎', label: '주목' },
 ]
 
+function LegendIconPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const triggerCls = 'border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] rounded-lg px-3 py-1.5 text-sm w-20 flex items-center justify-center select-none focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]'
+  return (
+    <div className="relative">
+      <button type="button" onClick={() => setOpen(o => !o)} className={triggerCls}>
+        {value || <span className="text-[11px] text-[var(--color-text-muted)]">없음</span>}
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute top-full left-0 mt-1 z-50 w-48 max-h-64 overflow-y-auto bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-xl shadow-lg p-1.5 grid grid-cols-5 gap-1">
+            {LEGEND_ICON_OPTIONS.map(opt => (
+              <button
+                key={opt.value}
+                type="button"
+                title={opt.label}
+                onClick={() => { onChange(opt.value); setOpen(false) }}
+                className={`h-8 rounded-lg flex items-center justify-center text-base select-none hover:bg-[var(--color-surface-hover)] ${value === opt.value ? 'bg-[color-mix(in_srgb,var(--color-brand-primary)_12%,transparent)] ring-1 ring-[var(--color-brand-primary)]' : ''}`}
+              >
+                {opt.value || <span className="text-[10px] text-[var(--color-text-muted)]">∅</span>}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 const FIELD_TYPE_DEFS: { value: CustomFieldType; label: string; badgeCls: string }[] = [
   { value: 'text',          label: '텍스트',   badgeCls: 'bg-slate-100 text-slate-600' },
   { value: 'number',        label: '숫자',     badgeCls: 'bg-blue-100 text-blue-700' },
@@ -1736,15 +1766,7 @@ export function AdminPage() {
                       <div key={item.id} className={`bg-[var(--color-surface)] border rounded-2xl shadow-sm hover:shadow-md transition-all ${s.border}`} style={{ padding: '13px' }}>
                         {isEditing ? (
                           <div className="flex gap-2 flex-wrap items-end">
-                            <select
-                              value={editLegendIcon}
-                              onChange={e => setEditLegendIcon(e.target.value)}
-                              className={inputCls + ' w-20 text-center [text-align-last:center]'}
-                            >
-                              {LEGEND_ICON_OPTIONS.map(opt => (
-                                <option key={opt.value} value={opt.value}>{opt.value || opt.label}</option>
-                              ))}
-                            </select>
+                            <LegendIconPicker value={editLegendIcon} onChange={setEditLegendIcon} />
                             <input
                               type="text"
                               value={editLegendLabel}
@@ -1828,15 +1850,9 @@ export function AdminPage() {
                   <div className="flex gap-2 flex-wrap items-end">
                     <div>
                       <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">아이콘</label>
-                      <select
-                        value={newLegendIcon}
-                        onChange={e => setNewLegendIcon(e.target.value)}
-                        className={inputCls + ' block mt-1 w-20 text-center [text-align-last:center]'}
-                      >
-                        {LEGEND_ICON_OPTIONS.map(opt => (
-                          <option key={opt.value} value={opt.value}>{opt.value || opt.label}</option>
-                        ))}
-                      </select>
+                      <div className="mt-1">
+                        <LegendIconPicker value={newLegendIcon} onChange={setNewLegendIcon} />
+                      </div>
                     </div>
                     <div className="flex-1 min-w-40">
                       <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">레이블</label>
