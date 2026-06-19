@@ -259,6 +259,7 @@ export function SchedulePage() {
     if (!copyBuf || !cellSel || !isPrivileged) return
     const daysInMonth = new Date(year, month, 0).getDate()
     const insertedIds: string[] = []
+    const roleMismatchNames = new Set<string>()
 
     // 한 칸(td, tsi, tci)에 cell의 배정들을 붙여넣는다. 이 칸 자신의 날짜/슬롯/열을 기준으로 time_slot/role_id 등을 정한다.
     async function pasteCellAt(cell: CopiedCell, td: number, tsi: number, tci: number) {
@@ -281,6 +282,12 @@ export function SchedulePage() {
       const cs = getCellState(td, ts, year, month, scheduleRules, slotSettings, dateOverrides, assignments)
       if (cs.isHoliday || cs.isBreaktime || cs.isClosed || cs.isLocked) return
       for (const a of cell.assignments) {
+        // 역할 분리 모드: 등록된 회원은 자신이 속한 역할의 셀에만 배정될 수 있다(일반 등록과 동일한 규칙).
+        // 복사한 배정의 원래 role_id와 붙여넣을 열의 role_id가 다르면 건너뛰고 알림으로 안내한다.
+        if (isSplitMode && a.role_id !== targetRoleId) {
+          roleMismatchNames.add(a.member_name)
+          continue
+        }
         const { error, id } = await addAssignmentWithId({
           tenant_id: tenant!.id, year, month, day: td, time_slot: ts,
           member_name: a.member_name, note: a.note ?? undefined,
@@ -320,6 +327,9 @@ export function SchedulePage() {
     }
 
     if (insertedIds.length) setPasteHistory(prev => [...prev, insertedIds])
+    if (roleMismatchNames.size) {
+      alert(`다른 역할의 칸에는 붙여넣을 수 없어 건너뛰었습니다: ${[...roleMismatchNames].join(', ')}`)
+    }
     // 모바일은 동일한 이유로 붙여넣기 후에도 선택을 비워 다음 탭이 새 붙여넣기 위치로 쓰이게 함. PC는 비우지 않음.
     if (isCoarsePointerDevice()) setCellSel(null)
   }
