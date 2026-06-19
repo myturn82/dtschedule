@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
+import { rangeFromCells, nextCellSelection, legacyCellSelection, colIdxForRole, colIdxForMemberType, type CellPos } from '../utils/excelSelection'
 import { DevFileLabel } from '../components/DevFileLabel'
 import { useAssignmentSnapshot, type SnapshotInfo, type SnapshotScope } from '../hooks/useAssignmentSnapshot'
 import { useSlotHighlights } from '../hooks/useSlotHighlights'
@@ -8,7 +9,7 @@ import { useSchedule } from '../hooks/useSchedule'
 import { useProfiles } from '../hooks/useProfiles'
 import { useTenantRoles } from '../hooks/useTenantRoles'
 import { getCellState } from '../utils/cellState'
-import { getTimeSubOptions } from '../utils/timeSlots'
+import { getTimeSubOptions, remapTimeSub } from '../utils/timeSlots'
 import { AppHeader } from '../components/AppHeader'
 import { ScheduleHeader } from '../components/schedule/ScheduleHeader'
 import { ScheduleGrid } from '../components/schedule/ScheduleGrid'
@@ -50,14 +51,17 @@ export function SchedulePage() {
 
   // ── 셀 선택 / 복사 붙여넣기 ─────────────────────────────────────────────────
   const isShiftRef = useRef(false)
-  type CellPos = { day: number; slotIdx: number }
   type CopiedCell = {
-    dayOffset: number; slotOffset: number
-    assignments: Array<{ member_name: string; note: string | null; member_type: string; role_id: string | null; user_id: string | null; time_sub: string | null; color: string | null }>
+    dayOffset: number; slotOffset: number; colOffset: number
+    sourceTimeSlot: string
+    assignments: Array<{ member_name: string; note: string | null; member_type: string; role_id: string | null; user_id: string | null; time_sub: string | null; color: string | null; customer_name: string | null; customer_phone: string | null; extra_data?: Record<string, string> }>
   }
   const [excelMode, setExcelMode] = useState(false)
   const [cellSel, setCellSel] = useState<{ anchor: CellPos; cursor: CellPos } | null>(null)
   const [copyBuf, setCopyBuf] = useState<{ origin: CellPos; cells: CopiedCell[] } | null>(null)
+  // 엑셀모드에 진입한 시점부터 누적되는 붙여넣기 되돌리기 스택. 각 원소는 한 번의 붙여넣기로 생성된 배정 id 묶음.
+  // 엑셀모드를 끄거나 다시 켜면 비워져서, "엑셀모드 진입 시점"이 되돌리기의 끝점이 된다.
+  const [pasteHistory, setPasteHistory] = useState<string[][]>([])
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [showNoClearTarget, setShowNoClearTarget] = useState(false)
   const [lockAction, setLockAction] = useState<'lock' | 'unlock' | null>(null)
@@ -112,23 +116,21 @@ export function SchedulePage() {
 
   const selRange = useMemo(() => {
     if (!cellSel) return null
-    return {
-      minDay: Math.min(cellSel.anchor.day, cellSel.cursor.day),
-      maxDay: Math.max(cellSel.anchor.day, cellSel.cursor.day),
-      minSlotIdx: Math.min(cellSel.anchor.slotIdx, cellSel.cursor.slotIdx),
-      maxSlotIdx: Math.max(cellSel.anchor.slotIdx, cellSel.cursor.slotIdx),
-    }
+    return rangeFromCells(cellSel.anchor, cellSel.cursor)
   }, [cellSel])
 
   const cpRange = useMemo(() => {
     if (!copyBuf || !copyBuf.cells.length) return null
     const maxDO = Math.max(...copyBuf.cells.map(c => c.dayOffset))
     const maxSO = Math.max(...copyBuf.cells.map(c => c.slotOffset))
+    const maxCO = Math.max(...copyBuf.cells.map(c => c.colOffset))
     return {
       minDay: copyBuf.origin.day,
       maxDay: copyBuf.origin.day + maxDO,
       minSlotIdx: copyBuf.origin.slotIdx,
       maxSlotIdx: copyBuf.origin.slotIdx + maxSO,
+      minColIdx: copyBuf.origin.colIdx,
+      maxColIdx: copyBuf.origin.colIdx + maxCO,
     }
   }, [copyBuf])
 
@@ -161,7 +163,7 @@ export function SchedulePage() {
   const adjMonth = _sundayDate.getMonth() + 1
   const needsAdj = viewType === 'week' && (adjYear !== year || adjMonth !== month)
 
-  const { assignments: primaryAssignments, slotSettings, scheduleRules, dateOverrides, loading, addAssignment, updateAssignment, deleteAssignment, clearAssignments, lockAssignments, updateSlotCapacity } = useSchedule(tenant?.id ?? '', year, month)
+  const { assignments: primaryAssignments, slotSettings, scheduleRules, dateOverrides, loading, addAssignment, addAssignmentWithId, updateAssignment, deleteAssignment, clearAssignments, lockAssignments, updateSlotCapacity } = useSchedule(tenant?.id ?? '', year, month)
   const { assignments: adjAssignments, dateOverrides: adjDateOverrides, clearAssignments: clearAdjAssignments, lockAssignments: lockAdjAssignments } = useSchedule(needsAdj ? (tenant?.id ?? '') : '', adjYear, adjMonth)
   const { saveSnapshot, restoreSnapshot } = useAssignmentSnapshot(tenant?.id ?? '')
   const assignments = needsAdj ? [...primaryAssignments, ...adjAssignments] : primaryAssignments
@@ -223,6 +225,115 @@ export function SchedulePage() {
     else setMonth(m => m + 1)
   }
 
+  // ── 복사/붙여넣기 실행 (키보드·버튼 공용) ──────────────────────────────────
+  function runCopy() {
+    if (!selRange) return
+    const cells: CopiedCell[] = []
+    for (let ci = selRange.minColIdx; ci <= selRange.maxColIdx; ci++) {
+      for (let si = selRange.minSlotIdx; si <= selRange.maxSlotIdx; si++) {
+        if (si < 0 || si >= timeSlots.length) continue
+        for (let d = selRange.minDay; d <= selRange.maxDay; d++) {
+          const cs = getCellState(d, timeSlots[si], year, month, scheduleRules, slotSettings, dateOverrides, assignments)
+          const colAssignments = cs.assignments.filter(a => {
+            if (a.member_type === 'admin_note') return false
+            if (isSplitMode) return a.role_id === (splitRoles[ci]?.id ?? null)
+            return colIdxForMemberType(a.member_type) === ci
+          })
+          cells.push({
+            dayOffset: d - selRange.minDay,
+            slotOffset: si - selRange.minSlotIdx,
+            colOffset: ci - selRange.minColIdx,
+            sourceTimeSlot: timeSlots[si],
+            assignments: colAssignments.map(a => ({ member_name: a.member_name, note: a.note, member_type: a.member_type, role_id: a.role_id, user_id: a.user_id, time_sub: a.time_sub, color: a.color, customer_name: a.customer_name, customer_phone: a.customer_phone, extra_data: a.extra_data })),
+          })
+        }
+      }
+    }
+    setCopyBuf({ origin: { day: selRange.minDay, slotIdx: selRange.minSlotIdx, colIdx: selRange.minColIdx }, cells })
+    // 모바일(두 번 탭 규칙)은 복사 후에도 단일 칸 상태가 남아있으면 다음 탭이 범위 확장으로 처리되므로 선택을 비운다.
+    // PC는 클릭이 항상 새 선택이라 이 문제가 없고, 오히려 비우면 'Ctrl+C 후 바로 Ctrl+V로 같은 자리에 붙여넣기'가 막히므로 비우지 않는다.
+    if (isCoarsePointerDevice()) setCellSel(null)
+  }
+
+  async function runPaste() {
+    if (!copyBuf || !cellSel || !isPrivileged) return
+    const daysInMonth = new Date(year, month, 0).getDate()
+    const insertedIds: string[] = []
+
+    // 한 칸(td, tsi, tci)에 cell의 배정들을 붙여넣는다. 이 칸 자신의 날짜/슬롯/열을 기준으로 time_slot/role_id 등을 정한다.
+    async function pasteCellAt(cell: CopiedCell, td: number, tsi: number, tci: number) {
+      if (td < 1 || td > daysInMonth || tsi < 0 || tsi >= timeSlots.length) return
+
+      let targetRoleId: string | null = null
+      let targetMemberType = 'member'
+      if (isSplitMode) {
+        const role = splitRoles[tci]
+        if (!role) return
+        targetRoleId = role.id
+      } else {
+        if (tci < 0 || tci > 1) return
+        const dow = new Date(year, month - 1, td).getDay()
+        if (tci === 1 && dow === 6) return // 토요일은 50+ 열이 없음 — 붙여넣으면 화면에 안 보이는 고아 데이터가 됨
+        targetMemberType = tci === 1 ? '50plus' : 'member'
+      }
+
+      const ts = timeSlots[tsi]
+      const cs = getCellState(td, ts, year, month, scheduleRules, slotSettings, dateOverrides, assignments)
+      if (cs.isHoliday || cs.isBreaktime || cs.isClosed || cs.isLocked) return
+      for (const a of cell.assignments) {
+        const { error, id } = await addAssignmentWithId({
+          tenant_id: tenant!.id, year, month, day: td, time_slot: ts,
+          member_name: a.member_name, note: a.note ?? undefined,
+          member_type: isSplitMode ? a.member_type : targetMemberType,
+          user_id: a.user_id,
+          role_id: isSplitMode ? targetRoleId : null,
+          time_sub: remapTimeSub(cell.sourceTimeSlot, a.time_sub, ts), color: a.color ?? undefined,
+          customer_name: a.customer_name, customer_phone: a.customer_phone,
+          extra_data: a.extra_data,
+        })
+        if (!error && id) insertedIds.push(id)
+      }
+    }
+
+    const destIsMultiCell = !!selRange && (
+      selRange.minDay !== selRange.maxDay || selRange.minSlotIdx !== selRange.maxSlotIdx || selRange.minColIdx !== selRange.maxColIdx
+    )
+
+    if (copyBuf.cells.length === 1 && destIsMultiCell && selRange) {
+      // 복사한 셀이 1개뿐인데 붙여넣을 대상으로 여러 칸을 선택한 경우 — 선택한 모든 칸에 각자의 날짜/슬롯/열로 동일하게 채워 넣는다.
+      const sourceCell = copyBuf.cells[0]
+      for (let tci = selRange.minColIdx; tci <= selRange.maxColIdx; tci++) {
+        for (let tsi = selRange.minSlotIdx; tsi <= selRange.maxSlotIdx; tsi++) {
+          for (let td = selRange.minDay; td <= selRange.maxDay; td++) {
+            await pasteCellAt(sourceCell, td, tsi, tci)
+          }
+        }
+      }
+    } else {
+      // 기존 동작: 복사한 모양을 붙여넣기 시작 칸(선택 영역의 최소 좌표)에 상대 오프셋 그대로 재현
+      const pasteDay = Math.min(cellSel.anchor.day, cellSel.cursor.day)
+      const pasteSlotIdx = Math.min(cellSel.anchor.slotIdx, cellSel.cursor.slotIdx)
+      const pasteColIdx = Math.min(cellSel.anchor.colIdx, cellSel.cursor.colIdx)
+      for (const cell of copyBuf.cells) {
+        await pasteCellAt(cell, pasteDay + cell.dayOffset, pasteSlotIdx + cell.slotOffset, pasteColIdx + cell.colOffset)
+      }
+    }
+
+    if (insertedIds.length) setPasteHistory(prev => [...prev, insertedIds])
+    // 모바일은 동일한 이유로 붙여넣기 후에도 선택을 비워 다음 탭이 새 붙여넣기 위치로 쓰이게 함. PC는 비우지 않음.
+    if (isCoarsePointerDevice()) setCellSel(null)
+  }
+
+  // 가장 마지막 붙여넣기 묶음을 하나씩 되돌린다. 반복 호출하면 엑셀모드 진입 시점까지 거슬러 되돌릴 수 있다 (redo 없음)
+  async function runUndo() {
+    if (!pasteHistory.length || !isPrivileged) return
+    const ids = pasteHistory[pasteHistory.length - 1]
+    setPasteHistory(prev => prev.slice(0, -1))
+    for (const id of ids) {
+      await deleteAssignment(id)
+    }
+  }
+
   // ── 키보드: Shift 추적 + Ctrl+C/V/Escape ──────────────────────────────────
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -232,50 +343,18 @@ export function SchedulePage() {
       if (!(e.ctrlKey || e.metaKey)) return
 
       if (e.key === 'c') {
-        if (!selRange) return
         e.preventDefault()
-        const cells: Array<{ dayOffset: number; slotOffset: number; assignments: Array<{ member_name: string; note: string | null; member_type: string; role_id: string | null; user_id: string | null; time_sub: string | null; color: string | null }> }> = []
-        for (let si = selRange.minSlotIdx; si <= selRange.maxSlotIdx; si++) {
-          if (si < 0 || si >= timeSlots.length) continue
-          for (let d = selRange.minDay; d <= selRange.maxDay; d++) {
-            const cs = getCellState(d, timeSlots[si], year, month, scheduleRules, slotSettings, dateOverrides, assignments)
-            cells.push({
-              dayOffset: d - selRange.minDay,
-              slotOffset: si - selRange.minSlotIdx,
-              assignments: cs.assignments
-                .filter(a => a.member_type !== 'admin_note')
-                .map(a => ({ member_name: a.member_name, note: a.note, member_type: a.member_type, role_id: a.role_id, user_id: a.user_id, time_sub: a.time_sub, color: a.color })),
-            })
-          }
-        }
-        setCopyBuf({ origin: { day: selRange.minDay, slotIdx: selRange.minSlotIdx }, cells })
+        runCopy()
       }
 
       if (e.key === 'v') {
-        if (!copyBuf || !cellSel || !isPrivileged) return
         e.preventDefault()
-        const pasteDay = Math.min(cellSel.anchor.day, cellSel.cursor.day)
-        const pasteSlotIdx = Math.min(cellSel.anchor.slotIdx, cellSel.cursor.slotIdx)
-        const daysInMonth = new Date(year, month, 0).getDate()
-        ;(async () => {
-          for (const cell of copyBuf.cells) {
-            const td = pasteDay + cell.dayOffset
-            const tsi = pasteSlotIdx + cell.slotOffset
-            if (td < 1 || td > daysInMonth || tsi < 0 || tsi >= timeSlots.length) continue
-            const ts = timeSlots[tsi]
-            const cs = getCellState(td, ts, year, month, scheduleRules, slotSettings, dateOverrides, assignments)
-            if (cs.isHoliday || cs.isBreaktime || cs.isClosed || cs.isLocked) continue
-            for (const a of cell.assignments) {
-              await addAssignment({
-                tenant_id: tenant!.id, year, month, day: td, time_slot: ts,
-                member_name: a.member_name, note: a.note ?? undefined,
-                member_type: a.member_type, user_id: a.user_id,
-                role_id: a.role_id, time_sub: a.time_sub ?? undefined, color: a.color ?? undefined,
-                customer_name: null, customer_phone: null,
-              })
-            }
-          }
-        })()
+        runPaste()
+      }
+
+      if (e.key === 'z') {
+        e.preventDefault()
+        runUndo()
       }
     }
     function onKeyUp(e: KeyboardEvent) { if (e.key === 'Shift') isShiftRef.current = false }
@@ -283,7 +362,7 @@ export function SchedulePage() {
     window.addEventListener('keyup', onKeyUp)
     return () => { window.removeEventListener('keydown', onKeyDown); window.removeEventListener('keyup', onKeyUp) }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [excelMode, cellSel, selRange, copyBuf, isPrivileged, timeSlots, year, month, scheduleRules, slotSettings, dateOverrides, assignments, addAssignment, tenant])
+  }, [excelMode, cellSel, selRange, copyBuf, pasteHistory, isPrivileged, isSplitMode, splitRoles, timeSlots, year, month, scheduleRules, slotSettings, dateOverrides, assignments, addAssignmentWithId, deleteAssignment, tenant])
 
   const swipeTouchStartX = useRef<number | null>(null)
   const swipeTouchStartY = useRef<number | null>(null)
@@ -438,19 +517,26 @@ export function SchedulePage() {
     setLockAction(locked ? 'lock' : 'unlock')
   }
 
+  function colIdxOf(target: ModalTarget): number {
+    if (isSplitMode) return colIdxForRole(splitRoles.map(r => r.id), target.roleId)
+    return colIdxForMemberType(target.memberType)
+  }
+
+  // 터치 기기(모바일/태블릿)는 Shift 키가 없으므로 두 번 탭 방식, PC는 기존 클릭=새선택/Shift+클릭=확장 방식을 그대로 사용
+  function isCoarsePointerDevice(): boolean {
+    return typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches === true
+  }
+
   async function handleCellClick(target: ModalTarget) {
     const slotIdx = timeSlots.indexOf(target.timeSlot)
 
     // 엑셀 모드: 선택만 하고 팝업 열지 않음
     if (excelMode) {
-      if (isShiftRef.current) {
-        setCellSel(prev => ({
-          anchor: prev?.anchor ?? { day: target.day, slotIdx },
-          cursor: { day: target.day, slotIdx },
-        }))
-      } else {
-        setCellSel({ anchor: { day: target.day, slotIdx }, cursor: { day: target.day, slotIdx } })
-      }
+      const pos: CellPos = { day: target.day, slotIdx, colIdx: colIdxOf(target) }
+      const isTouch = isCoarsePointerDevice()
+      setCellSel(prev => isTouch
+        ? nextCellSelection(prev, pos, isShiftRef.current)
+        : legacyCellSelection(prev, pos, isShiftRef.current))
       return
     }
 
@@ -533,7 +619,7 @@ export function SchedulePage() {
               <>
                 <button
                   onClick={() => {
-                    setExcelMode(v => { if (v) { setCellSel(null); setCopyBuf(null) } return !v })
+                    setExcelMode(v => { setCellSel(null); setCopyBuf(null); setPasteHistory([]); return !v })
                     close()
                   }}
                   className={`${menuItemCls} ${excelMode ? 'bg-[color-mix(in_srgb,var(--color-brand-primary)_12%,transparent)] text-[var(--color-brand-primary)]' : ''}`}
@@ -662,7 +748,7 @@ export function SchedulePage() {
               <span className="flex-1 font-semibold text-xs">엑셀 모드 — 클릭으로 셀 선택, Shift+클릭으로 범위, Ctrl+C/V 복사·붙여넣기</span>
               {copyBuf && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[var(--color-brand-primary)] text-white">복사됨</span>}
               <button
-                onClick={() => { setExcelMode(false); setCellSel(null); setCopyBuf(null) }}
+                onClick={() => { setExcelMode(false); setCellSel(null); setCopyBuf(null); setPasteHistory([]) }}
                 className="ml-1 opacity-60 hover:opacity-100 transition-opacity text-xs leading-none"
               >✕</button>
             </div>
@@ -1086,6 +1172,41 @@ export function SchedulePage() {
       {directRegMsg && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl bg-[var(--color-brand-primary)] text-white text-sm font-medium shadow-lg animate-fade-up pointer-events-none">
           {directRegMsg}
+        </div>
+      )}
+      {excelMode && (cellSel || copyBuf || pasteHistory.length > 0) && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-3 py-2 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border-strong)] shadow-[var(--shadow-lg)]">
+          <button
+            type="button"
+            onClick={runCopy}
+            disabled={!selRange}
+            className="select-none px-3 py-1.5 rounded-xl text-sm font-semibold bg-[var(--color-brand-primary)] text-white hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+          >
+            📋 복사
+          </button>
+          <button
+            type="button"
+            onClick={runPaste}
+            disabled={!copyBuf || !isPrivileged}
+            className="select-none px-3 py-1.5 rounded-xl text-sm font-semibold bg-[var(--color-brand-primary)] text-white hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+          >
+            📥 붙여넣기
+          </button>
+          <button
+            type="button"
+            onClick={runUndo}
+            disabled={!pasteHistory.length || !isPrivileged}
+            className="select-none px-3 py-1.5 rounded-xl text-sm font-semibold border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            ↩️ 되돌리기
+          </button>
+          <button
+            type="button"
+            onClick={() => { setCellSel(null); setCopyBuf(null) }}
+            className="select-none px-3 py-1.5 rounded-xl text-sm font-semibold border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
+          >
+            ✕ 선택해제
+          </button>
         </div>
       )}
       <DevFileLabel file="SchedulePage.tsx" />

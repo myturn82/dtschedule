@@ -9,6 +9,7 @@ interface ScheduleData {
   dateOverrides: DateOverride[]
   loading: boolean
   addAssignment: (params: AddParams) => Promise<string | null>
+  addAssignmentWithId: (params: AddParams) => Promise<{ error: string | null; id: string | null }>
   updateAssignment: (id: string, params: UpdateParams) => Promise<string | null>
   deleteAssignment: (id: string) => Promise<string | null>
   clearAssignments: (days?: number[]) => Promise<string | null>
@@ -137,21 +138,26 @@ export function useSchedule(tenantId: string, year: number, month: number): Sche
     return () => { supabase.removeChannel(channel) }
   }, [tenantId, year, month])
 
-  const addAssignment = useCallback(async (params: AddParams): Promise<string | null> => {
+  const addAssignmentWithId = useCallback(async (params: AddParams): Promise<{ error: string | null; id: string | null }> => {
     if (params.member_type !== 'admin_note') {
       const isDuplicate = assignments.some(
         a => a.year === params.year && a.month === params.month &&
              a.day === params.day && a.time_slot === params.time_slot &&
              a.member_name === params.member_name
       )
-      if (isDuplicate) return '이미 같은 회원이 배정되어 있습니다'
+      if (isDuplicate) return { error: '이미 같은 회원이 배정되어 있습니다', id: null }
     }
     const { data, error } = await supabase.from('assignments').insert(params).select().single()
     if (!error && data) setAssignments(prev =>
       prev.some(a => a.id === (data as Assignment).id) ? prev : [...prev, data as Assignment]
     )
-    return error?.message ?? null
+    return { error: error?.message ?? null, id: (data as Assignment | null)?.id ?? null }
   }, [assignments])
+
+  const addAssignment = useCallback(async (params: AddParams): Promise<string | null> => {
+    const { error } = await addAssignmentWithId(params)
+    return error
+  }, [addAssignmentWithId])
 
   const updateAssignment = useCallback(async (id: string, params: UpdateParams): Promise<string | null> => {
     const { error } = await supabase.from('assignments').update(params).eq('id', id)
@@ -249,5 +255,5 @@ export function useSchedule(tenantId: string, year: number, month: number): Sche
     return null
   }, [tenantId])
 
-  return { assignments, slotSettings, scheduleRules, dateOverrides, loading, addAssignment, updateAssignment, deleteAssignment, clearAssignments, lockAssignments, updateSlotCapacity }
+  return { assignments, slotSettings, scheduleRules, dateOverrides, loading, addAssignment, addAssignmentWithId, updateAssignment, deleteAssignment, clearAssignments, lockAssignments, updateSlotCapacity }
 }

@@ -92,3 +92,18 @@ export function getTimeSubOptions(slot: string): { value: string; label: string 
     { value: `${start}~${start + 1}`, label: `${start}~${end}시` },
   ]
 }
+
+// 복사한 배정의 time_sub(2시간 슬롯 내 전반/후반/전체 구분, 절대 시각 기준)를
+// 붙여넣는 슬롯의 절대 시각으로 다시 계산한다.
+// - 대상 슬롯이 2시간 슬롯이 아니면 부분 시각 구분 자체가 없으므로 undefined.
+// - 원본에 time_sub이 없었다면(1시간 슬롯 등 부분 시각 구분이 없던 슬롯) 대상 슬롯 "전체 담당"으로 간주한다.
+export function remapTimeSub(sourceSlot: string, sourceTimeSub: string | null | undefined, destSlot: string): string | undefined {
+  const destOptions = getTimeSubOptions(destSlot)
+  if (!destOptions) return undefined
+  if (!sourceTimeSub) return destOptions[2].value
+  const [srcStart] = sourceSlot.split('-').map(Number)
+  if (sourceTimeSub === `${srcStart}`) return destOptions[0].value
+  if (sourceTimeSub === `${srcStart + 1}`) return destOptions[1].value
+  if (sourceTimeSub === `${srcStart}~${srcStart + 1}`) return destOptions[2].value
+  return destOptions[2].value
+}
