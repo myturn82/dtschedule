@@ -27,8 +27,8 @@ interface Props {
   displayAssignmentFilter?: (a: Assignment) => boolean
   withdrawnUserIds?: Set<string>
   highlightedSlots?: Set<string>
-  selectionRange?: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number } | null
-  copyRange?: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number } | null
+  selectionRange?: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number; minColIdx: number; maxColIdx: number } | null
+  copyRange?: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number; minColIdx: number; maxColIdx: number } | null
   canAdd?: boolean
 }
 
@@ -177,8 +177,8 @@ export function ScheduleGrid({
   const pad2 = (n: number) => String(n).padStart(2, '0')
   const isAdmin = profile?.is_super_admin || tenantRole === 'admin'
 
-  function inRange(day: number, si: number, r: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number }) {
-    return day >= r.minDay && day <= r.maxDay && si >= r.minSlotIdx && si <= r.maxSlotIdx
+  function inRange(day: number, si: number, ci: number, r: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number; minColIdx: number; maxColIdx: number }) {
+    return day >= r.minDay && day <= r.maxDay && si >= r.minSlotIdx && si <= r.maxSlotIdx && ci >= r.minColIdx && ci <= r.maxColIdx
   }
   const isIndicatorBarMember = !isAdmin && indicatorBarRoles.some(r => r.id === memberRoleId)
   const weeks = getCalendarWeeks(year, month)
@@ -412,10 +412,10 @@ export function ScheduleGrid({
                                 className="border border-[var(--color-border-table)] p-0 relative"
                                 style={{ height: '1px' }}
                               >
-                                {selectionRange && day && inRange(day, slotIdx, selectionRange) && (
+                                {selectionRange && day && inRange(day, slotIdx, roleIdx, selectionRange) && (
                                   <div className="absolute inset-0 bg-blue-400/20 pointer-events-none z-10" />
                                 )}
-                                {copyRange && day && inRange(day, slotIdx, copyRange) && (
+                                {copyRange && day && inRange(day, slotIdx, roleIdx, copyRange) && (
                                   <div className="absolute inset-0 border-2 border-dashed border-blue-500 pointer-events-none z-10" />
                                 )}
                                 <TimeSlotCell
@@ -470,10 +470,10 @@ export function ScheduleGrid({
                               className="border border-[var(--color-border-table)] p-0 relative"
                               style={{ height: '1px' }}
                             >
-                              {selectionRange && inRange(day, slotIdx, selectionRange) && (
+                              {selectionRange && inRange(day, slotIdx, 0, selectionRange) && (
                                 <div className="absolute inset-0 bg-blue-400/20 pointer-events-none z-10" />
                               )}
-                              {copyRange && inRange(day, slotIdx, copyRange) && (
+                              {copyRange && inRange(day, slotIdx, 0, copyRange) && (
                                 <div className="absolute inset-0 border-2 border-dashed border-blue-500 pointer-events-none z-10" />
                               )}
                               <TimeSlotCell
@@ -496,10 +496,10 @@ export function ScheduleGrid({
                               className="border border-[var(--color-border-table)] p-0 relative"
                               style={{ height: '1px' }}
                             >
-                              {selectionRange && inRange(day, slotIdx, selectionRange) && (
+                              {selectionRange && inRange(day, slotIdx, 1, selectionRange) && (
                                 <div className="absolute inset-0 bg-blue-400/20 pointer-events-none z-10" />
                               )}
-                              {copyRange && inRange(day, slotIdx, copyRange) && (
+                              {copyRange && inRange(day, slotIdx, 1, copyRange) && (
                                 <div className="absolute inset-0 border-2 border-dashed border-blue-500 pointer-events-none z-10" />
                               )}
                               <TimeSlotCell
