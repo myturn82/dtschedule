@@ -32,6 +32,8 @@ interface Props {
   onCellClick: (target: ModalTarget) => void
   displayAssignmentFilter?: (a: Assignment) => boolean
   withdrawnUserIds?: Set<string>
+  selectionRange?: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number; minColIdx: number; maxColIdx: number } | null
+  copyRange?: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number; minColIdx: number; maxColIdx: number } | null
 }
 
 function PersonChip({ a, withdrawnUserIds, onClick }: { a: Assignment; withdrawnUserIds?: Set<string>; onClick?: () => void }) {
@@ -87,7 +89,12 @@ export function DayView({
   year, month, day, timeSlots, assignments, slotSettings, scheduleRules, dateOverrides,
   profile: _profile, splitRoles = [], isSplitMode = false, slotLabels = {},
   canAdd = true, onCellClick, displayAssignmentFilter, withdrawnUserIds,
+  selectionRange, copyRange,
 }: Props) {
+  function inRange(d: number, si: number, ci: number, r: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number; minColIdx: number; maxColIdx: number }) {
+    return d >= r.minDay && d <= r.maxDay && si >= r.minSlotIdx && si <= r.maxSlotIdx && ci >= r.minColIdx && ci <= r.maxColIdx
+  }
+
   const dow = new Date(year, month - 1, day).getDay()
 
   let totalAssigned = 0
@@ -125,7 +132,7 @@ export function DayView({
       )}
 
       <div className="flex flex-col gap-3">
-        {timeSlots.map(slot => {
+        {timeSlots.map((slot, slotIdx) => {
           const cs = getCellState(day, slot, year, month, scheduleRules, slotSettings, dateOverrides, assignments)
           const displayCs = displayAssignmentFilter
             ? { ...cs, assignments: cs.assignments.filter(displayAssignmentFilter) }
@@ -203,10 +210,16 @@ export function DayView({
                     background: 'var(--color-border)',
                   }}
                 >
-                  {splitRoles.map(role => {
+                  {splitRoles.map((role, roleIdx) => {
                     const roleAssigns = visible.filter(a => a.role_id === role.id)
                     return (
-                      <div key={role.id} className="p-4 flex flex-col gap-2 min-w-0 bg-[var(--color-surface)]">
+                      <div key={role.id} className="relative p-4 flex flex-col gap-2 min-w-0 bg-[var(--color-surface)]">
+                        {selectionRange && inRange(day, slotIdx, roleIdx, selectionRange) && (
+                          <div className="absolute inset-0 bg-blue-400/20 pointer-events-none z-10" />
+                        )}
+                        {copyRange && inRange(day, slotIdx, roleIdx, copyRange) && (
+                          <div className="absolute inset-0 border-2 border-dashed border-blue-500 pointer-events-none z-10" />
+                        )}
                         <span className="block text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-muted)] truncate" title={role.name}>
                           {role.name}
                         </span>
@@ -219,7 +232,13 @@ export function DayView({
                   })}
                 </div>
               ) : (
-                <div className="border-t border-[var(--color-border)] p-4 flex flex-col gap-2">
+                <div className="relative border-t border-[var(--color-border)] p-4 flex flex-col gap-2">
+                  {selectionRange && inRange(day, slotIdx, 0, selectionRange) && (
+                    <div className="absolute inset-0 bg-blue-400/20 pointer-events-none z-10" />
+                  )}
+                  {copyRange && inRange(day, slotIdx, 0, copyRange) && (
+                    <div className="absolute inset-0 border-2 border-dashed border-blue-500 pointer-events-none z-10" />
+                  )}
                   {visible.map(a => (
                     <PersonChip key={a.id} a={a} withdrawnUserIds={withdrawnUserIds} onClick={() => onCellClick({ year, month, day, timeSlot: slot, memberType: 'member' })} />
                   ))}

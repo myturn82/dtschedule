@@ -827,6 +827,8 @@ export function SchedulePage() {
                 displayAssignmentFilter={displayAssignmentFilter}
                 withdrawnUserIds={withdrawnUserIds}
                 highlightedSlots={highlightedSlots}
+                selectionRange={selRange}
+                copyRange={cpRange}
               />
             ) : (
               <DayView
@@ -842,6 +844,8 @@ export function SchedulePage() {
                 onCellClick={handleCellClick}
                 displayAssignmentFilter={displayAssignmentFilter}
                 withdrawnUserIds={withdrawnUserIds}
+                selectionRange={selRange}
+                copyRange={cpRange}
               />
             )}
             </div>

@@ -49,6 +49,8 @@ interface Props {
   withdrawnUserIds?: Set<string>
   highlightedSlots?: Set<string>
   canAdd?: boolean
+  selectionRange?: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number; minColIdx: number; maxColIdx: number } | null
+  copyRange?: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number; minColIdx: number; maxColIdx: number } | null
 }
 
 export function WeekGrid({
@@ -56,7 +58,12 @@ export function WeekGrid({
   highlightName, splitRoles = [], indicatorBarRoles = [], isSplitMode = false, slotLabels = {},
   selectedDay, onDateHeaderClick, onCellClick,
   memberRoleId, teamLeaderUserIds, isPrivileged = false, displayAssignmentFilter, withdrawnUserIds, highlightedSlots, canAdd = true,
+  selectionRange, copyRange,
 }: Props) {
+  function inRange(d: number, si: number, ci: number, r: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number; minColIdx: number; maxColIdx: number }) {
+    return d >= r.minDay && d <= r.maxDay && si >= r.minSlotIdx && si <= r.maxSlotIdx && ci >= r.minColIdx && ci <= r.maxColIdx
+  }
+
   const pad2 = (n: number) => String(n).padStart(2, '0')
   const today = new Date()
   const activeRoles = isSplitMode && splitRoles.length > 0 ? splitRoles : []
@@ -136,7 +143,7 @@ export function WeekGrid({
         </div>
 
         {/* ── Time slot rows ── */}
-        {timeSlots.map(slot => {
+        {timeSlots.map((slot, slotIdx) => {
           const [slotStartNum] = slot.split('-').map(Number)
           const isMoon = slotStartNum >= 20
           const isRowClosed = weekDays.every(d => {
@@ -225,11 +232,17 @@ export function WeekGrid({
                               if (!canClick) return
                               onCellClick({ year: y, month: m, day, timeSlot: slot, memberType: 'member', roleId: role.id })
                             }}
-                            className={`flex flex-col items-center justify-center gap-0.5 p-0.5 sm:p-1 transition-colors ${
+                            className={`relative flex flex-col items-center justify-center gap-0.5 p-0.5 sm:p-1 transition-colors ${
                               ri > 0 ? 'border-l border-dashed border-[var(--color-border-strong)]' : ''
                             } ${canClick ? (roleAssigns.length > 0 ? 'group hover:brightness-95' : 'group hover:bg-[var(--color-surface-hover)]') : 'cursor-default'}`}
                             style={{ background: roleAssigns.length > 0 ? tint.bg : undefined }}
                           >
+                            {selectionRange && day && inRange(day, slotIdx, ri, selectionRange) && (
+                              <div className="absolute inset-0 bg-blue-400/20 pointer-events-none z-10" />
+                            )}
+                            {copyRange && day && inRange(day, slotIdx, ri, copyRange) && (
+                              <div className="absolute inset-0 border-2 border-dashed border-blue-500 pointer-events-none z-10" />
+                            )}
                             {roleAssigns.length > 0 ? (
                               roleAssigns.map(a => {
                                 const _hq = highlightName?.toLowerCase() ?? ''
@@ -300,6 +313,12 @@ export function WeekGrid({
                     )}
                     {hasBar && (
                       <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: INDICATOR_BAR_COLOR }} />
+                    )}
+                    {selectionRange && day && inRange(day, slotIdx, 0, selectionRange) && (
+                      <div className="absolute inset-0 bg-blue-400/20 pointer-events-none z-10" />
+                    )}
+                    {copyRange && day && inRange(day, slotIdx, 0, copyRange) && (
+                      <div className="absolute inset-0 border-2 border-dashed border-blue-500 pointer-events-none z-10" />
                     )}
                     {visibleAssigns.length > 0 ? (
                       visibleAssigns.map(a => {
