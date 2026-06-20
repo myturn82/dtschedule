@@ -1,4 +1,4 @@
-import { Fragment } from 'react'
+import { Fragment, useState } from 'react'
 import { getCellState } from '../../utils/cellState'
 import { rangeSlotLabel, slotStartLabel } from '../../utils/timeSlots'
 import { getKoreanHolidayName } from '../../utils/koreanHolidays'
@@ -182,7 +182,11 @@ export function ScheduleGrid({
   }
   const isIndicatorBarMember = !isAdmin && indicatorBarRoles.some(r => r.id === memberRoleId)
   const weeks = getCalendarWeeks(year, month)
-  const splitCount = splitRoles.length
+  const [hiddenRoleIds, setHiddenRoleIds] = useState<Set<string>>(new Set())
+  const visibleSplitRoles = isSplitMode
+    ? (() => { const v = splitRoles.filter(r => !hiddenRoleIds.has(r.id)); return v.length > 0 ? v : splitRoles })()
+    : splitRoles
+  const splitCount = visibleSplitRoles.length
   // vol+plus 2-column split: only when indicator_bar roles exist (team leader bar shown in vol column)
   const showVolPlusSplit = indicatorBarRoles.length > 0
 
@@ -195,8 +199,43 @@ export function ScheduleGrid({
     return dow === 6 ? 1 : 2
   }
 
+  function toggleRole(id: string) {
+    setHiddenRoleIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) { next.delete(id) } else if (visibleSplitRoles.length > 1) { next.add(id) }
+      return next
+    })
+  }
+
   return (
-    <div className="sm:overflow-x-auto">
+    <div>
+      {isSplitMode && splitRoles.length > 1 && (
+        <div className="flex flex-wrap items-center gap-1.5 mb-2 px-1">
+          <span className="text-[11px] text-[var(--color-text-muted)] shrink-0">역할 표시:</span>
+          {splitRoles.map(role => (
+            <button
+              key={role.id}
+              onClick={() => toggleRole(role.id)}
+              className={`px-2.5 py-0.5 text-xs rounded-full border transition-colors select-none ${
+                !hiddenRoleIds.has(role.id)
+                  ? 'bg-[var(--color-brand-primary)] text-white border-[var(--color-brand-primary)]'
+                  : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]'
+              }`}
+            >
+              {role.name}
+            </button>
+          ))}
+          {hiddenRoleIds.size > 0 && (
+            <button
+              onClick={() => setHiddenRoleIds(new Set())}
+              className="px-2.5 py-0.5 text-xs rounded-full border border-dashed border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)] transition-colors"
+            >
+              전체
+            </button>
+          )}
+        </div>
+      )}
+      <div className="sm:overflow-x-auto">
       <table className="border-collapse text-sm w-full table-fixed">
         <thead>
           <tr>
@@ -268,7 +307,7 @@ export function ScheduleGrid({
                   <tr>
                     <td className="border border-[var(--color-border-table)] bg-[var(--color-surface-secondary)] sticky left-0 z-10" />
                     {week.map((day, dowIdx) =>
-                      splitRoles.map(role => (
+                      visibleSplitRoles.map(role => (
                         <td
                           key={`${dowIdx}-${role.id}`}
                           className="border border-[var(--color-border-table)] text-center text-[7px] sm:text-[9px] font-semibold bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] px-0.5 py-0.5 overflow-hidden"
@@ -300,7 +339,7 @@ export function ScheduleGrid({
                         if (isSplitMode) {
                           return (
                             <Fragment key={dowIdx}>
-                              {splitRoles.map(role => (
+                              {visibleSplitRoles.map(role => (
                                 <td key={role.id} className="border border-[var(--color-border-table)] bg-[var(--color-surface-secondary)]" />
                               ))}
                             </Fragment>
@@ -405,7 +444,9 @@ export function ScheduleGrid({
 
                         return (
                           <Fragment key={dowIdx}>
-                            {splitRoles.map((role, roleIdx) => (
+                            {visibleSplitRoles.map((role) => {
+                              const roleIdx = splitRoles.findIndex(r => r.id === role.id)
+                              return (
                               <td
                                 key={role.id}
                                 rowSpan={merge.rowspan > 1 ? merge.rowspan : undefined}
@@ -435,7 +476,8 @@ export function ScheduleGrid({
                                   highlighted={highlightedSlots?.has(`${year}-${pad2(month)}-${pad2(day)}|${slot}`) ?? false}
                                 />
                               </td>
-                            ))}
+                              )
+                            })}
                           </Fragment>
                         )
                       }
@@ -524,6 +566,7 @@ export function ScheduleGrid({
           })}
         </tbody>
       </table>
+      </div>
     </div>
   )
 }

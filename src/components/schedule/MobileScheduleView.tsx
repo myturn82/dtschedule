@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { getCellState } from '../../utils/cellState'
 import { slotStartLabel } from '../../utils/timeSlots'
 import { TimeSlotCell } from './TimeSlotCell'
-import type { Assignment, SlotSetting, ScheduleRule, DateOverride, TimeSlot, ModalTarget } from '../../types'
+import type { Assignment, SlotSetting, ScheduleRule, DateOverride, TimeSlot, ModalTarget, TenantRole } from '../../types'
 
 interface Props {
   year: number
@@ -14,12 +14,14 @@ interface Props {
   scheduleRules: ScheduleRule[]
   dateOverrides: DateOverride[]
   highlightName: string | null
+  splitRoles?: TenantRole[]
+  isSplitMode?: boolean
   onCellClick: (target: ModalTarget) => void
 }
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
 
-export function MobileScheduleView({ year, month, timeSlots, slotLabels = {}, assignments, slotSettings, scheduleRules, dateOverrides, highlightName, onCellClick }: Props) {
+export function MobileScheduleView({ year, month, timeSlots, slotLabels = {}, assignments, slotSettings, scheduleRules, dateOverrides, highlightName, splitRoles = [], isSplitMode = false, onCellClick }: Props) {
   const daysCount = new Date(year, month, 0).getDate()
   const days = Array.from({ length: daysCount }, (_, i) => i + 1)
   const [selectedDay, setSelectedDay] = useState(1)
@@ -64,26 +66,43 @@ export function MobileScheduleView({ year, month, timeSlots, slotLabels = {}, as
           return (
             <div key={slot} className="flex items-stretch gap-2">
               <div className="w-16 text-xs font-medium text-gray-600 dark:text-gray-300 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded px-1 truncate">{slotLabels[slot] ?? slotStartLabel(slot)}</div>
-              <div className="flex-1 flex">
-                <div className="flex-1">
-                  <TimeSlotCell
-                    cellState={cellState}
-                    timeSlot={slot}
-                    colType="vol"
-                    highlightName={highlightName}
-                    onClick={() => onCellClick({ year, month, day: selectedDay, timeSlot: slot, memberType: 'member' })}
-                  />
-                </div>
-                {!isSat && (
-                  <div className="w-[40%]">
-                    <TimeSlotCell
-                      cellState={cellState}
-                      timeSlot={slot}
-                      colType="plus"
-                      highlightName={highlightName}
-                      onClick={() => onCellClick({ year, month, day: selectedDay, timeSlot: slot, memberType: '50plus' })}
-                    />
-                  </div>
+              <div className="flex-1 flex gap-1">
+                {isSplitMode && splitRoles.length > 0 ? (
+                  splitRoles.map(role => (
+                    <div key={role.id} className="flex-1 min-w-0">
+                      <TimeSlotCell
+                        cellState={cellState}
+                        timeSlot={slot}
+                        colType="role"
+                        roleId={role.id}
+                        highlightName={highlightName}
+                        onClick={() => onCellClick({ year, month, day: selectedDay, timeSlot: slot, memberType: 'member', roleId: role.id })}
+                      />
+                    </div>
+                  ))
+                ) : (
+                  <>
+                    <div className="flex-1">
+                      <TimeSlotCell
+                        cellState={cellState}
+                        timeSlot={slot}
+                        colType="vol"
+                        highlightName={highlightName}
+                        onClick={() => onCellClick({ year, month, day: selectedDay, timeSlot: slot, memberType: 'member' })}
+                      />
+                    </div>
+                    {!isSat && (
+                      <div className="w-[40%]">
+                        <TimeSlotCell
+                          cellState={cellState}
+                          timeSlot={slot}
+                          colType="plus"
+                          highlightName={highlightName}
+                          onClick={() => onCellClick({ year, month, day: selectedDay, timeSlot: slot, memberType: '50plus' })}
+                        />
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>

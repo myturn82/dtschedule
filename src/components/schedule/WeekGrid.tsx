@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { Assignment, SlotSetting, ScheduleRule, DateOverride, ModalTarget, Profile, TenantRole, TimeSlot, TenantAccessRole } from '../../types'
 import { getCellState } from '../../utils/cellState'
 import { shortSlotLabel, slotStartLabel, formatTimeSub } from '../../utils/timeSlots'
@@ -67,6 +68,10 @@ export function WeekGrid({
   const pad2 = (n: number) => String(n).padStart(2, '0')
   const today = new Date()
   const activeRoles = isSplitMode && splitRoles.length > 0 ? splitRoles : []
+  const [hiddenRoleIds, setHiddenRoleIds] = useState<Set<string>>(new Set())
+  const visibleActiveRoles = activeRoles.length > 0
+    ? (() => { const v = activeRoles.filter(r => !hiddenRoleIds.has(r.id)); return v.length > 0 ? v : activeRoles })()
+    : activeRoles
   const isAdmin = isPrivileged
   const indicatorBarRoleIds = new Set(indicatorBarRoles.map(r => r.id))
 
@@ -77,11 +82,46 @@ export function WeekGrid({
   }
 
   const timeColW = 72
-  const dayColMinW = activeRoles.length > 1 ? activeRoles.length * 52 : 64
+  const dayColMinW = visibleActiveRoles.length > 1 ? visibleActiveRoles.length * 52 : 64
   const minTotalW = timeColW + 7 * dayColMinW
 
+  function toggleRole(id: string) {
+    setHiddenRoleIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) { next.delete(id) } else if (visibleActiveRoles.length > 1) { next.add(id) }
+      return next
+    })
+  }
+
   return (
-    <div className="overflow-x-auto -mx-1 framed:mx-0 rounded-xl border border-[var(--color-border)]">
+    <div>
+      {isSplitMode && activeRoles.length > 1 && (
+        <div className="flex flex-wrap items-center gap-1.5 mb-2 px-1">
+          <span className="text-[11px] text-[var(--color-text-muted)] shrink-0">역할 표시:</span>
+          {activeRoles.map(role => (
+            <button
+              key={role.id}
+              onClick={() => toggleRole(role.id)}
+              className={`px-2.5 py-0.5 text-xs rounded-full border transition-colors select-none ${
+                !hiddenRoleIds.has(role.id)
+                  ? 'bg-[var(--color-brand-primary)] text-white border-[var(--color-brand-primary)]'
+                  : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]'
+              }`}
+            >
+              {role.name}
+            </button>
+          ))}
+          {hiddenRoleIds.size > 0 && (
+            <button
+              onClick={() => setHiddenRoleIds(new Set())}
+              className="px-2.5 py-0.5 text-xs rounded-full border border-dashed border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)] transition-colors"
+            >
+              전체
+            </button>
+          )}
+        </div>
+      )}
+      <div className="overflow-x-auto -mx-1 framed:mx-0 rounded-xl border border-[var(--color-border)]">
       <div style={{ minWidth: minTotalW }}>
 
         {/* ── Day header row ── */}
@@ -122,9 +162,9 @@ export function WeekGrid({
                 </div>
 
                 {/* Role sub-headers */}
-                {activeRoles.length > 0 && (
-                  <div className="mt-1.5 grid overflow-hidden" style={{ gridTemplateColumns: `repeat(${activeRoles.length}, 1fr)` }}>
-                    {activeRoles.map((role, ri) => (
+                {visibleActiveRoles.length > 0 && (
+                  <div className="mt-1.5 grid overflow-hidden" style={{ gridTemplateColumns: `repeat(${visibleActiveRoles.length}, 1fr)` }}>
+                    {visibleActiveRoles.map((role, ri) => (
                       <div
                         key={role.id}
                         className={`text-[8px] font-medium text-[var(--color-text-muted)] truncate py-0.5 min-w-0 ${
@@ -207,7 +247,7 @@ export function WeekGrid({
                     <div
                       key={di}
                       className="relative border-l border-[var(--color-border)] grid"
-                      style={{ gridTemplateColumns: `repeat(${activeRoles.length}, 1fr)` }}
+                      style={{ gridTemplateColumns: `repeat(${visibleActiveRoles.length}, 1fr)` }}
                     >
                       {isSlotHighlighted && (
                         <span className="absolute inset-[2px] rounded pointer-events-none z-20" style={{ border: '1px dashed oklch(0.72 0.16 80)' }} />
@@ -215,7 +255,8 @@ export function WeekGrid({
                       {hasBar && (
                         <span className="absolute left-0 top-0 bottom-0 w-[3px] z-10 pointer-events-none" style={{ background: INDICATOR_BAR_COLOR }} />
                       )}
-                      {activeRoles.map((role, ri) => {
+                      {visibleActiveRoles.map((role) => {
+                        const ri = activeRoles.findIndex(r => r.id === role.id)
                         const roleAssigns = displayCs.assignments.filter(
                           a => a.role_id === role.id && !(a.user_id && teamLeaderUserIds?.has(a.user_id))
                         )
@@ -361,6 +402,7 @@ export function WeekGrid({
             </div>
           )
         })}
+      </div>
       </div>
     </div>
   )
