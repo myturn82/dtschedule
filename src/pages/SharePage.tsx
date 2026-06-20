@@ -13,7 +13,7 @@ import type { TimeSlot } from '../utils/timeSlots'
 import type { LegendItem } from '../types'
 
 export function SharePage() {
-  const [params] = useSearchParams()
+  const [params, setParams] = useSearchParams()
   const year = parseInt(params.get('year') ?? String(new Date().getFullYear()))
   const month = parseInt(params.get('month') ?? String(new Date().getMonth() + 1))
   const tidFromUrl = params.get('tid') ?? ''
@@ -69,7 +69,17 @@ export function SharePage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 max-w-full">
         <div className="mb-2 text-xs text-gray-400 dark:text-gray-500 text-right">읽기 전용 공유 뷰</div>
-        <ScheduleHeader year={year} month={month} onPrev={() => {}} onNext={() => {}} />
+        <ScheduleHeader
+          year={year} month={month}
+          onPrev={() => {
+            const [py, pm] = month === 1 ? [year - 1, 12] : [year, month - 1]
+            setParams({ tid: tidFromUrl, year: String(py), month: String(pm) })
+          }}
+          onNext={() => {
+            const [ny, nm] = month === 12 ? [year + 1, 1] : [year, month + 1]
+            setParams({ tid: tidFromUrl, year: String(ny), month: String(nm) })
+          }}
+        />
         <Legend legendItems={legendItems} />
         {loading ? (
           <div className="flex items-center justify-center h-64 text-gray-400 dark:text-gray-500">로딩 중...</div>
@@ -80,6 +90,7 @@ export function SharePage() {
             assignments={assignments} slotSettings={slotSettings}
             scheduleRules={scheduleRules} dateOverrides={dateOverrides}
             highlightName={null}
+            canAdd={false}
             onCellClick={() => {}}
           />
         )}
