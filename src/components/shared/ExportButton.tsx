@@ -1,11 +1,16 @@
+import { useTenant } from '../../contexts/TenantContext'
+
 interface Props {
   year: number
   month: number
 }
 
 export function ExportButton({ year, month }: Props) {
+  const { tenant } = useTenant()
+
   function handleShareUrl() {
-    const url = `${window.location.origin}/share?year=${year}&month=${month}`
+    const tid = tenant?.id ?? ''
+    const url = `${window.location.origin}/share?tid=${tid}&year=${year}&month=${month}`
     navigator.clipboard.writeText(url).then(() => alert('공유 URL이 클립보드에 복사되었습니다.\n' + url))
   }
 
