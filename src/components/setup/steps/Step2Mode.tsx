@@ -2,11 +2,8 @@ import type { TenantMode } from '../../../types'
 
 interface Props {
   mode: TenantMode
-  saving: boolean
   error: string
   onChange: (mode: TenantMode) => void
-  onNext: () => void
-  onBack: () => void
 }
 
 const MODE_CARDS: {
@@ -61,14 +58,17 @@ function MiniDiagram({ mode }: { mode: TenantMode }) {
   )
 }
 
-export function Step2Mode({ mode, saving, error, onChange, onNext, onBack }: Props) {
+export function Step2Mode({ mode, error, onChange }: Props) {
   return (
-    <div className="space-y-5">
-      <div>
-        <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-1">운영 방식을 선택하세요</h2>
-        <p className="text-sm text-[var(--color-text-muted)]">나중에 관리자 설정에서 변경할 수 있습니다.</p>
+    <div className="space-y-6">
+      {/* Icon + header */}
+      <div className="text-center space-y-2 pt-2">
+        <div className="text-4xl select-none">⚙️</div>
+        <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">어떻게 운영할 예정인가요?</h2>
+        <p className="text-[var(--color-text-muted)] text-sm leading-relaxed max-w-sm mx-auto">아래 방식 중 내 서비스에 맞는 것을 선택해주세요. 나중에 변경할 수 있습니다.</p>
       </div>
 
+      {/* Mode cards */}
       <div className="space-y-3">
         {MODE_CARDS.map(card => (
           <button
@@ -105,16 +105,8 @@ export function Step2Mode({ mode, saving, error, onChange, onNext, onBack }: Pro
         ))}
       </div>
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
-
-      <div className="flex gap-2">
-        <button onClick={onBack} className="flex-1 py-3 rounded-xl text-sm font-medium border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors">
-          ← 이전
-        </button>
-        <button onClick={onNext} disabled={saving} className="flex-[2] py-3 rounded-xl font-semibold text-sm bg-[var(--color-brand-primary)] text-white disabled:opacity-40 hover:brightness-95 transition-all">
-          {saving ? '저장 중...' : '다음 →'}
-        </button>
-      </div>
+      {/* Error */}
+      {error && <p className="text-sm text-red-500 text-center">{error}</p>}
     </div>
   )
 }

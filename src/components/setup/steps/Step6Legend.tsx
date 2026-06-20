@@ -3,12 +3,8 @@ import type { LegendItem, LegendColor } from '../../../types'
 
 interface Props {
   legendItems: LegendItem[]
-  saving: boolean
   error: string
   onChange: (items: LegendItem[]) => void
-  onNext: () => void
-  onBack: () => void
-  onSkip: () => void
 }
 
 const COLORS: LegendColor[] = ['amber', 'blue', 'green', 'red', 'purple', 'pink', 'indigo', 'slate', 'yellow', 'black']
@@ -27,7 +23,7 @@ const SUGGESTED: Omit<LegendItem, 'id'>[] = [
   { icon: '✓', label: '완료',     color: 'green' },
 ]
 
-export function Step6Legend({ legendItems, saving, error, onChange, onNext, onBack, onSkip }: Props) {
+export function Step6Legend({ legendItems, error, onChange }: Props) {
   const [label, setLabel] = useState('')
   const [icon, setIcon] = useState('★')
   const [color, setColor] = useState<LegendColor>('amber')
@@ -44,13 +40,18 @@ export function Step6Legend({ legendItems, saving, error, onChange, onNext, onBa
   }
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-1">
-          범례를 설정하세요
-          <span className="ml-2 text-sm font-normal text-[var(--color-text-muted)]">(선택)</span>
-        </h2>
-        <p className="text-sm text-[var(--color-text-muted)]">달력 하단에 표시될 색상 범례입니다.</p>
+    <div className="space-y-6">
+      {/* Icon + header */}
+      <div className="text-center space-y-2 pt-2">
+        <div className="text-4xl select-none">🎨</div>
+        <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">색상 범례를 추가할까요?</h2>
+        <p className="text-[var(--color-text-muted)] text-sm leading-relaxed max-w-sm mx-auto">특별한 날이나 상태를 색상으로 구분할 수 있어요. 건너뛰어도 됩니다.</p>
+      </div>
+
+      {/* Example callout */}
+      <div className="rounded-2xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)] px-4 py-3">
+        <p className="text-xs font-semibold text-[var(--color-text-muted)] mb-1">💡 예시</p>
+        <p className="text-sm text-[var(--color-text-secondary)]">★ 특별 근무일 → 주황, ✓ 완료 → 초록, ⚠ 주의 필요 → 빨강</p>
       </div>
 
       {/* Suggestions */}
@@ -102,16 +103,8 @@ export function Step6Legend({ legendItems, saving, error, onChange, onNext, onBa
         </button>
       </div>
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
-
-      <div className="flex gap-2">
-        <button onClick={onBack} className="flex-1 py-3 rounded-xl text-sm font-medium border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors">← 이전</button>
-        <button onClick={onSkip} className="flex-1 py-3 rounded-xl text-sm font-medium border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)] transition-colors">건너뛰기</button>
-        <button onClick={onNext} disabled={saving}
-          className="flex-[2] py-3 rounded-xl font-semibold text-sm bg-[var(--color-brand-primary)] text-white disabled:opacity-40 hover:brightness-95 transition-all">
-          {saving ? '저장 중...' : '다음 →'}
-        </button>
-      </div>
+      {/* Error */}
+      {error && <p className="text-sm text-red-500 text-center">{error}</p>}
     </div>
   )
 }

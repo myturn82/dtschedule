@@ -1,20 +1,27 @@
 interface Props {
   name: string
   title: string
-  saving: boolean
   error: string
   onChange: (name: string, title: string) => void
-  onNext: () => void
 }
 
-export function Step1OrgName({ name, title, saving, error, onChange, onNext }: Props) {
+export function Step1OrgName({ name, title, error, onChange }: Props) {
   return (
-    <div className="space-y-5">
-      <div>
-        <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-1">조직 이름을 알려주세요</h2>
-        <p className="text-sm text-[var(--color-text-muted)]">달력 상단과 공유 링크에 표시됩니다.</p>
+    <div className="space-y-6">
+      {/* Icon + header */}
+      <div className="text-center space-y-2 pt-2">
+        <div className="text-4xl select-none">🏢</div>
+        <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">조직 이름을 알려주세요</h2>
+        <p className="text-[var(--color-text-muted)] text-sm leading-relaxed max-w-sm mx-auto">달력 화면 상단과 공유 링크에 표시됩니다.</p>
       </div>
 
+      {/* Example callout */}
+      <div className="rounded-2xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)] px-4 py-3">
+        <p className="text-xs font-semibold text-[var(--color-text-muted)] mb-1">💡 예시</p>
+        <p className="text-sm text-[var(--color-text-secondary)]">행복 자원봉사센터, ABC 헬스장, 홍길동 학원</p>
+      </div>
+
+      {/* Form */}
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">
@@ -46,15 +53,8 @@ export function Step1OrgName({ name, title, saving, error, onChange, onNext }: P
         </div>
       </div>
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
-
-      <button
-        onClick={onNext}
-        disabled={!name.trim() || saving}
-        className="w-full py-3 rounded-xl font-semibold text-sm bg-[var(--color-brand-primary)] text-white disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-95 transition-all"
-      >
-        {saving ? '저장 중...' : '다음 →'}
-      </button>
+      {/* Error */}
+      {error && <p className="text-sm text-red-500 text-center">{error}</p>}
     </div>
   )
 }

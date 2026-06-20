@@ -4,12 +4,9 @@ import type { TenantRole } from '../../../types'
 
 interface Props {
   roles: TenantRole[]
-  saving: boolean
   error: string
   onAdd: (name: string, splitCell: boolean, requiresCustomerInfo: boolean, indicatorBar: boolean) => Promise<string | null>
   onDelete: (id: string) => Promise<string | null>
-  onNext: () => void
-  onBack: () => void
 }
 
 type DisplayMode = 'none' | 'split' | 'bar'
@@ -20,7 +17,7 @@ const DISPLAY_OPTIONS: { value: DisplayMode; label: string; desc: string }[] = [
   { value: 'bar',   label: '바 표시',   desc: '셀 좌측에 색상 바가 나타납니다' },
 ]
 
-export function Step4Roles({ roles, saving, error, onAdd, onDelete, onNext, onBack }: Props) {
+export function Step4Roles({ roles, error, onAdd, onDelete }: Props) {
   const [name, setName] = useState('')
   const [displayMode, setDisplayMode] = useState<DisplayMode>('none')
   const [requiresCustomerInfo, setRequiresCustomerInfo] = useState(false)
@@ -38,10 +35,12 @@ export function Step4Roles({ roles, saving, error, onAdd, onDelete, onNext, onBa
   }
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-1">역할을 설정하세요</h2>
-        <p className="text-sm text-[var(--color-text-muted)]">역할을 추가하면 스케줄 표에서 역할별로 구역이 나뉩니다.</p>
+    <div className="space-y-6">
+      {/* Icon + header */}
+      <div className="text-center space-y-2 pt-2">
+        <div className="text-4xl select-none">👥</div>
+        <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">역할이 필요한가요?</h2>
+        <p className="text-[var(--color-text-muted)] text-sm leading-relaxed max-w-sm mx-auto">'팀장·봉사자', '강사·보조' 처럼 역할을 구분하면 달력에서 역할별로 칸이 나뉩니다.</p>
       </div>
 
       {/* Live preview */}
@@ -112,22 +111,13 @@ export function Step4Roles({ roles, saving, error, onAdd, onDelete, onNext, onBa
         </button>
       </div>
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {/* Note */}
+      <p className="text-sm text-center text-[var(--color-text-muted)]">
+        💡 역할이 없어도 괜찮아요 — 시간대별 배정만 필요하다면 바로 다음으로 넘어가세요.
+      </p>
 
-      <div className="flex gap-2">
-        <button onClick={onBack} className="flex-1 py-3 rounded-xl text-sm font-medium border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors">
-          ← 이전
-        </button>
-        <div className="flex flex-col gap-1 flex-[2]">
-          <button onClick={onNext} disabled={saving}
-            className="w-full py-3 rounded-xl font-semibold text-sm bg-[var(--color-brand-primary)] text-white disabled:opacity-40 hover:brightness-95 transition-all">
-            {saving ? '저장 중...' : (roles.length > 0 ? `역할 ${roles.length}개로 다음 →` : '역할 없이 다음 →')}
-          </button>
-          {roles.length === 0 && (
-            <p className="text-[10px] text-center text-[var(--color-text-muted)]">역할 없이도 스케줄 운영이 가능합니다</p>
-          )}
-        </div>
-      </div>
+      {/* Error */}
+      {error && <p className="text-sm text-red-500 text-center">{error}</p>}
     </div>
   )
 }
