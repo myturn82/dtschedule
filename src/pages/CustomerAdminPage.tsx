@@ -220,7 +220,7 @@ export function CustomerAdminPage() {
       setShowCreate(false)
       setForm(EMPTY_FORM)
       setCreateSlots(['09-12', '13-14', '14-16', '16-18', '20-22'])
-      setMessage('조직이 생성됐습니다.')
+      navigate('/setup?org=' + data.id)
     }
     setSaving(false)
   }, [form, createSlots, myCustomer, tenants.length, profile, refreshCustomer, reloadMemberships, planLimits])

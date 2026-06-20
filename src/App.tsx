@@ -17,6 +17,7 @@ import { LandingPage }  from './pages/LandingPage'
 import { ConsentPage }  from './pages/ConsentPage'
 import { AuthPage }     from './pages/AuthPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
+import { SetupWizardPage } from './pages/SetupWizardPage'
 import { useDarkMode } from './hooks/useDarkMode'
 import { InstallBanner } from './components/InstallBanner'
 import { DevFileLabelDisplay } from './components/DevFileLabel'
@@ -100,6 +101,7 @@ function AppRoutes() {
     return (
       <Routes>
         <Route path="/share" element={<SharePage />} />
+        <Route path="/setup" element={<SetupWizardPage />} />
         <Route path="/customer-admin" element={<CustomerAdminPage />} />
         <Route path="*" element={<CustomerAdminPage />} />
       </Routes>
@@ -120,6 +122,7 @@ function AppRoutes() {
       } />
       <Route path="/share" element={<SharePage />} />
       <Route path="/admin" element={<AdminPage />} />
+      <Route path="/setup" element={<SetupWizardPage />} />
       <Route path="/select-org" element={<TenantSelectPage />} />
       <Route path="/pending" element={<PendingPage />} />
       <Route path="/superadmin" element={
