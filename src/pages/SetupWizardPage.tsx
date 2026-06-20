@@ -17,14 +17,14 @@ import { Step7CustomFields } from '../components/setup/steps/Step7CustomFields'
 import { StepDone } from '../components/setup/steps/StepDone'
 import type { Tenant, TenantMode, LegendItem, CustomFieldDef } from '../types'
 
-const STEP_DEFS: { label: string; required: true | false | 'conditional' }[] = [
-  { label: '조직명', required: true },
-  { label: '모드',   required: true },
-  { label: '슬롯',   required: true },
-  { label: '역할',   required: true },
-  { label: '규칙',   required: true },
-  { label: '범례',   required: false },
-  { label: '필드',   required: 'conditional' },
+const STEP_DEFS: { label: string }[] = [
+  { label: '조직명' },
+  { label: '모드' },
+  { label: '슬롯' },
+  { label: '역할' },
+  { label: '규칙' },
+  { label: '범례' },
+  { label: '필드' },
 ]
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
@@ -87,6 +87,9 @@ export function SetupWizardPage() {
   }, [tenant])
 
   const isFreeform = mode === '비회원'
+
+  // Steps 6 and 7 (non-freeform) can be skipped
+  const isSkippable = (s: number) => s === 6 || (s === 7 && !isFreeform)
 
   // ── Persist helpers ────────────────────────────────────────────────────────
 
@@ -164,6 +167,16 @@ export function SetupWizardPage() {
     if (ok) setStep(stepNum + 1)
   }
 
+  function goBack() {
+    setError('')
+    setStep(s => s - 1)
+  }
+
+  function skip() {
+    setError('')
+    setStep(s => s + 1)
+  }
+
   // ── Summary data for done screen ─────────────────────────────────────────
 
   const openDaysSummary = useMemo(() => {
@@ -176,6 +189,14 @@ export function SetupWizardPage() {
   }, [scheduleRules])
 
   const shareUrl = `${window.location.origin}/share?tid=${orgId}&year=${new Date().getFullYear()}&month=${new Date().getMonth() + 1}`
+
+  // ── Footer button disabled logic ─────────────────────────────────────────
+
+  const nextDisabled =
+    saving ||
+    (step === 1 && !name.trim()) ||
+    (step === 3 && slots.length === 0) ||
+    (step === 7 && isFreeform && customFields.length === 0)
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -212,83 +233,101 @@ export function SetupWizardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)] p-4 sm:py-8">
-      <div className="w-full max-w-md mx-auto">
-        {/* Header */}
-        <div className="text-center mb-4">
-          <p className="text-xs text-[var(--color-text-muted)] font-medium uppercase tracking-wide mb-0.5">간편 설정 마법사</p>
-          <h1 className="text-base font-bold text-[var(--color-text-primary)]">{name || '조직 설정'}</h1>
+    <div className="min-h-screen flex flex-col bg-[var(--color-bg)]">
+      {/* Sticky top bar */}
+      <div className="sticky top-0 z-20 bg-[var(--color-bg)]/95 backdrop-blur-sm border-b border-[var(--color-border)]">
+        <div className="flex items-center gap-3 px-4 py-3 max-w-lg mx-auto w-full">
+          {step > 1 ? (
+            <button
+              onClick={goBack}
+              className="flex items-center gap-1 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+            >
+              <span>←</span> <span>이전</span>
+            </button>
+          ) : (
+            <div className="w-16" />
+          )}
+          <div className="flex-1 text-center">
+            <span className="text-sm font-semibold text-[var(--color-text-primary)]">{step}</span>
+            <span className="text-sm text-[var(--color-text-muted)]">/{STEP_DEFS.length}단계</span>
+            <span className="ml-2 text-xs text-[var(--color-text-muted)]">— {STEP_DEFS[step - 1].label}</span>
+          </div>
+          {isSkippable(step) ? (
+            <button
+              onClick={skip}
+              className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors w-16 text-right"
+            >
+              건너뛰기
+            </button>
+          ) : (
+            <div className="w-16" />
+          )}
         </div>
+        <WizardProgress step={step} total={STEP_DEFS.length} />
+      </div>
 
-        <WizardProgress step={step} steps={STEP_DEFS} isFreeform={isFreeform} />
-
-        <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow-sm p-5 sm:p-6">
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-lg mx-auto px-4 py-8 pb-4">
           {step === 1 && (
             <Step1OrgName
-              name={name} title={title} saving={saving} error={error}
+              name={name} title={title} error={error}
               onChange={(n, t) => { setName(n); setTitle(t) }}
-              onNext={() => goNext(1)}
             />
           )}
           {step === 2 && (
             <Step2Mode
-              mode={mode} saving={saving} error={error}
+              mode={mode} error={error}
               onChange={setMode}
-              onNext={() => goNext(2)} onBack={() => { setError(''); setStep(1) }}
             />
           )}
           {step === 3 && (
             <Step3Slots
-              slots={slots} saving={saving} error={error}
+              slots={slots} error={error}
               onChange={setSlots}
-              onNext={() => goNext(3)} onBack={() => { setError(''); setStep(2) }}
             />
           )}
           {step === 4 && (
             <Step4Roles
-              roles={roles} saving={saving} error={error}
+              roles={roles} error={error}
               onAdd={addRole} onDelete={deleteRole}
-              onNext={() => { setError(''); setStep(5) }}
-              onBack={() => { setError(''); setStep(3) }}
             />
           )}
           {step === 5 && (
             <Step5Rules
-              rules={scheduleRules} timeSlots={slots} saving={saving} error={error}
+              rules={scheduleRules} timeSlots={slots} error={error}
               onToggleRule={toggleScheduleRule}
               onApplyTemplate={applyRuleTemplate}
-              onNext={() => { setError(''); setStep(6) }}
-              onBack={() => { setError(''); setStep(4) }}
             />
           )}
           {step === 6 && (
             <Step6Legend
-              legendItems={legendItems} saving={saving} error={error}
+              legendItems={legendItems} error={error}
               onChange={setLegendItems}
-              onNext={() => goNext(6)}
-              onBack={() => { setError(''); setStep(5) }}
-              onSkip={() => { setError(''); setStep(7) }}
             />
           )}
           {step === 7 && (
             <Step7CustomFields
-              fields={customFields} isFreeform={isFreeform} saving={saving} error={error}
+              fields={customFields} isFreeform={isFreeform} error={error}
               onChange={setCustomFields}
-              onNext={() => goNext(7)}
-              onBack={() => { setError(''); setStep(6) }}
-              onSkip={() => { setError(''); setStep(8) }}
             />
           )}
         </div>
-
-        <p className="text-center text-xs text-[var(--color-text-muted)] mt-4">
-          각 단계는 자동 저장됩니다 ·{' '}
-          <button onClick={() => navigate(`/admin?org=${orgId}`)} className="underline hover:text-[var(--color-text-secondary)]">
-            관리자 페이지
-          </button>
-          에서 수정 가능
-        </p>
       </div>
+
+      {/* Sticky footer */}
+      <div className="sticky bottom-0 bg-[var(--color-bg)]/95 backdrop-blur-sm border-t border-[var(--color-border)] p-4">
+        <div className="max-w-lg mx-auto">
+          <button
+            onClick={() => goNext(step)}
+            disabled={nextDisabled}
+            className="w-full py-3.5 rounded-2xl font-bold text-sm bg-[var(--color-brand-primary)] text-white disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-95 active:scale-[0.99] transition-all"
+          >
+            {saving ? '저장 중...' : (step === 7 ? '설정 완료' : '다음 단계 →')}
+          </button>
+        </div>
+      </div>
+
       <DevFileLabel file="SetupWizardPage.tsx" />
     </div>
   )

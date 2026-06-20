@@ -4,12 +4,8 @@ import type { CustomFieldDef, CustomFieldType } from '../../../types'
 interface Props {
   fields: CustomFieldDef[]
   isFreeform: boolean
-  saving: boolean
   error: string
   onChange: (fields: CustomFieldDef[]) => void
-  onNext: () => void
-  onBack: () => void
-  onSkip: () => void
 }
 
 const FIELD_TYPES: { value: CustomFieldType; label: string }[] = [
@@ -20,7 +16,7 @@ const FIELD_TYPES: { value: CustomFieldType; label: string }[] = [
   { value: 'checkbox', label: '체크박스' },
 ]
 
-export function Step7CustomFields({ fields, isFreeform, saving, error, onChange, onNext, onBack, onSkip }: Props) {
+export function Step7CustomFields({ fields, isFreeform, error, onChange }: Props) {
   const [label, setLabel] = useState('')
   const [type, setType] = useState<CustomFieldType>('text')
   const [required, setRequired] = useState(false)
@@ -39,21 +35,27 @@ export function Step7CustomFields({ fields, isFreeform, saving, error, onChange,
   }
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-1">
-          커스텀 필드 설정
-          {isFreeform
-            ? <span className="ml-2 text-sm font-normal text-orange-500">필수</span>
-            : <span className="ml-2 text-sm font-normal text-[var(--color-text-muted)]">(선택)</span>
-          }
+    <div className="space-y-6">
+      {/* Icon + header */}
+      <div className="text-center space-y-2 pt-2">
+        <div className="text-4xl select-none">📝</div>
+        <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
+          {isFreeform ? '방문자 정보를 설정해주세요' : '추가 정보를 수집할까요?'}
         </h2>
-        <p className="text-sm text-[var(--color-text-muted)]">
+        <p className="text-[var(--color-text-muted)] text-sm leading-relaxed max-w-sm mx-auto">
           {isFreeform
-            ? '비회원 모드: 첫 번째 필드가 이름 필드로 사용됩니다.'
-            : '배정 등록 시 추가로 입력받을 정보를 정의합니다.'}
+            ? '첫 번째 필드가 이름으로 사용됩니다. 연락처도 추가해두면 편리합니다.'
+            : '배정 등록 시 이름·연락처 외에 더 받을 정보를 설정합니다. 건너뛰어도 됩니다.'}
         </p>
       </div>
+
+      {/* Example callout (non-freeform only) */}
+      {!isFreeform && (
+        <div className="rounded-2xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)] px-4 py-3">
+          <p className="text-xs font-semibold text-[var(--color-text-muted)] mb-1">💡 예시</p>
+          <p className="text-sm text-[var(--color-text-secondary)]">부서명, 신청 확인번호, 메모</p>
+        </div>
+      )}
 
       {/* Quick-add suggestions */}
       {fields.length < 3 && (
@@ -116,18 +118,8 @@ export function Step7CustomFields({ fields, isFreeform, saving, error, onChange,
         </button>
       </div>
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
-
-      <div className="flex gap-2">
-        <button onClick={onBack} className="flex-1 py-3 rounded-xl text-sm font-medium border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors">← 이전</button>
-        {!isFreeform && (
-          <button onClick={onSkip} className="flex-1 py-3 rounded-xl text-sm font-medium border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)] transition-colors">건너뛰기</button>
-        )}
-        <button onClick={onNext} disabled={(isFreeform && fields.length === 0) || saving}
-          className="flex-[2] py-3 rounded-xl font-semibold text-sm bg-[var(--color-brand-primary)] text-white disabled:opacity-40 hover:brightness-95 transition-all">
-          {saving ? '저장 중...' : '완료 →'}
-        </button>
-      </div>
+      {/* Error */}
+      {error && <p className="text-sm text-red-500 text-center">{error}</p>}
     </div>
   )
 }

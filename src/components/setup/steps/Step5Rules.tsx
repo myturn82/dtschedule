@@ -5,12 +5,9 @@ import type { ScheduleRule } from '../../../types'
 interface Props {
   rules: ScheduleRule[]
   timeSlots: string[]
-  saving: boolean
   error: string
   onToggleRule: (ruleId: string, currentIsOpen: boolean) => Promise<string | null>
   onApplyTemplate: (openDays: number[]) => Promise<void>
-  onNext: () => void
-  onBack: () => void
 }
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
@@ -22,7 +19,7 @@ function slotLabel(slot: string) {
   return `${h}:${m}`
 }
 
-export function Step5Rules({ rules, timeSlots, saving, error, onToggleRule, onApplyTemplate, onNext, onBack }: Props) {
+export function Step5Rules({ rules, timeSlots, error, onToggleRule, onApplyTemplate }: Props) {
   const [showMatrix, setShowMatrix] = useState(false)
   const [applyingTemplate, setApplyingTemplate] = useState<number | null>(null)
 
@@ -40,10 +37,12 @@ export function Step5Rules({ rules, timeSlots, saving, error, onToggleRule, onAp
   }
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-1">운영 요일을 설정하세요</h2>
-        <p className="text-sm text-[var(--color-text-muted)]">어떤 요일에 스케줄을 운영할지 선택합니다.</p>
+    <div className="space-y-6">
+      {/* Icon + header */}
+      <div className="text-center space-y-2 pt-2">
+        <div className="text-4xl select-none">📅</div>
+        <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">언제 운영하나요?</h2>
+        <p className="text-[var(--color-text-muted)] text-sm leading-relaxed max-w-sm mx-auto">운영하는 요일을 선택해주세요. 나중에 날짜별로 개별 설정도 가능합니다.</p>
       </div>
 
       {/* Templates */}
@@ -128,17 +127,8 @@ export function Step5Rules({ rules, timeSlots, saving, error, onToggleRule, onAp
         </div>
       )}
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
-
-      <div className="flex gap-2">
-        <button onClick={onBack} className="flex-1 py-3 rounded-xl text-sm font-medium border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors">
-          ← 이전
-        </button>
-        <button onClick={onNext} disabled={saving}
-          className="flex-[2] py-3 rounded-xl font-semibold text-sm bg-[var(--color-brand-primary)] text-white disabled:opacity-40 hover:brightness-95 transition-all">
-          {saving ? '저장 중...' : '다음 →'}
-        </button>
-      </div>
+      {/* Error */}
+      {error && <p className="text-sm text-red-500 text-center">{error}</p>}
     </div>
   )
 }
