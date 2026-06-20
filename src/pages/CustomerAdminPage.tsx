@@ -31,6 +31,17 @@ interface CreateForm {
 const EMPTY_FORM: CreateForm = { slug: '', name: '', title: '', business_type: '', theme_color: '', tenant_mode: '회원공유' }
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 
+function nameToSlug(name: string): string {
+  const base = name
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  const prefix = base || 'org'
+  return `${prefix}-${Math.random().toString(36).slice(2, 7)}`
+}
+
 export function CustomerAdminPage() {
   const { profile, myCustomer, loading: authLoading, signOut, refreshCustomer } = useAuth()
   const { setTenant, reloadMemberships } = useTenant()
@@ -195,7 +206,22 @@ export function CustomerAdminPage() {
       .single()
     if (error) {
       if (error.code === '23505' && error.message.includes('slug')) {
-        setMessage('오류: 이미 사용 중인 Slug입니다. 다른 Slug를 입력해 주세요.')
+        // slug 충돌 시 새 slug로 자동 재시도
+        const retrySlug = nameToSlug(form.name.trim())
+        const { data: retryData, error: retryError } = await supabase
+          .from('tenants')
+          .insert({ ...{ slug: retrySlug, name: form.name.trim(), business_type: form.business_type.trim() || null, customer_id: (await refreshCustomer())?.id ?? myCustomer!.id, settings: { title: form.title.trim() || form.name.trim(), theme_color: form.theme_color.trim() || undefined, time_slots: createSlots, open_from: '09:00', open_to: '22:00', slot_interval_minutes: createSlots.some(s => s.includes('.')) ? 30 : 60, timezone: 'Asia/Seoul', locale: 'ko-KR', tenant_mode: form.tenant_mode } } })
+          .select().single()
+        if (!retryError && retryData) {
+          const ruleRows = [0,1,2,3,4,5,6].flatMap(day => createSlots.map(slot => ({ tenant_id: retryData.id, day_of_week: day, time_slot: slot, is_open: true })))
+          await supabase.from('schedule_rules').insert(ruleRows)
+          if (profile?.id) await supabase.from('tenant_members').insert({ tenant_id: retryData.id, user_id: profile.id, role: 'admin', is_approved: true })
+          setTenants(prev => [...prev, retryData])
+          await reloadMemberships()
+          setShowCreate(false); setForm(EMPTY_FORM); setCreateSlots(['09-12','13-14','14-16','16-18','20-22'])
+          setSaving(false); navigate('/setup?org=' + retryData.id); return
+        }
+        setMessage('오류: 조직 생성에 실패했습니다. 다시 시도해 주세요.')
       } else if (error.code === '23503' && error.message.includes('customer_id')) {
         setMessage('오류: 서비스 계정 정보가 올바르지 않습니다. 페이지를 새로고침 후 다시 시도해 주세요.')
       } else {
@@ -403,9 +429,8 @@ export function CustomerAdminPage() {
                 <h3 className="font-semibold text-[var(--color-text-primary)]">새 조직 만들기</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {([
-                    { key: 'slug',        label: 'Slug (소문자+하이픈)', placeholder: 'my-org',    required: true  },
-                    { key: 'name',        label: '조직명',               placeholder: '홍길동 미용실', required: true  },
-                    { key: 'title',       label: '페이지 타이틀 (선택)',  placeholder: '스케줄'                    },
+                    { key: 'name',  label: '조직명',              placeholder: '홍길동 미용실', required: true },
+                    { key: 'title', label: '페이지 타이틀 (선택)', placeholder: '스케줄' },
                   ] as { key: keyof CreateForm; label: string; placeholder: string; required?: boolean }[]).map(f => (
                     <div key={f.key}>
                       <label className="block text-xs text-[var(--color-text-secondary)] mb-1">{f.label}</label>
@@ -414,7 +439,14 @@ export function CustomerAdminPage() {
                         placeholder={f.placeholder}
                         required={f.required}
                         value={form[f.key]}
-                        onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                        onChange={e => {
+                          const val = e.target.value
+                          setForm(prev => ({
+                            ...prev,
+                            [f.key]: val,
+                            ...(f.key === 'name' ? { slug: nameToSlug(val) } : {}),
+                          }))
+                        }}
                         className={inputCls}
                       />
                     </div>
@@ -503,7 +535,7 @@ export function CustomerAdminPage() {
                 <SlotEditor slots={createSlots} onChange={setCreateSlots} />
 
                 <div className="flex gap-2 pt-1">
-                  <button type="submit" disabled={saving || !form.slug || !form.name}
+                  <button type="submit" disabled={saving || !form.name}
                     className="px-4 py-2 rounded-xl bg-[var(--color-brand-primary)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-40">
                     {saving ? '저장 중...' : '생성'}
                   </button>
