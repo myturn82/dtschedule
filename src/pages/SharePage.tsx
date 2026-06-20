@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { DevFileLabel } from '../components/DevFileLabel'
 import { useSchedule } from '../hooks/useSchedule'
@@ -6,6 +7,9 @@ import { useAuth } from '../hooks/useAuth'
 import { ScheduleHeader } from '../components/schedule/ScheduleHeader'
 import { ScheduleGrid } from '../components/schedule/ScheduleGrid'
 import { Legend } from '../components/schedule/Legend'
+import { supabase } from '../lib/supabase'
+import { generateTimeSlots } from '../utils/timeSlots'
+import type { TimeSlot } from '../utils/timeSlots'
 
 export function SharePage() {
   const [params] = useSearchParams()
@@ -14,9 +18,29 @@ export function SharePage() {
   const tidFromUrl = params.get('tid') ?? ''
 
   const { profile } = useAuth()
-  const { tenant, timeSlots } = useTenant()
-  // URL의 tid 파라미터를 우선 사용, 없으면 현재 컨텍스트의 tenant
+  const { tenant, timeSlots: contextTimeSlots } = useTenant()
   const tenantId = tidFromUrl || tenant?.id || ''
+
+  // tid가 컨텍스트 테넌트와 다를 때(슈퍼관리자 등) 직접 테넌트 설정을 가져와 timeSlots 계산
+  const [fetchedTimeSlots, setFetchedTimeSlots] = useState<TimeSlot[] | null>(null)
+  useEffect(() => {
+    if (!tidFromUrl || tidFromUrl === tenant?.id) { setFetchedTimeSlots(null); return }
+    supabase.from('tenants').select('settings').eq('id', tidFromUrl).single()
+      .then(({ data }) => {
+        if (!data?.settings) return
+        const s = data.settings as Record<string, unknown>
+        const slots = Array.isArray(s.time_slots) && (s.time_slots as string[]).length > 0
+          ? s.time_slots as TimeSlot[]
+          : generateTimeSlots(
+              (s.open_from as string | undefined) ?? '09:00',
+              (s.open_to as string | undefined) ?? '22:00',
+              (s.slot_interval_minutes as number | undefined) ?? 120
+            )
+        setFetchedTimeSlots(slots)
+      })
+  }, [tidFromUrl, tenant?.id])
+
+  const timeSlots = fetchedTimeSlots ?? contextTimeSlots
 
   const { assignments, slotSettings, scheduleRules, dateOverrides, loading } = useSchedule(tenantId, year, month)
 
