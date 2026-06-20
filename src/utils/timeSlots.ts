@@ -60,16 +60,14 @@ export function buildSlot(start: number, end: number): string {
 }
 
 export const SLOT_TEMPLATES: { label: string; intervalMinutes: number; slots: string[] }[] = [
-  {
-    label: '09-22시 (1시간 단위)',
-    intervalMinutes: 60,
-    slots: generateTimeSlots('09:00', '22:00', 60),
-  },
-  {
-    label: '09-22시 (30분 단위)',
-    intervalMinutes: 30,
-    slots: generateTimeSlots('09:00', '22:00', 30),
-  },
+  { label: '오전 (09-13시·1시간)',      intervalMinutes: 60,  slots: generateTimeSlots('09:00', '13:00', 60) },
+  { label: '업무 (09-18시·1시간)',      intervalMinutes: 60,  slots: generateTimeSlots('09:00', '18:00', 60) },
+  { label: '업무 30분 (09-18시·30분)', intervalMinutes: 30,  slots: generateTimeSlots('09:00', '18:00', 30) },
+  { label: '연장 (09-22시·1시간)',      intervalMinutes: 60,  slots: generateTimeSlots('09:00', '22:00', 60) },
+  { label: '연장 (09-22시·30분)',       intervalMinutes: 30,  slots: generateTimeSlots('09:00', '22:00', 30) },
+  { label: '오후/저녁 (13-22시·1시간)', intervalMinutes: 60,  slots: generateTimeSlots('13:00', '22:00', 60) },
+  { label: '야간 (18-24시·1시간)',      intervalMinutes: 60,  slots: generateTimeSlots('18:00', '24:00', 60) },
+  { label: '2시간 블록 (09-22시)',      intervalMinutes: 120, slots: generateTimeSlots('09:00', '22:00', 120) },
 ];
 
 export const DEFAULT_TIME_SLOTS: TimeSlot[] = generateTimeSlots('09:00', '22:00', 120);

@@ -1,0 +1,133 @@
+import { useState } from 'react'
+import { RolePreviewCalendar } from '../RolePreviewCalendar'
+import type { TenantRole } from '../../../types'
+
+interface Props {
+  roles: TenantRole[]
+  saving: boolean
+  error: string
+  onAdd: (name: string, splitCell: boolean, requiresCustomerInfo: boolean, indicatorBar: boolean) => Promise<string | null>
+  onDelete: (id: string) => Promise<string | null>
+  onNext: () => void
+  onBack: () => void
+}
+
+type DisplayMode = 'none' | 'split' | 'bar'
+
+const DISPLAY_OPTIONS: { value: DisplayMode; label: string; desc: string }[] = [
+  { value: 'none',  label: '표시 없음', desc: '역할로만 분류, 칸 구분 없음' },
+  { value: 'split', label: '칸 분리',   desc: '역할별로 달력에 칸이 나뉩니다' },
+  { value: 'bar',   label: '바 표시',   desc: '셀 좌측에 색상 바가 나타납니다' },
+]
+
+export function Step4Roles({ roles, saving, error, onAdd, onDelete, onNext, onBack }: Props) {
+  const [name, setName] = useState('')
+  const [displayMode, setDisplayMode] = useState<DisplayMode>('none')
+  const [requiresCustomerInfo, setRequiresCustomerInfo] = useState(false)
+  const [adding, setAdding] = useState(false)
+  const [addError, setAddError] = useState('')
+
+  async function handleAdd() {
+    if (!name.trim()) return
+    setAdding(true)
+    setAddError('')
+    const err = await onAdd(name.trim(), displayMode === 'split', requiresCustomerInfo, displayMode === 'bar')
+    if (err) setAddError(err)
+    else { setName(''); setDisplayMode('none'); setRequiresCustomerInfo(false) }
+    setAdding(false)
+  }
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-1">역할을 설정하세요</h2>
+        <p className="text-sm text-[var(--color-text-muted)]">역할을 추가하면 스케줄 표에서 역할별로 구역이 나뉩니다.</p>
+      </div>
+
+      {/* Live preview */}
+      <div>
+        <p className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-2">미리보기</p>
+        <RolePreviewCalendar roles={roles} />
+      </div>
+
+      {/* Current roles */}
+      {roles.length > 0 && (
+        <div className="space-y-1.5">
+          {roles.map(role => (
+            <div key={role.id} className="flex items-center gap-2 px-3 py-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)]">
+              <span className="flex-1 text-sm font-medium text-[var(--color-text-primary)]">{role.name}</span>
+              {role.split_cell && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700">칸분리</span>}
+              {role.indicator_bar && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">바표시</span>}
+              {role.requires_customer_info && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-700">고객정보</span>}
+              <button onClick={() => onDelete(role.id)} className="text-[var(--color-text-muted)] hover:text-red-500 text-sm select-none">✕</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add form */}
+      <div className="space-y-3 p-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)]">
+        <p className="text-sm font-semibold text-[var(--color-text-secondary)]">역할 추가</p>
+        <input
+          type="text"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          placeholder="예: 팀장, 강사, 봉사자"
+          className="w-full px-3 py-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]"
+          onKeyDown={e => e.key === 'Enter' && handleAdd()}
+        />
+        <div>
+          <p className="text-xs text-[var(--color-text-muted)] mb-1.5">달력 표시 방식</p>
+          <div className="flex gap-1.5">
+            {DISPLAY_OPTIONS.map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => setDisplayMode(opt.value)}
+                className={`flex-1 py-1.5 px-1 rounded-lg text-[11px] font-medium border transition-colors ${
+                  displayMode === opt.value
+                    ? 'border-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/8 text-[var(--color-brand-primary)]'
+                    : 'border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-brand-primary)]/40'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          <p className="text-[10px] text-[var(--color-text-muted)] mt-1">
+            {DISPLAY_OPTIONS.find(o => o.value === displayMode)?.desc}
+          </p>
+        </div>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" checked={requiresCustomerInfo} onChange={e => setRequiresCustomerInfo(e.target.checked)}
+            className="w-4 h-4 rounded accent-[var(--color-brand-primary)]" />
+          <span className="text-sm text-[var(--color-text-secondary)]">고객 정보 입력 필요</span>
+        </label>
+        {addError && <p className="text-xs text-red-500">{addError}</p>}
+        <button
+          onClick={handleAdd}
+          disabled={!name.trim() || adding}
+          className="w-full py-2 rounded-xl text-sm font-semibold border-2 border-dashed border-[var(--color-brand-primary)] text-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary)]/5 disabled:opacity-40 transition-colors"
+        >
+          {adding ? '추가 중...' : '+ 역할 추가'}
+        </button>
+      </div>
+
+      {error && <p className="text-sm text-red-500">{error}</p>}
+
+      <div className="flex gap-2">
+        <button onClick={onBack} className="flex-1 py-3 rounded-xl text-sm font-medium border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors">
+          ← 이전
+        </button>
+        <div className="flex flex-col gap-1 flex-[2]">
+          <button onClick={onNext} disabled={saving}
+            className="w-full py-3 rounded-xl font-semibold text-sm bg-[var(--color-brand-primary)] text-white disabled:opacity-40 hover:brightness-95 transition-all">
+            {saving ? '저장 중...' : (roles.length > 0 ? `역할 ${roles.length}개로 다음 →` : '역할 없이 다음 →')}
+          </button>
+          {roles.length === 0 && (
+            <p className="text-[10px] text-center text-[var(--color-text-muted)]">역할 없이도 스케줄 운영이 가능합니다</p>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}

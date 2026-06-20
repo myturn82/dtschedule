@@ -83,6 +83,7 @@ export interface TenantSettings {
   volunteer_label?: string;
   plus_label?: string;
   role_ratios?: Record<string, number>; // roleId → 퍼센트, 합계 100
+  setup_completed_at?: string;
 }
 
 export type LegendColor = 'amber' | 'pink' | 'slate' | 'yellow' | 'blue' | 'green' | 'purple' | 'red' | 'indigo' | 'black'
