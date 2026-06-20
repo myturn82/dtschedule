@@ -56,7 +56,7 @@ export function useSchedule(tenantId: string, year: number, month: number): Sche
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!tenantId) return
+    if (!tenantId) { setLoading(false); return }
     setLoading(true)
     Promise.all([
       supabase.from('assignments').select('*')
