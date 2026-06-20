@@ -10,6 +10,7 @@ import { Legend } from '../components/schedule/Legend'
 import { supabase } from '../lib/supabase'
 import { generateTimeSlots } from '../utils/timeSlots'
 import type { TimeSlot } from '../utils/timeSlots'
+import type { LegendItem } from '../types'
 
 export function SharePage() {
   const [params] = useSearchParams()
@@ -18,13 +19,18 @@ export function SharePage() {
   const tidFromUrl = params.get('tid') ?? ''
 
   const { profile } = useAuth()
-  const { tenant, timeSlots: contextTimeSlots } = useTenant()
+  const { tenant, timeSlots: contextTimeSlots, legendItems: contextLegendItems } = useTenant()
   const tenantId = tidFromUrl || tenant?.id || ''
 
-  // tid가 컨텍스트 테넌트와 다를 때(슈퍼관리자 등) 직접 테넌트 설정을 가져와 timeSlots 계산
+  // tid가 컨텍스트 테넌트와 다를 때 직접 테넌트 설정을 조회해 timeSlots·legendItems 계산
   const [fetchedTimeSlots, setFetchedTimeSlots] = useState<TimeSlot[] | null>(null)
+  const [fetchedLegendItems, setFetchedLegendItems] = useState<LegendItem[] | null>(null)
   useEffect(() => {
-    if (!tidFromUrl || tidFromUrl === tenant?.id) { setFetchedTimeSlots(null); return }
+    if (!tidFromUrl || tidFromUrl === tenant?.id) {
+      setFetchedTimeSlots(null)
+      setFetchedLegendItems(null)
+      return
+    }
     supabase.from('tenants').select('settings').eq('id', tidFromUrl).single()
       .then(({ data }) => {
         if (!data?.settings) return
@@ -37,10 +43,12 @@ export function SharePage() {
               (s.slot_interval_minutes as number | undefined) ?? 120
             )
         setFetchedTimeSlots(slots)
+        setFetchedLegendItems((s.legend_items as LegendItem[] | undefined) ?? [])
       })
   }, [tidFromUrl, tenant?.id])
 
   const timeSlots = fetchedTimeSlots ?? contextTimeSlots
+  const legendItems = fetchedLegendItems ?? contextLegendItems
 
   const { assignments, slotSettings, scheduleRules, dateOverrides, loading } = useSchedule(tenantId, year, month)
 
@@ -62,7 +70,7 @@ export function SharePage() {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 max-w-full">
         <div className="mb-2 text-xs text-gray-400 dark:text-gray-500 text-right">읽기 전용 공유 뷰</div>
         <ScheduleHeader year={year} month={month} onPrev={() => {}} onNext={() => {}} />
-        <Legend />
+        <Legend legendItems={legendItems} />
         {loading ? (
           <div className="flex items-center justify-center h-64 text-gray-400 dark:text-gray-500">로딩 중...</div>
         ) : (
