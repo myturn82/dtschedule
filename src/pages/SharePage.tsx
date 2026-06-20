@@ -8,9 +8,9 @@ import { ScheduleHeader } from '../components/schedule/ScheduleHeader'
 import { ScheduleGrid } from '../components/schedule/ScheduleGrid'
 import { Legend } from '../components/schedule/Legend'
 import { supabase } from '../lib/supabase'
-import { generateTimeSlots } from '../utils/timeSlots'
+import { generateTimeSlots, slotStartLabel } from '../utils/timeSlots'
 import { getCellState } from '../utils/cellState'
-import { slotStartLabel } from '../utils/timeSlots'
+import { useTenantRoles } from '../hooks/useTenantRoles'
 import type { TimeSlot } from '../utils/timeSlots'
 import type { LegendItem, ModalTarget } from '../types'
 
@@ -60,6 +60,11 @@ export function SharePage() {
   const legendItems = fetchedLegendItems ?? contextLegendItems
   const slotLabels = fetchedSlotLabels ?? contextSlotLabels
 
+  const { roles: tenantRoles } = useTenantRoles(tenantId)
+  const splitRoles = tenantRoles.filter(r => r.split_cell && !r.indicator_bar)
+  const indicatorBarRoles = tenantRoles.filter(r => r.indicator_bar)
+  const isSplitMode = splitRoles.length > 0
+
   const { assignments, slotSettings, scheduleRules, dateOverrides, loading } = useSchedule(tenantId, year, month)
 
   if (!profile) {
@@ -103,6 +108,9 @@ export function SharePage() {
             timeSlots={timeSlots}
             assignments={assignments} slotSettings={slotSettings}
             scheduleRules={scheduleRules} dateOverrides={dateOverrides}
+            splitRoles={splitRoles}
+            indicatorBarRoles={indicatorBarRoles}
+            isSplitMode={isSplitMode}
             highlightName={null}
             canAdd={false}
             onCellClick={t => {
