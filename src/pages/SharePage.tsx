@@ -9,8 +9,12 @@ import { ScheduleGrid } from '../components/schedule/ScheduleGrid'
 import { Legend } from '../components/schedule/Legend'
 import { supabase } from '../lib/supabase'
 import { generateTimeSlots } from '../utils/timeSlots'
+import { getCellState } from '../utils/cellState'
+import { slotStartLabel } from '../utils/timeSlots'
 import type { TimeSlot } from '../utils/timeSlots'
-import type { LegendItem } from '../types'
+import type { LegendItem, ModalTarget } from '../types'
+
+const DAY_KR = ['일', '월', '화', '수', '목', '금', '토']
 
 export function SharePage() {
   const [params, setParams] = useSearchParams()
@@ -19,16 +23,20 @@ export function SharePage() {
   const tidFromUrl = params.get('tid') ?? ''
 
   const { profile } = useAuth()
-  const { tenant, timeSlots: contextTimeSlots, legendItems: contextLegendItems } = useTenant()
+  const { tenant, timeSlots: contextTimeSlots, legendItems: contextLegendItems, slotLabels: contextSlotLabels } = useTenant()
   const tenantId = tidFromUrl || tenant?.id || ''
+
+  const [modalTarget, setModalTarget] = useState<ModalTarget | null>(null)
 
   // tid가 컨텍스트 테넌트와 다를 때 직접 테넌트 설정을 조회해 timeSlots·legendItems 계산
   const [fetchedTimeSlots, setFetchedTimeSlots] = useState<TimeSlot[] | null>(null)
   const [fetchedLegendItems, setFetchedLegendItems] = useState<LegendItem[] | null>(null)
+  const [fetchedSlotLabels, setFetchedSlotLabels] = useState<Record<string, string> | null>(null)
   useEffect(() => {
     if (!tidFromUrl || tidFromUrl === tenant?.id) {
       setFetchedTimeSlots(null)
       setFetchedLegendItems(null)
+      setFetchedSlotLabels(null)
       return
     }
     supabase.from('tenants').select('settings').eq('id', tidFromUrl).single()
@@ -44,11 +52,13 @@ export function SharePage() {
             )
         setFetchedTimeSlots(slots)
         setFetchedLegendItems((s.legend_items as LegendItem[] | undefined) ?? [])
+        setFetchedSlotLabels((s.slot_labels as Record<string, string> | undefined) ?? {})
       })
   }, [tidFromUrl, tenant?.id])
 
   const timeSlots = fetchedTimeSlots ?? contextTimeSlots
   const legendItems = fetchedLegendItems ?? contextLegendItems
+  const slotLabels = fetchedSlotLabels ?? contextSlotLabels
 
   const { assignments, slotSettings, scheduleRules, dateOverrides, loading } = useSchedule(tenantId, year, month)
 
@@ -64,6 +74,10 @@ export function SharePage() {
       </div>
     )
   }
+
+  const modalCellState = modalTarget
+    ? getCellState(modalTarget.day, modalTarget.timeSlot, modalTarget.year, modalTarget.month, scheduleRules, slotSettings, dateOverrides, assignments)
+    : null
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
@@ -91,10 +105,59 @@ export function SharePage() {
             scheduleRules={scheduleRules} dateOverrides={dateOverrides}
             highlightName={null}
             canAdd={false}
-            onCellClick={() => {}}
+            onCellClick={t => {
+              const cs = getCellState(t.day, t.timeSlot, t.year, t.month, scheduleRules, slotSettings, dateOverrides, assignments)
+              if (cs.assignments.filter(a => a.member_type !== 'admin_note').length > 0) setModalTarget(t)
+            }}
           />
         )}
       </div>
+
+      {modalTarget && modalCellState && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onClick={() => setModalTarget(null)}
+        >
+          <div
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-5 w-full max-w-sm mx-4"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <span className="text-base font-bold text-[var(--color-text-primary)]">
+                  {modalTarget.month}월 {modalTarget.day}일 ({DAY_KR[new Date(modalTarget.year, modalTarget.month - 1, modalTarget.day).getDay()]})
+                </span>
+                <span className="ml-2 text-sm text-[var(--color-text-muted)]">
+                  {slotLabels[modalTarget.timeSlot] ?? slotStartLabel(modalTarget.timeSlot)}
+                </span>
+              </div>
+              <button
+                onClick={() => setModalTarget(null)}
+                className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] text-xl leading-none"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="text-xs text-[var(--color-text-muted)] mb-3">
+              {modalCellState.assignments.filter(a => a.member_type !== 'admin_note').length}명 / {modalCellState.maxCapacity}명
+            </div>
+            <div className="flex flex-col gap-2 max-h-64 overflow-y-auto">
+              {modalCellState.assignments
+                .filter(a => a.member_type !== 'admin_note')
+                .map(a => (
+                  <div key={a.id} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)]">
+                    <span className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold bg-[oklch(0.95_0.045_28)] text-[oklch(0.45_0.14_28)]">
+                      {a.member_name?.charAt(0) ?? '?'}
+                    </span>
+                    <span className="text-sm font-semibold text-[var(--color-text-primary)]">{a.member_name}</span>
+                    {a.note && <span className="text-xs text-[var(--color-text-muted)] truncate">· {a.note}</span>}
+                  </div>
+                ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       <DevFileLabel file="SharePage.tsx" />
     </div>
   )
