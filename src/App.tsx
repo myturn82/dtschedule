@@ -42,6 +42,15 @@ function AppRoutes() {
     )
   }
 
+  // 신규 가입 후 setup 페이지로 이동하는 짧은 구간 — SIGNED_IN 이벤트로 인한 라우팅 깜빡임 방지
+  if (sessionStorage.getItem('vs_setup_creating') === '1' && window.location.pathname !== '/setup') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg)]">
+        <div className="text-[var(--color-text-secondary)] text-sm">로딩 중...</div>
+      </div>
+    )
+  }
+
   // ── 비인증 사용자: 공개 라우트 ─────────────────────────────────────────
   if (!profile) {
     return (
@@ -63,6 +72,7 @@ function AppRoutes() {
       <Routes>
         <Route path="/share" element={<SharePage />} />
         <Route path="/superadmin" element={<SuperAdminPage />} />
+        <Route path="/setup" element={<SetupWizardPage />} />
         <Route path="*" element={<PendingPage />} />
       </Routes>
     )

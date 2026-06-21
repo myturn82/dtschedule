@@ -1132,12 +1132,12 @@ export function DashboardPage() {
                           <span className="text-[12px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">{stat.label}</span>
                           <div className="flex items-baseline gap-3 mt-1">
                             <div>
-                              <span className="text-[22px] font-bold font-mono-num text-[var(--color-text-primary)]">{stat.sum.toLocaleString()}</span>
+                              <span className="text-[22px] font-bold font-mono-num text-[var(--color-text-primary)]">{fmtNumber(stat.sum)}</span>
                               <span className="text-[11px] text-[var(--color-text-muted)] font-semibold ml-1">합계</span>
                             </div>
                             <div className="text-[var(--color-text-muted)]">·</div>
                             <div>
-                              <span className="text-[18px] font-bold font-mono-num text-[var(--color-text-secondary)]">{stat.avg.toLocaleString()}</span>
+                              <span className="text-[18px] font-bold font-mono-num text-[var(--color-text-secondary)]">{fmtNumber(stat.avg)}</span>
                               <span className="text-[11px] text-[var(--color-text-muted)] font-semibold ml-1">평균</span>
                             </div>
                             <div className="ml-auto text-right">
