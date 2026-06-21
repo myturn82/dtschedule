@@ -22,9 +22,20 @@ function slotLabel(slot: string) {
 export function Step5Rules({ rules, timeSlots, error, onToggleRule, onApplyTemplate }: Props) {
   const [showMatrix, setShowMatrix] = useState(false)
   const [applyingTemplate, setApplyingTemplate] = useState<number | null>(null)
+  const [closedDays, setClosedDays] = useState<Set<number>>(new Set())
+  const [applyingHoliday, setApplyingHoliday] = useState(false)
 
   function getRule(day: number, slot: string) {
     return rules.find(r => r.day_of_week === day && r.time_slot === slot)
+  }
+
+  function toggleClosedDay(d: number) {
+    setClosedDays(prev => {
+      const next = new Set(prev)
+      if (next.has(d)) next.delete(d)
+      else next.add(d)
+      return next
+    })
   }
 
   const openDaysSummary = () => {
@@ -35,6 +46,8 @@ export function Step5Rules({ rules, timeSlots, error, onToggleRule, onApplyTempl
     if (openDays.length === 7) return '매일'
     return openDays.map(d => DAY_LABELS[d]).join('·')
   }
+
+  const isApplying = applyingTemplate !== null || applyingHoliday
 
   return (
     <div className="space-y-6">
@@ -52,7 +65,7 @@ export function Step5Rules({ rules, timeSlots, error, onToggleRule, onApplyTempl
           {SCHEDULE_RULE_TEMPLATES.map((t, i) => (
             <button
               key={t.label}
-              disabled={applyingTemplate !== null}
+              disabled={isApplying}
               onClick={async () => {
                 setApplyingTemplate(i)
                 await onApplyTemplate(t.openDays)
@@ -66,6 +79,58 @@ export function Step5Rules({ rules, timeSlots, error, onToggleRule, onApplyTempl
               <div className="text-[11px] text-[var(--color-text-muted)] mt-0.5">{t.description}</div>
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* 정기휴일 직접 지정 */}
+      <div>
+        <p className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-2">정기휴일 직접 지정</p>
+        <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] space-y-3">
+          <p className="text-[11px] text-[var(--color-text-muted)]">매주 닫는 요일을 선택하세요 (선택한 요일 = 휴무)</p>
+          <div className="flex gap-1.5">
+            {DAY_LABELS.map((d, idx) => {
+              const isClosed = closedDays.has(idx)
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => toggleClosedDay(idx)}
+                  className={`flex-1 py-2 rounded-lg text-xs font-bold border-2 transition-colors select-none ${
+                    isClosed
+                      ? 'border-red-400 bg-red-50 text-red-600 dark:bg-red-950/30 dark:text-red-400'
+                      : idx === 0
+                      ? 'border-[var(--color-border)] text-red-400 hover:bg-red-50/50 dark:hover:bg-red-950/20'
+                      : idx === 6
+                      ? 'border-[var(--color-border)] text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-950/20'
+                      : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
+                  }`}
+                >
+                  {d}
+                </button>
+              )
+            })}
+          </div>
+          {closedDays.size > 0 ? (
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] text-[var(--color-text-muted)]">
+                휴무일: <span className="font-semibold text-red-500">{[...closedDays].sort().map(d => DAY_LABELS[d]).join('·')}</span>
+              </p>
+              <button
+                disabled={isApplying}
+                onClick={async () => {
+                  setApplyingHoliday(true)
+                  const openDays = [0, 1, 2, 3, 4, 5, 6].filter(d => !closedDays.has(d))
+                  await onApplyTemplate(openDays)
+                  setApplyingHoliday(false)
+                }}
+                className="px-3 py-1 rounded-lg text-xs font-semibold bg-[var(--color-brand-primary)] text-white hover:brightness-95 disabled:opacity-50 transition-colors"
+              >
+                {applyingHoliday ? '적용 중...' : '적용'}
+              </button>
+            </div>
+          ) : (
+            <p className="text-[11px] text-[var(--color-text-muted)] italic">요일을 선택하면 해당 요일이 정기휴일로 지정됩니다</p>
+          )}
         </div>
       </div>
 

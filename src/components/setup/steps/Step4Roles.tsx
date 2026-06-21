@@ -96,10 +96,13 @@ export function Step4Roles({ roles, error, onAdd, onDelete }: Props) {
             {DISPLAY_OPTIONS.find(o => o.value === displayMode)?.desc}
           </p>
         </div>
-        <label className="flex items-center gap-2 cursor-pointer">
+        <label className="flex items-start gap-2 cursor-pointer">
           <input type="checkbox" checked={requiresCustomerInfo} onChange={e => setRequiresCustomerInfo(e.target.checked)}
-            className="w-4 h-4 rounded accent-[var(--color-brand-primary)]" />
-          <span className="text-sm text-[var(--color-text-secondary)]">고객 정보 입력 필요</span>
+            className="w-4 h-4 rounded accent-[var(--color-brand-primary)] mt-0.5 shrink-0" />
+          <span className="flex flex-col gap-0.5">
+            <span className="text-sm text-[var(--color-text-secondary)]">배정 시 고객 정보 수집</span>
+            <span className="text-[11px] text-[var(--color-text-muted)]">이 역할의 배정 등록 시 담당 고객 연락처 등을 함께 입력받습니다 (예: PT 트레이너)</span>
+          </span>
         </label>
         {addError && <p className="text-xs text-red-500">{addError}</p>}
         <button

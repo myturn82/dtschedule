@@ -77,12 +77,15 @@ export function CustomerAdminPage() {
 
   useEffect(() => {
     if (!myCustomer) return
+    let cancelled = false
     async function load() {
       const { data: tenantData } = await supabase
         .from('tenants')
         .select('*')
         .eq('customer_id', myCustomer!.id)
         .order('created_at')
+      if (cancelled) return
+
       const list = (tenantData ?? []) as Tenant[]
       setTenants(list)
 
@@ -91,6 +94,7 @@ export function CustomerAdminPage() {
           .from('tenant_members')
           .select('tenant_id, is_approved')
           .in('tenant_id', list.map(t => t.id))
+        if (cancelled) return
         const approved: Record<string, number> = {}
         const pending: Record<string, number> = {}
         let approvedTotal = 0
@@ -103,9 +107,46 @@ export function CustomerAdminPage() {
         setTotalUsers(approvedTotal)
       }
       setLoading(false)
+      if (list.length === 0) {
+        // 첫 번째 조직 자동 생성 — ID 미리 생성 후 INSERT만 수행 (SELECT 없이)
+        const DEFAULT_SLOTS = ['09-10','10-11','11-12','12-13','13-14','14-15','15-16','16-17','17-18']
+        const orgName = myCustomer!.name || '내 서비스'
+        const tenantSettings = { title: orgName, time_slots: DEFAULT_SLOTS, open_from:'09:00', open_to:'22:00', slot_interval_minutes:60, timezone:'Asia/Seoul', locale:'ko-KR', tenant_mode:'회원공유' }
+        const base = orgName.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'').replace(/-+/g,'-').replace(/^-+|-+$/g,'')
+        let createdId: string | null = null
+        let createdSlug = ''
+        for (let i = 0; i < 3; i++) {
+          createdId = crypto.randomUUID()
+          createdSlug = `${base||'org'}-${Math.random().toString(36).slice(2,7)}`
+          const { error: te } = await supabase.from('tenants').insert({
+            id: createdId, slug: createdSlug, name: orgName, customer_id: myCustomer!.id, is_active: true, settings: tenantSettings
+          })
+          if (cancelled) return
+          if (!te) break
+          if (te.code !== '23505') { createdId = null; break }
+          createdId = null
+        }
+        if (!createdId) return
+        if (profile?.id) await supabase.from('tenant_members').insert({ tenant_id: createdId, user_id: profile.id, role: 'admin', is_approved: true })
+        if (cancelled) return
+        await supabase.from('schedule_rules').insert(
+          [0,1,2,3,4,5,6].flatMap(d => DEFAULT_SLOTS.map(s => ({ tenant_id: createdId!, day_of_week: d, time_slot: s, is_open: true })))
+        )
+        if (cancelled) return
+        sessionStorage.setItem('vs_setup_tenant', JSON.stringify({ id: createdId, slug: createdSlug, name: orgName, customer_id: myCustomer!.id, is_active: true, settings: tenantSettings }))
+        navigate('/setup?org=' + createdId)
+        reloadMemberships()
+        return
+      } else if (list.length === 1 && !list[0].settings?.setup_completed_at) {
+        // 미완료 설정이 있는 단일 조직 → 위저드로 이동
+        if (cancelled) return
+        sessionStorage.setItem('vs_setup_tenant', JSON.stringify(list[0]))
+        navigate('/setup?org=' + list[0].id)
+      }
     }
     load()
-  }, [myCustomer])
+    return () => { cancelled = true }
+  }, [myCustomer?.id, profile?.id])
 
   async function requestDeletion() {
     if (!myCustomer) return
@@ -183,72 +224,55 @@ export function CustomerAdminPage() {
     const freshCustomer = await refreshCustomer()
     const customerId = freshCustomer?.id ?? myCustomer.id
     const hasHalf = createSlots.some(s => s.includes('.'))
-    const { data, error } = await supabase
-      .from('tenants')
-      .insert({
-        slug: slugTrimmed,
-        name: form.name.trim(),
-        business_type: form.business_type.trim() || null,
-        customer_id: customerId,
-        settings: {
-          title: form.title.trim() || form.name.trim(),
-          theme_color: form.theme_color.trim() || undefined,
-          time_slots: createSlots,
-          open_from: '09:00',
-          open_to: '22:00',
-          slot_interval_minutes: hasHalf ? 30 : 60,
-          timezone: 'Asia/Seoul',
-          locale: 'ko-KR',
-          tenant_mode: form.tenant_mode,
-        },
-      })
-      .select()
-      .single()
+    const tenantSettings = {
+      title: form.title.trim() || form.name.trim(),
+      theme_color: form.theme_color.trim() || undefined,
+      time_slots: createSlots,
+      open_from: '09:00', open_to: '22:00',
+      slot_interval_minutes: hasHalf ? 30 : 60,
+      timezone: 'Asia/Seoul', locale: 'ko-KR',
+      tenant_mode: form.tenant_mode,
+    }
+
+    // ID 미리 생성 후 INSERT만 수행 (SELECT 없이, RLS 우회)
+    let tenantId = crypto.randomUUID()
+    let finalSlug = slugTrimmed
+    const { error } = await supabase.from('tenants').insert({
+      id: tenantId, slug: finalSlug, name: form.name.trim(),
+      business_type: form.business_type.trim() || null,
+      customer_id: customerId, settings: tenantSettings,
+    })
     if (error) {
       if (error.code === '23505' && error.message.includes('slug')) {
         // slug 충돌 시 새 slug로 자동 재시도
-        const retrySlug = nameToSlug(form.name.trim())
-        const { data: retryData, error: retryError } = await supabase
-          .from('tenants')
-          .insert({ ...{ slug: retrySlug, name: form.name.trim(), business_type: form.business_type.trim() || null, customer_id: (await refreshCustomer())?.id ?? myCustomer!.id, settings: { title: form.title.trim() || form.name.trim(), theme_color: form.theme_color.trim() || undefined, time_slots: createSlots, open_from: '09:00', open_to: '22:00', slot_interval_minutes: createSlots.some(s => s.includes('.')) ? 30 : 60, timezone: 'Asia/Seoul', locale: 'ko-KR', tenant_mode: form.tenant_mode } } })
-          .select().single()
-        if (!retryError && retryData) {
-          const ruleRows = [0,1,2,3,4,5,6].flatMap(day => createSlots.map(slot => ({ tenant_id: retryData.id, day_of_week: day, time_slot: slot, is_open: true })))
-          await supabase.from('schedule_rules').insert(ruleRows)
-          if (profile?.id) await supabase.from('tenant_members').insert({ tenant_id: retryData.id, user_id: profile.id, role: 'admin', is_approved: true })
-          setTenants(prev => [...prev, retryData])
-          await reloadMemberships()
-          setShowCreate(false); setForm(EMPTY_FORM); setCreateSlots(['09-12','13-14','14-16','16-18','20-22'])
-          setSaving(false); navigate('/setup?org=' + retryData.id); return
-        }
-        setMessage('오류: 조직 생성에 실패했습니다. 다시 시도해 주세요.')
+        tenantId = crypto.randomUUID()
+        finalSlug = nameToSlug(form.name.trim())
+        const { error: retryError } = await supabase.from('tenants').insert({
+          id: tenantId, slug: finalSlug, name: form.name.trim(),
+          business_type: form.business_type.trim() || null,
+          customer_id: customerId, settings: tenantSettings,
+        })
+        if (retryError) { setMessage('오류: 조직 생성에 실패했습니다. 다시 시도해 주세요.'); setSaving(false); return }
       } else if (error.code === '23503' && error.message.includes('customer_id')) {
         setMessage('오류: 서비스 계정 정보가 올바르지 않습니다. 페이지를 새로고침 후 다시 시도해 주세요.')
+        setSaving(false); return
       } else {
-        setMessage(`오류: ${error.message}`)
+        setMessage(`오류: ${error.message}`); setSaving(false); return
       }
-    } else if (data) {
-      const ruleRows = [0, 1, 2, 3, 4, 5, 6].flatMap(day =>
-        createSlots.map(slot => ({ tenant_id: data.id, day_of_week: day, time_slot: slot, is_open: true }))
-      )
-      await supabase.from('schedule_rules').insert(ruleRows)
-      // 생성자를 해당 조직의 admin 멤버로 자동 등록
-      if (profile?.id) {
-        await supabase.from('tenant_members').insert({
-          tenant_id: data.id,
-          user_id: profile.id,
-          role: 'admin',
-          is_approved: true,
-        })
-      }
-      setTenants(prev => [...prev, data])
-      await reloadMemberships()
-      setShowCreate(false)
-      setForm(EMPTY_FORM)
-      setCreateSlots(['09-12', '13-14', '14-16', '16-18', '20-22'])
-      navigate('/setup?org=' + data.id)
     }
+
+    // 멤버 등록 후 스케줄 규칙 생성
+    if (profile?.id) await supabase.from('tenant_members').insert({ tenant_id: tenantId, user_id: profile.id, role: 'admin', is_approved: true })
+    await supabase.from('schedule_rules').insert(
+      [0,1,2,3,4,5,6].flatMap(day => createSlots.map(slot => ({ tenant_id: tenantId, day_of_week: day, time_slot: slot, is_open: true })))
+    )
+    await reloadMemberships()
+    setShowCreate(false)
+    setForm(EMPTY_FORM)
+    setCreateSlots(['09-12', '13-14', '14-16', '16-18', '20-22'])
+    sessionStorage.setItem('vs_setup_tenant', JSON.stringify({ id: tenantId, slug: finalSlug, name: form.name.trim(), customer_id: customerId, is_active: true, settings: tenantSettings }))
     setSaving(false)
+    navigate('/setup?org=' + tenantId)
   }, [form, createSlots, myCustomer, tenants.length, profile, refreshCustomer, reloadMemberships, planLimits])
 
   if (authLoading || loading) {
