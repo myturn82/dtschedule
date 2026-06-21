@@ -6,7 +6,7 @@ import { parseSlotLabel, getTimeSubOptions, formatTimeSub } from '../../utils/ti
 import { useProfiles } from '../../hooks/useProfiles'
 import type { ProfileWithRole } from '../../hooks/useProfiles'
 import { LockIcon, UnlockIcon } from '../icons/LockIcons'
-import { fmtPhone } from '../../lib/format'
+import { fmtPhone, fmtNumber } from '../../lib/format'
 import { formatPhone, isValidPhone } from '../../lib/phone'
 
 interface Props {
@@ -614,14 +614,14 @@ export function SlotEditModal({
                     const val = a.extra_data?.[f.id]
                     if (!val) return
                     const unit = getOptionUnit(f.options?.find(o => o.value === val)?.value_type)
-                    detailChips.push({ key: f.id, label: f.label, value: `${val}${unit}` })
+                    detailChips.push({ key: f.id, label: f.label, value: `${fmtNumber(val)}${unit}` })
                   })
                 } else if (showExtraCustomFields) {
                   customFields.forEach(f => {
                     const val = a.extra_data?.[f.id]
                     if (!val) return
                     const unit = getOptionUnit(f.options?.find(o => o.value === val)?.value_type)
-                    detailChips.push({ key: f.id, label: f.label, value: `${val}${unit}` })
+                    detailChips.push({ key: f.id, label: f.label, value: `${fmtNumber(val)}${unit}` })
                   })
                 }
                 if (a.note) detailChips.push({ key: 'note', label: '메모', value: a.note })

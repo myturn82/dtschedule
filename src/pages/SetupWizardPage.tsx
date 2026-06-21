@@ -12,10 +12,9 @@ import { Step2Mode } from '../components/setup/steps/Step2Mode'
 import { Step3Slots } from '../components/setup/steps/Step3Slots'
 import { Step4Roles } from '../components/setup/steps/Step4Roles'
 import { Step5Rules } from '../components/setup/steps/Step5Rules'
-import { Step6Legend } from '../components/setup/steps/Step6Legend'
-import { Step7CustomFields } from '../components/setup/steps/Step7CustomFields'
+import { Step7CustomFields as Step6CustomFields } from '../components/setup/steps/Step7CustomFields'
 import { StepDone } from '../components/setup/steps/StepDone'
-import type { Tenant, TenantMode, LegendItem, CustomFieldDef } from '../types'
+import type { Tenant, TenantMode, CustomFieldDef } from '../types'
 
 const STEP_DEFS: { label: string }[] = [
   { label: '조직명' },
@@ -23,7 +22,6 @@ const STEP_DEFS: { label: string }[] = [
   { label: '슬롯' },
   { label: '역할' },
   { label: '규칙' },
-  { label: '범례' },
   { label: '필드' },
 ]
 
@@ -38,20 +36,35 @@ export function SetupWizardPage() {
   const [params] = useSearchParams()
   const orgId = params.get('org') ?? ''
   const navigate = useNavigate()
-  const { setTenant } = useTenant()
+  const { setTenant, reloadMemberships } = useTenant()
 
   const [tenant, setLocalTenant] = useState<Tenant | null>(null)
   const [loadingTenant, setLoadingTenant] = useState(true)
 
-  // Load tenant by orgId
+  // 신규 가입 완료 — 깜빡임 방지 플래그 해제
+  useEffect(() => { sessionStorage.removeItem('vs_setup_creating') }, [])
+
+  // Load tenant by orgId — sessionStorage 우선(생성 직후 RLS 경쟁 방지), 없으면 DB 조회
+  // sessionStorage는 즉시 삭제하지 않음 — 라우팅 브랜치 변경 시 재마운트 대비
   useEffect(() => {
-    if (!orgId) { navigate('/customer-admin'); return }
-    supabase.from('tenants').select('*').eq('id', orgId).single().then(({ data }) => {
+    if (!orgId) { setLoadingTenant(false); return }
+    const cached = sessionStorage.getItem('vs_setup_tenant')
+    if (cached) {
+      try {
+        const t = JSON.parse(cached)
+        if (t?.id === orgId) {
+          setLocalTenant(t as Tenant)
+          setLoadingTenant(false)
+          return
+        }
+      } catch { /* invalid JSON */ }
+      sessionStorage.removeItem('vs_setup_tenant')
+    }
+    supabase.from('tenants').select('*').eq('id', orgId).maybeSingle().then(({ data }) => {
       if (data) setLocalTenant(data as Tenant)
-      else navigate('/customer-admin')
       setLoadingTenant(false)
     })
-  }, [orgId, navigate])
+  }, [orgId])
 
   const {
     scheduleRules,
@@ -73,7 +86,7 @@ export function SetupWizardPage() {
   const [title, setTitle] = useState('')
   const [mode, setMode] = useState<TenantMode>('회원공유')
   const [slots, setSlots] = useState<string[]>([])
-  const [legendItems, setLegendItems] = useState<LegendItem[]>([])
+  const [industry, setIndustry] = useState('')
   const [customFields, setCustomFields] = useState<CustomFieldDef[]>([])
 
   useEffect(() => {
@@ -82,23 +95,25 @@ export function SetupWizardPage() {
     setTitle(tenant.settings?.title ?? tenant.name ?? '')
     setMode(displayMode(tenant.settings?.tenant_mode))
     setSlots(tenant.settings?.time_slots ?? [])
-    setLegendItems(tenant.settings?.legend_items ?? [])
+    setIndustry(tenant.business_type ?? '')
     setCustomFields(tenant.settings?.custom_fields ?? [])
   }, [tenant])
 
   const isFreeform = mode === '비회원'
 
   // Steps 6 and 7 (non-freeform) can be skipped
-  const isSkippable = (s: number) => s === 6 || (s === 7 && !isFreeform)
+  const isSkippable = (s: number) => s === 6 && !isFreeform
 
   // ── Persist helpers ────────────────────────────────────────────────────────
 
   async function saveStep1(): Promise<boolean> {
     if (!name.trim()) { setError('조직명을 입력해주세요'); return false }
+    if (!industry) { setError('업종을 선택해주세요'); return false }
     setSaving(true); setError('')
     const nameErr = await updateTenantName(orgId, name.trim())
     const settingsErr = await updateTenantSettings(orgId, { title: title.trim() || name.trim() })
-    if (nameErr || settingsErr) { setError(nameErr ?? settingsErr ?? '저장 실패'); setSaving(false); return false }
+    const { error: bizErr } = await supabase.from('tenants').update({ business_type: industry }).eq('id', orgId)
+    if (nameErr || settingsErr || bizErr) { setError(nameErr ?? settingsErr ?? bizErr?.message ?? '저장 실패'); setSaving(false); return false }
     setSaving(false); return true
   }
 
@@ -123,13 +138,6 @@ export function SetupWizardPage() {
   }
 
   async function saveStep6(): Promise<boolean> {
-    setSaving(true); setError('')
-    const err = await updateTenantSettings(orgId, { legend_items: legendItems })
-    if (err) { setError(err); setSaving(false); return false }
-    setSaving(false); return true
-  }
-
-  async function saveStep7(): Promise<boolean> {
     if (isFreeform && customFields.length === 0) {
       setError('비회원 모드에서는 필드를 하나 이상 추가해주세요')
       return false
@@ -140,6 +148,7 @@ export function SetupWizardPage() {
       setup_completed_at: new Date().toISOString(),
     })
     if (err) { setError(err); setSaving(false); return false }
+    sessionStorage.removeItem('vs_setup_tenant')
     setSaving(false); return true
   }
 
@@ -159,10 +168,9 @@ export function SetupWizardPage() {
     if (stepNum === 1) ok = await saveStep1()
     else if (stepNum === 2) ok = await saveStep2()
     else if (stepNum === 3) ok = await saveStep3()
-    else if (stepNum === 6) ok = await saveStep6()
-    else if (stepNum === 7) {
-      ok = await saveStep7()
-      if (ok) { setStep(8); return }
+    else if (stepNum === 6) {
+      ok = await saveStep6()
+      if (ok) { setStep(7); return }
     }
     if (ok) setStep(stepNum + 1)
   }
@@ -172,9 +180,16 @@ export function SetupWizardPage() {
     setStep(s => s - 1)
   }
 
-  function skip() {
+  async function skip() {
     setError('')
-    setStep(s => s + 1)
+    if (step === 6) {
+      // 마지막 단계 건너뛰기 — 완료 플래그는 반드시 저장 (미저장 시 다음 접속에 위저드 재진입)
+      await updateTenantSettings(orgId, { setup_completed_at: new Date().toISOString() })
+      sessionStorage.removeItem('vs_setup_tenant')
+      setStep(7)
+    } else {
+      setStep(s => s + 1)
+    }
   }
 
   // ── Summary data for done screen ─────────────────────────────────────────
@@ -194,9 +209,9 @@ export function SetupWizardPage() {
 
   const nextDisabled =
     saving ||
-    (step === 1 && !name.trim()) ||
+    (step === 1 && (!name.trim() || !industry)) ||
     (step === 3 && slots.length === 0) ||
-    (step === 7 && isFreeform && customFields.length === 0)
+    (step === 6 && isFreeform && customFields.length === 0)
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -208,7 +223,27 @@ export function SetupWizardPage() {
     )
   }
 
-  if (step === 8) {
+  if (!tenant) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-6">
+        <p className="text-sm text-[var(--color-text-secondary)]">조직 정보를 불러올 수 없습니다.</p>
+        <button
+          onClick={() => { window.location.href = '/setup?org=' + orgId }}
+          className="px-4 py-2 rounded-xl bg-[var(--color-brand-primary)] text-white text-sm font-semibold"
+        >
+          다시 시도
+        </button>
+        <button
+          onClick={() => { window.location.href = '/customer-admin' }}
+          className="text-sm text-[var(--color-text-muted)] underline"
+        >
+          관리 페이지로
+        </button>
+      </div>
+    )
+  }
+
+  if (step === 7) {
     return (
       <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center p-4">
         <div className="w-full max-w-md">
@@ -219,12 +254,21 @@ export function SetupWizardPage() {
             modeName={MODE_LABEL[mode] ?? mode}
             openDays={openDaysSummary}
             shareUrl={shareUrl}
-            onGoSchedule={() => {
+            onGoSchedule={async () => {
+              await reloadMemberships()
               if (tenant) setTenant(tenant, 'admin')
               navigate('/schedule')
             }}
-            onGoMembers={() => navigate(`/admin?org=${orgId}&tab=members`)}
-            onGoAdmin={() => navigate(`/admin?org=${orgId}`)}
+            onGoMembers={async () => {
+              await reloadMemberships()
+              if (tenant) setTenant(tenant, 'admin')
+              navigate(`/admin?org=${orgId}&tab=members`)
+            }}
+            onGoAdmin={async () => {
+              await reloadMemberships()
+              if (tenant) setTenant(tenant, 'admin')
+              navigate(`/admin?org=${orgId}`)
+            }}
           />
         </div>
         <DevFileLabel file="SetupWizardPage.tsx" />
@@ -271,13 +315,13 @@ export function SetupWizardPage() {
         <div className="max-w-lg mx-auto px-4 py-8 pb-4">
           {step === 1 && (
             <Step1OrgName
-              name={name} title={title} error={error}
-              onChange={(n, t) => { setName(n); setTitle(t) }}
+              name={name} title={title} industry={industry} error={error}
+              onChange={(n, t, ind) => { setName(n); setTitle(t); setIndustry(ind) }}
             />
           )}
           {step === 2 && (
             <Step2Mode
-              mode={mode} error={error}
+              mode={mode} error={error} industry={industry}
               onChange={setMode}
             />
           )}
@@ -301,13 +345,7 @@ export function SetupWizardPage() {
             />
           )}
           {step === 6 && (
-            <Step6Legend
-              legendItems={legendItems} error={error}
-              onChange={setLegendItems}
-            />
-          )}
-          {step === 7 && (
-            <Step7CustomFields
+            <Step6CustomFields
               fields={customFields} isFreeform={isFreeform} error={error}
               onChange={setCustomFields}
             />
@@ -323,7 +361,7 @@ export function SetupWizardPage() {
             disabled={nextDisabled}
             className="w-full py-3.5 rounded-2xl font-bold text-sm bg-[var(--color-brand-primary)] text-white disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-95 active:scale-[0.99] transition-all"
           >
-            {saving ? '저장 중...' : (step === 7 ? '설정 완료' : '다음 단계 →')}
+            {saving ? '저장 중...' : (step === 6 ? '설정 완료' : '다음 단계 →')}
           </button>
         </div>
       </div>
