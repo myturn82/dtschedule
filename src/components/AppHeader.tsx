@@ -235,7 +235,6 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
         <StartServiceModal
           userId={profile.id}
           onClose={() => setShowStartService(false)}
-          onSuccess={() => { window.location.href = '/customer-admin' }}
         />
       )}
 

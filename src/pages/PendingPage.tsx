@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { DevFileLabel } from '../components/DevFileLabel'
 import { useAuth } from '../hooks/useAuth'
 import { useTenant } from '../contexts/TenantContext'
@@ -38,7 +39,8 @@ const IJoin = () => (
 const labelSt: React.CSSProperties = { display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-700)', marginBottom: 7 }
 
 export function PendingPage() {
-  const { profile, signOut, deleteAccount } = useAuth()
+  const navigate = useNavigate()
+  const { profile, signOut, deleteAccount, refreshCustomer } = useAuth()
   const { reloadMemberships } = useTenant()
   const [mode, setMode] = useState<'choose' | 'start-service' | 'join-org'>('choose')
 
@@ -169,16 +171,80 @@ export function PendingPage() {
     setSelTenantRoles(null); setSelRole(null); setLoadingRoles(false); setError(null)
   }
 
+  function nameToSlug(name: string): string {
+    const base = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-+|-+$/g, '')
+    return `${base || 'org'}-${Math.random().toString(36).slice(2, 7)}`
+  }
+
+  const DEFAULT_SLOTS = ['09-10', '10-11', '11-12', '12-13', '13-14', '14-15', '15-16', '16-17', '17-18']
+
   async function handleCreateCustomer(e: React.FormEvent) {
     e.preventDefault()
     if (!profile || !customerName.trim()) return
     if (!isValidPhone(customerPhone)) { setError('올바른 전화번호를 입력해 주세요. (예: 010-1234-5678)'); return }
-    setCustomerCreating(true)
-    const { data, error } = await supabase
-      .from('customers').insert({ name: customerName.trim(), phone: customerPhone.trim(), owner_user_id: profile.id, plan: 'basic' }).select().single()
-    if (error) { setError(`오류: ${error.message}`); setCustomerCreating(false); return }
-    if (data) { window.location.href = '/customer-admin'; return }
-    setCustomerCreating(false)
+    setCustomerCreating(true); setError(null)
+
+    // 1. 기존 고객 확인 또는 신규 생성
+    const { data: existingCustomer } = await supabase
+      .from('customers').select('id, is_active').eq('owner_user_id', profile.id)
+      .order('created_at', { ascending: false }).limit(1).maybeSingle()
+
+    let customerId: string
+    if (existingCustomer?.id && existingCustomer.is_active !== false) {
+      customerId = existingCustomer.id
+    } else {
+      const { error: customerErr } = await supabase
+        .from('customers')
+        .insert({ name: customerName.trim(), phone: customerPhone.trim(), owner_user_id: profile.id, plan: 'basic', is_active: true })
+      if (customerErr) { setError(`오류: ${customerErr.message}`); setCustomerCreating(false); return }
+      const { data: newCustomer } = await supabase
+        .from('customers').select('id').eq('owner_user_id', profile.id)
+        .order('created_at', { ascending: false }).limit(1).single()
+      if (!newCustomer) { setError('오류: 고객 정보를 불러오지 못했습니다.'); setCustomerCreating(false); return }
+      customerId = newCustomer.id
+    }
+
+    // 2. 조직 생성 — ID 미리 생성 후 INSERT만 수행 (SELECT 없이, RLS 우회)
+    const orgName = customerName.trim()
+    const tenantSettings = {
+      title: orgName, time_slots: DEFAULT_SLOTS,
+      open_from: '09:00', open_to: '22:00', slot_interval_minutes: 60,
+      timezone: 'Asia/Seoul', locale: 'ko-KR', tenant_mode: '회원공유',
+    }
+    let tenantId: string | null = null
+    let tenantSlug = ''
+    for (let attempt = 0; attempt < 3; attempt++) {
+      tenantId = crypto.randomUUID()
+      tenantSlug = nameToSlug(orgName)
+      const { error: tenantErr } = await supabase.from('tenants').insert({
+        id: tenantId, slug: tenantSlug, name: orgName,
+        customer_id: customerId, is_active: true, settings: tenantSettings,
+      })
+      if (!tenantErr) break
+      if (tenantErr.code !== '23505') { setError(`오류: ${tenantErr.message}`); setCustomerCreating(false); return }
+      tenantId = null
+    }
+    if (!tenantId) { setError('오류: 조직 생성에 실패했습니다. 다시 시도해 주세요.'); setCustomerCreating(false); return }
+
+    // 3. admin 멤버 등록 (고객 소유자 정책으로 허용)
+    await supabase.from('tenant_members').insert({
+      tenant_id: tenantId, user_id: profile.id, role: 'admin', is_approved: true,
+    })
+
+    // 4. 스케줄 규칙 생성 (멤버 등록 후 허용)
+    await supabase.from('schedule_rules').insert(
+      [0, 1, 2, 3, 4, 5, 6].flatMap(day =>
+        DEFAULT_SLOTS.map(slot => ({ tenant_id: tenantId!, day_of_week: day, time_slot: slot, is_open: true }))
+      )
+    )
+
+    // 5. SPA 이동 + 컨텍스트 백그라운드 갱신 (sessionStorage로 DB SELECT 우회)
+    sessionStorage.setItem('vs_setup_tenant', JSON.stringify({
+      id: tenantId, slug: tenantSlug, name: orgName,
+      customer_id: customerId, is_active: true, settings: tenantSettings,
+    }))
+    navigate('/setup?org=' + tenantId)
+    refreshCustomer().then(() => reloadMemberships())
   }
 
   const defaultRoles = [

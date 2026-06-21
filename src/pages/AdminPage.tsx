@@ -177,7 +177,7 @@ export function AdminPage() {
   const initOrgId = searchParams.get('org')
 
   const { profile, loading: authLoading } = useAuth()
-  const { tenant, memberships, updateCurrentTenant } = useTenant()
+  const { tenant, memberships, tenantRole, updateCurrentTenant } = useTenant()
 
   // Local org selection — independent from TenantContext (doesn't affect schedule page)
   const [adminTenant, setAdminTenant] = useState<Tenant | null>(null)
@@ -283,6 +283,9 @@ export function AdminPage() {
     setCustomFields(s.custom_fields ?? [])
   }, [adminTenant?.id])
 
+  // admin memberships key — stable string, changes only when actual admin orgs change
+  const adminMemberKey = memberships.filter(m => m.role === 'admin').map(m => m.tenant_id).sort().join(',')
+
   // Load available orgs based on user role
   useEffect(() => {
     if (!profile || authLoading) return
@@ -293,9 +296,22 @@ export function AdminPage() {
         const { data } = await supabase.from('tenants').select('*').order('name')
         orgs = (data ?? []) as Tenant[]
       } else {
-        orgs = memberships
+        const ctxAdminOrgs = memberships
           .filter(m => m.role === 'admin')
           .map(m => (m as { tenant: Tenant }).tenant)
+
+        if (ctxAdminOrgs.length > 0) {
+          orgs = ctxAdminOrgs
+        } else {
+          // memberships가 아직 로드되지 않은 경우(위저드 직후 등) — DB 직접 조회
+          const { data } = await supabase
+            .from('tenant_members')
+            .select('*, tenant:tenants(*)')
+            .eq('user_id', currentProfile.id)
+            .eq('role', 'admin')
+            .neq('is_approved', false)
+          orgs = ((data ?? []) as { tenant: Tenant }[]).map(m => m.tenant).filter(Boolean)
+        }
       }
       setAvailableTenants(orgs)
       const init =
@@ -307,7 +323,7 @@ export function AdminPage() {
       setOrgLoading(false)
     }
     loadOrgs()
-  }, [profile?.id, authLoading])
+  }, [profile?.id, authLoading, adminMemberKey])
 
   const adminTenantMode = displayMode(adminTenant?.settings?.tenant_mode)
   const adminIsFreeform = adminTenantMode === '비회원'
@@ -326,8 +342,10 @@ export function AdminPage() {
   }
 
   // Access control: super admin, current tenant admin, or admin of any org
+  // tenantRole === 'admin' covers the case where setTenant() was called but memberships haven't reloaded yet
   const canAdmin =
     profile?.is_super_admin ||
+    tenantRole === 'admin' ||
     memberships.some(m => m.role === 'admin')
 
   if (!profile || !canAdmin) {

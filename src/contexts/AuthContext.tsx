@@ -47,7 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   async function fetchProfile(userId: string) {
     const [profileRes, customerRes] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
-      supabase.from('customers').select('*').eq('owner_user_id', userId).maybeSingle(),
+      supabase.from('customers').select('*').eq('owner_user_id', userId).order('created_at', { ascending: false }).limit(1).maybeSingle(),
     ])
     let profileData = profileRes.data
     setMyCustomer(customerRes.data ?? null)
@@ -77,6 +77,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .from('customers')
       .select('*')
       .eq('owner_user_id', session.user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle()
     setMyCustomer(data ?? null)
     return data ?? null
