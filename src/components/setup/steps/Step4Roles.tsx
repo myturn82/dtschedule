@@ -41,7 +41,7 @@ export function Step4Roles({ roles, error, onAdd, onDelete }: Props) {
       <StepHeader step={WIZARD_STEPS[3]} />
 
       <Field label="미리보기">
-        <RolePreviewCalendar roles={roles} />
+        <RolePreviewCalendar roles={roles} previewMode={displayMode} previewName={name.trim()} />
       </Field>
 
       {roles.length > 0 && (

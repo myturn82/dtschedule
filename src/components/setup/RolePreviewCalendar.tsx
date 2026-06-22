@@ -6,11 +6,26 @@ const SAMPLE_SLOTS = ['9-11', '11-13', '13-15']
 
 interface Props {
   roles: TenantRole[]
+  previewMode?: 'none' | 'split' | 'bar'
+  previewName?: string
 }
 
-export function RolePreviewCalendar({ roles }: Props) {
-  const splitRoles = roles.filter(r => r.split_cell && !r.indicator_bar)
-  const barRoles = roles.filter(r => r.indicator_bar)
+export function RolePreviewCalendar({ roles, previewMode, previewName }: Props) {
+  const previewRole: TenantRole | null = previewMode && previewMode !== 'none'
+    ? {
+        id: '__preview__',
+        tenant_id: '',
+        name: previewName || '새 역할',
+        split_cell: previewMode === 'split',
+        indicator_bar: previewMode === 'bar',
+        requires_customer_info: false,
+        display_order: 999,
+        created_at: '',
+      }
+    : null
+  const allRoles = previewRole ? [...roles, previewRole] : roles
+  const splitRoles = allRoles.filter(r => r.split_cell && !r.indicator_bar)
+  const barRoles = allRoles.filter(r => r.indicator_bar)
   const hasSplit = splitRoles.length > 0
 
   function slotLabel(slot: string) {
