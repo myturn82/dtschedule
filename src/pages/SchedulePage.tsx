@@ -198,7 +198,6 @@ export function SchedulePage() {
       {profiles.map(p => (
         <option key={p.id} value={p.id}>{p.name}</option>
       ))}
-      <option value="__unassigned__">미귀속 배정</option>
     </select>
   ) : null
 
