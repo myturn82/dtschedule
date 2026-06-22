@@ -1,5 +1,8 @@
 import { useState } from 'react'
 import { RolePreviewCalendar } from '../RolePreviewCalendar'
+import { StepHeader, WIZARD_STEPS } from '../StepHeader'
+import { Field, ErrLine } from '../WizardField'
+import { WizardIcon } from '../WizardIcons'
 import type { TenantRole } from '../../../types'
 
 interface Props {
@@ -34,83 +37,50 @@ export function Step4Roles({ roles, error, onAdd, onDelete }: Props) {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Icon + header */}
-      <div className="text-center space-y-2 pt-2">
-        <div className="text-4xl select-none">👥</div>
-        <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">역할이 필요한가요?</h2>
-        <p className="text-[var(--color-text-muted)] text-sm leading-relaxed max-w-sm mx-auto">'팀장·봉사자', '강사·보조' 처럼 역할을 구분하면 달력에서 역할별로 칸이 나뉩니다.</p>
-      </div>
+    <div className="step-body">
+      <StepHeader step={WIZARD_STEPS[3]} />
 
-      {/* Live preview */}
-      <div>
-        <p className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-2">미리보기</p>
+      <Field label="미리보기">
         <RolePreviewCalendar roles={roles} />
-      </div>
+      </Field>
 
-      {/* Current roles */}
       {roles.length > 0 && (
-        <div className="space-y-1.5">
+        <div className="row-list">
           {roles.map(role => (
-            <div key={role.id} className="flex items-center gap-2 px-3 py-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)]">
-              <span className="flex-1 text-sm font-medium text-[var(--color-text-primary)]">{role.name}</span>
-              {role.split_cell && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700">칸분리</span>}
-              {role.indicator_bar && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">바표시</span>}
-              <button onClick={() => onDelete(role.id)} className="text-[var(--color-text-muted)] hover:text-red-500 text-sm select-none">✕</button>
+            <div key={role.id} className="role-row">
+              <span className="role-name">{role.name}</span>
+              {role.split_cell && <span className="chip chip-meta tone-blue">칸분리</span>}
+              {role.indicator_bar && <span className="chip chip-meta tone-amber">바표시</span>}
+              <button className="iconbtn danger" onClick={() => onDelete(role.id)} aria-label="삭제"><WizardIcon.x size={15} /></button>
             </div>
           ))}
         </div>
       )}
 
-      {/* Add form */}
-      <div className="space-y-3 p-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)]">
-        <p className="text-sm font-semibold text-[var(--color-text-secondary)]">역할 추가</p>
-        <input
-          type="text"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          placeholder="예: 팀장, 강사, 봉사자"
-          className="w-full px-3 py-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]"
-          onKeyDown={e => e.key === 'Enter' && handleAdd()}
-        />
+      <div className="addbox">
+        <p className="addbox-title">역할 추가</p>
+        <input className="ipt" value={name} placeholder="예: 팀장, 강사, 봉사자"
+          onChange={e => setName(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAdd()} />
         <div>
-          <p className="text-xs text-[var(--color-text-muted)] mb-1.5">달력 표시 방식</p>
-          <div className="flex gap-1.5">
+          <p className="mini-label">달력 표시 방식</p>
+          <div className="seg3">
             {DISPLAY_OPTIONS.map(opt => (
-              <button
-                key={opt.value}
-                onClick={() => setDisplayMode(opt.value)}
-                className={`flex-1 py-1.5 px-1 rounded-lg text-[11px] font-medium border transition-colors ${
-                  displayMode === opt.value
-                    ? 'border-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/8 text-[var(--color-brand-primary)]'
-                    : 'border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-brand-primary)]/40'
-                }`}
-              >
+              <button key={opt.value} className={`seg3-b${displayMode === opt.value ? ' on' : ''}`} onClick={() => setDisplayMode(opt.value)}>
                 {opt.label}
               </button>
             ))}
           </div>
-          <p className="text-[10px] text-[var(--color-text-muted)] mt-1">
-            {DISPLAY_OPTIONS.find(o => o.value === displayMode)?.desc}
-          </p>
+          <p className="mini-hint">{DISPLAY_OPTIONS.find(o => o.value === displayMode)?.desc}</p>
         </div>
-        {addError && <p className="text-xs text-red-500">{addError}</p>}
-        <button
-          onClick={handleAdd}
-          disabled={!name.trim() || adding}
-          className="w-full py-2 rounded-xl text-sm font-semibold border-2 border-dashed border-[var(--color-brand-primary)] text-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary)]/5 disabled:opacity-40 transition-colors"
-        >
-          {adding ? '추가 중...' : '+ 역할 추가'}
+        {addError && <p className="err-line"><WizardIcon.warn size={14} /> {addError}</p>}
+        <button className="btn btn-dashed" disabled={!name.trim() || adding} onClick={handleAdd}>
+          <WizardIcon.plus size={15} sw={2} /> {adding ? '추가 중...' : '역할 추가'}
         </button>
       </div>
 
-      {/* Note */}
-      <p className="text-sm text-center text-[var(--color-text-muted)]">
-        💡 역할이 없어도 괜찮아요 — 시간대별 배정만 필요하다면 바로 다음으로 넘어가세요.
-      </p>
+      <p className="center-note"><WizardIcon.bulb size={14} /> 역할이 없어도 괜찮아요 — 시간대별 배정만 필요하다면 바로 다음으로 넘어가세요.</p>
 
-      {/* Error */}
-      {error && <p className="text-sm text-red-500 text-center">{error}</p>}
+      <ErrLine error={error} />
     </div>
   )
 }

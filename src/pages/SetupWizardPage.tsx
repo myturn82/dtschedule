@@ -5,25 +5,22 @@ import { useAdmin } from '../hooks/useAdmin'
 import { useTenantRoles } from '../hooks/useTenantRoles'
 import { useTenant } from '../contexts/TenantContext'
 import { displayMode } from '../lib/tenantMode'
+import { getKoreanHolidaysInYear } from '../utils/koreanHolidays'
 import { DevFileLabel } from '../components/DevFileLabel'
-import { WizardProgress } from '../components/setup/WizardProgress'
+import { WizardIcon } from '../components/setup/WizardIcons'
+import { isIndustryComplete } from '../components/IndustryPicker'
+import { WIZARD_STEPS } from '../components/setup/StepHeader'
 import { Step1OrgName } from '../components/setup/steps/Step1OrgName'
 import { Step2Mode } from '../components/setup/steps/Step2Mode'
 import { Step3Slots } from '../components/setup/steps/Step3Slots'
 import { Step4Roles } from '../components/setup/steps/Step4Roles'
 import { Step5Rules } from '../components/setup/steps/Step5Rules'
-import { Step7CustomFields as Step6CustomFields } from '../components/setup/steps/Step7CustomFields'
+import { Step6Legend } from '../components/setup/steps/Step6Legend'
+import { Step7CustomFields } from '../components/setup/steps/Step7CustomFields'
 import { StepDone } from '../components/setup/steps/StepDone'
-import type { Tenant, TenantMode, CustomFieldDef } from '../types'
+import type { Tenant, TenantMode, CustomFieldDef, LegendItem } from '../types'
 
-const STEP_DEFS: { label: string }[] = [
-  { label: '조직명' },
-  { label: '모드' },
-  { label: '슬롯' },
-  { label: '역할' },
-  { label: '규칙' },
-  { label: '필드' },
-]
+const TOTAL = WIZARD_STEPS.length // 7
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
 const MODE_LABEL: Record<string, string> = {
@@ -72,6 +69,7 @@ export function SetupWizardPage() {
     updateTenantName,
     upsertScheduleRulesForSlots,
     toggleScheduleRule,
+    addDateOverride,
   } = useAdmin(orgId)
 
   const { roles, addRole, deleteRole } = useTenantRoles(orgId)
@@ -87,6 +85,7 @@ export function SetupWizardPage() {
   const [mode, setMode] = useState<TenantMode>('회원공유')
   const [slots, setSlots] = useState<string[]>([])
   const [industry, setIndustry] = useState('')
+  const [legendItems, setLegendItems] = useState<LegendItem[]>([])
   const [customFields, setCustomFields] = useState<CustomFieldDef[]>([])
 
   useEffect(() => {
@@ -96,19 +95,21 @@ export function SetupWizardPage() {
     setMode(displayMode(tenant.settings?.tenant_mode))
     setSlots(tenant.settings?.time_slots ?? [])
     setIndustry(tenant.business_type ?? '')
+    setLegendItems(tenant.settings?.legend_items ?? [])
     setCustomFields(tenant.settings?.custom_fields ?? [])
   }, [tenant])
 
   const isFreeform = mode === '비회원'
 
-  // Steps 6 and 7 (non-freeform) can be skipped
-  const isSkippable = (s: number) => s === 6 && !isFreeform
+  // Steps 6(범례), 7(커스텀필드) can be skipped
+  const isSkippable = (s: number) => (s === 6 || s === 7) && !(s === 7 && isFreeform)
 
   // ── Persist helpers ────────────────────────────────────────────────────────
 
   async function saveStep1(): Promise<boolean> {
     if (!name.trim()) { setError('조직명을 입력해주세요'); return false }
     if (!industry) { setError('업종을 선택해주세요'); return false }
+    if (!isIndustryComplete(industry)) { setError('세부 업종을 선택해주세요'); return false }
     setSaving(true); setError('')
     const nameErr = await updateTenantName(orgId, name.trim())
     const settingsErr = await updateTenantSettings(orgId, { title: title.trim() || name.trim() })
@@ -138,6 +139,13 @@ export function SetupWizardPage() {
   }
 
   async function saveStep6(): Promise<boolean> {
+    setSaving(true); setError('')
+    const err = await updateTenantSettings(orgId, { legend_items: legendItems })
+    if (err) { setError(err); setSaving(false); return false }
+    setSaving(false); return true
+  }
+
+  async function saveStep7(): Promise<boolean> {
     if (isFreeform && customFields.length === 0) {
       setError('비회원 모드에서는 필드를 하나 이상 추가해주세요')
       return false
@@ -154,11 +162,17 @@ export function SetupWizardPage() {
 
   // ── Apply schedule rule template ───────────────────────────────────────────
 
-  async function applyRuleTemplate(openDays: number[]) {
+  async function applyRuleTemplate(openDays: number[], includeHolidays?: boolean) {
     const tasks = scheduleRules
       .filter(r => r.is_open !== openDays.includes(r.day_of_week))
       .map(r => toggleScheduleRule(r.id, r.is_open))
     await Promise.all(tasks)
+
+    if (includeHolidays) {
+      const thisYear = new Date().getFullYear()
+      const holidays = [...getKoreanHolidaysInYear(thisYear), ...getKoreanHolidaysInYear(thisYear + 1)]
+      await Promise.all(holidays.map(h => addDateOverride(h.date, true, false, h.name)))
+    }
   }
 
   // ── Navigation ────────────────────────────────────────────────────────────
@@ -168,10 +182,8 @@ export function SetupWizardPage() {
     if (stepNum === 1) ok = await saveStep1()
     else if (stepNum === 2) ok = await saveStep2()
     else if (stepNum === 3) ok = await saveStep3()
-    else if (stepNum === 6) {
-      ok = await saveStep6()
-      if (ok) { setStep(7); return }
-    }
+    else if (stepNum === 6) ok = await saveStep6()
+    else if (stepNum === 7) ok = await saveStep7()
     if (ok) setStep(stepNum + 1)
   }
 
@@ -180,13 +192,19 @@ export function SetupWizardPage() {
     setStep(s => s - 1)
   }
 
+  function jumpTo(n: number) {
+    if (n >= step) return
+    setError('')
+    setStep(n)
+  }
+
   async function skip() {
     setError('')
-    if (step === 6) {
+    if (step === TOTAL) {
       // 마지막 단계 건너뛰기 — 완료 플래그는 반드시 저장 (미저장 시 다음 접속에 위저드 재진입)
       await updateTenantSettings(orgId, { setup_completed_at: new Date().toISOString() })
       sessionStorage.removeItem('vs_setup_tenant')
-      setStep(7)
+      setStep(TOTAL + 1)
     } else {
       setStep(s => s + 1)
     }
@@ -209,9 +227,9 @@ export function SetupWizardPage() {
 
   const nextDisabled =
     saving ||
-    (step === 1 && (!name.trim() || !industry)) ||
+    (step === 1 && (!name.trim() || !isIndustryComplete(industry))) ||
     (step === 3 && slots.length === 0) ||
-    (step === 6 && isFreeform && customFields.length === 0)
+    (step === 7 && isFreeform && customFields.length === 0)
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -243,76 +261,26 @@ export function SetupWizardPage() {
     )
   }
 
-  if (step === 7) {
-    return (
-      <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center p-4">
-        <div className="w-full max-w-md">
-          <StepDone
-            orgName={name}
-            slotCount={slots.length}
-            roleCount={roles.length}
-            modeName={MODE_LABEL[mode] ?? mode}
-            openDays={openDaysSummary}
-            shareUrl={shareUrl}
-            onGoSchedule={async () => {
-              await reloadMemberships()
-              if (tenant) setTenant(tenant, 'admin')
-              navigate('/schedule')
-            }}
-            onGoMembers={async () => {
-              await reloadMemberships()
-              if (tenant) setTenant(tenant, 'admin')
-              navigate(`/admin?org=${orgId}&tab=members`)
-            }}
-            onGoAdmin={async () => {
-              await reloadMemberships()
-              if (tenant) setTenant(tenant, 'admin')
-              navigate(`/admin?org=${orgId}`)
-            }}
-          />
-        </div>
-        <DevFileLabel file="SetupWizardPage.tsx" />
-      </div>
-    )
-  }
+  const isDone = step > TOTAL
 
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--color-bg)]">
-      {/* Sticky top bar */}
-      <div className="sticky top-0 z-20 bg-[var(--color-bg)]/95 backdrop-blur-sm border-b border-[var(--color-border)]">
-        <div className="flex items-center gap-3 px-4 py-3 max-w-lg mx-auto w-full">
-          {step > 1 ? (
-            <button
-              onClick={goBack}
-              className="flex items-center gap-1 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
-            >
-              <span>←</span> <span>이전</span>
-            </button>
-          ) : (
-            <div className="w-16" />
-          )}
-          <div className="flex-1 text-center">
-            <span className="text-sm font-semibold text-[var(--color-text-primary)]">{step}</span>
-            <span className="text-sm text-[var(--color-text-muted)]">/{STEP_DEFS.length}단계</span>
-            <span className="ml-2 text-xs text-[var(--color-text-muted)]">— {STEP_DEFS[step - 1].label}</span>
-          </div>
-          {isSkippable(step) ? (
-            <button
-              onClick={skip}
-              className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors w-16 text-right"
-            >
-              건너뛰기
-            </button>
-          ) : (
-            <div className="w-16" />
-          )}
-        </div>
-        <WizardProgress step={step} total={STEP_DEFS.length} />
-      </div>
+    <div className="wiz-root wiz-stage">
+      <div className="wiz-card">
+        <div className="wiz-progress"><div className="wiz-progress-fill" style={{ width: `${(Math.min(step, TOTAL) / TOTAL) * 100}%` }} /></div>
 
-      {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-lg mx-auto px-4 py-8 pb-4">
+        {!isDone && (
+          <div className="wiz-top">
+            <span className="wiz-step-no">STEP <b>{step}</b> / {TOTAL}</span>
+            <div className="wiz-dots">
+              {WIZARD_STEPS.map(s => (
+                <button key={s.n} className={`wiz-dot${s.n === step ? ' cur' : s.n < step ? ' done' : ''}`}
+                  disabled={s.n >= step} onClick={() => jumpTo(s.n)} aria-label={`${s.n}단계로`} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="wiz-scroll">
           {step === 1 && (
             <Step1OrgName
               name={name} title={title} industry={industry} error={error}
@@ -345,27 +313,55 @@ export function SetupWizardPage() {
             />
           )}
           {step === 6 && (
-            <Step6CustomFields
+            <Step6Legend
+              legendItems={legendItems} error={error}
+              onChange={setLegendItems}
+            />
+          )}
+          {step === 7 && (
+            <Step7CustomFields
               fields={customFields} isFreeform={isFreeform} error={error}
               onChange={setCustomFields}
             />
           )}
+          {isDone && (
+            <StepDone
+              orgName={name}
+              slotCount={slots.length}
+              roleCount={roles.length}
+              fieldCount={customFields.length}
+              modeName={MODE_LABEL[mode] ?? mode}
+              openDays={openDaysSummary}
+              shareUrl={shareUrl}
+              onGoSchedule={async () => {
+                await reloadMemberships()
+                if (tenant) setTenant(tenant, 'admin')
+                navigate('/schedule')
+              }}
+              onGoMembers={async () => {
+                await reloadMemberships()
+                if (tenant) setTenant(tenant, 'admin')
+                navigate(`/admin?org=${orgId}&tab=members`)
+              }}
+              onGoAdmin={async () => {
+                await reloadMemberships()
+                if (tenant) setTenant(tenant, 'admin')
+                navigate(`/admin?org=${orgId}`)
+              }}
+            />
+          )}
         </div>
-      </div>
 
-      {/* Sticky footer */}
-      <div className="sticky bottom-0 bg-[var(--color-bg)]/95 backdrop-blur-sm border-t border-[var(--color-border)] p-4">
-        <div className="max-w-lg mx-auto">
-          <button
-            onClick={() => goNext(step)}
-            disabled={nextDisabled}
-            className="w-full py-3.5 rounded-2xl font-bold text-sm bg-[var(--color-brand-primary)] text-white disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-95 active:scale-[0.99] transition-all"
-          >
-            {saving ? '저장 중...' : (step === 6 ? '설정 완료' : '다음 단계 →')}
-          </button>
-        </div>
+        {!isDone && (
+          <div className="wiz-foot">
+            {step > 1 && <button className="btn btn-ghost back" onClick={goBack}><WizardIcon.arrowLeft size={15} /> 이전</button>}
+            {isSkippable(step) && <button className="btn btn-ghost" onClick={skip}>건너뛰기</button>}
+            <button className="btn btn-primary" disabled={nextDisabled} onClick={() => goNext(step)}>
+              {saving ? '저장 중...' : (step === TOTAL ? '완료하기' : '다음')} <WizardIcon.arrowRight size={15} />
+            </button>
+          </div>
+        )}
       </div>
-
       <DevFileLabel file="SetupWizardPage.tsx" />
     </div>
   )

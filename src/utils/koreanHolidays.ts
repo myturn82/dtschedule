@@ -71,3 +71,15 @@ export function getKoreanHolidayName(dateStr: string): string | null {
 export function isKoreanHoliday(dateStr: string): boolean {
   return getKoreanHolidayName(dateStr) !== null
 }
+
+export function getKoreanHolidaysInYear(year: number): { date: string; name: string }[] {
+  const result: { date: string; name: string }[] = SOLAR_HOLIDAYS.map(([m, d, name]) => ({
+    date: `${year}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`,
+    name,
+  }))
+  const annual = ANNUAL_HOLIDAYS[year]
+  if (annual) {
+    for (const [date, name] of Object.entries(annual)) result.push({ date, name })
+  }
+  return result
+}

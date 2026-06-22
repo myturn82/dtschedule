@@ -1,7 +1,10 @@
+import { WizardIcon } from '../WizardIcons'
+
 interface Props {
   orgName: string
   slotCount: number
   roleCount: number
+  fieldCount: number
   modeName: string
   openDays: string
   shareUrl: string
@@ -10,7 +13,7 @@ interface Props {
   onGoAdmin: () => void
 }
 
-export function StepDone({ orgName, slotCount, roleCount, modeName, openDays, shareUrl, onGoSchedule, onGoMembers, onGoAdmin }: Props) {
+export function StepDone({ orgName, slotCount, roleCount, fieldCount, modeName, openDays, shareUrl, onGoSchedule, onGoMembers, onGoAdmin }: Props) {
   function copyShareUrl() {
     navigator.clipboard.writeText(shareUrl).then(() => alert('공유 링크가 복사됐습니다.\n' + shareUrl))
   }
@@ -20,55 +23,31 @@ export function StepDone({ orgName, slotCount, roleCount, modeName, openDays, sh
     { label: '시간 슬롯', value: `${slotCount}개` },
     { label: '역할', value: roleCount > 0 ? `${roleCount}개` : '없음' },
     { label: '운영 요일', value: openDays || '미설정' },
+    { label: '커스텀 필드', value: `${fieldCount}개` },
   ]
 
   return (
-    <div className="space-y-6 text-center">
-      <div className="text-5xl select-none">🎉</div>
-
-      <div>
-        <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">설정 완료!</h2>
-        <p className="text-[var(--color-text-muted)]">
-          <span className="font-semibold text-[var(--color-text-primary)]">{orgName}</span> 조직이 준비됐어요.
-        </p>
+    <div className="step-body">
+      <div className="step-head">
+        <span className="step-badge tone-accent done-badge"><WizardIcon.party size={28} sw={1.7} /></span>
+        <h2 className="step-title">설정 완료!</h2>
+        <p className="step-desc"><b>{orgName || '내 조직'}</b> 조직이 준비됐어요.</p>
       </div>
 
-      {/* Summary */}
-      <div className="text-left rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] divide-y divide-[var(--color-border)]">
+      <div className="summary-card">
         {summary.map(row => (
-          <div key={row.label} className="flex justify-between px-4 py-2.5 text-sm">
-            <span className="text-[var(--color-text-muted)]">{row.label}</span>
-            <span className="font-semibold text-[var(--color-text-primary)]">{row.value}</span>
+          <div key={row.label} className="summary-row">
+            <span>{row.label}</span>
+            <b>{row.value}</b>
           </div>
         ))}
       </div>
 
-      {/* CTAs */}
-      <div className="space-y-2.5">
-        <button
-          onClick={onGoSchedule}
-          className="w-full py-3.5 rounded-2xl font-bold text-sm bg-[var(--color-brand-primary)] text-white hover:brightness-95 transition-all shadow-sm"
-        >
-          📅 스케줄 보러가기
-        </button>
-        <button
-          onClick={onGoMembers}
-          className="w-full py-3.5 rounded-2xl font-semibold text-sm border-2 border-[var(--color-brand-primary)] text-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary)]/5 transition-colors"
-        >
-          👤 회원 초대하기
-        </button>
-        <button
-          onClick={copyShareUrl}
-          className="w-full py-3.5 rounded-2xl font-semibold text-sm border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
-        >
-          🔗 공유 링크 복사
-        </button>
-        <button
-          onClick={onGoAdmin}
-          className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
-        >
-          전체 관리자 설정 열기 →
-        </button>
+      <div className="done-cta">
+        <button className="btn btn-primary wide" onClick={onGoSchedule}><WizardIcon.calendar size={16} /> 스케줄 보러가기</button>
+        <button className="btn btn-outline wide" onClick={onGoMembers}><WizardIcon.user size={16} /> 회원 초대하기</button>
+        <button className="btn btn-ghost wide" onClick={copyShareUrl}><WizardIcon.link size={16} /> 공유 링크 복사</button>
+        <button className="link-btn center" onClick={onGoAdmin}>전체 관리자 설정 열기 <WizardIcon.arrowRight size={14} /></button>
       </div>
     </div>
   )
