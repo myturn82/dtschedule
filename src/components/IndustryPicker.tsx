@@ -52,9 +52,11 @@ export function IndustryPicker({ value, onChange, inputCls, hideLabel }: Props) 
 
   const topCat = INDUSTRY_CATEGORIES.find(c => c.label === selTop)
   const hasChildren = topCat && topCat.children.length > 0
+  const selectedMidCat = topCat?.children.find(c => c.value === selMid)
   const isEtcTop = topCat?.value === 'etc'
-  const isEtcMid = selMid === 'other'
+  const isEtcMid = selMid === 'other' || !!selectedMidCat?.hasCustomInput
   const showCustom = isEtcTop || isEtcMid
+  const customPlaceholder = selectedMidCat?.customPlaceholder ?? '업종을 직접 입력하세요'
 
   function emit(top: string, mid: string, cur: string) {
     const topC = INDUSTRY_CATEGORIES.find(c => c.label === top)
@@ -65,11 +67,12 @@ export function IndustryPicker({ value, onChange, inputCls, hideLabel }: Props) 
       return
     }
     if (!mid) { onChange(top); return }
-    if (mid === 'other') {
-      onChange(cur ? `${top} / ${cur}` : `${top} / 기타`)
+    const midC = topC.children.find(c => c.value === mid)
+    if (mid === 'other' || midC?.hasCustomInput) {
+      const fallback = midC?.label ?? '기타'
+      onChange(cur ? `${top} / ${cur}` : `${top} / ${fallback}`)
       return
     }
-    const midC = topC.children.find(c => c.value === mid)
     onChange(midC ? `${top} / ${midC.label}` : top)
   }
 
@@ -131,7 +134,7 @@ export function IndustryPicker({ value, onChange, inputCls, hideLabel }: Props) 
             type="text"
             value={custom}
             onChange={e => handleCustomChange(e.target.value)}
-            placeholder="업종을 직접 입력하세요"
+            placeholder={customPlaceholder}
             className={cls}
           />
         </div>

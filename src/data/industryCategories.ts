@@ -1,4 +1,4 @@
-export interface IndustryMid { value: string; label: string }
+export interface IndustryMid { value: string; label: string; hasCustomInput?: boolean; customPlaceholder?: string }
 export interface IndustryTop { value: string; label: string; children: IndustryMid[] }
 
 export const INDUSTRY_CATEGORIES: IndustryTop[] = [
@@ -42,6 +42,7 @@ export const INDUSTRY_CATEGORIES: IndustryTop[] = [
       { value: 'martial',  label: '무술·격투기' },
       { value: 'golf',     label: '골프' },
       { value: 'sports',   label: '종합스포츠센터' },
+      { value: 'ball-general', label: '구기·일반 스포츠', hasCustomInput: true, customPlaceholder: '예: 축구' },
       { value: 'other',    label: '기타' },
     ],
   },
