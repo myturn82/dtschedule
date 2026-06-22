@@ -4,7 +4,7 @@ import { useTenant } from '../contexts/TenantContext'
 import type { Profile } from '../types'
 import type { MemberPreference } from '../utils/autoAssign'
 
-export type ProfileWithRole = Profile & { tenantRoleId: string | null }
+export type ProfileWithRole = Profile & { tenantRoleId: string | null; memberRole: string }
 
 export function useProfiles() {
   const { tenant } = useTenant()
@@ -16,11 +16,12 @@ export function useProfiles() {
     if (!tenant) return
     supabase
       .from('tenant_members')
-      .select('user_id, role_id, available_days, monthly_limit, profiles(*)')
+      .select('user_id, role, role_id, available_days, monthly_limit, profiles(*)')
       .eq('tenant_id', tenant.id)
       .then(({ data }) => {
         const rows = (data ?? []) as unknown as {
           user_id: string
+          role: string
           role_id: string | null
           available_days: number[] | null
           monthly_limit: number | null
@@ -28,7 +29,7 @@ export function useProfiles() {
         }[]
 
         const list = rows
-          .map(m => m.profiles ? { ...m.profiles, tenantRoleId: m.role_id ?? null } : null)
+          .map(m => m.profiles ? { ...m.profiles, tenantRoleId: m.role_id ?? null, memberRole: m.role } : null)
           .filter(Boolean) as ProfileWithRole[]
         list.sort((a, b) => a.name.localeCompare(b.name, 'ko'))
         setProfiles(list)
