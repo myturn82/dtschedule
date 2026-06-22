@@ -444,8 +444,9 @@ export function ScheduleGrid({
 
                         return (
                           <Fragment key={dowIdx}>
-                            {visibleSplitRoles.map((role) => {
+                            {visibleSplitRoles.map((role, visibleIdx) => {
                               const roleIdx = splitRoles.findIndex(r => r.id === role.id)
+                              const isLeftmost = visibleIdx === 0
                               return (
                               <td
                                 key={role.id}
@@ -467,9 +468,9 @@ export function ScheduleGrid({
                                   onClick={() => onCellClick({ year, month, day, timeSlot: slot, memberType: 'member', roleId: role.id })}
                                   highlightName={highlightName}
                                   teamLeaderUserIds={teamLeaderUserIds}
-                                  indicatorBarRoles={roleIdx === 0 ? indicatorBarRoles : []}
+                                  indicatorBarRoles={isLeftmost ? indicatorBarRoles : []}
                                   canInteract={canAdd && (isAdmin || memberRoleId === role.id)}
-                                  onIndicatorBarClick={isIndicatorBarMember && roleIdx === 0
+                                  onIndicatorBarClick={isIndicatorBarMember && isLeftmost
                                     ? () => onCellClick({ year, month, day, timeSlot: slot, memberType: 'member', roleId: memberRoleId! })
                                     : undefined}
                                   withdrawnUserIds={withdrawnUserIds}
