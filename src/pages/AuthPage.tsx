@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { ScheduleBackground } from '../components/auth/ScheduleBackground'
 import { isValidPhone, formatPhone } from '../lib/phone'
+import { TERMS, type DocKey } from '../lib/legalTerms'
 
 type Tab       = 'login' | 'signup'
 type LoginStep = 'buttons' | 'email' | 'password' | 'forgot'
@@ -128,6 +129,7 @@ export function AuthPage() {
   // Shared
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [legalDoc, setLegalDoc] = useState<DocKey | null>(null)
 
   useEffect(() => {
     if (profile && !signupInProgress.current) {
@@ -522,8 +524,8 @@ export function AuthPage() {
             )}
             <p className="af-legal">
               가입 시{' '}
-              <a onClick={() => navigate('/consent')}>서비스 약관</a>{' '}및{' '}
-              <a onClick={() => navigate('/consent')}>개인정보 처리방침</a>에 동의하게 됩니다.
+              <a onClick={() => setLegalDoc('tos')}>서비스 약관</a>{' '}및{' '}
+              <a onClick={() => setLegalDoc('privacy')}>개인정보 처리방침</a>에 동의하게 됩니다.
             </p>
           </>
         )}
@@ -734,6 +736,23 @@ export function AuthPage() {
                   <button className="af-back-link" onClick={() => { setJoinStep('choice'); setError(null) }}><IBack /> 뒤로</button>
                 </>
               )}
+            </div>
+          </div>
+        </>
+      )}
+      {/* 약관 상세 모달 */}
+      {legalDoc && (
+        <>
+          <div className="af-overlay" onClick={() => setLegalDoc(null)} />
+          <div className="af-popup-layer">
+            <div className="af-doc">
+              <div className="af-doc-head">
+                <span className="af-doc-title">{TERMS[legalDoc].title}</span>
+                <button className="af-popup-x" onClick={() => setLegalDoc(null)}><IClose /></button>
+              </div>
+              <div className="af-doc-body">
+                <p>{TERMS[legalDoc].body}</p>
+              </div>
             </div>
           </div>
         </>
