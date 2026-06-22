@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { CustomFieldDef, CustomFieldType, CustomFieldOption, OptionValueType } from '../../../types'
 import { FIELD_TYPES_WITH_OPTIONS, FIELD_TYPES_WITH_DASHBOARD, OPTION_VALUE_TYPES, getOptionUnit } from '../../../types'
+import { CUSTOM_FIELD_TEMPLATES } from '../../../utils/customFieldTemplates'
 
 const OPT_PLACEHOLDER: Record<string, { name: string; value: string }> = {
   none:     { name: '예: 일반, 특별, 기타',    value: '예: normal, special' },
@@ -240,6 +241,28 @@ export function Step7CustomFields({ fields, isFreeform, error, onChange }: Props
             ? '첫 번째 필드가 이름으로 사용됩니다. 연락처도 추가해두면 편리합니다.'
             : '배정 등록 시 이름·연락처 외에 더 받을 정보를 설정합니다. 건너뛰어도 됩니다.'}
         </p>
+      </div>
+
+      {/* 자주 쓰는 항목 */}
+      <div>
+        <p className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-2">자주 쓰는 항목</p>
+        <div className="flex flex-wrap gap-2">
+          {CUSTOM_FIELD_TEMPLATES.map(tpl => {
+            const alreadyAdded = fields.some(f => f.label.trim() === tpl.field.label)
+            return (
+              <button
+                key={tpl.label}
+                type="button"
+                disabled={alreadyAdded}
+                onClick={() => onChange([...fields, { id: crypto.randomUUID(), ...tpl.field }])}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[var(--color-border)] text-[13px] font-semibold text-[var(--color-text-secondary)] hover:border-[var(--color-brand-primary)]/50 hover:text-[var(--color-brand-primary)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                {alreadyAdded ? `${tpl.label} 추가됨` : tpl.label}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {/* 필드 카드 목록 */}
