@@ -6,6 +6,7 @@ interface Props {
   onChange: (v: string) => void
   inputCls?: string
   hideLabel?: boolean
+  requireDetail?: boolean
 }
 
 function parseValue(value: string): { topLabel: string; midLabel: string; custom: string } {
@@ -22,7 +23,17 @@ function parseValue(value: string): { topLabel: string; midLabel: string; custom
   return { topLabel, midLabel: midCat?.value ?? '', custom: '' }
 }
 
-export function IndustryPicker({ value, onChange, inputCls, hideLabel }: Props) {
+// 대분류는 선택했지만 하위 분류가 있는데도 세부 업종을 고르지 않은 상태인지 확인
+export function isIndustryComplete(value: string): boolean {
+  if (!value) return false
+  const { topLabel, midLabel } = parseValue(value)
+  if (!topLabel) return false
+  const topCat = INDUSTRY_CATEGORIES.find(c => c.label === topLabel)
+  if (!topCat || topCat.children.length === 0) return true
+  return !!midLabel
+}
+
+export function IndustryPicker({ value, onChange, inputCls, hideLabel, requireDetail }: Props) {
   const cls = inputCls ?? 'w-full px-3 py-2 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]'
   const labelCls = 'block text-xs text-[var(--color-text-secondary)] mb-1'
 
@@ -119,7 +130,7 @@ export function IndustryPicker({ value, onChange, inputCls, hideLabel }: Props) 
             onChange={e => handleMidChange(e.target.value)}
             className={cls}
           >
-            <option value="">세부 업종 선택 (선택)</option>
+            <option value="">{requireDetail ? '세부 업종을 선택하세요' : '세부 업종 선택 (선택)'}</option>
             {topCat!.children.map(c => (
               <option key={c.value} value={c.value}>{c.label}</option>
             ))}

@@ -1,5 +1,8 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import type { TenantMode } from '../../../types'
+import { StepHeader, WIZARD_STEPS } from '../StepHeader'
+import { ErrLine } from '../WizardField'
+import { WizardIcon, type WizardIconKey } from '../WizardIcons'
 
 interface Props {
   mode: TenantMode
@@ -10,28 +13,32 @@ interface Props {
 
 const MODE_CARDS: {
   mode: TenantMode
-  icon: string
+  icon: WizardIconKey
+  tone: string
   title: string
   desc: string
   examples: string
 }[] = [
   {
     mode: '회원공유',
-    icon: '👥',
+    icon: 'users',
+    tone: 'green',
     title: '회원 공유',
     desc: '회원들이 스케줄을 실시간으로 공유합니다. 관리자와 멤버가 서로의 배정 현황을 함께 확인할 수 있어 혼선 없이 운영됩니다.',
     examples: '도서관 좌석 배정, 스터디그룹, 봉사 센터, 공동 작업 공간',
   },
   {
     mode: '회원개별',
-    icon: '🗂️',
+    icon: 'lock',
+    tone: 'indigo',
     title: '회원 개별',
     desc: '관리자만 각 회원의 스케줄을 통합 관리합니다. 회원 간에는 서로의 스케줄이 보이지 않아 개인별 관리에 적합합니다.',
     examples: 'PT·코칭, 교습소, 담당자별 독립 배정 관리',
   },
   {
     mode: '비회원',
-    icon: '📋',
+    icon: 'walk',
+    tone: 'amber',
     title: '비회원 (예약·방문)',
     desc: '회원 등록 없이 방문자 정보를 직접 입력합니다.',
     examples: '미용실, 식당 예약, 병원, 방문 서비스',
@@ -120,51 +127,53 @@ function getRecommendation(industry: string): (Rec & { precision: 'mid' | 'top' 
   return { mode: '회원공유', reason: '', precision: null }
 }
 
-// ── Mini grid diagram ─────────────────────────────────────────────────────────
+// ── Mini schedule diagram ─────────────────────────────────────────────────────
 
-interface ChipData { text: string; bg: string; ink: string }
+type MdCell = { tone: 'sun' | 'blue' | 'form'; label: string } | null
 
-function SchedMiniGrid({ chips, label }: { chips: ChipData[]; label?: string }) {
-  const borderCls = 'border-[var(--color-border-table)]'
-  const headerCls = 'bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] font-semibold'
+function MdSched({ days, rows }: { days: string[]; rows: { time: string; cells: MdCell[] }[] }) {
   return (
-    <div className="flex flex-col items-center gap-[3px]">
-      {label && <span className="text-[7px] font-semibold text-[var(--color-text-muted)]">{label}</span>}
-      <div className={`border ${borderCls} rounded overflow-hidden`} style={{ width: 80 }}>
-        <div className={`flex border-b ${borderCls}`}>
-          <div className={`w-[22px] shrink-0 ${headerCls} border-r ${borderCls}`} />
-          <div className={`flex-1 text-[8px] text-center ${headerCls} py-[2px]`}>화</div>
-        </div>
-        <div className="flex">
-          <div className={`w-[22px] shrink-0 flex items-center justify-center text-[7px] ${headerCls} border-r ${borderCls} py-[3px]`}>10시</div>
-          <div className="flex-1 flex flex-col gap-[2px] p-[3px] bg-[var(--color-surface)]">
-            {chips.map((c, i) => (
-              <span key={i} className="text-[7px] font-semibold px-[3px] py-[1px] rounded text-center truncate leading-[11px]"
-                style={{ background: c.bg, color: c.ink }}>{c.text}</span>
-            ))}
-          </div>
-        </div>
-      </div>
+    <div className="md-sched" style={{ gridTemplateColumns: `13px repeat(${days.length}, 1fr)` }}>
+      <span />
+      {days.map(d => <span key={d} className="md-dow">{d}</span>)}
+      {rows.map((r, i) => (
+        <Fragment key={i}>
+          <span className="md-time">{r.time}</span>
+          {r.cells.map((c, j) => c
+            ? <span key={j} className={`md-cell md-${c.tone}`}>{c.label}</span>
+            : <span key={j} className="md-cell empty" />)}
+        </Fragment>
+      ))}
     </div>
   )
 }
 
 function MiniDiagram({ mode }: { mode: TenantMode }) {
-  const sun  = { bg: 'var(--tint-sun)',  ink: 'var(--tint-sun-ink)' }
-  const blue = { bg: 'oklch(0.93 0.06 240)', ink: 'oklch(0.38 0.16 240)' }
-  const form = { bg: 'var(--color-surface-secondary)', ink: 'var(--color-text-secondary)' }
-  if (mode === '회원공유') return (
-    <SchedMiniGrid chips={[{ text: '김○○', ...sun }, { text: '이○○', ...sun }]} />
-  )
-  if (mode === '회원개별') return (
-    <div className="flex flex-col gap-[6px]">
-      <SchedMiniGrid label="관리자" chips={[{ text: '김○○', ...sun }, { text: '이○○', ...blue }]} />
-      <SchedMiniGrid label="회원"   chips={[{ text: '김○○', ...sun }]} />
-    </div>
-  )
-  return (
-    <SchedMiniGrid chips={[{ text: '📝 홍길동', ...form }, { text: '010-1234', ...form }]} />
-  )
+  const days = ['월', '화']
+  if (mode === '회원공유') {
+    return <MdSched days={days} rows={[
+      { time: '9', cells: [{ tone: 'sun', label: '김○' }, { tone: 'blue', label: '이○' }] },
+      { time: '10', cells: [{ tone: 'sun', label: '박○' }, null] },
+    ]} />
+  }
+  if (mode === '회원개별') {
+    return (
+      <div className="md-stack">
+        <div className="md-unit">
+          <span className="md-cap">관리자</span>
+          <MdSched days={days} rows={[{ time: '9', cells: [{ tone: 'sun', label: '김○' }, { tone: 'blue', label: '이○' }] }]} />
+        </div>
+        <div className="md-unit">
+          <span className="md-cap">회원</span>
+          <MdSched days={days} rows={[{ time: '9', cells: [{ tone: 'sun', label: '김○' }, null] }]} />
+        </div>
+      </div>
+    )
+  }
+  return <MdSched days={days} rows={[
+    { time: '9', cells: [{ tone: 'form', label: '홍○' }, null] },
+    { time: '10', cells: [null, { tone: 'form', label: '정○' }] },
+  ]} />
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -196,97 +205,81 @@ export function Step2Mode({ mode, error, industry, onChange }: Props) {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="text-center space-y-2 pt-2">
-        <div className="text-4xl select-none">⚙️</div>
-        <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">어떻게 운영할 예정인가요?</h2>
-        <p className="text-[var(--color-text-muted)] text-sm leading-relaxed max-w-sm mx-auto">아래 방식 중 내 서비스에 맞는 것을 선택해주세요. 나중에 변경할 수 있습니다.</p>
-      </div>
+    <div className="step-body">
+      <StepHeader step={WIZARD_STEPS[1]} />
 
       {/* Industry-based recommendation */}
       {hasRec && (
-        <div className="rounded-2xl border-2 border-[var(--color-brand-primary)]/40 bg-[var(--color-brand-primary)]/4 p-4 space-y-3">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <span className="text-lg select-none">✨</span>
-              <p className="text-sm font-bold text-[var(--color-text-primary)]">
-                추천: <span className="text-[var(--color-brand-primary)]">{MODE_NAMES[rec.mode]}</span>
-                {rec.precision === 'top' && (
-                  <span className="ml-1.5 text-[10px] font-normal text-[var(--color-text-muted)]">세부 업종 선택 시 더 정확해요</span>
-                )}
-              </p>
-            </div>
-            <button onClick={() => setDismissed(true)}
-              className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] text-xs shrink-0">✕</button>
+        <div className="rec-banner">
+          <div className="rec-top">
+            <span className="rec-spark"><WizardIcon.sparkles size={16} /></span>
+            <p className="rec-title">추천 · <span>{MODE_NAMES[rec.mode]}</span></p>
+            <button className="rec-x" onClick={() => setDismissed(true)} aria-label="닫기"><WizardIcon.x size={14} /></button>
           </div>
-          <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">{rec.reason}</p>
-          <button onClick={() => applyRec(rec.mode)}
-            className="w-full py-2 rounded-xl text-sm font-semibold bg-[var(--color-brand-primary)] text-white hover:brightness-95 transition-colors">
-            이 모드로 설정 →
+          <p className="rec-reason">
+            {rec.reason}
+            {rec.precision === 'top' && ' 세부 업종을 선택하면 더 정확해요.'}
+          </p>
+          <button className="btn btn-primary rec-apply" onClick={() => applyRec(rec.mode)}>
+            이 모드로 설정 <WizardIcon.arrowRight size={15} />
           </button>
         </div>
       )}
 
       {/* Fallback questionnaire (shown when no industry match or dismissed) */}
       {!hasRec && !recoOpen && (
-        <button onClick={() => { setRecoOpen(true); setQ1(null); setQ2(null) }}
-          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-dashed border-[var(--color-brand-primary)]/50 text-sm text-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary)]/4 transition-colors">
-          <span className="text-base select-none">🤔</span>
+        <button className="btn btn-dashed"
+          onClick={() => { setRecoOpen(true); setQ1(null); setQ2(null) }}>
           어떤 모드가 맞는지 모르겠어요 → 추천 받기
         </button>
       )}
 
       {recoOpen && (
-        <div className="rounded-2xl border border-[var(--color-brand-primary)]/30 bg-[var(--color-brand-primary)]/3 p-4 space-y-4">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-bold text-[var(--color-brand-primary)] uppercase tracking-wide">모드 추천</p>
-            <button onClick={() => setRecoOpen(false)} className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]">닫기 ✕</button>
+        <div className="addbox">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <p className="addbox-title">모드 추천</p>
+            <button className="link-btn" onClick={() => setRecoOpen(false)}>닫기 <WizardIcon.x size={12} /></button>
           </div>
-          <div className="space-y-2">
-            <p className="text-sm font-semibold text-[var(--color-text-primary)]">스케줄에 등록되는 대상은 누구인가요?</p>
-            <div className="grid grid-cols-2 gap-2">
+          <div className="wfield">
+            <label className="wlabel">스케줄에 등록되는 대상은 누구인가요?</label>
+            <div className="tpl-grid">
               {([
-                { val: 'member',  icon: '👤', label: '팀원·등록 회원',   desc: '사전에 등록된 멤버를 배정' },
-                { val: 'visitor', icon: '🚶', label: '예약 손님·방문자', desc: '매번 정보를 직접 입력' },
-              ] as const).map(opt => (
-                <button key={opt.val} onClick={() => { setQ1(opt.val); setQ2(null) }}
-                  className={`text-left p-3 rounded-xl border-2 transition-all ${q1 === opt.val ? 'border-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/8' : 'border-[var(--color-border)] hover:border-[var(--color-brand-primary)]/40 bg-[var(--color-surface)]'}`}>
-                  <div className="text-lg select-none mb-0.5">{opt.icon}</div>
-                  <div className="text-xs font-semibold text-[var(--color-text-primary)]">{opt.label}</div>
-                  <div className="text-[10px] text-[var(--color-text-muted)] mt-0.5">{opt.desc}</div>
+                { val: 'member' as const,  icon: 'users' as WizardIconKey,  label: '팀원·등록 회원',   desc: '사전에 등록된 멤버를 배정' },
+                { val: 'visitor' as const, icon: 'walk' as WizardIconKey, label: '예약 손님·방문자', desc: '매번 정보를 직접 입력' },
+              ]).map(opt => (
+                <button key={opt.val} className={`tpl-card${q1 === opt.val ? ' on' : ''}`}
+                  onClick={() => { setQ1(opt.val); setQ2(null) }}>
+                  <span className="tpl-label">{opt.label}</span>
+                  <span className="tpl-sub">{opt.desc}</span>
                 </button>
               ))}
             </div>
           </div>
           {q1 === 'member' && (
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-[var(--color-text-primary)]">팀원·회원이 서로의 배정을 볼 수 있어야 하나요?</p>
-              <div className="grid grid-cols-2 gap-2">
+            <div className="wfield">
+              <label className="wlabel">팀원·회원이 서로의 배정을 볼 수 있어야 하나요?</label>
+              <div className="tpl-grid">
                 {([
-                  { val: 'shared',  icon: '👥', label: '예, 함께 봐요',    desc: '모든 멤버가 전체 스케줄 확인' },
-                  { val: 'private', icon: '🔒', label: '아니요, 개인별로', desc: '관리자만 전체 조회' },
-                ] as const).map(opt => (
-                  <button key={opt.val} onClick={() => setQ2(opt.val)}
-                    className={`text-left p-3 rounded-xl border-2 transition-all ${q2 === opt.val ? 'border-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/8' : 'border-[var(--color-border)] hover:border-[var(--color-brand-primary)]/40 bg-[var(--color-surface)]'}`}>
-                    <div className="text-lg select-none mb-0.5">{opt.icon}</div>
-                    <div className="text-xs font-semibold text-[var(--color-text-primary)]">{opt.label}</div>
-                    <div className="text-[10px] text-[var(--color-text-muted)] mt-0.5">{opt.desc}</div>
+                  { val: 'shared' as const,  label: '예, 함께 봐요',    desc: '모든 멤버가 전체 스케줄 확인' },
+                  { val: 'private' as const, label: '아니요, 개인별로', desc: '관리자만 전체 조회' },
+                ]).map(opt => (
+                  <button key={opt.val} className={`tpl-card${q2 === opt.val ? ' on' : ''}`} onClick={() => setQ2(opt.val)}>
+                    <span className="tpl-label">{opt.label}</span>
+                    <span className="tpl-sub">{opt.desc}</span>
                   </button>
                 ))}
               </div>
             </div>
           )}
           {qRec && (
-            <div className="rounded-xl bg-[var(--color-surface)] border border-[var(--color-brand-primary)]/40 p-3 space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="text-base select-none">✨</span>
-                <p className="text-sm font-bold text-[var(--color-text-primary)]">추천: {MODE_NAMES[qRec.mode]}</p>
+            <div className="rec-banner">
+              <div className="rec-top">
+                <span className="rec-spark"><WizardIcon.sparkles size={16} /></span>
+                <p className="rec-title">추천 · <span>{MODE_NAMES[qRec.mode]}</span></p>
               </div>
-              <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">{qRec.reason}</p>
-              <button onClick={() => applyRec(qRec.mode)}
-                className="w-full py-2 rounded-lg text-sm font-semibold bg-[var(--color-brand-primary)] text-white hover:brightness-95 transition-colors">
-                이 모드로 설정 →
+              <p className="rec-reason">{qRec.reason}</p>
+              <button className="btn btn-primary rec-apply" onClick={() => applyRec(qRec.mode)}>
+                이 모드로 설정 <WizardIcon.arrowRight size={15} />
               </button>
             </div>
           )}
@@ -294,36 +287,32 @@ export function Step2Mode({ mode, error, industry, onChange }: Props) {
       )}
 
       {/* Mode cards */}
-      <div className="space-y-3">
-        {MODE_CARDS.map(card => (
-          <button key={card.mode} onClick={() => onChange(card.mode)}
-            className={`w-full text-left rounded-2xl border-2 p-4 transition-all ${
-              mode === card.mode
-                ? 'border-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/5'
-                : 'border-[var(--color-border)] hover:border-[var(--color-brand-primary)]/40 hover:bg-[var(--color-surface-hover)]'
-            }`}>
-            <div className="flex gap-3 items-start">
-              <div className="shrink-0"><MiniDiagram mode={card.mode} /></div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xl select-none">{card.icon}</span>
-                  <span className="font-bold text-sm text-[var(--color-text-primary)]">{card.title}</span>
-                  {mode === card.mode && <span className="ml-auto text-[var(--color-brand-primary)] text-base shrink-0">✓</span>}
-                </div>
-                <p className="text-sm text-[var(--color-text-secondary)] leading-snug">{card.desc}</p>
-                <p className="text-xs text-[var(--color-text-muted)] mt-1">예: {card.examples}</p>
-              </div>
-            </div>
-            {card.mode === '비회원' && mode === '비회원' && (
-              <div className="mt-2 pt-2 border-t border-[var(--color-border)] text-xs text-orange-600 dark:text-orange-400">
-                ⚠ 6단계(커스텀필드)에서 방문자 수집 정보를 설정해야 합니다.
-              </div>
-            )}
-          </button>
-        ))}
+      <div className="mode-list">
+        {MODE_CARDS.map(card => {
+          const on = mode === card.mode
+          const Mic = WizardIcon[card.icon]
+          return (
+            <button key={card.mode} className={`mode-card${on ? ' on' : ''}`} onClick={() => onChange(card.mode)}>
+              <span className="mode-diagram"><MiniDiagram mode={card.mode} /></span>
+              <span className="mode-main">
+                <span className="mode-titlerow">
+                  <span className={`mode-ic tone-${card.tone}`}><Mic size={15} /></span>
+                  <span className="mode-name">{card.title}</span>
+                  {on && <span className="mode-check"><WizardIcon.check2 size={16} sw={2.4} /></span>}
+                </span>
+                <span className="mode-desc">{card.desc}</span>
+                <span className="mode-ex">예: {card.examples}</span>
+              </span>
+            </button>
+          )
+        })}
       </div>
 
-      {error && <p className="text-sm text-red-500 text-center">{error}</p>}
+      {mode === '비회원' && (
+        <div className="info-note"><WizardIcon.warn size={15} /> 7단계(커스텀필드)에서 방문자 수집 정보를 설정해야 합니다.</div>
+      )}
+
+      <ErrLine error={error} />
     </div>
   )
 }

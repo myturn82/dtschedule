@@ -1,5 +1,8 @@
 import { useState } from 'react'
 import { SLOT_TEMPLATES, buildSlot, rangeSlotLabel } from '../../../utils/timeSlots'
+import { StepHeader, WIZARD_STEPS } from '../StepHeader'
+import { Field, ErrLine } from '../WizardField'
+import { WizardIcon } from '../WizardIcons'
 
 interface Props {
   slots: string[]
@@ -37,83 +40,65 @@ export function Step3Slots({ slots, error, onChange }: Props) {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Icon + header */}
-      <div className="text-center space-y-2 pt-2">
-        <div className="text-4xl select-none">🕐</div>
-        <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">운영 시간 단위를 정해주세요</h2>
-        <p className="text-[var(--color-text-muted)] text-sm leading-relaxed max-w-sm mx-auto">달력 한 칸이 얼마의 시간을 나타낼지 설정합니다.</p>
+    <div className="step-body">
+      <StepHeader step={WIZARD_STEPS[2]} />
+
+      <div className="callout">
+        <span className="callout-ic tone-teal"><WizardIcon.bulb size={15} /></span>
+        <div>
+          <p className="callout-row">1시간 단위 — 09:00~10:00, 10:00~11:00</p>
+          <p className="callout-row">2시간 단위 — 09:00~11:00, 11:00~13:00</p>
+        </div>
       </div>
 
-      {/* Example callout */}
-      <div className="rounded-2xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)] px-4 py-3">
-        <p className="text-xs font-semibold text-[var(--color-text-muted)] mb-1">💡 예시</p>
-        <p className="text-sm text-[var(--color-text-secondary)]">1시간 단위: 09:00~10:00, 10:00~11:00</p>
-        <p className="text-sm text-[var(--color-text-secondary)]">2시간 단위: 09:00~11:00, 11:00~13:00</p>
-      </div>
-
-      {/* Templates */}
-      <div>
-        <p className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-2">빠른 선택</p>
-        <div className="grid grid-cols-2 gap-2">
+      <Field label="빠른 선택">
+        <div className="tpl-grid">
           {SLOT_TEMPLATES.map((t, i) => (
-            <button
-              key={t.label}
-              onClick={() => applyTemplate(i)}
-              className={`text-left px-3 py-2.5 rounded-xl border text-sm transition-all ${
-                selectedTemplate === i
-                  ? 'border-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/8 text-[var(--color-brand-primary)] font-semibold'
-                  : 'border-[var(--color-border)] hover:border-[var(--color-brand-primary)]/40 text-[var(--color-text-secondary)]'
-              }`}
-            >
-              <div className="font-medium text-[13px] leading-tight">{t.label}</div>
-              <div className="text-[11px] text-[var(--color-text-muted)] mt-0.5">{t.slots.length}개 슬롯</div>
+            <button key={t.label} className={`tpl-card${selectedTemplate === i ? ' on' : ''}`} onClick={() => applyTemplate(i)}>
+              <span className="tpl-label">{t.label}</span>
+              <span className="tpl-sub">{t.slots.length}개 슬롯</span>
             </button>
           ))}
         </div>
-      </div>
+      </Field>
 
-      {/* Selected slots preview */}
       {slots.length > 0 && (
-        <div>
-          <p className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-2">
-            선택된 슬롯 ({slots.length}개)
-          </p>
-          <div className="flex flex-wrap gap-1.5">
+        <Field label={`선택된 슬롯 ${slots.length}개`}>
+          <div className="chip-wrap">
             {slots.map(s => (
-              <span key={s} className="flex items-center gap-1 px-2.5 py-1 text-xs rounded-full border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)]">
+              <span key={s} className="slot-chip">
                 {rangeSlotLabel(s)}
-                <button onClick={() => removeSlot(s)} className="text-[var(--color-text-muted)] hover:text-red-500 leading-none ml-0.5 select-none">✕</button>
+                <button onClick={() => removeSlot(s)} aria-label="삭제"><WizardIcon.x size={11} sw={2.2} /></button>
               </span>
             ))}
           </div>
-        </div>
+        </Field>
       )}
 
-      {/* Custom add */}
-      <button onClick={() => setShowCustom(v => !v)} className="text-sm text-[var(--color-brand-primary)] hover:underline">
-        {showCustom ? '▲ 직접 입력 닫기' : '▼ 직접 시간 추가'}
+      <button className="link-btn" onClick={() => setShowCustom(v => !v)}>
+        <WizardIcon.chevron size={14} style={{ transform: showCustom ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }} />
+        직접 시간 추가
       </button>
       {showCustom && (
-        <div className="flex items-center gap-2 p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)]">
-          <select value={startVal} onChange={e => setStartVal(Number(e.target.value))}
-            className="flex-1 px-2 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text-primary)]">
-            {TIME_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
-          <span className="text-[var(--color-text-muted)] text-sm shrink-0">~</span>
-          <select value={endVal} onChange={e => setEndVal(Number(e.target.value))}
-            className="flex-1 px-2 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text-primary)]">
-            {TIME_OPTIONS.filter(o => o.value > startVal).map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
-          <button onClick={addSlot} disabled={endVal <= startVal}
-            className="shrink-0 px-3 py-1.5 rounded-lg bg-[var(--color-brand-primary)] text-white text-sm font-medium hover:brightness-95 disabled:opacity-40">
-            추가
-          </button>
+        <div className="custom-add">
+          <div className="sel-wrap">
+            <select className="sel" value={startVal} onChange={e => setStartVal(Number(e.target.value))}>
+              {TIME_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+            <WizardIcon.chevron size={14} className="sel-chev" />
+          </div>
+          <span className="tilde">~</span>
+          <div className="sel-wrap">
+            <select className="sel" value={endVal} onChange={e => setEndVal(Number(e.target.value))}>
+              {TIME_OPTIONS.filter(o => o.value > startVal).map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+            <WizardIcon.chevron size={14} className="sel-chev" />
+          </div>
+          <button className="btn btn-primary" disabled={endVal <= startVal} onClick={addSlot}>추가</button>
         </div>
       )}
 
-      {/* Error */}
-      {error && <p className="text-sm text-red-500 text-center">{error}</p>}
+      <ErrLine error={error} />
     </div>
   )
 }

@@ -1,5 +1,8 @@
 import { useState } from 'react'
 import { SCHEDULE_RULE_TEMPLATES } from '../../../utils/scheduleRuleTemplates'
+import { StepHeader, WIZARD_STEPS } from '../StepHeader'
+import { Field, ErrLine } from '../WizardField'
+import { WizardIcon } from '../WizardIcons'
 import type { ScheduleRule } from '../../../types'
 
 interface Props {
@@ -7,7 +10,7 @@ interface Props {
   timeSlots: string[]
   error: string
   onToggleRule: (ruleId: string, currentIsOpen: boolean) => Promise<string | null>
-  onApplyTemplate: (openDays: number[]) => Promise<void>
+  onApplyTemplate: (openDays: number[], includeHolidays?: boolean) => Promise<void>
 }
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
@@ -50,72 +53,47 @@ export function Step5Rules({ rules, timeSlots, error, onToggleRule, onApplyTempl
   const isApplying = applyingTemplate !== null || applyingHoliday
 
   return (
-    <div className="space-y-6">
-      {/* Icon + header */}
-      <div className="text-center space-y-2 pt-2">
-        <div className="text-4xl select-none">📅</div>
-        <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">언제 운영하나요?</h2>
-        <p className="text-[var(--color-text-muted)] text-sm leading-relaxed max-w-sm mx-auto">운영하는 요일을 선택해주세요. 나중에 날짜별로 개별 설정도 가능합니다.</p>
-      </div>
+    <div className="step-body">
+      <StepHeader step={WIZARD_STEPS[4]} />
 
-      {/* Templates */}
-      <div>
-        <p className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-2">빠른 선택</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+      <Field label="빠른 선택">
+        <div className="tpl-grid">
           {SCHEDULE_RULE_TEMPLATES.map((t, i) => (
             <button
               key={t.label}
               disabled={isApplying}
               onClick={async () => {
                 setApplyingTemplate(i)
-                await onApplyTemplate(t.openDays)
+                await onApplyTemplate(t.openDays, t.includeHolidays)
                 setApplyingTemplate(null)
               }}
-              className="text-left px-3 py-2.5 rounded-xl border border-[var(--color-border)] hover:border-[var(--color-brand-primary)]/40 hover:bg-[var(--color-surface-hover)] transition-all disabled:opacity-50"
+              className={`tpl-card${applyingTemplate === i ? ' on' : ''}`}
             >
-              <div className="text-[13px] font-semibold text-[var(--color-text-primary)]">
-                {applyingTemplate === i ? '적용 중...' : t.label}
-              </div>
-              <div className="text-[11px] text-[var(--color-text-muted)] mt-0.5">{t.description}</div>
+              <span className="tpl-label">{applyingTemplate === i ? '적용 중...' : t.label}</span>
+              <span className="tpl-sub">{t.description}</span>
             </button>
           ))}
         </div>
-      </div>
+      </Field>
 
-      {/* 정기휴일 직접 지정 */}
-      <div>
-        <p className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-2">정기휴일 직접 지정</p>
-        <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] space-y-3">
-          <p className="text-[11px] text-[var(--color-text-muted)]">매주 닫는 요일을 선택하세요 (선택한 요일 = 휴무)</p>
-          <div className="flex gap-1.5">
-            {DAY_LABELS.map((d, idx) => {
-              const isClosed = closedDays.has(idx)
-              return (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => toggleClosedDay(idx)}
-                  className={`flex-1 py-2 rounded-lg text-xs font-bold border-2 transition-colors select-none ${
-                    isClosed
-                      ? 'border-red-400 bg-red-50 text-red-600 dark:bg-red-950/30 dark:text-red-400'
-                      : idx === 0
-                      ? 'border-[var(--color-border)] text-red-400 hover:bg-red-50/50 dark:hover:bg-red-950/20'
-                      : idx === 6
-                      ? 'border-[var(--color-border)] text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-950/20'
-                      : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
-                  }`}
-                >
-                  {d}
-                </button>
-              )
-            })}
+      <Field label="정기휴일 직접 지정" hint="선택한 요일 = 휴무">
+        <div className="addbox">
+          <div className="day-row">
+            {DAY_LABELS.map((d, idx) => (
+              <button
+                key={idx}
+                className={`day-btn${closedDays.has(idx) ? ' closed' : ''}${idx === 0 ? ' sun' : ''}${idx === 6 ? ' sat' : ''}`}
+                onClick={() => toggleClosedDay(idx)}
+              >
+                {d}
+              </button>
+            ))}
           </div>
           {closedDays.size > 0 ? (
-            <div className="flex items-center justify-between">
-              <p className="text-[11px] text-[var(--color-text-muted)]">
-                휴무일: <span className="font-semibold text-red-500">{[...closedDays].sort().map(d => DAY_LABELS[d]).join('·')}</span>
-              </p>
+            <div className="day-apply">
+              <span>휴무일 <b>{[...closedDays].sort().map(d => DAY_LABELS[d]).join('·')}</b></span>
               <button
+                className="btn btn-primary btn-sm"
                 disabled={isApplying}
                 onClick={async () => {
                   setApplyingHoliday(true)
@@ -123,63 +101,44 @@ export function Step5Rules({ rules, timeSlots, error, onToggleRule, onApplyTempl
                   await onApplyTemplate(openDays)
                   setApplyingHoliday(false)
                 }}
-                className="px-3 py-1 rounded-lg text-xs font-semibold bg-[var(--color-brand-primary)] text-white hover:brightness-95 disabled:opacity-50 transition-colors"
               >
                 {applyingHoliday ? '적용 중...' : '적용'}
               </button>
             </div>
-          ) : (
-            <p className="text-[11px] text-[var(--color-text-muted)] italic">요일을 선택하면 해당 요일이 정기휴일로 지정됩니다</p>
-          )}
+          ) : <p className="mini-hint">요일을 선택하면 해당 요일이 정기휴일로 지정됩니다</p>}
         </div>
-      </div>
+      </Field>
 
-      {/* Summary */}
       {rules.length > 0 && (
-        <div className="px-4 py-3 rounded-xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)]">
-          <span className="text-sm text-[var(--color-text-secondary)]">현재 운영 요일: </span>
-          <span className="text-sm font-semibold text-[var(--color-text-primary)]">{openDaysSummary()}</span>
-        </div>
+        <div className="summary-bar">현재 운영 요일 <b>{openDaysSummary()}</b></div>
       )}
 
-      {/* Matrix toggle */}
-      <button onClick={() => setShowMatrix(v => !v)} className="text-sm text-[var(--color-brand-primary)] hover:underline">
-        {showMatrix ? '▲ 세부 설정 닫기' : '▼ 시간대별 직접 설정'}
+      <button className="link-btn" onClick={() => setShowMatrix(v => !v)}>
+        <WizardIcon.chevron size={14} style={{ transform: showMatrix ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }} />
+        시간대별 직접 설정
       </button>
 
       {showMatrix && timeSlots.length > 0 && (
-        <div className="overflow-x-auto rounded-xl border border-[var(--color-border)]">
-          <table className="border-collapse text-[11px] w-full">
+        <div className="matrix-wrap">
+          <table className="matrix">
             <thead>
               <tr>
-                <th className="border border-[var(--color-border)] px-2 py-1.5 bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] font-medium sticky left-0">시간</th>
+                <th className="mx-time">시간</th>
                 {DAY_LABELS.map((d, idx) => (
-                  <th key={idx} className={`border border-[var(--color-border)] px-2 py-1.5 bg-[var(--color-surface-secondary)] font-semibold ${idx === 0 ? 'text-red-500' : idx === 6 ? 'text-blue-500' : 'text-[var(--color-text-secondary)]'}`}>
-                    {d}
-                  </th>
+                  <th key={idx} className={idx === 0 ? 'sun' : idx === 6 ? 'sat' : ''}>{d}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {timeSlots.map(slot => (
                 <tr key={slot}>
-                  <td className="border border-[var(--color-border)] px-2 py-1 bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] sticky left-0 font-medium whitespace-nowrap">
-                    {slotLabel(slot)}
-                  </td>
+                  <td className="mx-time">{slotLabel(slot)}</td>
                   {[0, 1, 2, 3, 4, 5, 6].map(day => {
                     const rule = getRule(day, slot)
                     const isOpen = rule?.is_open ?? false
                     return (
-                      <td key={day} className="border border-[var(--color-border)] p-0 text-center">
-                        <button
-                          onClick={() => rule && onToggleRule(rule.id, isOpen)}
-                          disabled={!rule}
-                          className={`w-full py-1.5 px-1 text-[10px] font-medium transition-colors ${
-                            isOpen
-                              ? 'bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-950/30 dark:text-green-400'
-                              : 'bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)]'
-                          }`}
-                        >
+                      <td key={day} className="mx-cell">
+                        <button className={`mx-btn${isOpen ? ' on' : ''}`} disabled={!rule} onClick={() => rule && onToggleRule(rule.id, isOpen)}>
                           {isOpen ? '운영' : '—'}
                         </button>
                       </td>
@@ -192,8 +151,7 @@ export function Step5Rules({ rules, timeSlots, error, onToggleRule, onApplyTempl
         </div>
       )}
 
-      {/* Error */}
-      {error && <p className="text-sm text-red-500 text-center">{error}</p>}
+      <ErrLine error={error} />
     </div>
   )
 }
