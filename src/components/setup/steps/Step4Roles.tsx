@@ -20,7 +20,6 @@ const DISPLAY_OPTIONS: { value: DisplayMode; label: string; desc: string }[] = [
 export function Step4Roles({ roles, error, onAdd, onDelete }: Props) {
   const [name, setName] = useState('')
   const [displayMode, setDisplayMode] = useState<DisplayMode>('none')
-  const [requiresCustomerInfo, setRequiresCustomerInfo] = useState(false)
   const [adding, setAdding] = useState(false)
   const [addError, setAddError] = useState('')
 
@@ -28,9 +27,9 @@ export function Step4Roles({ roles, error, onAdd, onDelete }: Props) {
     if (!name.trim()) return
     setAdding(true)
     setAddError('')
-    const err = await onAdd(name.trim(), displayMode === 'split', requiresCustomerInfo, displayMode === 'bar')
+    const err = await onAdd(name.trim(), displayMode === 'split', false, displayMode === 'bar')
     if (err) setAddError(err)
-    else { setName(''); setDisplayMode('none'); setRequiresCustomerInfo(false) }
+    else { setName(''); setDisplayMode('none') }
     setAdding(false)
   }
 
@@ -57,7 +56,6 @@ export function Step4Roles({ roles, error, onAdd, onDelete }: Props) {
               <span className="flex-1 text-sm font-medium text-[var(--color-text-primary)]">{role.name}</span>
               {role.split_cell && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700">칸분리</span>}
               {role.indicator_bar && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">바표시</span>}
-              {role.requires_customer_info && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-700">고객정보</span>}
               <button onClick={() => onDelete(role.id)} className="text-[var(--color-text-muted)] hover:text-red-500 text-sm select-none">✕</button>
             </div>
           ))}
@@ -96,14 +94,6 @@ export function Step4Roles({ roles, error, onAdd, onDelete }: Props) {
             {DISPLAY_OPTIONS.find(o => o.value === displayMode)?.desc}
           </p>
         </div>
-        <label className="flex items-start gap-2 cursor-pointer">
-          <input type="checkbox" checked={requiresCustomerInfo} onChange={e => setRequiresCustomerInfo(e.target.checked)}
-            className="w-4 h-4 rounded accent-[var(--color-brand-primary)] mt-0.5 shrink-0" />
-          <span className="flex flex-col gap-0.5">
-            <span className="text-sm text-[var(--color-text-secondary)]">배정 시 고객 정보 수집</span>
-            <span className="text-[11px] text-[var(--color-text-muted)]">이 역할의 배정 등록 시 담당 고객 연락처 등을 함께 입력받습니다 (예: PT 트레이너)</span>
-          </span>
-        </label>
         {addError && <p className="text-xs text-red-500">{addError}</p>}
         <button
           onClick={handleAdd}
