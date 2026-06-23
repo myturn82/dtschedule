@@ -75,7 +75,12 @@ export function SetupWizardPage() {
   const { roles, addRole, deleteRole } = useTenantRoles(orgId)
 
   // Wizard state
-  const [step, setStep] = useState(1)
+  // 새로고침 시에도 진행 단계를 유지 — org id 기준 sessionStorage에 저장/복원
+  const [step, setStep] = useState(() => {
+    if (!orgId) return 1
+    const cached = Number(sessionStorage.getItem(`vs_setup_step_${orgId}`))
+    return Number.isInteger(cached) && cached >= 1 ? cached : 1
+  })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -87,6 +92,11 @@ export function SetupWizardPage() {
   const [industry, setIndustry] = useState('')
   const [legendItems, setLegendItems] = useState<LegendItem[]>([])
   const [customFields, setCustomFields] = useState<CustomFieldDef[]>([])
+
+  useEffect(() => {
+    if (!orgId) return
+    sessionStorage.setItem(`vs_setup_step_${orgId}`, String(step))
+  }, [orgId, step])
 
   useEffect(() => {
     if (!tenant) return
@@ -157,6 +167,7 @@ export function SetupWizardPage() {
     })
     if (err) { setError(err); setSaving(false); return false }
     sessionStorage.removeItem('vs_setup_tenant')
+    sessionStorage.removeItem(`vs_setup_step_${orgId}`)
     setSaving(false); return true
   }
 
@@ -204,6 +215,7 @@ export function SetupWizardPage() {
       // 마지막 단계 건너뛰기 — 완료 플래그는 반드시 저장 (미저장 시 다음 접속에 위저드 재진입)
       await updateTenantSettings(orgId, { setup_completed_at: new Date().toISOString() })
       sessionStorage.removeItem('vs_setup_tenant')
+      sessionStorage.removeItem(`vs_setup_step_${orgId}`)
       setStep(TOTAL + 1)
     } else {
       setStep(s => s + 1)
