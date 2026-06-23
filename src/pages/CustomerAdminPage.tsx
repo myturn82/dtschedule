@@ -138,8 +138,12 @@ export function CustomerAdminPage() {
         reloadMemberships()
         return
       } else if (list.length === 1 && !list[0].settings?.setup_completed_at) {
-        // 미완료 설정이 있는 단일 조직 → 위저드로 이동
+        // 미완료 설정이 있는 단일 조직 → 위저드로 이동 (세션당 1회만 강제 이동 —
+        // 사용자가 위저드 도중 새로고침/다른 URL로 빠져나오면 다시 끌고 가지 않음)
         if (cancelled) return
+        const redirectKey = `vs_setup_resume_redirected_${list[0].id}`
+        if (sessionStorage.getItem(redirectKey)) return
+        sessionStorage.setItem(redirectKey, '1')
         sessionStorage.setItem('vs_setup_tenant', JSON.stringify(list[0]))
         navigate('/setup?org=' + list[0].id)
       }
