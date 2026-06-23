@@ -129,6 +129,7 @@ export function AuthPage() {
   // Shared
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [joinProgress, setJoinProgress] = useState('')
   const [legalDoc, setLegalDoc] = useState<DocKey | null>(null)
 
   useEffect(() => {
@@ -252,10 +253,10 @@ export function AuthPage() {
   async function handleJoinSubmit() {
     if (!orgName.trim()) { setError('서비스 이름을 입력해 주세요.'); return }
     if (!isValidPhone(orgPhone)) { setError('올바른 전화번호를 입력해 주세요. (예: 010-1234-5678)'); return }
-    setLoading(true); setError(null)
+    setLoading(true); setError(null); setJoinProgress('계정을 만드는 중...')
     const err = await signUp(joinEmail.trim(), joinPw, joinName.trim(), 'volunteer', '')
     if (err) {
-      setLoading(false)
+      setLoading(false); setJoinProgress('')
       if (err.includes('이미 가입된')) { redirectToLoginTab(err); return }
       setError(err); return
     }
@@ -266,13 +267,14 @@ export function AuthPage() {
     const clearCreatingFlag = () => sessionStorage.removeItem('vs_setup_creating')
     window.addEventListener('beforeunload', clearCreatingFlag)
     try {
+      setJoinProgress('조직을 만드는 중...')
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { setLoading(false); sessionStorage.removeItem('vs_setup_creating'); setError('인증 오류가 발생했습니다.'); return }
+      if (!user) { setLoading(false); setJoinProgress(''); sessionStorage.removeItem('vs_setup_creating'); setError('인증 오류가 발생했습니다.'); return }
       const { data: custData, error: custErr } = await supabase
         .from('customers')
         .insert({ name: orgName.trim(), phone: orgPhone.trim(), owner_user_id: user.id, plan: 'basic' })
         .select('id').single()
-      if (custErr || !custData) { setLoading(false); sessionStorage.removeItem('vs_setup_creating'); setError(`조직 생성 오류: ${custErr?.message}`); return }
+      if (custErr || !custData) { setLoading(false); setJoinProgress(''); sessionStorage.removeItem('vs_setup_creating'); setError(`조직 생성 오류: ${custErr?.message}`); return }
 
       // tenant 바로 생성 → CustomerAdminPage 경유 없이 /setup으로 직행
       const DEFAULT_SLOTS = ['09-10','10-11','11-12','12-13','13-14','14-15','15-16','16-17','17-18']
@@ -291,12 +293,13 @@ export function AuthPage() {
         if (te.code !== '23505') { tenantId = null; break }
         tenantId = null
       }
-      if (!tenantId) { setLoading(false); sessionStorage.removeItem('vs_setup_creating'); setError('조직 초기화 오류가 발생했습니다.'); return }
+      if (!tenantId) { setLoading(false); setJoinProgress(''); sessionStorage.removeItem('vs_setup_creating'); setError('조직 초기화 오류가 발생했습니다.'); return }
       await supabase.from('tenant_members').insert({ tenant_id: tenantId, user_id: user.id, role: 'admin', is_approved: true })
       await supabase.from('schedule_rules').insert(
         [0,1,2,3,4,5,6].flatMap(d => DEFAULT_SLOTS.map(s => ({ tenant_id: tenantId!, day_of_week: d, time_slot: s, is_open: true })))
       )
       sessionStorage.setItem('vs_setup_tenant', JSON.stringify({ id: tenantId, slug: tenantSlug, name: tenantName, customer_id: custData.id, is_active: true, settings: tenantSettings }))
+      setJoinProgress('이동하는 중...')
       window.location.href = '/setup?org=' + tenantId
     } finally {
       window.removeEventListener('beforeunload', clearCreatingFlag)
@@ -740,7 +743,9 @@ export function AuthPage() {
                   {error && <div className="af-err">{error}</div>}
                   <button className="af-btn af-btn-primary" style={{ marginTop: 6, opacity: loading ? 0.6 : 1 }}
                     disabled={loading} onClick={handleJoinSubmit}>
-                    {loading ? '처리 중...' : <>시작하기 <IArrow /></>}
+                    {loading
+                      ? <><span className="af-btn-spinner" /> {joinProgress || '처리 중...'}</>
+                      : <>시작하기 <IArrow /></>}
                   </button>
                   <button className="af-back-link" onClick={() => { setJoinStep('choice'); setError(null) }}><IBack /> 뒤로</button>
                 </>

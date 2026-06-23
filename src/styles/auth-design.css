@@ -95,6 +95,8 @@
 .af-btn-primary:hover:not(:disabled) { background: #000; transform: translateY(-1px); }
 .af-btn-primary:active { transform: translateY(0); }
 .af-btn-primary:disabled { background: rgba(20,23,28,0.10); color: var(--ink-400); box-shadow: none; cursor: not-allowed; transform: none; }
+.af-btn-spinner { width: 14px; height: 14px; border-radius: 50%; border: 2px solid currentColor; border-top-color: transparent; opacity: 0.7; flex-shrink: 0; animation: af-spin .6s linear infinite; }
+@keyframes af-spin { to { transform: rotate(360deg); } }
 .af-btn-ghost { background: var(--paper-2); border: 1px solid var(--line-2); color: var(--ink-500); height: 48px; }
 .af-btn-ghost:hover { background: var(--paper-3); }
 .af-btn-row { display: flex; gap: 9px; margin-top: 16px; }
