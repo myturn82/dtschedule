@@ -137,12 +137,13 @@ export function AuthPage() {
     }
   }, [profile, navigate])
 
-  // 회원가입 탭은 서비스 이용 동의(/consent)를 거친 직후에만 1회 접근 허용 (재진입 시 다시 동의 필요)
+  // 회원가입 탭은 서비스 이용 동의(/consent)를 거친 적이 있어야 접근 허용.
+  // 동의 플래그는 즉시 소멸시키지 않고 같은 탭(세션) 동안 유지 — 새로고침해도
+  // 다시 동의 화면으로 튕기지 않음. 새 탭/재로그인 등 새 세션에서는 sessionStorage가
+  // 자연히 비어 있으므로 다시 동의를 거치게 된다.
   useEffect(() => {
     if (tab !== 'signup') return
-    if (sessionStorage.getItem('vs_consent_ok') === '1') {
-      sessionStorage.removeItem('vs_consent_ok')
-    } else {
+    if (sessionStorage.getItem('vs_consent_ok') !== '1') {
       navigate('/consent', { replace: true })
     }
   }, [tab, navigate])
@@ -260,38 +261,46 @@ export function AuthPage() {
     }
     // signUp 성공 → SIGNED_IN 이벤트로 React가 리렌더링되어 다른 화면이 깜빡이는 것을 방지
     sessionStorage.setItem('vs_setup_creating', '1')
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { setLoading(false); sessionStorage.removeItem('vs_setup_creating'); setError('인증 오류가 발생했습니다.'); return }
-    const { data: custData, error: custErr } = await supabase
-      .from('customers')
-      .insert({ name: orgName.trim(), phone: orgPhone.trim(), owner_user_id: user.id, plan: 'basic' })
-      .select('id').single()
-    if (custErr || !custData) { setLoading(false); sessionStorage.removeItem('vs_setup_creating'); setError(`조직 생성 오류: ${custErr?.message}`); return }
+    // 아래 작업 도중 새로고침·이탈로 중단되면 플래그가 영구히 남아 메인 화면 진입이
+    // 막히던 문제 방지 — 페이지를 떠나는 순간 플래그를 정리
+    const clearCreatingFlag = () => sessionStorage.removeItem('vs_setup_creating')
+    window.addEventListener('beforeunload', clearCreatingFlag)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { setLoading(false); sessionStorage.removeItem('vs_setup_creating'); setError('인증 오류가 발생했습니다.'); return }
+      const { data: custData, error: custErr } = await supabase
+        .from('customers')
+        .insert({ name: orgName.trim(), phone: orgPhone.trim(), owner_user_id: user.id, plan: 'basic' })
+        .select('id').single()
+      if (custErr || !custData) { setLoading(false); sessionStorage.removeItem('vs_setup_creating'); setError(`조직 생성 오류: ${custErr?.message}`); return }
 
-    // tenant 바로 생성 → CustomerAdminPage 경유 없이 /setup으로 직행
-    const DEFAULT_SLOTS = ['09-10','10-11','11-12','12-13','13-14','14-15','15-16','16-17','17-18']
-    const tenantName = orgName.trim()
-    const tenantSettings = { title: tenantName, time_slots: DEFAULT_SLOTS, open_from: '09:00', open_to: '22:00', slot_interval_minutes: 60, timezone: 'Asia/Seoul', locale: 'ko-KR', tenant_mode: '회원공유' }
-    const base = tenantName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-+|-+$/g, '')
-    let tenantId: string | null = null
-    let tenantSlug = ''
-    for (let i = 0; i < 3; i++) {
-      tenantId = crypto.randomUUID()
-      tenantSlug = `${base || 'org'}-${Math.random().toString(36).slice(2, 7)}`
-      const { error: te } = await supabase.from('tenants').insert({
-        id: tenantId, slug: tenantSlug, name: tenantName, customer_id: custData.id, is_active: true, settings: tenantSettings
-      })
-      if (!te) break
-      if (te.code !== '23505') { tenantId = null; break }
-      tenantId = null
+      // tenant 바로 생성 → CustomerAdminPage 경유 없이 /setup으로 직행
+      const DEFAULT_SLOTS = ['09-10','10-11','11-12','12-13','13-14','14-15','15-16','16-17','17-18']
+      const tenantName = orgName.trim()
+      const tenantSettings = { title: tenantName, time_slots: DEFAULT_SLOTS, open_from: '09:00', open_to: '22:00', slot_interval_minutes: 60, timezone: 'Asia/Seoul', locale: 'ko-KR', tenant_mode: '회원공유' }
+      const base = tenantName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-+|-+$/g, '')
+      let tenantId: string | null = null
+      let tenantSlug = ''
+      for (let i = 0; i < 3; i++) {
+        tenantId = crypto.randomUUID()
+        tenantSlug = `${base || 'org'}-${Math.random().toString(36).slice(2, 7)}`
+        const { error: te } = await supabase.from('tenants').insert({
+          id: tenantId, slug: tenantSlug, name: tenantName, customer_id: custData.id, is_active: true, settings: tenantSettings
+        })
+        if (!te) break
+        if (te.code !== '23505') { tenantId = null; break }
+        tenantId = null
+      }
+      if (!tenantId) { setLoading(false); sessionStorage.removeItem('vs_setup_creating'); setError('조직 초기화 오류가 발생했습니다.'); return }
+      await supabase.from('tenant_members').insert({ tenant_id: tenantId, user_id: user.id, role: 'admin', is_approved: true })
+      await supabase.from('schedule_rules').insert(
+        [0,1,2,3,4,5,6].flatMap(d => DEFAULT_SLOTS.map(s => ({ tenant_id: tenantId!, day_of_week: d, time_slot: s, is_open: true })))
+      )
+      sessionStorage.setItem('vs_setup_tenant', JSON.stringify({ id: tenantId, slug: tenantSlug, name: tenantName, customer_id: custData.id, is_active: true, settings: tenantSettings }))
+      window.location.href = '/setup?org=' + tenantId
+    } finally {
+      window.removeEventListener('beforeunload', clearCreatingFlag)
     }
-    if (!tenantId) { setLoading(false); sessionStorage.removeItem('vs_setup_creating'); setError('조직 초기화 오류가 발생했습니다.'); return }
-    await supabase.from('tenant_members').insert({ tenant_id: tenantId, user_id: user.id, role: 'admin', is_approved: true })
-    await supabase.from('schedule_rules').insert(
-      [0,1,2,3,4,5,6].flatMap(d => DEFAULT_SLOTS.map(s => ({ tenant_id: tenantId!, day_of_week: d, time_slot: s, is_open: true })))
-    )
-    sessionStorage.setItem('vs_setup_tenant', JSON.stringify({ id: tenantId, slug: tenantSlug, name: tenantName, customer_id: custData.id, is_active: true, settings: tenantSettings }))
-    window.location.href = '/setup?org=' + tenantId
   }
 
   async function handleGoogle() {
