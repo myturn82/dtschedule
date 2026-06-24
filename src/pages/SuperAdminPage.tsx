@@ -196,6 +196,11 @@ export function SuperAdminPage() {
       supabase.from('profiles').select('id, name, email, is_super_admin, created_at').order('created_at', { ascending: false }),
       supabase.from('tenant_members').select('user_id').eq('is_approved', true),
     ])
+    if (profilesRes.error) {
+      setMessage(`오류: ${profilesRes.error.message}`)
+      setUsersLoading(false)
+      return  // usersLoaded를 true로 세팅하지 않아 재진입 시 재시도 가능
+    }
     const orgCounts: Record<string, number> = {}
     for (const m of membersRes.data ?? []) {
       orgCounts[m.user_id] = (orgCounts[m.user_id] ?? 0) + 1
