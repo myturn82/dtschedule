@@ -400,6 +400,11 @@ CREATE POLICY "profiles_update_own" ON profiles
 CREATE POLICY "profiles_superadmin_update" ON profiles
   FOR UPDATE USING (is_super_admin_caller());
 
+CREATE POLICY "profiles_superadmin_delete" ON profiles
+  FOR DELETE USING (
+    (SELECT is_super_admin FROM profiles WHERE id = auth.uid())
+  );
+
 -- ── customers ────────────────────────────────────────────────
 -- 자신이 소유한 고객 또는 슈퍼어드민
 CREATE POLICY "customers_select_own" ON customers
