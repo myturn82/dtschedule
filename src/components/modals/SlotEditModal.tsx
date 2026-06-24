@@ -8,6 +8,10 @@ import type { ProfileWithRole } from '../../hooks/useProfiles'
 import { LockIcon, UnlockIcon } from '../icons/LockIcons'
 import { fmtPhone, fmtNumber } from '../../lib/format'
 import { formatPhone, isValidPhone } from '../../lib/phone'
+import { ImageUploadField } from '../schedule/ImageUploadField'
+import type { PendingImage } from '../schedule/ImageUploadField'
+import { ImageGalleryModal } from '../schedule/ImageGalleryModal'
+import { uploadScheduleImage } from '../../lib/uploadScheduleImage'
 
 interface Props {
   target: ModalTarget
@@ -22,6 +26,7 @@ interface Props {
   customFields?: CustomFieldDef[]
   slotLabels?: Record<string, string>
   typeLabels?: { member: string; '50plus': string }
+  tenantId?: string
   lockedUserId?: string
   onClose: () => void
   onAdd: (name: string, note: string, memberType: MemberType, timeSub: string | null, color?: string, userId?: string, roleId?: string | null, customerName?: string | null, customerPhone?: string | null, extraData?: Record<string, string>) => Promise<string | null>
@@ -38,6 +43,7 @@ export function SlotEditModal({
   tenantMode = '회원선택', customFields = [],
   slotLabels = {},
   typeLabels = { member: '팀원', '50plus': '' },
+  tenantId,
   lockedUserId,
   onClose, onAdd, onUpdate, onDelete, onToggleLock, isHighlighted, onToggleHighlight,
 }: Props) {
@@ -72,6 +78,8 @@ export function SlotEditModal({
 
   // 동적 필드 값 (useDynamicFields 모드)
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({})
+  const [pendingImages, setPendingImages] = useState<Record<string, PendingImage[]>>({})
+  const [galleryUrls, setGalleryUrls] = useState<string[] | null>(null)
 
   const selectedRole = splitRoles.find(r => r.id === selectedRoleId) ?? null
 
@@ -120,6 +128,25 @@ export function SlotEditModal({
   }, [isAdmin, editingId, singleProfileId])
 
 
+  async function resolveImageUploads(baseValues: Record<string, string>): Promise<Record<string, string>> {
+    if (!tenantId) return baseValues
+    const resolved = { ...baseValues }
+    await Promise.all(
+      customFields
+        .filter(f => f.type === 'image_upload')
+        .map(async f => {
+          const pending = pendingImages[f.id] ?? []
+          if (pending.length === 0) return
+          const existing: string[] = (() => {
+            try { return resolved[f.id] ? (JSON.parse(resolved[f.id]) as string[]) : [] } catch { return [] }
+          })()
+          const newUrls = await Promise.all(pending.map(img => uploadScheduleImage(tenantId, img.blob)))
+          resolved[f.id] = JSON.stringify([...existing, ...newUrls])
+        })
+    )
+    return resolved
+  }
+
   function startEdit(a: Assignment) {
     setEditingId(a.id)
     setNote(a.note ?? '')
@@ -146,6 +173,8 @@ export function SlotEditModal({
     setNote('')
     setTimeSub(defaultTimeSub)
     setFieldValues({})
+    Object.values(pendingImages).flat().forEach(img => URL.revokeObjectURL(img.previewUrl))
+    setPendingImages({})
     setSelectedUserId(isAdmin ? '' : (profile?.id ?? ''))
   }
 
@@ -153,16 +182,11 @@ export function SlotEditModal({
     setError(null)
     let name: string
     let userId: string | undefined
-    let customerPhone: string | null = null
-    let extraData: Record<string, string> | undefined
+    const customerPhone: string | null = null
 
     if (useDynamicFields) {
-      // 동적 필드 유효성 검사
       for (const field of customFields) {
-        if (field.required && !isFieldFilled(field)) {
-          setError(`"${field.label}"은(는) 필수 항목입니다`)
-          return
-        }
+        if (field.required && !isFieldFilled(field)) { setError(`"${field.label}"은(는) 필수 항목입니다`); return }
         if (field.type === 'number') {
           const num = Number(fieldValues[field.id])
           if (fieldValues[field.id]?.trim() && field.min !== undefined && num < field.min) { setError(`"${field.label}"은(는) ${field.min} 이상이어야 합니다`); return }
@@ -178,13 +202,6 @@ export function SlotEditModal({
       const nameFieldId = customFields[0].id
       name = fieldValues[nameFieldId]?.trim() ?? ''
       if (!name) return
-      // 첫 번째 필드 제외 나머지 extra_data에 저장
-      const rest: Record<string, string> = {}
-      customFields.slice(1).forEach(f => {
-        const v = fieldValues[f.id]
-        if (v !== undefined && v !== '') rest[f.id] = v.trim ? v.trim() : v
-      })
-      if (Object.keys(rest).length > 0) extraData = rest
       if (isAdmin && isSplitMode && selectedUserId) userId = selectedUserId
     } else {
       if (!selectedProfile) return
@@ -194,10 +211,7 @@ export function SlotEditModal({
 
     if (showExtraCustomFields) {
       for (const field of customFields) {
-        if (field.required && !isFieldFilled(field)) {
-          setError(`"${field.label}"은(는) 필수 항목입니다`)
-          return
-        }
+        if (field.required && !isFieldFilled(field)) { setError(`"${field.label}"은(는) 필수 항목입니다`); return }
         if (field.type === 'number') {
           const num = Number(fieldValues[field.id])
           if (fieldValues[field.id]?.trim() && field.min !== undefined && num < field.min) { setError(`"${field.label}"은(는) ${field.min} 이상이어야 합니다`); return }
@@ -210,12 +224,6 @@ export function SlotEditModal({
           if (fieldValues[field.id].replace(/\D/g, '').length < 8) { setError(`"${field.label}"의 계좌번호는 숫자 8자리 이상이어야 합니다`); return }
         }
       }
-      const rest: Record<string, string> = {}
-      customFields.forEach(f => {
-        const v = fieldValues[f.id]
-        if (v !== undefined && v !== '') rest[f.id] = v.trim ? v.trim() : v
-      })
-      if (Object.keys(rest).length > 0) extraData = rest
     }
 
     if (cellState.isFull) {
@@ -224,6 +232,35 @@ export function SlotEditModal({
     }
 
     setLoading(true)
+
+    let resolvedValues = fieldValues
+    if (customFields.some(f => f.type === 'image_upload')) {
+      try {
+        resolvedValues = await resolveImageUploads(fieldValues)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : '이미지 업로드 실패')
+        setLoading(false)
+        return
+      }
+    }
+
+    let extraData: Record<string, string> | undefined
+    if (useDynamicFields) {
+      const rest: Record<string, string> = {}
+      customFields.slice(1).forEach(f => {
+        const v = resolvedValues[f.id]
+        if (v !== undefined && v !== '') rest[f.id] = v.trim ? v.trim() : v
+      })
+      if (Object.keys(rest).length > 0) extraData = rest
+    } else if (showExtraCustomFields) {
+      const rest: Record<string, string> = {}
+      customFields.forEach(f => {
+        const v = resolvedValues[f.id]
+        if (v !== undefined && v !== '') rest[f.id] = v.trim ? v.trim() : v
+      })
+      if (Object.keys(rest).length > 0) extraData = rest
+    }
+
     const err = await onAdd(
       name,
       note.trim(),
@@ -238,6 +275,8 @@ export function SlotEditModal({
     )
     setLoading(false)
     if (err) { setError(err); return }
+    Object.values(pendingImages).flat().forEach(img => URL.revokeObjectURL(img.previewUrl))
+    setPendingImages({})
     onClose()
   }
 
@@ -246,15 +285,11 @@ export function SlotEditModal({
     setError(null)
 
     let name: string
-    let customerPhone: string | null = null
-    let extraData: Record<string, string> | undefined
+    const customerPhone: string | null = null
 
     if (useDynamicFields) {
       for (const field of customFields) {
-        if (field.required && !isFieldFilled(field)) {
-          setError(`"${field.label}"은(는) 필수 항목입니다`)
-          return
-        }
+        if (field.required && !isFieldFilled(field)) { setError(`"${field.label}"은(는) 필수 항목입니다`); return }
         if (field.type === 'number') {
           const num = Number(fieldValues[field.id])
           if (fieldValues[field.id]?.trim() && field.min !== undefined && num < field.min) { setError(`"${field.label}"은(는) ${field.min} 이상이어야 합니다`); return }
@@ -270,12 +305,6 @@ export function SlotEditModal({
       const nameFieldId = customFields[0].id
       name = fieldValues[nameFieldId]?.trim() ?? ''
       if (!name) return
-      const rest: Record<string, string> = {}
-      customFields.slice(1).forEach(f => {
-        const v = fieldValues[f.id]
-        if (v !== undefined && v !== '') rest[f.id] = v.trim ? v.trim() : v
-      })
-      if (Object.keys(rest).length > 0) extraData = rest
     } else {
       if (!selectedProfile) return
       name = selectedProfile.name
@@ -283,10 +312,7 @@ export function SlotEditModal({
 
     if (showExtraCustomFields) {
       for (const field of customFields) {
-        if (field.required && !isFieldFilled(field)) {
-          setError(`"${field.label}"은(는) 필수 항목입니다`)
-          return
-        }
+        if (field.required && !isFieldFilled(field)) { setError(`"${field.label}"은(는) 필수 항목입니다`); return }
         if (field.type === 'number') {
           const num = Number(fieldValues[field.id])
           if (fieldValues[field.id]?.trim() && field.min !== undefined && num < field.min) { setError(`"${field.label}"은(는) ${field.min} 이상이어야 합니다`); return }
@@ -299,15 +325,38 @@ export function SlotEditModal({
           if (fieldValues[field.id].replace(/\D/g, '').length < 8) { setError(`"${field.label}"의 계좌번호는 숫자 8자리 이상이어야 합니다`); return }
         }
       }
+    }
+
+    setLoading(true)
+
+    let resolvedValues = fieldValues
+    if (customFields.some(f => f.type === 'image_upload')) {
+      try {
+        resolvedValues = await resolveImageUploads(fieldValues)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : '이미지 업로드 실패')
+        setLoading(false)
+        return
+      }
+    }
+
+    let extraData: Record<string, string> | undefined
+    if (useDynamicFields) {
+      const rest: Record<string, string> = {}
+      customFields.slice(1).forEach(f => {
+        const v = resolvedValues[f.id]
+        if (v !== undefined && v !== '') rest[f.id] = v.trim ? v.trim() : v
+      })
+      if (Object.keys(rest).length > 0) extraData = rest
+    } else if (showExtraCustomFields) {
       const rest: Record<string, string> = {}
       customFields.forEach(f => {
-        const v = fieldValues[f.id]
+        const v = resolvedValues[f.id]
         if (v !== undefined && v !== '') rest[f.id] = v.trim ? v.trim() : v
       })
       if (Object.keys(rest).length > 0) extraData = rest
     }
 
-    setLoading(true)
     const err = await onUpdate(
       editingId,
       name,
@@ -321,8 +370,10 @@ export function SlotEditModal({
       extraData,
     )
     setLoading(false)
-    if (err) setError(err)
-    else cancelEdit()
+    if (err) { setError(err); return }
+    Object.values(pendingImages).flat().forEach(img => URL.revokeObjectURL(img.previewUrl))
+    setPendingImages({})
+    cancelEdit()
   }
 
   async function handleDelete(id: string) {
@@ -369,12 +420,33 @@ export function SlotEditModal({
   const inputClass = 'w-full min-w-0 h-11 border border-[var(--color-border-strong)] rounded-xl px-3 text-sm font-medium bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/20 focus:border-[var(--color-brand-primary)]/50 focus:bg-[var(--color-surface)] transition-all duration-200'
 
   function isFieldFilled(field: CustomFieldDef): boolean {
+    if (field.type === 'image_upload') {
+      const hasExisting = (() => {
+        try { return field.id in fieldValues && (JSON.parse(fieldValues[field.id]) as string[]).length > 0 } catch { return false }
+      })()
+      return hasExisting || (pendingImages[field.id]?.length ?? 0) > 0
+    }
     const val = fieldValues[field.id] ?? ''
     if (field.type === 'checkbox') return val === 'true'
     return val.trim() !== ''
   }
 
   function renderFieldInput(field: CustomFieldDef) {
+    if (field.type === 'image_upload') {
+      const existingUrls: string[] = (() => {
+        try { return fieldValues[field.id] ? (JSON.parse(fieldValues[field.id]) as string[]) : [] } catch { return [] }
+      })()
+      return (
+        <ImageUploadField
+          key={field.id}
+          fieldDef={field}
+          existingUrls={existingUrls}
+          onExistingChange={urls => setFieldValues(prev => ({ ...prev, [field.id]: JSON.stringify(urls) }))}
+          pending={pendingImages[field.id] ?? []}
+          onPendingChange={imgs => setPendingImages(prev => ({ ...prev, [field.id]: imgs }))}
+        />
+      )
+    }
     const val = fieldValues[field.id] ?? ''
     return (
       <div key={field.id}>
@@ -611,6 +683,7 @@ export function SlotEditModal({
                 if (isFreeform) {
                   if (!useDynamicFields && a.customer_phone) detailChips.push({ key: 'phone', label: '연락처', value: fmtPhone(a.customer_phone) })
                   if (useDynamicFields) customFields.slice(1).forEach(f => {
+                    if (f.type === 'image_upload') return
                     const val = a.extra_data?.[f.id]
                     if (!val) return
                     const unit = getOptionUnit(f.options?.find(o => o.value === val)?.value_type)
@@ -618,6 +691,7 @@ export function SlotEditModal({
                   })
                 } else if (showExtraCustomFields) {
                   customFields.forEach(f => {
+                    if (f.type === 'image_upload') return
                     const val = a.extra_data?.[f.id]
                     if (!val) return
                     const unit = getOptionUnit(f.options?.find(o => o.value === val)?.value_type)
@@ -625,6 +699,18 @@ export function SlotEditModal({
                   })
                 }
                 if (a.note) detailChips.push({ key: 'note', label: '메모', value: a.note })
+
+                const imageChips: { fieldId: string; label: string; urls: string[] }[] = []
+                const imgFieldSource = useDynamicFields ? customFields.slice(1) : showExtraCustomFields ? customFields : []
+                imgFieldSource.forEach(f => {
+                  if (f.type !== 'image_upload') return
+                  const raw = a.extra_data?.[f.id]
+                  if (!raw) return
+                  try {
+                    const urls = JSON.parse(raw) as string[]
+                    if (urls.length > 0) imageChips.push({ fieldId: f.id, label: f.label, urls })
+                  } catch {}
+                })
 
                 return (
                   <div
@@ -676,12 +762,22 @@ export function SlotEditModal({
                         </div>
                       )}
                     </div>
-                    {detailChips.length > 0 && (
+                    {(detailChips.length > 0 || imageChips.length > 0) && (
                       <div className="flex flex-wrap gap-1.5 mt-2.5 pt-2.5 border-t border-dashed border-[var(--color-border-strong)]">
                         {detailChips.map(c => (
                           <span key={c.key} className="text-[11.5px] font-semibold text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] px-2 py-1 rounded-lg inline-flex gap-1 whitespace-nowrap">
                             <b className="font-extrabold text-[var(--color-text-muted)]">{c.label}</b>{c.value}
                           </span>
+                        ))}
+                        {imageChips.map(ic => (
+                          <button
+                            key={ic.fieldId}
+                            type="button"
+                            onClick={() => setGalleryUrls(ic.urls)}
+                            className="text-[11.5px] font-semibold text-[var(--color-brand-primary)] bg-[color-mix(in_srgb,var(--color-brand-primary)_8%,transparent)] border border-[var(--color-brand-primary)]/20 px-2 py-1 rounded-lg inline-flex items-center gap-1 whitespace-nowrap hover:bg-[color-mix(in_srgb,var(--color-brand-primary)_15%,transparent)] transition-colors select-none"
+                          >
+                            <span className="select-none">🖼</span> {ic.label} {ic.urls.length}장
+                          </button>
                         ))}
                       </div>
                     )}
@@ -866,6 +962,12 @@ export function SlotEditModal({
           </div>
         )}
       </div>
+      {galleryUrls && (
+        <ImageGalleryModal
+          urls={galleryUrls}
+          onClose={() => setGalleryUrls(null)}
+        />
+      )}
       <DevFileLabel file="SlotEditModal.tsx" />
     </div>
   )
