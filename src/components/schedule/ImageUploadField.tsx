@@ -87,7 +87,7 @@ export function ImageUploadField({ fieldDef, existingUrls, onExistingChange, pen
             </div>
           ))}
           {pending.map((img, i) => (
-            <div key={i} className="relative w-16 h-16 rounded-xl overflow-hidden border-2 border-[var(--color-brand-primary)]/40 group flex-shrink-0">
+            <div key={img.previewUrl} className="relative w-16 h-16 rounded-xl overflow-hidden border-2 border-[var(--color-brand-primary)]/40 group flex-shrink-0">
               <img src={img.previewUrl} alt="" className="w-full h-full object-cover" />
               <button
                 type="button"

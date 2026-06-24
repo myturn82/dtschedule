@@ -796,7 +796,15 @@ ON CONFLICT (id) DO NOTHING;
 DROP POLICY IF EXISTS "authenticated_upload_schedule_images" ON storage.objects;
 CREATE POLICY "authenticated_upload_schedule_images"
   ON storage.objects FOR INSERT TO authenticated
-  WITH CHECK (bucket_id = 'schedule-images');
+  WITH CHECK (
+    bucket_id = 'schedule-images'
+    AND EXISTS (
+      SELECT 1 FROM tenant_members tm
+      WHERE tm.user_id = auth.uid()
+      AND tm.tenant_id::text = (storage.foldername(name))[1]
+      AND tm.is_approved = true
+    )
+  );
 
 DROP POLICY IF EXISTS "public_read_schedule_images" ON storage.objects;
 CREATE POLICY "public_read_schedule_images"
@@ -806,7 +814,15 @@ CREATE POLICY "public_read_schedule_images"
 DROP POLICY IF EXISTS "authenticated_delete_schedule_images" ON storage.objects;
 CREATE POLICY "authenticated_delete_schedule_images"
   ON storage.objects FOR DELETE TO authenticated
-  USING (bucket_id = 'schedule-images');
+  USING (
+    bucket_id = 'schedule-images'
+    AND EXISTS (
+      SELECT 1 FROM tenant_members tm
+      WHERE tm.user_id = auth.uid()
+      AND tm.tenant_id::text = (storage.foldername(name))[1]
+      AND tm.is_approved = true
+    )
+  );
 
 
 -- ────────────────────────────────────────────────────────────
