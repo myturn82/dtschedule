@@ -1,0 +1,75 @@
+// 조직별 포인트 컬러 프리셋 — claude.ai/design "Org Setup Wizard" 트윅스 패널의
+// THEMES 토큰을 그대로 포팅. 다크 변형은 데이터로 보관하되 현재 앱은 다크모드가
+// 비활성 상태라 적용하지 않는다(useDarkMode.ts 참고).
+
+export type ThemePresetKey = 'midnight' | 'forest' | 'salmon' | 'beige' | 'original'
+
+export interface ThemeTokens {
+  accent: string
+  accentHover: string
+  accentSoft: string
+  accentRing: string
+  accentText: string
+  accentContrast: string
+  pageOverride?: string
+  surfaceOverride?: string
+  borderOverride?: string
+}
+
+export interface ThemePreset {
+  label: string
+  light: ThemeTokens
+  dark: ThemeTokens
+}
+
+export const THEME_PRESETS: Record<ThemePresetKey, ThemePreset> = {
+  midnight: {
+    label: '미드나잇',
+    light: { accent: '#3056D3', accentHover: '#2742B5', accentSoft: '#EEF1FD', accentRing: '#C7D2F7', accentText: '#2742B5', accentContrast: '#FFFFFF' },
+    dark: { accent: '#5B7BF5', accentHover: '#6E8AF7', accentSoft: '#1A2140', accentRing: '#2E3A6B', accentText: '#A9BCFB', accentContrast: '#0B0E18' },
+  },
+  forest: {
+    label: '딥 그린',
+    light: { accent: '#0E8A5F', accentHover: '#0B7050', accentSoft: '#E7F6EF', accentRing: '#B4E3CE', accentText: '#0B6E4F', accentContrast: '#FFFFFF' },
+    dark: { accent: '#2BB37D', accentHover: '#36C189', accentSoft: '#10271E', accentRing: '#1F4A39', accentText: '#7FD9B4', accentContrast: '#08130E' },
+  },
+  salmon: {
+    label: '살몬',
+    light: { accent: '#F2604E', accentHover: '#DD4B3A', accentSoft: '#FDEDEA', accentRing: '#F8C9C0', accentText: '#C2402F', accentContrast: '#FFFFFF' },
+    dark: { accent: '#FF7A66', accentHover: '#FF8C7A', accentSoft: '#30181590', accentRing: '#5A2E27', accentText: '#FFB3A4', accentContrast: '#1A0D0A' },
+  },
+  beige: {
+    label: '베이지 (샌드)',
+    light: { accent: '#B0744A', accentHover: '#955F3A', accentSoft: '#F3EADF', accentRing: '#E0C9AF', accentText: '#8A5733', accentContrast: '#FFFFFF', pageOverride: '#F4F1EA', surfaceOverride: '#FBF9F4', borderOverride: '#E6DECF' },
+    dark: { accent: '#C8895C', accentHover: '#D69A6D', accentSoft: '#2A2017', accentRing: '#4A3A27', accentText: '#E0B488', accentContrast: '#1A130C', pageOverride: '#1A1712', surfaceOverride: '#221E18', borderOverride: '#352E24' },
+  },
+  original: {
+    label: '오리지널 (기존)',
+    light: { accent: '#D35438', accentHover: '#BC4630', accentSoft: '#FBEBE6', accentRing: '#F3C9BC', accentText: '#B23E27', accentContrast: '#FFFFFF', pageOverride: '#F5F4F1', surfaceOverride: '#FFFFFF', borderOverride: '#E9E6E0' },
+    dark: { accent: '#E8694D', accentHover: '#F07A5F', accentSoft: '#2E1812', accentRing: '#5A2D22', accentText: '#F6A892', accentContrast: '#1A0E0A', pageOverride: '#15110F', surfaceOverride: '#1E1916', borderOverride: '#322A25' },
+  },
+}
+
+export const THEME_PRESET_LIST: { key: ThemePresetKey; label: string; preset: ThemePreset }[] =
+  (Object.keys(THEME_PRESETS) as ThemePresetKey[]).map(key => ({ key, label: THEME_PRESETS[key].label, preset: THEME_PRESETS[key] }))
+
+const TOKEN_TO_CSS_VAR: Record<keyof Pick<ThemeTokens, 'accent' | 'accentHover' | 'accentSoft' | 'accentRing' | 'accentText' | 'accentContrast'>, string> = {
+  accent: '--color-brand-primary',
+  accentHover: '--color-brand-primary-hover',
+  accentSoft: '--color-brand-primary-soft',
+  accentRing: '--color-brand-primary-ring',
+  accentText: '--color-brand-primary-text',
+  accentContrast: '--color-brand-primary-contrast',
+}
+
+// 조직의 포인트 컬러 프리셋을 전역 CSS 변수로 주입한다. 기존 31개 파일이 참조하는
+// --color-brand-primary(-hover)를 이 한 곳에서만 바꾸면 버튼·포커스링 등에 자동 반영된다.
+export function applyThemePreset(key: ThemePresetKey | null | undefined) {
+  const root = document.documentElement
+  const tokens = key ? THEME_PRESETS[key]?.light : undefined
+  for (const [tokenKey, cssVar] of Object.entries(TOKEN_TO_CSS_VAR) as [keyof typeof TOKEN_TO_CSS_VAR, string][]) {
+    const value = tokens?.[tokenKey]
+    if (value) root.style.setProperty(cssVar, value)
+    else root.style.removeProperty(cssVar)
+  }
+}

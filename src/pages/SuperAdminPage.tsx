@@ -13,6 +13,7 @@ import { PlanLimitsPanel } from '../components/superadmin/PlanLimitsPanel'
 import { EMPTY_ORG_FORM, SLUG_RE, type CreateOrgForm } from '../components/superadmin/createOrgForm'
 import { displayMode } from '../lib/tenantMode'
 import { isValidPhone } from '../lib/phone'
+import { THEME_PRESETS, type ThemePresetKey } from '../lib/themePresets'
 import '../styles/account-hub.css'
 
 // ─── SuperAdminPage ───────────────────────────────────────────────────────────
@@ -49,6 +50,7 @@ export function SuperAdminPage() {
 
   // Edit state
   const [modeSaving, setModeSaving] = useState(false)
+  const [themeSaving, setThemeSaving] = useState(false)
 
   // Name edit state
   const [editingNameId, setEditingNameId] = useState<string | null>(null)
@@ -499,6 +501,28 @@ export function SuperAdminPage() {
     setPendingModeChange({ tenant, from: fromMode, to: newMode })
   }
 
+  async function handleThemeChange(tenant: Tenant, presetKey: ThemePresetKey | '') {
+    setThemeSaving(true)
+    const { data, error } = await supabase
+      .from('tenants')
+      .update({
+        settings: {
+          ...tenant.settings,
+          theme_preset: presetKey || undefined,
+          theme_color: presetKey ? THEME_PRESETS[presetKey].light.accent : undefined,
+        },
+      })
+      .eq('id', tenant.id)
+      .select()
+      .single()
+    if (error) {
+      setMessage(`오류: ${error.message}`)
+    } else if (data) {
+      setTenants(prev => prev.map(t => t.id === tenant.id ? data : t))
+    }
+    setThemeSaving(false)
+  }
+
   const selectedCustomer = customers.find(c => c.id === selectedCustomerId) ?? customers[0] ?? null
 
   const createTenant = useCallback(async (e: React.FormEvent) => {
@@ -536,6 +560,7 @@ export function SuperAdminPage() {
         settings: {
           title: form.title.trim() || form.name.trim(),
           theme_color: form.theme_color.trim() || undefined,
+          theme_preset: form.theme_preset || undefined,
           time_slots: createSlots,
           open_from: '09:00',
           open_to: '22:00',
@@ -760,6 +785,8 @@ export function SuperAdminPage() {
               saveSlug={saveSlug}
               modeSaving={modeSaving}
               onModeChange={handleModeChange}
+              themeSaving={themeSaving}
+              onThemeChange={handleThemeChange}
               onOpenSchedule={t => { setTenant(t, 'admin'); navigate('/') }}
               onOpenAdmin={t => navigate(`/admin?org=${t.id}`)}
               deletingSaving={deletingSaving}
