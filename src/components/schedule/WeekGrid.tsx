@@ -5,7 +5,7 @@ import { shortSlotLabel, slotStartLabel, formatTimeSub } from '../../utils/timeS
 import { LockIcon } from '../icons/LockIcons'
 
 const DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일']
-const INDICATOR_BAR_COLOR = 'oklch(0.65 0.15 60)'
+const INDICATOR_BAR_COLOR = 'var(--color-brand-primary)'
 
 const STRIPE_STYLE = {
   background: 'repeating-linear-gradient(135deg, transparent 0 6px, rgba(20,23,28,0.03) 6px 12px)',
@@ -261,9 +261,7 @@ export function WeekGrid({
                           a => a.role_id === role.id && !(a.user_id && teamLeaderUserIds?.has(a.user_id))
                         )
                         const canClick = isAdmin || memberRoleId === role.id
-                        const tint = isMoon
-                          ? { bg: 'var(--tint-moon)', ink: 'var(--tint-moon-ink)' }
-                          : { bg: 'var(--tint-sun)',  ink: 'var(--tint-sun-ink)' }
+                        const tint = { bg: 'var(--tint-brand)', ink: 'var(--tint-brand-ink)' }
 
                         return (
                           <button
@@ -330,9 +328,7 @@ export function WeekGrid({
                 const visibleAssigns = displayCs.assignments.filter(
                   a => a.member_type !== 'admin_note' && !(a.user_id && teamLeaderUserIds?.has(a.user_id)) && !indicatorBarRoleIds.has(a.role_id ?? '')
                 )
-                const baseTint = isMoon
-                  ? { bg: 'var(--tint-moon)', ink: 'var(--tint-moon-ink)' }
-                  : { bg: 'var(--tint-sun)',  ink: 'var(--tint-sun-ink)' }
+                const baseTint = { bg: 'var(--tint-brand)', ink: 'var(--tint-brand-ink)' }
                 const plusTint = { bg: 'var(--tint-plus)', ink: 'var(--tint-plus-ink)' }
                 const isAllPlus = visibleAssigns.length > 0 && visibleAssigns.every(a => a.member_type === '50plus')
                 const cellTint = isAllPlus ? plusTint : baseTint

@@ -41,7 +41,7 @@ export function MobileScheduleView({ year, month, timeSlots, slotLabels = {}, as
               key={d}
               onClick={() => setSelectedDay(d)}
               className={`flex-shrink-0 w-10 h-12 rounded text-xs font-medium border
-                ${selectedDay === d ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 dark:text-gray-200'}
+                ${selectedDay === d ? 'bg-[var(--color-brand-primary)] text-white border-[var(--color-brand-primary)]' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 dark:text-gray-200'}
                 ${isSunDay && selectedDay !== d ? 'text-red-500' : ''}
                 ${isSatDay && selectedDay !== d ? 'text-blue-600' : ''}`}
             >
@@ -65,7 +65,7 @@ export function MobileScheduleView({ year, month, timeSlots, slotLabels = {}, as
           const cellState = getCellState(selectedDay, slot, year, month, scheduleRules, slotSettings, dateOverrides, assignments)
           return (
             <div key={slot} className="flex items-stretch gap-2">
-              <div className="w-16 text-xs font-medium text-gray-600 dark:text-gray-300 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded px-1 truncate">{slotLabels[slot] ?? slotStartLabel(slot)}</div>
+              <div className="w-16 text-xs font-medium text-[var(--tint-brand-ink)] flex items-center justify-center bg-[var(--tint-brand)] rounded px-1 truncate">{slotLabels[slot] ?? slotStartLabel(slot)}</div>
               <div className="flex-1 flex gap-1">
                 {isSplitMode && splitRoles.length > 0 ? (
                   splitRoles.map(role => (

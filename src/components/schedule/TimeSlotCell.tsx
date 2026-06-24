@@ -3,7 +3,7 @@ import { fmtPhone } from '../../lib/format'
 import { formatTimeSub } from '../../utils/timeSlots'
 import { LockIcon } from '../icons/LockIcons'
 
-const INDICATOR_BAR_COLOR = 'oklch(0.65 0.15 60)'
+const INDICATOR_BAR_COLOR = 'var(--color-brand-primary)'
 
 interface Props {
   cellState: CellState
@@ -35,11 +35,10 @@ function assignmentCoversHour(timeSub: string | null, hour: number): boolean {
   return Number(timeSub) === hour
 }
 
-// Determine tint based on member_type and time slot
-function resolveTint(colType: 'vol' | 'plus' | 'role', slotStart: number): { bg: string; ink: string } {
+// Determine tint based on member_type — 배정된 일반 셀은 조직 포인트 컬러를 반영
+function resolveTint(colType: 'vol' | 'plus' | 'role', _slotStart: number): { bg: string; ink: string } {
   if (colType === 'plus') return { bg: 'var(--tint-plus)', ink: 'var(--tint-plus-ink)' }
-  if (slotStart >= 20)    return { bg: 'var(--tint-moon)', ink: 'var(--tint-moon-ink)' }
-  return { bg: 'var(--tint-sun)', ink: 'var(--tint-sun-ink)' }
+  return { bg: 'var(--tint-brand)', ink: 'var(--tint-brand-ink)' }
 }
 
 // Striped closed-cell pattern matching design
