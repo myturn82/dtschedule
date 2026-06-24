@@ -29,11 +29,20 @@ const FIELD_TYPE_DEFS: { value: CustomFieldType; label: string; tone: string; ic
   { value: 'phone',          label: '전화번호', tone: 'teal',   icon: 'phone' },
   { value: 'account_number', label: '계좌번호', tone: 'pink',   icon: 'hash' },
   { value: 'radio',          label: '라디오',   tone: 'amber',  icon: 'dot' },
+  { value: 'image_upload',   label: '이미지첨부', tone: 'rose',   icon: 'image' },
 ]
 const PLACEHOLDER_TYPES: CustomFieldType[] = ['text', 'number', 'select', 'phone', 'account_number']
 const BLANK_EDIT = (): Omit<CustomFieldDef, 'id'> => ({ label: '', type: 'text', required: true, options: [], placeholder: '', show_in_dashboard: false, min: undefined, max: undefined })
 
 function FieldPreview({ field }: { field: CustomFieldDef }) {
+  if (field.type === 'image_upload') {
+    return (
+      <div className="prev-input" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span style={{ fontSize: 16 }}>📷</span>
+        <span>이미지 첨부 (최대 3장, WebP 자동 압축)</span>
+      </div>
+    )
+  }
   if (field.type === 'text' || field.type === 'number' || field.type === 'phone' || field.type === 'account_number') {
     return <div className="prev-input">{field.placeholder || `${field.label} 입력`}</div>
   }
