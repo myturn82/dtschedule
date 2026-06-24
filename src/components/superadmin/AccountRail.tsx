@@ -157,8 +157,9 @@ export function AccountRail({
                   return (
                     <label
                       key={c.id}
-                      className={`hub-acct cursor-pointer ${isChecked ? 'is-selected' : ''}`}
+                      className={`hub-acct cursor-pointer ${isChecked ? 'is-selected' : ''} ${isSystem ? 'pointer-events-none opacity-60' : ''}`}
                       onClick={() => {
+                        if (isSystem) return
                         setSelectedCustomerIds(prev => {
                           const next = new Set(prev)
                           if (next.has(c.id)) next.delete(c.id); else next.add(c.id)
@@ -169,6 +170,7 @@ export function AccountRail({
                       <input
                         type="checkbox"
                         checked={isChecked}
+                        disabled={isSystem}
                         onChange={() => {}}
                         className="flex-shrink-0 w-4 h-4 rounded accent-[var(--color-brand-primary)]"
                         onClick={e => e.stopPropagation()}
