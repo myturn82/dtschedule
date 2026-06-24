@@ -426,12 +426,17 @@ export function SuperAdminPage() {
   }
 
   async function handleDeleteUsers(ids: string[]) {
-    const { error } = await supabase.from('profiles').delete().in('id', ids)
+    const safeIds = ids.filter(id => {
+      const user = allUsers.find(u => u.id === id)
+      return user && !user.is_super_admin
+    })
+    if (safeIds.length === 0) return
+    const { error } = await supabase.from('profiles').delete().in('id', safeIds)
     if (error) {
       setMessage(`오류: ${error.message}`)
     } else {
-      setAllUsers(prev => prev.filter(u => !ids.includes(u.id)))
-      setMessage(`${ids.length}명의 사용자가 삭제됐습니다.`)
+      setAllUsers(prev => prev.filter(u => !safeIds.includes(u.id)))
+      setMessage(`${safeIds.length}명의 사용자가 삭제됐습니다.`)
     }
   }
 
