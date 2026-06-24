@@ -67,10 +67,13 @@ export function UserManagementPanel({ users, loading, onDeleteUsers }: Props) {
   async function executeDelete() {
     if (!deleteConfirm) return
     setDeleting(true)
-    await onDeleteUsers(deleteConfirm.map(u => u.id))
-    setSelectedIds(new Set())
-    setDeleteConfirm(null)
-    setDeleting(false)
+    try {
+      await onDeleteUsers(deleteConfirm.map(u => u.id))
+      setSelectedIds(new Set())
+      setDeleteConfirm(null)
+    } finally {
+      setDeleting(false)
+    }
   }
 
   return (
