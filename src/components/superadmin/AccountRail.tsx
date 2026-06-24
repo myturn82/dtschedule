@@ -62,6 +62,21 @@ export function AccountRail({
     })).filter(g => g.items.length > 0)
   }, [filtered])
 
+  const SYSTEM_CUSTOMER_ID = '00000000-0000-0000-0000-000000000001'
+  const selectableIds = useMemo(
+    () => filtered.filter(c => c.id !== SYSTEM_CUSTOMER_ID).map(c => c.id),
+    [filtered]
+  )
+  const allChecked = selectableIds.length > 0 && selectableIds.every(id => selectedCustomerIds.has(id))
+
+  function toggleAll() {
+    if (allChecked) {
+      setSelectedCustomerIds(new Set())
+    } else {
+      setSelectedCustomerIds(new Set(selectableIds))
+    }
+  }
+
   return (
     <>
       <div className={`hub-drawer-backdrop ${isOpen ? 'is-open' : ''}`} onClick={onClose} />
@@ -105,6 +120,19 @@ export function AccountRail({
             placeholder="고객명 검색"
             className={inputCls + ' text-xs py-1.5'}
           />
+          {selectMode && (
+            <label className="flex items-center gap-2 px-1 py-0.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={allChecked}
+                onChange={toggleAll}
+                className="w-4 h-4 rounded accent-[var(--color-brand-primary)]"
+              />
+              <span className="text-[12px] font-semibold text-[var(--color-text-secondary)]">
+                전체 선택 ({selectableIds.length}개)
+              </span>
+            </label>
+          )}
           {showCreateCustomer && (
             <form onSubmit={onCreateCustomer} className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] space-y-2">
               <input
