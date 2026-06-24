@@ -273,3 +273,22 @@ export function MyNewPage() {
    - 예외: 실시간 입력 onChange 핸들러 내부에서는 `formatPhone()` 직접 사용 허용.
 3. **마스킹 정책 변경 시** — `format.ts`의 `mask*` 함수 내부만 수정하면 전체 적용된다.
 4. **`null` / `undefined` 안전** — `fmtPhone`, `fmtNumber` 모두 null/undefined를 빈 문자열로 처리한다.
+
+---
+
+## 관리자콘솔 ↔ 조직 위자드 동기화 규칙
+
+커스텀 필드 타입, 역할 설정, 슬롯 규칙 등 **조직 위자드(Setup Wizard)의 각 단계와 관리자콘솔(AdminPage)은 동일한 기능을 독립적으로 구현하고 있다.**
+어느 한쪽을 수정할 때는 반드시 다른 쪽도 함께 확인하고 동기화해야 한다.
+
+### 동기화 대상 파일
+
+| 위자드 단계 | 관리자콘솔 대응 위치 |
+|------------|---------------------|
+| `Step7CustomFields.tsx` — 커스텀 필드 타입·미리보기 | `AdminPage.tsx` — `FIELD_TYPE_DEFS`, `CfTypeIcon`, `FieldPreview` |
+
+### 반드시 지켜야 할 규칙
+
+1. **`CustomFieldType` union에 새 타입 추가 시** — `Step7CustomFields.tsx`의 `FIELD_TYPE_DEFS`와 `FieldPreview` 수정 후, `AdminPage.tsx`의 `FIELD_TYPE_DEFS`, `CfTypeIcon`, `FieldPreview`도 반드시 같이 수정한다.
+2. **관리자콘솔에서 먼저 수정한 경우** — 위자드 동일 단계도 확인하여 누락 여부를 검증한다.
+3. **image_upload 등 파일 관련 필드** — `show_in_dashboard`, `FIELD_TYPES_WITH_OPTIONS`, `PLACEHOLDER_TYPES` 배열에서 제외되어야 하므로, 양쪽 파일 모두에서 이 배열에 추가하지 않는다.

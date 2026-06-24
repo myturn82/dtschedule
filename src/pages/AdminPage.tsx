@@ -80,6 +80,7 @@ const FIELD_TYPE_DEFS: { value: CustomFieldType; label: string; badgeCls: string
   { value: 'checkbox_group',label: '다중선택', badgeCls: 'bg-pink-100 text-pink-700' },
   { value: 'phone',         label: '전화번호', badgeCls: 'bg-teal-100 text-teal-700' },
   { value: 'account_number',label: '계좌번호', badgeCls: 'bg-violet-100 text-violet-700' },
+  { value: 'image_upload',  label: '이미지첨부', badgeCls: 'bg-rose-100 text-rose-700' },
 ]
 
 function CfTypeIcon({ type, size = 12 }: { type: CustomFieldType; size?: number }) {
@@ -92,6 +93,7 @@ function CfTypeIcon({ type, size = 12 }: { type: CustomFieldType; size?: number 
   if (type === 'checkbox_group') return <svg {...p}><rect x="2" y="4" width="7" height="7" rx="1.5"/><path d="m3.5 7.5 1.5 1.5 3-3"/><rect x="2" y="13" width="7" height="7" rx="1.5"/><path d="m3.5 16.5 1.5 1.5 3-3"/><path d="M12 7h10M12 17h10"/></svg>
   if (type === 'phone') return <svg {...p}><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-1Z"/></svg>
   if (type === 'account_number') return <svg {...p}><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3 10h18"/></svg>
+  if (type === 'image_upload') return <svg {...p}><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
   return null
 }
 
@@ -146,6 +148,12 @@ function FieldPreview({ field }: { field: CustomFieldDef }) {
       )}
       {field.type === 'account_number' && (
         <input type="text" disabled placeholder={field.placeholder || '계좌번호 입력 (숫자)'} className={cls} />
+      )}
+      {field.type === 'image_upload' && (
+        <div className="flex items-center gap-2 h-[34px] border border-dashed border-[var(--color-border-strong)] rounded-lg px-3 text-[13px] text-[var(--color-text-muted)]">
+          <span className="select-none">📷</span>
+          <span>이미지 첨부 (최대 3장, WebP 자동 압축)</span>
+        </div>
       )}
     </div>
   )
