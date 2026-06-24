@@ -92,6 +92,14 @@ export function SuperAdminPage() {
   const [deleteCustomerSaving, setDeleteCustomerSaving] = useState(false)
   const [deleteCustomerNameInput, setDeleteCustomerNameInput] = useState('')
 
+  // Bulk customer delete state
+  type BulkCustomerItem = { customer: Customer; tenantCount: number }
+  const [bulkCustomerConfirm, setBulkCustomerConfirm] = useState<{
+    items: BulkCustomerItem[]
+    action: 'deactivate' | 'delete' | null
+  } | null>(null)
+  const [bulkCustomerSaving, setBulkCustomerSaving] = useState(false)
+
   // Owner / phone save state
   const [ownerSaving, setOwnerSaving] = useState(false)
   const [ownerEmails, setOwnerEmails] = useState<Record<string, string>>({})
@@ -314,6 +322,20 @@ export function SuperAdminPage() {
     setDeleteCustomerNameInput('')
   }
 
+  async function startBulkDeleteCustomers(customerIds: string[]) {
+    const items = await Promise.all(
+      customerIds.map(async id => {
+        const customer = customers.find(c => c.id === id)!
+        const { count } = await supabase
+          .from('tenants')
+          .select('*', { count: 'exact', head: true })
+          .eq('customer_id', id)
+        return { customer, tenantCount: count ?? 0 }
+      })
+    )
+    setBulkCustomerConfirm({ items, action: null })
+  }
+
   async function confirmDeleteCustomer() {
     if (!deleteCustomerConfirm) return
     setDeleteCustomerSaving(true)
@@ -327,6 +349,41 @@ export function SuperAdminPage() {
     }
     setDeleteCustomerConfirm(null)
     setDeleteCustomerSaving(false)
+  }
+
+  async function confirmBulkDeactivateCustomers() {
+    if (!bulkCustomerConfirm) return
+    setBulkCustomerSaving(true)
+    const ids = bulkCustomerConfirm.items.map(i => i.customer.id)
+    const { error } = await supabase
+      .from('customers')
+      .update({ is_active: false, updated_at: new Date().toISOString() })
+      .in('id', ids)
+    if (error) {
+      setMessage(`오류: ${error.message}`)
+    } else {
+      setCustomers(prev => prev.map(c => ids.includes(c.id) ? { ...c, is_active: false } : c))
+      await fetchTenants()
+      setMessage(`${ids.length}개 고객이 비활성화됐습니다.`)
+    }
+    setBulkCustomerConfirm(null)
+    setBulkCustomerSaving(false)
+  }
+
+  async function confirmBulkDeleteCustomers() {
+    if (!bulkCustomerConfirm) return
+    setBulkCustomerSaving(true)
+    const ids = bulkCustomerConfirm.items.map(i => i.customer.id)
+    const { error } = await supabase.from('customers').delete().in('id', ids)
+    if (error) {
+      setMessage(`오류: ${error.message}`)
+    } else {
+      setCustomers(prev => prev.filter(c => !ids.includes(c.id)))
+      await fetchTenants()
+      setMessage(`${ids.length}개 고객이 삭제됐습니다.`)
+    }
+    setBulkCustomerConfirm(null)
+    setBulkCustomerSaving(false)
   }
 
   async function toggleCustomerActive(customer: Customer) {
@@ -702,7 +759,7 @@ export function SuperAdminPage() {
             setCustomerForm={setCustomerForm}
             customerSaving={customerSaving}
             onCreateCustomer={createCustomer}
-            onBulkDelete={() => {}}
+            onBulkDelete={startBulkDeleteCustomers}
           />
 
           {selectedCustomer ? (
@@ -800,6 +857,68 @@ export function SuperAdminPage() {
           )}
         </div>
       </div>
+
+      {/* Bulk customer delete modal */}
+      {bulkCustomerConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] p-6 w-full max-w-md space-y-4 shadow-xl">
+            <h3 className="font-bold text-[var(--color-text-primary)] text-lg">
+              고객 {bulkCustomerConfirm.items.length}개 삭제
+            </h3>
+
+            {/* 선택된 고객 목록 */}
+            <div className="max-h-48 overflow-y-auto space-y-1">
+              {bulkCustomerConfirm.items.map(({ customer, tenantCount }) => (
+                <div key={customer.id} className="flex items-center justify-between px-3 py-2 rounded-lg bg-[var(--color-surface-secondary)] text-sm">
+                  <span className="font-semibold text-[var(--color-text-primary)] truncate">{customer.name}</span>
+                  <span className="text-xs text-[var(--color-text-muted)] flex-shrink-0 ml-2">조직 {tenantCount}개</span>
+                </div>
+              ))}
+            </div>
+
+            {/* 경고 */}
+            {bulkCustomerConfirm.items.some(i => i.tenantCount > 0) && (
+              <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-xs text-amber-700 dark:text-amber-400">
+                소속 조직 {bulkCustomerConfirm.items.reduce((s, i) => s + i.tenantCount, 0)}개와 모든 배정·회원 데이터가 함께 삭제됩니다.
+              </div>
+            )}
+
+            {/* 비활성화 옵션 */}
+            <div className="p-3 rounded-xl border border-amber-200 dark:border-amber-800 space-y-2">
+              <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">비활성화 (권장)</p>
+              <p className="text-xs text-[var(--color-text-secondary)]">데이터를 보존하고 고객을 숨깁니다. 나중에 복구할 수 있습니다.</p>
+              <button
+                disabled={bulkCustomerSaving}
+                onClick={confirmBulkDeactivateCustomers}
+                className="w-full px-4 py-2 rounded-xl bg-amber-500 text-white text-sm font-medium hover:bg-amber-600 disabled:opacity-40 transition-colors"
+              >
+                {bulkCustomerSaving ? '처리 중...' : '비활성화'}
+              </button>
+            </div>
+
+            {/* 영구 삭제 옵션 */}
+            <div className="p-3 rounded-xl border border-red-200 dark:border-red-800 space-y-2">
+              <p className="text-sm font-semibold text-red-600 dark:text-red-400">영구 삭제</p>
+              <p className="text-xs text-red-500">모든 데이터가 완전히 삭제되며 복구 불가능합니다.</p>
+              <button
+                disabled={bulkCustomerSaving}
+                onClick={confirmBulkDeleteCustomers}
+                className="w-full px-4 py-2 rounded-xl bg-red-500 text-white text-sm font-medium hover:bg-red-600 disabled:opacity-40 transition-colors"
+              >
+                {bulkCustomerSaving ? '삭제 중...' : '영구 삭제'}
+              </button>
+            </div>
+
+            <button
+              disabled={bulkCustomerSaving}
+              onClick={() => setBulkCustomerConfirm(null)}
+              className="w-full px-4 py-2 rounded-xl border border-[var(--color-border)] text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] disabled:opacity-40"
+            >
+              취소
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Customer delete modal */}
       {deleteCustomerConfirm && (
