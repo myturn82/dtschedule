@@ -10,6 +10,7 @@ import { HubMain, type HubView } from '../components/superadmin/HubMain'
 import { OrgDrawer, type DrawerMember } from '../components/superadmin/OrgDrawer'
 import { PendingApprovalsBanner, type PendingMember } from '../components/superadmin/PendingApprovalsBanner'
 import { PlanLimitsPanel } from '../components/superadmin/PlanLimitsPanel'
+import { UserManagementPanel, type ProfileWithOrgCount } from '../components/superadmin/UserManagementPanel'
 import { EMPTY_ORG_FORM, SLUG_RE, type CreateOrgForm } from '../components/superadmin/createOrgForm'
 import { displayMode } from '../lib/tenantMode'
 import { isValidPhone } from '../lib/phone'
@@ -91,6 +92,14 @@ export function SuperAdminPage() {
   const [deleteCustomerConfirm, setDeleteCustomerConfirm] = useState<{ customer: Customer; tenantCount: number } | null>(null)
   const [deleteCustomerSaving, setDeleteCustomerSaving] = useState(false)
   const [deleteCustomerNameInput, setDeleteCustomerNameInput] = useState('')
+
+  // Tab state
+  const [activeTab, setActiveTab] = useState<'hub' | 'users'>('hub')
+
+  // User management state
+  const [allUsers, setAllUsers] = useState<ProfileWithOrgCount[]>([])
+  const [usersLoading, setUsersLoading] = useState(false)
+  const [usersLoaded, setUsersLoaded] = useState(false)
 
   // Bulk customer delete state
   type BulkCustomerItem = { customer: Customer; tenantCount: number }
@@ -179,6 +188,23 @@ export function SuperAdminPage() {
     }
     setMemberCounts(approved)
     setPendingCountsByTenant(pending)
+  }
+
+  async function fetchAllUsers() {
+    setUsersLoading(true)
+    const [profilesRes, membersRes] = await Promise.all([
+      supabase.from('profiles').select('id, name, email, is_super_admin, created_at').order('created_at', { ascending: false }),
+      supabase.from('tenant_members').select('user_id').eq('is_approved', true),
+    ])
+    const orgCounts: Record<string, number> = {}
+    for (const m of membersRes.data ?? []) {
+      orgCounts[m.user_id] = (orgCounts[m.user_id] ?? 0) + 1
+    }
+    setAllUsers(
+      (profilesRes.data ?? []).map(p => ({ ...p, org_count: orgCounts[p.id] ?? 0 }))
+    )
+    setUsersLoading(false)
+    setUsersLoaded(true)
   }
 
   async function fetchPendingMembers() {
@@ -387,6 +413,21 @@ export function SuperAdminPage() {
     }
     setBulkCustomerConfirm(null)
     setBulkCustomerSaving(false)
+  }
+
+  function handleTabChange(tab: 'hub' | 'users') {
+    setActiveTab(tab)
+    if (tab === 'users' && !usersLoaded) fetchAllUsers()
+  }
+
+  async function handleDeleteUsers(ids: string[]) {
+    const { error } = await supabase.from('profiles').delete().in('id', ids)
+    if (error) {
+      setMessage(`오류: ${error.message}`)
+    } else {
+      setAllUsers(prev => prev.filter(u => !ids.includes(u.id)))
+      setMessage(`${ids.length}명의 사용자가 삭제됐습니다.`)
+    }
   }
 
   async function toggleCustomerActive(customer: Customer) {
@@ -699,6 +740,28 @@ export function SuperAdminPage() {
 
         <PlanLimitsPanel />
 
+        {/* ── 탭 네비게이션 ── */}
+        <div className="flex gap-1 mb-4 p-1 rounded-xl bg-[var(--color-surface-secondary)] w-fit">
+          <button
+            onClick={() => handleTabChange('hub')}
+            className={`px-4 py-1.5 rounded-lg text-[13px] font-semibold transition-colors ${activeTab === 'hub'
+              ? 'bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-sm'
+              : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'}`}
+          >
+            고객 계정 허브
+          </button>
+          <button
+            onClick={() => handleTabChange('users')}
+            className={`px-4 py-1.5 rounded-lg text-[13px] font-semibold transition-colors ${activeTab === 'users'
+              ? 'bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-sm'
+              : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'}`}
+          >
+            사용자 관리
+          </button>
+        </div>
+
+        {activeTab === 'hub' && (
+        <>
         <PendingApprovalsBanner
           pendingAdmins={pendingAdmins}
           pendingMembers={pendingMembers}
@@ -859,6 +922,17 @@ export function SuperAdminPage() {
             />
           )}
         </div>
+        </>
+        )}
+
+        {activeTab === 'users' && (
+          <UserManagementPanel
+            users={allUsers}
+            loading={usersLoading}
+            onDeleteUsers={handleDeleteUsers}
+          />
+        )}
+
       </div>
 
       {/* Bulk customer delete modal */}
