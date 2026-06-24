@@ -323,8 +323,11 @@ export function SuperAdminPage() {
   }
 
   async function startBulkDeleteCustomers(customerIds: string[]) {
+    const SYSTEM_CUSTOMER_ID = '00000000-0000-0000-0000-000000000001'
+    const safeIds = customerIds.filter(id => id !== SYSTEM_CUSTOMER_ID)
+    if (safeIds.length === 0) return
     const items = await Promise.all(
-      customerIds.map(async id => {
+      safeIds.map(async id => {
         const customer = customers.find(c => c.id === id)!
         const { count } = await supabase
           .from('tenants')
