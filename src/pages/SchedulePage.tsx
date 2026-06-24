@@ -867,6 +867,7 @@ export function SchedulePage() {
           slotLabels={slotLabels}
           typeLabels={typeLabels}
           onClose={() => setModalTarget(null)}
+          tenantId={tenant?.id}
           lockedUserId={tenantMode === '회원개별' && isPrivileged ? (filterMemberId ?? undefined) : undefined}
           isHighlighted={highlightedSlots.has(`${modalTarget.year}-${pad2(modalTarget.month)}-${pad2(modalTarget.day)}|${modalTarget.timeSlot}`)}
           onToggleHighlight={isPrivileged ? () => toggleHighlight(`${modalTarget.year}-${pad2(modalTarget.month)}-${pad2(modalTarget.day)}`, modalTarget.timeSlot) : undefined}

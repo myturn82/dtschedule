@@ -1,7 +1,7 @@
 -- ============================================================
 -- 운영 DB 초기화 스크립트 (전체 재생성)
 -- 생성일: 2026-06-10
--- 기준 마이그레이션: 001 ~ 052
+-- 기준 마이그레이션: 001 ~ 056
 --
 -- ⚠️  주의: 이 스크립트는 모든 데이터를 삭제합니다.
 --           Supabase SQL Editor에서 직접 실행하세요.
@@ -780,7 +780,37 @@ ON CONFLICT (plan) DO NOTHING;
 
 
 -- ────────────────────────────────────────────────────────────
--- STEP 10. 슈퍼어드민 지정 (직접 실행)
+-- STEP 10. Storage 버킷 및 정책 (마이그레이션 056)
+-- ────────────────────────────────────────────────────────────
+
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'schedule-images',
+  'schedule-images',
+  true,
+  5242880,
+  ARRAY['image/webp', 'image/jpeg', 'image/png', 'image/gif']
+)
+ON CONFLICT (id) DO NOTHING;
+
+DROP POLICY IF EXISTS "authenticated_upload_schedule_images" ON storage.objects;
+CREATE POLICY "authenticated_upload_schedule_images"
+  ON storage.objects FOR INSERT TO authenticated
+  WITH CHECK (bucket_id = 'schedule-images');
+
+DROP POLICY IF EXISTS "public_read_schedule_images" ON storage.objects;
+CREATE POLICY "public_read_schedule_images"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'schedule-images');
+
+DROP POLICY IF EXISTS "authenticated_delete_schedule_images" ON storage.objects;
+CREATE POLICY "authenticated_delete_schedule_images"
+  ON storage.objects FOR DELETE TO authenticated
+  USING (bucket_id = 'schedule-images');
+
+
+-- ────────────────────────────────────────────────────────────
+-- STEP 11. 슈퍼어드민 지정 (직접 실행)
 -- ────────────────────────────────────────────────────────────
 -- 회원가입 후 아래 SQL을 Supabase SQL Editor에서 실행하세요:
 --
