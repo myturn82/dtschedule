@@ -31,13 +31,17 @@ interface Props {
   setCustomerForm: (updater: (prev: CustomerForm) => CustomerForm) => void
   customerSaving: boolean
   onCreateCustomer: (e: React.FormEvent) => void
+  onBulkDelete: (customerIds: string[]) => void
 }
 
 export function AccountRail({
   customers, tenants, selectedId, onSelect, pendingCustomerIds, isOpen, onClose,
   showCreateCustomer, setShowCreateCustomer, customerForm, setCustomerForm, customerSaving, onCreateCustomer,
+  onBulkDelete,
 }: Props) {
   const [search, setSearch] = useState('')
+  const [selectMode, setSelectMode] = useState(false)
+  const [selectedCustomerIds, setSelectedCustomerIds] = useState<Set<string>>(new Set())
 
   const orgCounts = useMemo(() => {
     const map: Record<string, number> = {}
@@ -68,13 +72,31 @@ export function AccountRail({
             <span className="text-[11.5px] font-bold px-2 py-0.5 rounded-full" style={{ color: 'oklch(0.45 0.14 28)', background: 'oklch(0.95 0.045 28)' }}>
               {customers.length}
             </span>
-            <button
-              onClick={() => setShowCreateCustomer(!showCreateCustomer)}
-              className="ml-auto inline-flex items-center justify-center w-7 h-7 rounded-lg border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors text-base font-bold leading-none"
-              title="새 고객"
-            >
-              +
-            </button>
+            {!selectMode ? (
+              <>
+                <button
+                  onClick={() => setShowCreateCustomer(!showCreateCustomer)}
+                  className="ml-auto inline-flex items-center justify-center w-7 h-7 rounded-lg border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors text-base font-bold leading-none"
+                  title="새 고객"
+                >
+                  +
+                </button>
+                <button
+                  onClick={() => { setSelectMode(true); setSelectedCustomerIds(new Set()) }}
+                  className="inline-flex items-center justify-center h-6 px-2 rounded-md text-[11.5px] font-semibold border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
+                  title="고객 선택"
+                >
+                  선택
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => { setSelectMode(false); setSelectedCustomerIds(new Set()) }}
+                className="ml-auto inline-flex items-center justify-center h-6 px-2 rounded-md text-[11.5px] font-semibold border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
+              >
+                취소
+              </button>
+            )}
           </div>
           <input
             type="text"
@@ -129,6 +151,39 @@ export function AccountRail({
               {g.items.map(c => {
                 const { bg, fg } = colorOf(c.name)
                 const isSystem = c.id === '00000000-0000-0000-0000-000000000001'
+                const isChecked = selectedCustomerIds.has(c.id)
+
+                if (selectMode) {
+                  return (
+                    <label
+                      key={c.id}
+                      className={`hub-acct cursor-pointer ${isChecked ? 'is-selected' : ''}`}
+                      onClick={() => {
+                        setSelectedCustomerIds(prev => {
+                          const next = new Set(prev)
+                          if (next.has(c.id)) next.delete(c.id); else next.add(c.id)
+                          return next
+                        })
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => {}}
+                        className="flex-shrink-0 w-4 h-4 rounded accent-[var(--color-brand-primary)]"
+                        onClick={e => e.stopPropagation()}
+                      />
+                      <span className="hub-avatar" style={{ background: bg, color: fg }}>{initialsOf(c.name)}</span>
+                      <span className="flex-1 min-w-0">
+                        <span className={`block text-[13px] font-bold truncate ${c.is_active === false ? 'text-[var(--color-text-muted)]' : 'text-[var(--color-text-primary)]'}`}>
+                          {c.name}{isSystem && <span className="ml-1 text-[10px] font-bold text-[var(--color-text-muted)]">시스템</span>}
+                        </span>
+                        <span className="block text-[11px] text-[var(--color-text-muted)]">조직 {orgCounts[c.id] ?? 0}개</span>
+                      </span>
+                    </label>
+                  )
+                }
+
                 return (
                   <button
                     key={c.id}
@@ -152,6 +207,19 @@ export function AccountRail({
             </div>
           ))}
         </div>
+        {selectMode && selectedCustomerIds.size > 0 && (
+          <div className="p-3 border-t border-[var(--color-border)] bg-[var(--color-surface)] flex items-center gap-2">
+            <span className="flex-1 text-[12px] font-semibold text-[var(--color-text-secondary)]">
+              {selectedCustomerIds.size}개 선택됨
+            </span>
+            <button
+              onClick={() => onBulkDelete(Array.from(selectedCustomerIds))}
+              className="px-3 py-1.5 rounded-lg bg-red-500 text-white text-xs font-semibold hover:bg-red-600 transition-colors"
+            >
+              삭제
+            </button>
+          </div>
+        )}
       </aside>
     </>
   )

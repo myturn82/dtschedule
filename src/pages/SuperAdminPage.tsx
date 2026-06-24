@@ -702,6 +702,7 @@ export function SuperAdminPage() {
             setCustomerForm={setCustomerForm}
             customerSaving={customerSaving}
             onCreateCustomer={createCustomer}
+            onBulkDelete={() => {}}
           />
 
           {selectedCustomer ? (
