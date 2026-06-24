@@ -18,6 +18,7 @@
   --tone-teal-bg:#E0F4F3; --tone-teal-fg:#0B8C86;
   --tone-indigo-bg:#ECECFD; --tone-indigo-fg:#5454D4;
   --tone-pink-bg:#FCE7F1; --tone-pink-fg:#C4377F;
+  --tone-rose-bg:#FEE2E2; --tone-rose-fg:#BE123C;
 
   --tint-sun:#FBEAD9; --tint-sun-ink:#9A5B1E;
   --tint-blue:#E2ECFB; --tint-blue-ink:#2858A8;
@@ -41,6 +42,7 @@
 .tone-teal{background:var(--tone-teal-bg);color:var(--tone-teal-fg);}
 .tone-indigo{background:var(--tone-indigo-bg);color:var(--tone-indigo-fg);}
 .tone-pink{background:var(--tone-pink-bg);color:var(--tone-pink-fg);}
+.tone-rose{background:var(--tone-rose-bg);color:var(--tone-rose-fg);}
 .tone-accent{background:var(--accent-soft);color:var(--accent-text);}
 
 /* shell */

@@ -53,6 +53,7 @@ export const WizardIcon = {
   square: mk(<rect x={4} y={4} width={16} height={16} rx={3} />),
   phone: mk(<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-1Z" />),
   chart: mk(<><path d="M3 3v18h18" /><rect x={7} y={12} width={3} height={5} rx={0.6} /><rect x={12} y={8} width={3} height={9} rx={0.6} /><rect x={17} y={5} width={3} height={12} rx={0.6} /></>),
+  image: mk(<><rect x={3} y={3} width={18} height={18} rx={2.5} /><circle cx={8.5} cy={8.5} r={1.5} /><path d="m21 15-5-5L5 21" /></>),
 }
 
 export type WizardIconKey = keyof typeof WizardIcon
