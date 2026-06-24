@@ -33,7 +33,7 @@ export interface CustomFieldOption {
   value_type?: OptionValueType;
 }
 
-export type CustomFieldType = 'text' | 'number' | 'select' | 'radio' | 'checkbox' | 'checkbox_group' | 'phone' | 'account_number'
+export type CustomFieldType = 'text' | 'number' | 'select' | 'radio' | 'checkbox' | 'checkbox_group' | 'phone' | 'account_number' | 'image_upload'
 
 /** options를 가지는 타입 */
 export const FIELD_TYPES_WITH_OPTIONS: CustomFieldType[] = ['select', 'radio', 'checkbox_group']
