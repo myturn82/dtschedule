@@ -1,6 +1,7 @@
 import type { Tenant, TenantMode } from '../../types'
 import { colorOf, avatarColorFor, initialsOf } from '../../lib/avatarColor'
 import { displayMode } from '../../lib/tenantMode'
+import { THEME_PRESET_LIST, type ThemePresetKey } from '../../lib/themePresets'
 
 export interface DrawerMember {
   id: string
@@ -37,6 +38,9 @@ interface Props {
   modeSaving: boolean
   onModeChange: (tenant: Tenant, newMode: TenantMode) => void
 
+  themeSaving: boolean
+  onThemeChange: (tenant: Tenant, presetKey: ThemePresetKey | '') => void
+
   onOpenSchedule: (tenant: Tenant) => void
   onOpenAdmin: (tenant: Tenant) => void
 
@@ -54,6 +58,7 @@ export function OrgDrawer({
   editingNameId, editName, setEditName, nameSaving, setEditingNameId, saveName,
   editingSlugId, editSlug, setEditSlug, slugSaving, setEditingSlugId, saveSlug,
   modeSaving, onModeChange,
+  themeSaving, onThemeChange,
   onOpenSchedule, onOpenAdmin,
   deletingSaving, onDelete, onReactivate,
   onApproveMember, onRejectMember, approvingMemberId,
@@ -138,6 +143,30 @@ export function OrgDrawer({
           <option value="회원개별">회원개별</option>
           <option value="비회원">비회원</option>
         </select>
+      </div>
+
+      {/* ── 포인트 컬러 ── */}
+      <div className="mb-4">
+        <label className="block text-[11px] font-bold text-[var(--color-text-muted)] mb-1">포인트 컬러</label>
+        <div className="flex flex-wrap gap-1.5">
+          {THEME_PRESET_LIST.map(({ key, label, preset }) => {
+            const on = tenant.settings?.theme_preset === key
+            return (
+              <button
+                key={key}
+                type="button"
+                disabled={themeSaving}
+                title={label}
+                onClick={() => onThemeChange(tenant, on ? '' : key)}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 transition-transform hover:scale-[1.03] disabled:opacity-40 flex-shrink-0"
+                style={{ borderColor: on ? preset.light.accent : 'var(--color-border-strong)', background: on ? preset.light.accentSoft : 'var(--color-surface)' }}
+              >
+                <span className="w-4 h-4 rounded-full flex-shrink-0" style={{ background: preset.light.accent }} />
+                <span className="text-[11.5px] font-medium" style={{ color: on ? preset.light.accentText : 'var(--color-text-secondary)' }}>{label}</span>
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {/* ── 액션 ── */}

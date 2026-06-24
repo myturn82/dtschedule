@@ -73,6 +73,7 @@ export interface TenantSettings {
   time_slots?: string[];           // Explicit slot list; overrides auto-generation when present
   title: string;
   theme_color?: string;            // '#RRGGBB'
+  theme_preset?: 'midnight' | 'forest' | 'salmon' | 'beige' | 'original'; // 슈퍼관리자 지정 포인트 컬러 프리셋
   timezone: string;                // IANA tz, e.g. 'Asia/Seoul'
   locale: string;                  // e.g. 'ko-KR'
   tenant_mode?: TenantMode | '회원선택';

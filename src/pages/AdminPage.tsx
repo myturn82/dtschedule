@@ -11,6 +11,7 @@ import type { TimeSlot, Tenant, TenantAccessRole, LegendItem, LegendColor, Custo
 import { OPTION_VALUE_TYPES, getOptionUnit, FIELD_TYPES_WITH_OPTIONS, FIELD_TYPES_WITH_DASHBOARD } from '../types'
 import { LEGEND_COLOR_STYLES } from '../components/schedule/Legend'
 import { THEME_COLORS } from '../lib/themeColors'
+import { applyThemePreset } from '../lib/themePresets'
 import { displayMode } from '../lib/tenantMode'
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
@@ -185,6 +186,13 @@ export function AdminPage() {
   const [orgLoading, setOrgLoading] = useState(true)
 
   const adminTenantId = adminTenant?.id ?? ''
+
+  // adminTenant은 TenantContext와 독립적이라 포인트 컬러도 별도로 주입해야 한다 —
+  // 이 화면을 벗어나면 전역 tenant 기준 색상으로 되돌린다
+  useEffect(() => {
+    applyThemePreset(adminTenant?.settings?.theme_preset)
+    return () => applyThemePreset(tenant?.settings?.theme_preset)
+  }, [adminTenant?.settings?.theme_preset, tenant?.settings?.theme_preset])
 
   const {
     members, scheduleRules, dateOverrides, loading,
