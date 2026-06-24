@@ -48,7 +48,7 @@ function PersonChip({ a, withdrawnUserIds, onClick }: { a: Assignment; withdrawn
         className="w-[26px] h-[26px] rounded-full flex-shrink-0 flex items-center justify-center text-[11.5px] font-bold"
         style={isW
           ? { background: 'oklch(0.97 0.02 25)', color: 'oklch(0.55 0.16 25)' }
-          : { background: 'oklch(0.95 0.045 28)', color: 'oklch(0.45 0.14 28)' }
+          : { background: 'var(--tint-brand)', color: 'var(--tint-brand-ink)' }
         }
       >
         {initial}

@@ -36,6 +36,8 @@
   --color-text-muted: #8A8F99;
 
   /* Tag tints */
+  --tint-brand: color-mix(in srgb, var(--color-brand-primary) 14%, white);
+  --tint-brand-ink: var(--color-brand-primary-text, var(--color-brand-primary));
   --tint-sun: oklch(0.93 0.06 70);
   --tint-sun-ink: oklch(0.42 0.10 60);
   --tint-break: oklch(0.93 0.05 230);
