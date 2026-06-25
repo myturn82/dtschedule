@@ -123,6 +123,12 @@ export function SlotEditModal({
       : profiles
     : []
 
+  // 모달 열리면 배경 스크롤 차단
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
+
   // 선택 가능한 항목이 1개뿐이면 자동 선택
   const singleProfileId = !isFreeform && selectableProfiles.length === 1 ? selectableProfiles[0].id : null
   useEffect(() => {
