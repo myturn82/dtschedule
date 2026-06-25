@@ -544,16 +544,18 @@ export function SlotEditModal({
             className={inputClass}
           />
         ) : (
-          <input
-            type="text"
+          <textarea
             value={val}
+            rows={1}
+            ref={el => { if (el) { el.style.height = 'auto'; el.style.height = Math.max(el.scrollHeight, 44) + 'px'; el.scrollTop = 0 } }}
             onChange={e => {
               setFieldValues(prev => ({ ...prev, [field.id]: e.target.value }))
               if (isAdmin && isSplitMode && field.id === customFields[0]?.id) setSelectedUserId('')
             }}
+            onInput={e => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = Math.max(el.scrollHeight, 44) + 'px' }}
             placeholder={field.placeholder || `${field.label}${field.required ? ' (필수)' : ' (선택)'}`}
             maxLength={100}
-            className={inputClass}
+            className={inputClass + ' !h-auto min-h-[44px] py-[12px] resize-none overflow-hidden'}
           />
         )}
       </div>
@@ -765,8 +767,8 @@ export function SlotEditModal({
                     {(detailChips.length > 0 || imageChips.length > 0) && (
                       <div className="flex flex-wrap gap-1.5 mt-2.5 pt-2.5 border-t border-dashed border-[var(--color-border-strong)]">
                         {detailChips.map(c => (
-                          <span key={c.key} className="text-[11.5px] font-semibold text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] px-2 py-1 rounded-lg inline-flex gap-1 whitespace-nowrap">
-                            <b className="font-extrabold text-[var(--color-text-muted)]">{c.label}</b>{c.value}
+                          <span key={c.key} className="text-[11.5px] font-semibold text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] px-2 py-1 rounded-lg inline-flex gap-1 break-words min-w-0 max-w-full">
+                            <b className="font-extrabold text-[var(--color-text-muted)] shrink-0">{c.label}</b><span className="break-words min-w-0">{c.value}</span>
                           </span>
                         ))}
                         {imageChips.map(ic => (
@@ -829,12 +831,15 @@ export function SlotEditModal({
                 /* 동적 커스텀 필드 */
                 <>
                   {customFields.map(field => renderFieldInput(field))}
-                  <input
+                  <textarea
                     value={note}
+                    rows={1}
+                    ref={el => { if (el) { el.style.height = 'auto'; el.style.height = Math.max(el.scrollHeight, 44) + 'px'; el.scrollTop = 0 } }}
                     onChange={e => setNote(e.target.value)}
+                    onInput={e => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = Math.max(el.scrollHeight, 44) + 'px' }}
                     placeholder="메모 (선택)"
                     maxLength={200}
-                    className={inputClass}
+                    className={inputClass + ' !h-auto min-h-[44px] py-[12px] resize-none overflow-hidden'}
                   />
                 </>
               ) : (
@@ -885,11 +890,14 @@ export function SlotEditModal({
                     </div>
                   )}
                   {showExtraCustomFields && customFields.map(field => renderFieldInput(field))}
-                  <input
+                  <textarea
                     value={note}
+                    rows={1}
+                    ref={el => { if (el) { el.style.height = 'auto'; el.style.height = Math.max(el.scrollHeight, 44) + 'px'; el.scrollTop = 0 } }}
                     onChange={e => setNote(e.target.value)}
+                    onInput={e => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = Math.max(el.scrollHeight, 44) + 'px' }}
                     placeholder="메모 (선택)"
-                    className={inputClass}
+                    className={inputClass + ' !h-auto min-h-[44px] py-[12px] resize-none overflow-hidden'}
                   />
                 </>
               )}
