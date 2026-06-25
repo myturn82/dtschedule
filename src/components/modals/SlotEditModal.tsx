@@ -102,17 +102,20 @@ export function SlotEditModal({
     : cellState.assignments.filter(a => !a.member_type || a.member_type === memberType)
 
   // DB 제약: (year, month, day, time_slot, member_name) 고유 → 역할 무관하게 같은 슬롯 중복 배정 불가
-  const assignedNames = new Set(
-    cellState.assignments.filter(a => a.id !== editingId).map(a => a.member_name)
-  )
+  const nonEditingAssignments = cellState.assignments.filter(a => a.id !== editingId)
+  const assignedNames = new Set(nonEditingAssignments.map(a => a.member_name))
+  const assignedUserIds = new Set(nonEditingAssignments.filter(a => a.user_id).map(a => a.user_id!))
 
   const selectableProfiles = isAdmin && (isSplitMode || !isFreeform)
     ? isSplitMode
       ? (profiles as ProfileWithRole[]).filter(p =>
-            p.tenantRoleId === selectedRoleId && !assignedNames.has(p.name)
+            p.tenantRoleId === selectedRoleId && !assignedNames.has(p.name) && !assignedUserIds.has(p.id)
           )
       : profiles.filter(p => !assignedNames.has(p.name))
     : []
+
+  const selectedUserAlreadyAssigned = isSplitMode && !editingId && !!selectedUserId &&
+    assignedUserIds.has(selectedUserId)
 
   const totalTypeProfiles = (!isFreeform && isAdmin)
     ? isSplitMode
@@ -827,7 +830,11 @@ export function SlotEditModal({
               )}
 
               {/* Input section */}
-              {useDynamicFields ? (
+              {selectedUserAlreadyAssigned ? (
+                <p className="text-sm text-center text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/40 rounded-xl px-3 py-3">
+                  이미 이 슬롯에 배정된 회원입니다.
+                </p>
+              ) : useDynamicFields ? (
                 /* 동적 커스텀 필드 */
                 <>
                   {customFields.map(field => renderFieldInput(field))}
@@ -836,7 +843,7 @@ export function SlotEditModal({
                     value={note}
                     rows={1}
                     onChange={e => setNote(e.target.value)}
-                    placeholder="메모 (선택)"
+                    placeholder="달력에 표시됨"
                     maxLength={200}
                     className={inputClass + ' min-h-[44px] py-[12px] resize-none overflow-hidden'}
                   />
@@ -894,7 +901,7 @@ export function SlotEditModal({
                     value={note}
                     rows={1}
                     onChange={e => setNote(e.target.value)}
-                    placeholder="메모 (선택)"
+                    placeholder="달력에 표시됨"
                     className={inputClass + ' min-h-[44px] py-[12px] resize-none overflow-hidden'}
                   />
                 </>
