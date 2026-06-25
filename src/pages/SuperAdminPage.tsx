@@ -431,7 +431,8 @@ export function SuperAdminPage() {
       return user && !user.is_super_admin
     })
     if (safeIds.length === 0) return
-    const { error } = await supabase.from('profiles').delete().in('id', safeIds)
+    // profiles만 삭제하면 auth.users가 남아 동일 이메일 재가입 불가 → RPC로 auth.users 삭제 (profiles는 CASCADE)
+    const { error } = await supabase.rpc('admin_delete_users', { target_user_ids: safeIds })
     if (error) {
       setMessage(`오류: ${error.message}`)
     } else {

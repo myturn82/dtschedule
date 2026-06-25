@@ -26,6 +26,7 @@ DROP FUNCTION IF EXISTS public.is_tenant_member(uuid)           CASCADE;
 DROP FUNCTION IF EXISTS public.is_tenant_admin(uuid)            CASCADE;
 DROP FUNCTION IF EXISTS public.is_super_admin()                 CASCADE;
 DROP FUNCTION IF EXISTS public.is_super_admin_caller()          CASCADE;
+DROP FUNCTION IF EXISTS public.admin_delete_users(uuid[])       CASCADE;
 DROP FUNCTION IF EXISTS public.shares_tenant_with(uuid)         CASCADE;
 DROP FUNCTION IF EXISTS public.customer_has_active_tenant(uuid) CASCADE;
 DROP FUNCTION IF EXISTS public.cascade_customer_soft_delete()   CASCADE;
@@ -316,6 +317,21 @@ SET search_path = public AS $$
     SELECT 1 FROM profiles
     WHERE id = auth.uid() AND is_super_admin = true
   );
+$$;
+
+-- 슈퍼관리자용 auth.users 일괄 삭제 (profiles는 FK CASCADE로 자동 삭제)
+CREATE OR REPLACE FUNCTION admin_delete_users(target_user_ids uuid[])
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF NOT is_super_admin_caller() THEN
+    RAISE EXCEPTION 'Unauthorized: super admin only';
+  END IF;
+  DELETE FROM auth.users WHERE id = ANY(target_user_ids);
+END;
 $$;
 
 -- 같은 테넌트에 속한 승인된 멤버인지 확인
