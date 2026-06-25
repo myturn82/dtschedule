@@ -1,5 +1,42 @@
 # dtschedule 프로젝트 규칙
 
+## 세션 시작 시 자동 점검 (Windows)
+
+**Windows 환경에서 Claude Code를 시작할 때마다** 아래를 자동으로 점검한다.
+이 점검을 건너뛰면 Claude의 한글 답변이 깨져 보일 수 있다.
+
+### 터미널 인코딩 확인 및 자동 수정
+
+```powershell
+chcp
+```
+
+출력이 `65001`이 아니면 즉시 아래를 실행한다:
+
+```powershell
+chcp 65001
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+[Console]::InputEncoding  = [System.Text.Encoding]::UTF8
+```
+
+### 영구 설정 (최초 1회)
+
+PowerShell 프로필에 추가해두면 이후 매번 자동 적용된다:
+
+```powershell
+# 프로필 열기
+notepad $PROFILE
+
+# 아래 내용을 파일에 추가 후 저장
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+[Console]::InputEncoding  = [System.Text.Encoding]::UTF8
+chcp 65001 | Out-Null
+```
+
+폰트도 확인: 터미널 폰트가 한글을 지원해야 한다 (D2Coding, 맑은 고딕, Noto Sans CJK 권장).
+
+---
+
 ## 새 PC / 환경 최초 설정 체크리스트
 
 새 PC에서 프로젝트를 처음 시작하거나 유사한 프로젝트를 구성할 때 반드시 아래를 순서대로 수행한다.
