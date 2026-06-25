@@ -7,7 +7,6 @@ import { DashboardNav } from './DashboardNav'
 import { ProfileModal } from './auth/ProfileModal'
 import { JoinOrgModal } from './modals/JoinOrgModal'
 import { StartServiceModal } from './modals/StartServiceModal'
-import { LanguageSwitcher } from './shared/LanguageSwitcher'
 
 interface AppHeaderProps {
   funcMenuItems?: (closeMenu: () => void) => React.ReactNode
@@ -63,10 +62,9 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
           </div>
 
 
-          {/* Right: rightSlot + lang switcher + name/badge + avatar */}
+          {/* Right: rightSlot + name/badge + avatar */}
           <div className="flex items-center gap-1.5 shrink-0">
             {rightSlot}
-            <LanguageSwitcher variant="compact" />
             {profile && (
               <div className="flex items-center gap-1.5">
                 <span className="text-sm font-semibold text-[var(--color-text-primary)] max-w-[80px] truncate">{profile.name}</span>
