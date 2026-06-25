@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { ViewType } from '../../types'
 
 const DAY_KR = ['일', '월', '화', '수', '목', '금', '토']
@@ -30,7 +31,8 @@ function weekRangeLabel(weekDays: Date[]): string {
 }
 
 export function ScheduleHeader({ year, month, title, filledCount, openCount, operatingDays, onPrev, onNext, viewType = 'month', onViewTypeChange, day, weekDays }: Props) {
-  const VIEW_LABELS: Record<ViewType, string> = { month: '월', week: '주', day: '일' }
+  const { t } = useTranslation('schedule')
+  const VIEW_LABELS: Record<ViewType, string> = { month: t('views.month'), week: t('views.week'), day: t('views.day') }
 
   return (
     <div className="flex items-end justify-between gap-4 flex-wrap">
@@ -126,14 +128,14 @@ export function ScheduleHeader({ year, month, title, filledCount, openCount, ope
         {/* Nav buttons */}
         <button
           onClick={onPrev}
-          aria-label="이전"
+          aria-label={t('nav.prev')}
           className="w-10 h-10 flex items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-all duration-150 hover:scale-[1.04] active:scale-[0.96]"
         >
           <span className="text-base leading-none">←</span>
         </button>
         <button
           onClick={onNext}
-          aria-label="다음"
+          aria-label={t('nav.next')}
           className="w-10 h-10 flex items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-all duration-150 hover:scale-[1.04] active:scale-[0.96]"
         >
           <span className="text-base leading-none">→</span>
