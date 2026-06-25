@@ -22,11 +22,12 @@ export function Step1OrgName({ name, title, industry, error, onChange }: Props) 
           inputCls="sel"
           hideLabel
           requireDetail
+          autoFocus
         />
       </Field>
 
       <Field label="조직명" req>
-        <input className="ipt" value={name} maxLength={50} placeholder="예: 행복 자원봉사 센터" autoFocus
+        <input className="ipt" value={name} maxLength={50} placeholder="예: 행복 자원봉사 센터"
           onChange={e => onChange(e.target.value, title, industry)} />
       </Field>
 

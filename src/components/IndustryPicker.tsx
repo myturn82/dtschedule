@@ -7,6 +7,7 @@ interface Props {
   inputCls?: string
   hideLabel?: boolean
   requireDetail?: boolean
+  autoFocus?: boolean
 }
 
 function parseValue(value: string): { topLabel: string; midLabel: string; custom: string } {
@@ -33,7 +34,7 @@ export function isIndustryComplete(value: string): boolean {
   return !!midLabel
 }
 
-export function IndustryPicker({ value, onChange, inputCls, hideLabel, requireDetail }: Props) {
+export function IndustryPicker({ value, onChange, inputCls, hideLabel, requireDetail, autoFocus }: Props) {
   const cls = inputCls ?? 'w-full px-3 py-2 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]'
   const labelCls = 'block text-xs text-[var(--color-text-secondary)] mb-1'
 
@@ -113,6 +114,7 @@ export function IndustryPicker({ value, onChange, inputCls, hideLabel, requireDe
           value={selTop}
           onChange={e => handleTopChange(e.target.value)}
           className={cls}
+          autoFocus={autoFocus}
         >
           <option value="">업종을 선택하세요</option>
           {INDUSTRY_CATEGORIES.map(c => (
