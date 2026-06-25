@@ -2,7 +2,7 @@
 // THEMES 토큰을 그대로 포팅. 다크 변형은 데이터로 보관하되 현재 앱은 다크모드가
 // 비활성 상태라 적용하지 않는다(useDarkMode.ts 참고).
 
-export type ThemePresetKey = 'midnight' | 'forest' | 'salmon' | 'beige' | 'original'
+export type ThemePresetKey = 'midnight' | 'forest' | 'salmon' | 'beige' | 'original' | 'butter' | 'pistachio' | 'dusty_lavender' | 'terracotta'
 
 export interface ThemeTokens {
   accent: string
@@ -47,6 +47,26 @@ export const THEME_PRESETS: Record<ThemePresetKey, ThemePreset> = {
     label: '오리지널 (기존)',
     light: { accent: '#D35438', accentHover: '#BC4630', accentSoft: '#FBEBE6', accentRing: '#F3C9BC', accentText: '#B23E27', accentContrast: '#FFFFFF', pageOverride: '#F5F4F1', surfaceOverride: '#FFFFFF', borderOverride: '#E9E6E0' },
     dark: { accent: '#E8694D', accentHover: '#F07A5F', accentSoft: '#2E1812', accentRing: '#5A2D22', accentText: '#F6A892', accentContrast: '#1A0E0A', pageOverride: '#15110F', surfaceOverride: '#1E1916', borderOverride: '#322A25' },
+  },
+  butter: {
+    label: '버터 옐로우',
+    light: { accent: '#D4A017', accentHover: '#BA8C12', accentSoft: '#FEF9E7', accentRing: '#F9E79F', accentText: '#8A6C0A', accentContrast: '#FFFFFF' },
+    dark:  { accent: '#E8BB30', accentHover: '#F0C840', accentSoft: '#2A2210', accentRing: '#4A3B1A', accentText: '#F5DC80', accentContrast: '#1A1500' },
+  },
+  pistachio: {
+    label: '피스타치오 민트',
+    light: { accent: '#17A589', accentHover: '#138F76', accentSoft: '#E8F8F5', accentRing: '#A3E4D7', accentText: '#0E7A63', accentContrast: '#FFFFFF' },
+    dark:  { accent: '#2EC4A4', accentHover: '#38D0B0', accentSoft: '#0E2822', accentRing: '#1A4A3C', accentText: '#7ADFD0', accentContrast: '#071A16' },
+  },
+  dusty_lavender: {
+    label: '더스티 라벤더',
+    light: { accent: '#9B59B6', accentHover: '#8549A1', accentSoft: '#F5EEF8', accentRing: '#D7BDE2', accentText: '#7D3C98', accentContrast: '#FFFFFF' },
+    dark:  { accent: '#B27FCC', accentHover: '#BF90D8', accentSoft: '#1E1228', accentRing: '#3A2050', accentText: '#D4A8E8', accentContrast: '#100A18' },
+  },
+  terracotta: {
+    label: '테라코타',
+    light: { accent: '#DC7633', accentHover: '#C0651E', accentSoft: '#FDEBD0', accentRing: '#F0C5A0', accentText: '#A85218', accentContrast: '#FFFFFF' },
+    dark:  { accent: '#E8904D', accentHover: '#F0A060', accentSoft: '#2A1808', accentRing: '#4A2C14', accentText: '#F5B885', accentContrast: '#18100A' },
   },
 }
 
