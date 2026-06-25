@@ -7,6 +7,7 @@ import { useTenant } from '../contexts/TenantContext'
 import { useTenantRoles } from '../hooks/useTenantRoles'
 import { supabase } from '../lib/supabase'
 import { buildSlot, parseSlotLabel, generateTimeSlots, DEFAULT_TIME_SLOTS, SLOT_TEMPLATES } from '../utils/timeSlots'
+import { CUSTOM_FIELD_TEMPLATES } from '../utils/customFieldTemplates'
 import type { TimeSlot, Tenant, TenantAccessRole, LegendItem, LegendColor, CustomFieldDef, CustomFieldOption, OptionValueType, CustomFieldType } from '../types'
 import { OPTION_VALUE_TYPES, getOptionUnit, FIELD_TYPES_WITH_OPTIONS, FIELD_TYPES_WITH_DASHBOARD } from '../types'
 import { LEGEND_COLOR_STYLES } from '../components/schedule/Legend'
@@ -496,6 +497,21 @@ export function AdminPage() {
     setNewFieldMin('')
     setNewFieldMax('')
     msg('필드가 추가됐습니다.')
+  }
+
+  async function addFieldFromTemplate(field: Omit<CustomFieldDef, 'id'>) {
+    if (customFields.some(f => f.label === field.label) || !adminTenantId) return
+    const newField: CustomFieldDef = { ...field, id: Date.now().toString() }
+    const next = [...customFields, newField]
+    const err = await updateTenantSettings(adminTenantId, { custom_fields: next })
+    if (err) { msg(err, true); return }
+    setCustomFields(next)
+    if (adminTenant) {
+      const updated = { ...adminTenant, settings: { ...adminTenant.settings, custom_fields: next } }
+      setAdminTenant(updated)
+      if (adminTenant.id === tenant?.id) updateCurrentTenant(updated)
+    }
+    msg(`"${field.label}" 필드가 추가됐습니다.`)
   }
 
   async function removeCustomField(id: string) {
@@ -2141,6 +2157,25 @@ export function AdminPage() {
                       </div>
                     )
                   })}
+                </div>
+
+                {/* 자주 쓰는 항목 템플릿 */}
+                <div className="mt-4">
+                  <p className="text-[12px] font-bold text-[var(--color-text-secondary)] mb-2">자주 쓰는 항목</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {CUSTOM_FIELD_TEMPLATES.map(tpl => {
+                      const added = customFields.some(f => f.label.trim() === tpl.field.label)
+                      return (
+                        <button key={tpl.label} type="button"
+                          onClick={() => addFieldFromTemplate(tpl.field)}
+                          disabled={added}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${added ? 'border-[var(--color-border)] text-[var(--color-text-muted)] opacity-50 cursor-not-allowed' : 'border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:border-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary)]/5'}`}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                          {added ? `${tpl.label} 추가됨` : tpl.label}
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
 
                 {/* 새 항목 구분선 */}
