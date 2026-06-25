@@ -13,6 +13,7 @@
 [![Supabase](https://img.shields.io/badge/Supabase-Backend-3ECF8E?logo=supabase&logoColor=white)](https://supabase.com)
 [![Vite](https://img.shields.io/badge/Vite-Build-646CFF?logo=vite&logoColor=white)](https://vitejs.dev)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![i18n](https://img.shields.io/badge/i18n-react--i18next-26A69A?logo=i18next&logoColor=white)](https://react.i18next.com)
 
 </div>
 
@@ -66,6 +67,7 @@
 | **DB 관리** | Supabase Migrations (SQL 파일 57개+) |
 | **상태 관리** | React Context (TenantContext, AuthContext, PlanLimitsContext) |
 | **이미지 처리** | HTML5 Canvas API — WebP 압축, Supabase Storage 업로드 |
+| **다국어 (i18n)** | react-i18next, i18next-browser-languagedetector — 한국어/영어, 브라우저 자동 감지 |
 | **보안** | Row Level Security (RLS), SECURITY DEFINER Functions |
 
 ---
@@ -185,6 +187,8 @@ dtschedule/
 - [ ] 스케줄 통계 대시보드 고도화
 - [ ] 알림(Notification) 시스템
 - [ ] 모바일 앱 (PWA 완성도 향상)
+- [x] 다국어 지원 (한국어/영어, react-i18next)
+- [ ] 추가 언어 확장 (일본어, 중국어 등)
 - [ ] 외부 캘린더(Google Calendar) 연동
 
 ---

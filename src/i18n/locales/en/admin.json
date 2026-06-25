@@ -1,0 +1,75 @@
+{
+  "title": "Admin Console",
+  "tabs": {
+    "members": "Members",
+    "pending": "Pending",
+    "roles": "Roles",
+    "rules": "Assignment Rules",
+    "dates": "Date Settings",
+    "settings": "Org Settings",
+    "legend": "Legend",
+    "customFields": "Custom Fields"
+  },
+  "org": {
+    "label": "Organization",
+    "totalMembers": "Total Members",
+    "totalSlots": "Total Slots",
+    "pendingApproval": "Pending Approval",
+    "newOrg": "New Organization",
+    "memberSharing": "Member Sharing",
+    "mode": "Operation Mode",
+    "modes": {
+      "shared": "Shared",
+      "individual": "Individual",
+      "freeform": "Freeform"
+    }
+  },
+  "member": {
+    "name": "Name",
+    "phone": "Phone",
+    "role": "Role",
+    "status": "Status",
+    "joinDate": "Join Date",
+    "approve": "Approve",
+    "reject": "Reject",
+    "remove": "Remove",
+    "noMembers": "No members registered",
+    "noPending": "No members pending approval"
+  },
+  "customField": {
+    "title": "Custom Field Settings",
+    "addField": "Add New Field",
+    "fieldName": "Field Name",
+    "fieldType": "Type",
+    "required": "Required",
+    "frequentItems": "Frequent Items",
+    "types": {
+      "text": "Text",
+      "number": "Number",
+      "select": "Dropdown",
+      "radio": "Radio",
+      "checkbox": "Consent",
+      "checkbox_group": "Checkbox",
+      "phone": "Phone",
+      "account_number": "Account No.",
+      "image_upload": "Image Upload"
+    },
+    "placeholder": "Placeholder",
+    "options": "Options",
+    "addOption": "Add Option",
+    "dashboard": "Include in Dashboard Stats",
+    "preview": "Preview",
+    "totalFields": "{{count}} field(s) total",
+    "requiredFields": "{{count}} required"
+  },
+  "settings": {
+    "orgName": "Organization Name",
+    "pageTitle": "Page Title",
+    "themeColor": "Point Color",
+    "timeSlot": "Time Slots",
+    "slotTemplates": "Apply Template",
+    "slotManual": "Add Manually",
+    "slotStart": "Start",
+    "slotEnd": "End"
+  }
+}

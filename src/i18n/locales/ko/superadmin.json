@@ -1,0 +1,55 @@
+{
+  "title": "슈퍼관리자",
+  "tabs": {
+    "hub": "허브",
+    "users": "사용자"
+  },
+  "hub": {
+    "title": "고객 계정 허브",
+    "newCustomer": "새 고객",
+    "selectMode": "선택",
+    "cancelSelect": "취소",
+    "bulkDelete": "{{count}}개 삭제",
+    "noCustomers": "등록된 고객 계정이 없습니다"
+  },
+  "plan": {
+    "label": "요금제",
+    "basic": "Basic",
+    "pro": "Pro",
+    "business": "Business",
+    "limit": "플랜 한도 설정",
+    "slots": "슬롯 수",
+    "members": "회원 수",
+    "orgs": "조직 수"
+  },
+  "customer": {
+    "owner": "오너",
+    "joinDate": "가입일",
+    "orgCount": "조직 {{count}}개",
+    "deactivate": "비활성화",
+    "deactivateDesc": "데이터를 보존하고 고객을 숨깁니다. 나중에 복구할 수 있습니다.",
+    "permanentDelete": "영구 삭제",
+    "deleteDesc": "모든 데이터가 완전히 삭제되며 복구 불가능합니다.",
+    "deleteConfirmLabel": "고객명을 입력하여 확인",
+    "deleteWarning": "소속 조직 {{count}}개와 모든 데이터(배정, 회원 등)가 영구 삭제됩니다.",
+    "systemAccount": "시스템",
+    "pendingRequest": "탈퇴요청",
+    "pendingApproval": "승인 대기 있음",
+    "createTitle": "새 고객 생성",
+    "customerName": "고객명",
+    "ownerEmail": "오너 이메일"
+  },
+  "users": {
+    "title": "사용자 관리",
+    "deleteSelected": "{{count}}명 삭제",
+    "noUsers": "등록된 사용자가 없습니다",
+    "deleteWarning": "선택한 사용자를 삭제하면 해당 계정으로 재가입이 가능합니다."
+  },
+  "org": {
+    "deleteTitle": "조직 삭제",
+    "memberCount": "회원 {{count}}명",
+    "assignCount": "배정 {{count}}건",
+    "modeChange": "운영 모드 변경",
+    "modeChangeBlocked": "모드 변경 불가"
+  }
+}

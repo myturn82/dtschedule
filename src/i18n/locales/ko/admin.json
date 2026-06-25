@@ -1,0 +1,75 @@
+{
+  "title": "관리자 콘솔",
+  "tabs": {
+    "members": "회원 관리",
+    "pending": "승인 대기",
+    "roles": "역할 설정",
+    "rules": "배정 규칙",
+    "dates": "날짜 설정",
+    "settings": "조직 설정",
+    "legend": "범례",
+    "customFields": "커스텀 필드"
+  },
+  "org": {
+    "label": "조직",
+    "totalMembers": "전체 멤버",
+    "totalSlots": "슬롯 합계",
+    "pendingApproval": "승인 대기",
+    "newOrg": "새 조직",
+    "memberSharing": "회원 공유",
+    "mode": "운영 모드",
+    "modes": {
+      "shared": "회원공유",
+      "individual": "회원개별",
+      "freeform": "비회원"
+    }
+  },
+  "member": {
+    "name": "이름",
+    "phone": "전화번호",
+    "role": "역할",
+    "status": "상태",
+    "joinDate": "가입일",
+    "approve": "승인",
+    "reject": "거절",
+    "remove": "탈퇴",
+    "noMembers": "등록된 회원이 없습니다",
+    "noPending": "승인 대기 중인 회원이 없습니다"
+  },
+  "customField": {
+    "title": "커스텀 필드 설정",
+    "addField": "새 필드 추가",
+    "fieldName": "필드명",
+    "fieldType": "타입",
+    "required": "필수",
+    "frequentItems": "자주 쓰는 항목",
+    "types": {
+      "text": "텍스트",
+      "number": "숫자",
+      "select": "드롭다운",
+      "radio": "라디오",
+      "checkbox": "동의",
+      "checkbox_group": "체크박스",
+      "phone": "전화번호",
+      "account_number": "계좌번호",
+      "image_upload": "이미지첨부"
+    },
+    "placeholder": "플레이스홀더",
+    "options": "선택지",
+    "addOption": "옵션 추가",
+    "dashboard": "대시보드 통계 포함",
+    "preview": "미리보기",
+    "totalFields": "전체 {{count}}개",
+    "requiredFields": "필수 {{count}}개"
+  },
+  "settings": {
+    "orgName": "조직명",
+    "pageTitle": "페이지 타이틀",
+    "themeColor": "포인트 컬러",
+    "timeSlot": "타임슬롯",
+    "slotTemplates": "템플릿 적용",
+    "slotManual": "직접 추가",
+    "slotStart": "시작",
+    "slotEnd": "종료"
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "title": "Super Admin",
+  "tabs": {
+    "hub": "Hub",
+    "users": "Users"
+  },
+  "hub": {
+    "title": "Customer Account Hub",
+    "newCustomer": "New Customer",
+    "selectMode": "Select",
+    "cancelSelect": "Cancel",
+    "bulkDelete": "Delete {{count}}",
+    "noCustomers": "No customer accounts registered"
+  },
+  "plan": {
+    "label": "Plan",
+    "basic": "Basic",
+    "pro": "Pro",
+    "business": "Business",
+    "limit": "Plan Limit Settings",
+    "slots": "Slots",
+    "members": "Members",
+    "orgs": "Organizations"
+  },
+  "customer": {
+    "owner": "Owner",
+    "joinDate": "Join Date",
+    "orgCount": "{{count}} org(s)",
+    "deactivate": "Deactivate",
+    "deactivateDesc": "Hides the customer while preserving data. Can be restored later.",
+    "permanentDelete": "Permanent Delete",
+    "deleteDesc": "All data will be permanently deleted and cannot be recovered.",
+    "deleteConfirmLabel": "Enter customer name to confirm",
+    "deleteWarning": "{{count}} organization(s) and all data (assignments, members, etc.) will be permanently deleted.",
+    "systemAccount": "System",
+    "pendingRequest": "Withdrawal Req.",
+    "pendingApproval": "Pending approval",
+    "createTitle": "Create New Customer",
+    "customerName": "Customer Name",
+    "ownerEmail": "Owner Email"
+  },
+  "users": {
+    "title": "User Management",
+    "deleteSelected": "Delete {{count}} user(s)",
+    "noUsers": "No users registered",
+    "deleteWarning": "Deleted users can re-register with the same email."
+  },
+  "org": {
+    "deleteTitle": "Delete Organization",
+    "memberCount": "{{count}} member(s)",
+    "assignCount": "{{count}} assignment(s)",
+    "modeChange": "Change Operation Mode",
+    "modeChangeBlocked": "Mode Change Not Allowed"
+  }
+}

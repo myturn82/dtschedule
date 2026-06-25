@@ -1,0 +1,38 @@
+{
+  "views": {
+    "month": "Month",
+    "week": "Week",
+    "day": "Day",
+    "mobile": "Mobile"
+  },
+  "nav": {
+    "today": "Today",
+    "prev": "Prev",
+    "next": "Next"
+  },
+  "slot": {
+    "add": "Add Assignment",
+    "edit": "Edit Assignment",
+    "delete": "Delete Assignment",
+    "locked": "Locked",
+    "closed": "Closed",
+    "full": "Full",
+    "available": "Available",
+    "capacity": "{{current}}/{{max}} capacity"
+  },
+  "image": {
+    "add": "Add Photo (up to {{max}})",
+    "uploading": "Optimizing image...",
+    "maxCount": "Up to {{count}} image(s)",
+    "gallery": "🖼 {{count}} image(s)",
+    "compressedSize": "{{size}}KB",
+    "maxSizeError": "File size exceeds {{max}}MB",
+    "remove": "Remove Image"
+  },
+  "legend": {
+    "title": "Legend",
+    "available": "Available",
+    "locked": "Locked",
+    "closed": "Closed"
+  }
+}
