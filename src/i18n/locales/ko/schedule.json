@@ -1,0 +1,38 @@
+{
+  "views": {
+    "month": "월",
+    "week": "주",
+    "day": "일",
+    "mobile": "모바일"
+  },
+  "nav": {
+    "today": "오늘",
+    "prev": "이전",
+    "next": "다음"
+  },
+  "slot": {
+    "add": "배정 추가",
+    "edit": "배정 수정",
+    "delete": "배정 삭제",
+    "locked": "잠김",
+    "closed": "휴관",
+    "full": "마감",
+    "available": "가능",
+    "capacity": "정원 {{current}}/{{max}}"
+  },
+  "image": {
+    "add": "사진 추가 ({{max}}장 가능)",
+    "uploading": "이미지 최적화 중...",
+    "maxCount": "최대 {{count}}장",
+    "gallery": "🖼 이미지 {{count}}장",
+    "compressedSize": "{{size}}KB",
+    "maxSizeError": "파일 크기가 {{max}}MB를 초과합니다",
+    "remove": "이미지 삭제"
+  },
+  "legend": {
+    "title": "범례",
+    "available": "배정 가능",
+    "locked": "잠김",
+    "closed": "휴관"
+  }
+}
