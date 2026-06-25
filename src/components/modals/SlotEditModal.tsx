@@ -114,8 +114,12 @@ export function SlotEditModal({
       : profiles.filter(p => !assignedNames.has(p.name))
     : []
 
-  const selectedUserAlreadyAssigned = isSplitMode && !editingId && !!selectedUserId &&
-    assignedUserIds.has(selectedUserId)
+  const pendingName = !editingId
+    ? (useDynamicFields
+        ? (fieldValues[customFields[0]?.id]?.trim() ?? '')
+        : (selectedProfile?.name ?? ''))
+    : ''
+  const wouldBeDuplicate = !!pendingName && assignedNames.has(pendingName)
 
   const totalTypeProfiles = (!isFreeform && isAdmin)
     ? isSplitMode
@@ -425,7 +429,7 @@ export function SlotEditModal({
   // 날짜 전체가 잠긴 경우(date_overrides.is_locked) 신규 등록은 누구도 불가 (기존 항목 수정은 가능)
   const blockNewRegistration = !editingId && cellState.isLocked
 
-  const isAddDisabled = loading || (() => {
+  const isAddDisabled = loading || wouldBeDuplicate || (() => {
     if (useDynamicFields) {
       return customFields.some(f => f.required && !isFieldFilled(f))
     }
@@ -844,23 +848,28 @@ export function SlotEditModal({
               )}
 
               {/* Input section */}
-              {selectedUserAlreadyAssigned ? (
-                <p className="text-sm text-center text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/40 rounded-xl px-3 py-3">
-                  이미 이 슬롯에 배정된 회원입니다.
-                </p>
-              ) : useDynamicFields ? (
+              {useDynamicFields ? (
                 /* 동적 커스텀 필드 */
                 <>
-                  {customFields.map(field => renderFieldInput(field))}
-                  <AutoResizeTextarea
-                    minH={44}
-                    value={note}
-                    rows={1}
-                    onChange={e => setNote(e.target.value)}
-                    placeholder="달력에 표시됨"
-                    maxLength={200}
-                    className={inputClass + ' min-h-[44px] py-[12px] resize-none overflow-hidden'}
-                  />
+                  {customFields[0] && renderFieldInput(customFields[0])}
+                  {wouldBeDuplicate ? (
+                    <p className="text-sm text-center text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/40 rounded-xl px-3 py-3">
+                      이미 이 슬롯에 배정된 회원입니다.
+                    </p>
+                  ) : (
+                    <>
+                      {customFields.slice(1).map(field => renderFieldInput(field))}
+                      <AutoResizeTextarea
+                        minH={44}
+                        value={note}
+                        rows={1}
+                        onChange={e => setNote(e.target.value)}
+                        placeholder="달력에 표시됨"
+                        maxLength={200}
+                        className={inputClass + ' min-h-[44px] py-[12px] resize-none overflow-hidden'}
+                      />
+                    </>
+                  )}
                 </>
               ) : (
                 /* 회원선택 모드 */
@@ -909,15 +918,17 @@ export function SlotEditModal({
                       <span className="ml-auto text-[11px] font-extrabold text-white bg-[var(--color-brand-primary)] px-2 py-0.5 rounded-full">나</span>
                     </div>
                   )}
-                  {showExtraCustomFields && customFields.map(field => renderFieldInput(field))}
-                  <AutoResizeTextarea
-                    minH={44}
-                    value={note}
-                    rows={1}
-                    onChange={e => setNote(e.target.value)}
-                    placeholder="달력에 표시됨"
-                    className={inputClass + ' min-h-[44px] py-[12px] resize-none overflow-hidden'}
-                  />
+                  {showExtraCustomFields && !!selectedUserId && customFields.map(field => renderFieldInput(field))}
+                  {(!isSplitMode || !!selectedUserId) && (
+                    <AutoResizeTextarea
+                      minH={44}
+                      value={note}
+                      rows={1}
+                      onChange={e => setNote(e.target.value)}
+                      placeholder="달력에 표시됨"
+                      className={inputClass + ' min-h-[44px] py-[12px] resize-none overflow-hidden'}
+                    />
+                  )}
                 </>
               )}
 
