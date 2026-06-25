@@ -948,7 +948,7 @@ export function SuperAdminPage() {
 
       {/* Bulk customer delete modal */}
       {bulkCustomerConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4">
           <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] p-6 w-full max-w-md space-y-4 shadow-xl">
             <h3 className="font-bold text-[var(--color-text-primary)] text-lg">
               고객 {bulkCustomerConfirm.items.length}개 삭제
@@ -1010,7 +1010,7 @@ export function SuperAdminPage() {
 
       {/* Customer delete modal */}
       {deleteCustomerConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4">
           <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] p-6 w-full max-w-sm space-y-4 shadow-xl">
             <h3 className="font-bold text-[var(--color-text-primary)] text-lg">고객 삭제</h3>
             <div className="text-sm text-[var(--color-text-secondary)] space-y-1">
@@ -1050,7 +1050,7 @@ export function SuperAdminPage() {
 
       {/* Tenant delete confirmation modal */}
       {deleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4">
           <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] p-6 w-full max-w-sm space-y-4 shadow-xl">
             <h3 className="font-bold text-[var(--color-text-primary)] text-lg">조직 삭제</h3>
             <div className="text-sm text-[var(--color-text-secondary)] space-y-0.5">
@@ -1102,7 +1102,7 @@ export function SuperAdminPage() {
 
       {/* Mode change warning modal */}
       {pendingModeChange && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4">
           <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] p-6 w-full max-w-sm space-y-4 shadow-xl">
             <h3 className="font-bold text-[var(--color-text-primary)] text-lg">
               {pendingModeChange.blocked ? '모드 변경 불가' : '운영 모드 변경'}
