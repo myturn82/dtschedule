@@ -2001,7 +2001,7 @@ export function AdminPage() {
                               {idx === 0 && adminIsFreeform && (
                                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] font-semibold shrink-0">{t('name')}</span>
                               )}
-                              <span className="text-[15px] font-bold text-[var(--color-text-primary)] tracking-tight truncate flex-1 min-w-0">{field.label}</span>
+                              <span className="text-[15px] font-bold text-[var(--color-text-primary)] tracking-tight break-words flex-1 min-w-0">{field.label}</span>
                               {field.required && <span className="shrink-0 text-[11px] font-bold px-2.5 py-[3px] rounded-full text-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10">{t('required')}</span>}
                               {field.show_in_dashboard && (
                                 <span className="shrink-0 inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-[3px] rounded-full text-blue-600 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-400">
@@ -2040,9 +2040,11 @@ export function AdminPage() {
                           <div className="flex flex-col gap-[10px]" onClick={e => e.stopPropagation()}>
                             <div className="flex flex-col gap-[7px]">
                               <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">필드명</label>
-                              <input type="text" value={editField.label} placeholder="필드명"
+                              <textarea value={editField.label} placeholder="필드명" rows={1}
+                                ref={el => { if (el) { el.style.height = 'auto'; el.style.height = Math.max(el.scrollHeight, 34) + 'px' } }}
                                 onChange={e => setEditField(f => ({ ...f, label: e.target.value }))}
-                                className={inputCls + ' w-full'} />
+                                onInput={e => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = Math.max(el.scrollHeight, 34) + 'px' }}
+                                className={inputCls + ' w-full min-h-[34px] resize-none overflow-hidden leading-snug'} />
                             </div>
                             <div className="flex gap-2.5 items-end flex-wrap">
                               <div className="flex flex-col gap-[7px] flex-1 min-w-[120px]">
@@ -2205,10 +2207,12 @@ export function AdminPage() {
                   <div className="flex flex-wrap gap-2.5 items-end">
                     <div className="flex-1 min-w-[180px] flex flex-col gap-[7px]">
                       <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">{ta('customField.fieldName')} <span className="text-[var(--color-brand-primary)]">*</span></label>
-                      <input type="text" required value={newFieldLabel} maxLength={50}
+                      <textarea required value={newFieldLabel} maxLength={50} rows={1}
+                        ref={el => { if (el) { el.style.height = 'auto'; el.style.height = Math.max(el.scrollHeight, 34) + 'px' } }}
                         onChange={e => setNewFieldLabel(e.target.value)}
+                        onInput={e => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = Math.max(el.scrollHeight, 34) + 'px' }}
                         placeholder={ta('customField.fieldName')}
-                        className={inputCls + ' w-full'} />
+                        className={inputCls + ' w-full min-h-[34px] resize-none overflow-hidden leading-snug'} />
                     </div>
                     <div className="flex-[0_0_132px] flex flex-col gap-[7px]">
                       <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">{ta('customField.fieldType')}</label>
