@@ -15,10 +15,9 @@ import { Step2Mode } from '../components/setup/steps/Step2Mode'
 import { Step3Slots } from '../components/setup/steps/Step3Slots'
 import { Step4Roles } from '../components/setup/steps/Step4Roles'
 import { Step5Rules } from '../components/setup/steps/Step5Rules'
-import { Step6Legend } from '../components/setup/steps/Step6Legend'
 import { Step7CustomFields } from '../components/setup/steps/Step7CustomFields'
 import { StepDone } from '../components/setup/steps/StepDone'
-import type { Tenant, TenantMode, CustomFieldDef, LegendItem } from '../types'
+import type { Tenant, TenantMode, CustomFieldDef } from '../types'
 
 const TOTAL = WIZARD_STEPS.length // 7
 
@@ -90,7 +89,6 @@ export function SetupWizardPage() {
   const [mode, setMode] = useState<TenantMode>('회원공유')
   const [slots, setSlots] = useState<string[]>([])
   const [industry, setIndustry] = useState('')
-  const [legendItems, setLegendItems] = useState<LegendItem[]>([])
   const [customFields, setCustomFields] = useState<CustomFieldDef[]>([])
 
   useEffect(() => {
@@ -105,14 +103,13 @@ export function SetupWizardPage() {
     setMode(displayMode(tenant.settings?.tenant_mode))
     setSlots(tenant.settings?.time_slots ?? [])
     setIndustry(tenant.business_type ?? '')
-    setLegendItems(tenant.settings?.legend_items ?? [])
     setCustomFields(tenant.settings?.custom_fields ?? [])
   }, [tenant])
 
   const isFreeform = mode === '비회원'
 
-  // Steps 6(범례), 7(커스텀필드) can be skipped
-  const isSkippable = (s: number) => (s === 6 || s === 7) && !(s === 7 && isFreeform)
+  // Step 6(커스텀필드) can be skipped (비회원 모드 제외)
+  const isSkippable = (s: number) => s === 6 && !isFreeform
 
   // ── Persist helpers ────────────────────────────────────────────────────────
 
@@ -145,13 +142,6 @@ export function SetupWizardPage() {
     })
     if (err) { setError(err); setSaving(false); return false }
     await upsertScheduleRulesForSlots(slots)
-    setSaving(false); return true
-  }
-
-  async function saveStep6(): Promise<boolean> {
-    setSaving(true); setError('')
-    const err = await updateTenantSettings(orgId, { legend_items: legendItems })
-    if (err) { setError(err); setSaving(false); return false }
     setSaving(false); return true
   }
 
@@ -193,8 +183,7 @@ export function SetupWizardPage() {
     if (stepNum === 1) ok = await saveStep1()
     else if (stepNum === 2) ok = await saveStep2()
     else if (stepNum === 3) ok = await saveStep3()
-    else if (stepNum === 6) ok = await saveStep6()
-    else if (stepNum === 7) ok = await saveStep7()
+    else if (stepNum === 6) ok = await saveStep7()
     if (ok) setStep(stepNum + 1)
   }
 
@@ -241,7 +230,7 @@ export function SetupWizardPage() {
     saving ||
     (step === 1 && (!name.trim() || !isIndustryComplete(industry))) ||
     (step === 3 && slots.length === 0) ||
-    (step === 7 && isFreeform && customFields.length === 0)
+    (step === 6 && isFreeform && customFields.length === 0)
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -325,12 +314,6 @@ export function SetupWizardPage() {
             />
           )}
           {step === 6 && (
-            <Step6Legend
-              legendItems={legendItems} error={error}
-              onChange={setLegendItems}
-            />
-          )}
-          {step === 7 && (
             <Step7CustomFields
               fields={customFields} isFreeform={isFreeform} error={error}
               onChange={setCustomFields}
