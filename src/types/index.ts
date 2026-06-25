@@ -14,13 +14,14 @@ export const DEFAULT_MAX_CAPACITY = 2;
 
 // ─── Tenant types ─────────────────────────────────────────────────────────────
 
-export type OptionValueType = 'amount' | 'quantity' | 'people' | 'none'
+export type OptionValueType = 'amount' | 'quantity' | 'people' | 'session' | 'none'
 
 export const OPTION_VALUE_TYPES: { value: OptionValueType; label: string; unit: string }[] = [
   { value: 'none',     label: '없음', unit: '' },
   { value: 'amount',   label: '금액', unit: '원' },
   { value: 'quantity', label: '수량', unit: '개' },
   { value: 'people',   label: '인원', unit: '명' },
+  { value: 'session',  label: '회차', unit: '회' },
 ]
 
 export function getOptionUnit(valueType?: OptionValueType | string): string {
