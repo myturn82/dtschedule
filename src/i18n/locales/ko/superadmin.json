@@ -46,6 +46,7 @@
     "deleteWarning": "선택한 사용자를 삭제하면 해당 계정으로 재가입이 가능합니다."
   },
   "org": {
+    "label": "조직",
     "deleteTitle": "조직 삭제",
     "memberCount": "회원 {{count}}명",
     "assignCount": "배정 {{count}}건",

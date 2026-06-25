@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { DevFileLabel } from '../components/DevFileLabel'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
@@ -20,6 +21,8 @@ import '../styles/account-hub.css'
 // ─── SuperAdminPage ───────────────────────────────────────────────────────────
 
 export function SuperAdminPage() {
+  const { t } = useTranslation('common')
+  const { t: ts } = useTranslation('superadmin')
   const { profile, loading: authLoading } = useAuth()
   const { setTenant } = useTenant()
   const navigate = useNavigate()
@@ -720,7 +723,7 @@ export function SuperAdminPage() {
   }
 
   if (authLoading || loading) {
-    return <div className="min-h-screen flex items-center justify-center text-[var(--color-text-secondary)]">로딩 중...</div>
+    return <div className="min-h-screen flex items-center justify-center text-[var(--color-text-secondary)]">{t('loading')}</div>
   }
 
   if (!profile?.is_super_admin) return null
@@ -735,11 +738,11 @@ export function SuperAdminPage() {
             <span className="w-[32px] h-[32px] rounded-[9px] flex-shrink-0 grid place-items-center" style={{ background: '#14171C', color: '#fff' }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M3 17l2-9 4.5 5L12 6l2.5 7L19 8l2 9z"/><path d="M3 20.5h18"/></svg>
             </span>
-            슈퍼관리자
+            {ts('title')}
           </h1>
           <button onClick={() => navigate('/')} className="ml-auto inline-flex items-center gap-[6px] whitespace-nowrap text-[13.5px] font-semibold text-[var(--color-text-muted)] px-3 py-2 rounded-[10px] hover:bg-[var(--color-surface)] hover:text-[var(--color-text-primary)] transition-colors">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-            돌아가기
+            {t('back')}
           </button>
         </div>
 
@@ -759,7 +762,7 @@ export function SuperAdminPage() {
               ? 'bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-sm'
               : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'}`}
           >
-            고객 계정 허브
+            {ts('hub.title')}
           </button>
           <button
             onClick={() => handleTabChange('users')}
@@ -767,7 +770,7 @@ export function SuperAdminPage() {
               ? 'bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-sm'
               : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'}`}
           >
-            사용자 관리
+            {ts('users.title')}
           </button>
         </div>
 
@@ -880,21 +883,21 @@ export function SuperAdminPage() {
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
                 </button>
-                <span>계정 허브</span>
+                <span>{ts('hub.title')}</span>
               </div>
               {customers.length === 0 ? (
                 <div className="flex flex-col items-center gap-4 py-20 text-center">
-                  <p className="text-sm text-[var(--color-text-muted)]">등록된 고객 계정이 없습니다.</p>
+                  <p className="text-sm text-[var(--color-text-muted)]">{ts('hub.noCustomers')}</p>
                   <button
                     onClick={() => { setShowCreateCustomer(true); setRailOpen(true) }}
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-colors"
                     style={{ background: 'var(--color-brand-primary)' }}
                   >
-                    + 새 고객 추가
+                    + {ts('hub.newCustomer')}
                   </button>
                 </div>
               ) : (
-                <p className="text-center text-sm text-[var(--color-text-muted)] py-16">고객을 선택해 주세요.</p>
+                <p className="text-center text-sm text-[var(--color-text-muted)] py-16">{ts('hub.noCustomers')}</p>
               )}
             </div>
           )}
@@ -951,7 +954,7 @@ export function SuperAdminPage() {
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4">
           <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] p-6 w-full max-w-md space-y-4 shadow-xl">
             <h3 className="font-bold text-[var(--color-text-primary)] text-lg">
-              고객 {bulkCustomerConfirm.items.length}개 삭제
+              {ts('hub.bulkDelete', { count: bulkCustomerConfirm.items.length })}
             </h3>
 
             {/* 선택된 고객 목록 */}
@@ -959,7 +962,7 @@ export function SuperAdminPage() {
               {bulkCustomerConfirm.items.map(({ customer, tenantCount }) => (
                 <div key={customer.id} className="flex items-center justify-between px-3 py-2 rounded-lg bg-[var(--color-surface-secondary)] text-sm">
                   <span className="font-semibold text-[var(--color-text-primary)] truncate">{customer.name}</span>
-                  <span className="text-xs text-[var(--color-text-muted)] flex-shrink-0 ml-2">조직 {tenantCount}개</span>
+                  <span className="text-xs text-[var(--color-text-muted)] flex-shrink-0 ml-2">{ts('customer.orgCount', { count: tenantCount })}</span>
                 </div>
               ))}
             </div>
@@ -967,33 +970,33 @@ export function SuperAdminPage() {
             {/* 경고 */}
             {bulkCustomerConfirm.items.some(i => i.tenantCount > 0) && (
               <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-xs text-amber-700 dark:text-amber-400">
-                소속 조직 {bulkCustomerConfirm.items.reduce((s, i) => s + i.tenantCount, 0)}개와 모든 배정·회원 데이터가 함께 삭제됩니다.
+                {ts('customer.deleteWarning', { count: bulkCustomerConfirm.items.reduce((s, i) => s + i.tenantCount, 0) })}
               </div>
             )}
 
             {/* 비활성화 옵션 */}
             <div className="p-3 rounded-xl border border-amber-200 dark:border-amber-800 space-y-2">
-              <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">비활성화 (권장)</p>
-              <p className="text-xs text-[var(--color-text-secondary)]">데이터를 보존하고 고객을 숨깁니다. 나중에 복구할 수 있습니다.</p>
+              <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">{ts('customer.deactivate')}</p>
+              <p className="text-xs text-[var(--color-text-secondary)]">{ts('customer.deactivateDesc')}</p>
               <button
                 disabled={bulkCustomerSaving}
                 onClick={confirmBulkDeactivateCustomers}
                 className="w-full px-4 py-2 rounded-xl bg-amber-500 text-white text-sm font-medium hover:bg-amber-600 disabled:opacity-40 transition-colors"
               >
-                {bulkCustomerSaving ? '처리 중...' : '비활성화'}
+                {bulkCustomerSaving ? t('processing') : ts('customer.deactivate')}
               </button>
             </div>
 
             {/* 영구 삭제 옵션 */}
             <div className="p-3 rounded-xl border border-red-200 dark:border-red-800 space-y-2">
-              <p className="text-sm font-semibold text-red-600 dark:text-red-400">영구 삭제</p>
-              <p className="text-xs text-red-500">모든 데이터가 완전히 삭제되며 복구 불가능합니다.</p>
+              <p className="text-sm font-semibold text-red-600 dark:text-red-400">{ts('customer.permanentDelete')}</p>
+              <p className="text-xs text-red-500">{ts('customer.deleteDesc')}</p>
               <button
                 disabled={bulkCustomerSaving}
                 onClick={confirmBulkDeleteCustomers}
                 className="w-full px-4 py-2 rounded-xl bg-red-500 text-white text-sm font-medium hover:bg-red-600 disabled:opacity-40 transition-colors"
               >
-                {bulkCustomerSaving ? '삭제 중...' : '영구 삭제'}
+                {bulkCustomerSaving ? t('deleting') : ts('customer.permanentDelete')}
               </button>
             </div>
 
@@ -1002,7 +1005,7 @@ export function SuperAdminPage() {
               onClick={() => setBulkCustomerConfirm(null)}
               className="w-full px-4 py-2 rounded-xl border border-[var(--color-border)] text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] disabled:opacity-40"
             >
-              취소
+              {t('cancel')}
             </button>
           </div>
         </div>
@@ -1012,17 +1015,17 @@ export function SuperAdminPage() {
       {deleteCustomerConfirm && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4">
           <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] p-6 w-full max-w-sm space-y-4 shadow-xl">
-            <h3 className="font-bold text-[var(--color-text-primary)] text-lg">고객 삭제</h3>
+            <h3 className="font-bold text-[var(--color-text-primary)] text-lg">{t('delete')} {ts('plan.label')}</h3>
             <div className="text-sm text-[var(--color-text-secondary)] space-y-1">
-              <p>고객명: <span className="font-semibold text-[var(--color-text-primary)]">{deleteCustomerConfirm.customer.name}</span></p>
-              <p>소속 조직: <span className="font-semibold">{deleteCustomerConfirm.tenantCount}개</span></p>
+              <p>{ts('customer.owner')}: <span className="font-semibold text-[var(--color-text-primary)]">{deleteCustomerConfirm.customer.name}</span></p>
+              <p>{ts('org.label')}: <span className="font-semibold">{ts('customer.orgCount', { count: deleteCustomerConfirm.tenantCount })}</span></p>
             </div>
             {deleteCustomerConfirm.tenantCount > 0 && (
               <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-xs text-amber-700 dark:text-amber-400">
-                소속 조직 {deleteCustomerConfirm.tenantCount}개와 모든 데이터(배정, 회원 등)가 영구 삭제됩니다.
+                {ts('customer.deleteWarning', { count: deleteCustomerConfirm.tenantCount })}
               </div>
             )}
-            <p className="text-xs text-red-500">이 작업은 되돌릴 수 없습니다. 고객명을 입력해 확인하세요.</p>
+            <p className="text-xs text-red-500">{ts('customer.deleteConfirmLabel')}</p>
             <input
               value={deleteCustomerNameInput}
               onChange={e => setDeleteCustomerNameInput(e.target.value)}
@@ -1035,13 +1038,13 @@ export function SuperAdminPage() {
                 onClick={confirmDeleteCustomer}
                 className="flex-1 px-4 py-2 rounded-xl bg-red-500 text-white text-sm font-medium hover:bg-red-600 disabled:opacity-40 transition-colors"
               >
-                {deleteCustomerSaving ? '삭제 중...' : '영구 삭제'}
+                {deleteCustomerSaving ? t('deleting') : ts('customer.permanentDelete')}
               </button>
               <button
                 onClick={() => setDeleteCustomerConfirm(null)}
                 className="flex-1 px-4 py-2 rounded-xl border border-[var(--color-border)] text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]"
               >
-                취소
+                {t('cancel')}
               </button>
             </div>
           </div>
@@ -1052,33 +1055,33 @@ export function SuperAdminPage() {
       {deleteConfirm && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4">
           <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] p-6 w-full max-w-sm space-y-4 shadow-xl">
-            <h3 className="font-bold text-[var(--color-text-primary)] text-lg">조직 삭제</h3>
+            <h3 className="font-bold text-[var(--color-text-primary)] text-lg">{ts('org.deleteTitle')}</h3>
             <div className="text-sm text-[var(--color-text-secondary)] space-y-0.5">
-              <p>조직명: <span className="font-semibold text-[var(--color-text-primary)]">{deleteConfirm.tenant.name}</span></p>
-              <p>회원 <span className="font-semibold">{deleteConfirm.memberCount}명</span> · 배정 <span className="font-semibold">{deleteConfirm.assignCount}건</span></p>
+              <p>{deleteConfirm.tenant.name}</p>
+              <p>{ts('org.memberCount', { count: deleteConfirm.memberCount })} · {ts('org.assignCount', { count: deleteConfirm.assignCount })}</p>
             </div>
 
             {/* Option 1: 비활성화 */}
             <div className="p-3 rounded-xl border border-amber-200 dark:border-amber-800 space-y-2">
-              <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">비활성화 (권장)</p>
-              <p className="text-xs text-[var(--color-text-secondary)]">데이터를 보존하고 조직을 숨깁니다. 나중에 복구할 수 있습니다.</p>
+              <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">{ts('customer.deactivate')}</p>
+              <p className="text-xs text-[var(--color-text-secondary)]">{ts('customer.deactivateDesc')}</p>
               <button
                 disabled={deletingSaving}
                 onClick={deactivateTenant}
                 className="w-full px-4 py-2 rounded-xl bg-amber-500 text-white text-sm font-medium hover:bg-amber-600 disabled:opacity-40 transition-colors"
               >
-                {deletingSaving ? '처리 중...' : '비활성화'}
+                {deletingSaving ? t('processing') : ts('customer.deactivate')}
               </button>
             </div>
 
             {/* Option 2: 영구 삭제 */}
             <div className="p-3 rounded-xl border border-red-200 dark:border-red-800 space-y-2">
-              <p className="text-sm font-semibold text-red-600 dark:text-red-400">영구 삭제</p>
-              <p className="text-xs text-red-500">모든 데이터가 완전히 삭제되며 복구 불가능합니다.</p>
+              <p className="text-sm font-semibold text-red-600 dark:text-red-400">{ts('customer.permanentDelete')}</p>
+              <p className="text-xs text-red-500">{ts('customer.deleteDesc')}</p>
               <input
                 value={deleteNameInput}
                 onChange={e => setDeleteNameInput(e.target.value)}
-                placeholder={`조직명 "${deleteConfirm.tenant.name}" 입력`}
+                placeholder={`"${deleteConfirm.tenant.name}" 입력`}
                 className="w-full px-3 py-2 rounded-xl border border-red-200 dark:border-red-700 bg-[var(--color-surface)] text-sm focus:outline-none focus:ring-2 focus:ring-red-400/30 focus:border-red-400"
               />
               <button
@@ -1086,7 +1089,7 @@ export function SuperAdminPage() {
                 onClick={confirmDeleteTenant}
                 className="w-full px-4 py-2 rounded-xl bg-red-500 text-white text-sm font-medium hover:bg-red-600 disabled:opacity-40 transition-colors"
               >
-                {deletingSaving ? '삭제 중...' : '영구 삭제'}
+                {deletingSaving ? t('deleting') : ts('customer.permanentDelete')}
               </button>
             </div>
 
@@ -1094,7 +1097,7 @@ export function SuperAdminPage() {
               onClick={() => setDeleteConfirm(null)}
               className="w-full px-4 py-2 rounded-xl border border-[var(--color-border)] text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]"
             >
-              취소
+              {t('cancel')}
             </button>
           </div>
         </div>
@@ -1105,7 +1108,7 @@ export function SuperAdminPage() {
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4">
           <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] p-6 w-full max-w-sm space-y-4 shadow-xl">
             <h3 className="font-bold text-[var(--color-text-primary)] text-lg">
-              {pendingModeChange.blocked ? '모드 변경 불가' : '운영 모드 변경'}
+              {pendingModeChange.blocked ? ts('org.modeChangeBlocked') : ts('org.modeChange')}
             </h3>
             <p className="text-sm text-[var(--color-text-secondary)]">
               <span className="font-semibold text-[var(--color-text-primary)]">{pendingModeChange.tenant.name}</span>의 모드{' '}
@@ -1137,14 +1140,14 @@ export function SuperAdminPage() {
                   onClick={confirmModeChange}
                   className="flex-1 px-4 py-2 rounded-xl bg-[var(--color-brand-primary)] text-white text-sm font-medium hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40"
                 >
-                  {modeSaving ? '저장 중...' : '변경 적용'}
+                  {modeSaving ? t('saving') : t('apply')}
                 </button>
               )}
               <button
                 onClick={() => setPendingModeChange(null)}
                 className={`px-4 py-2 rounded-xl border border-[var(--color-border)] text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] ${pendingModeChange.blocked ? 'w-full' : 'flex-1'}`}
               >
-                {pendingModeChange.blocked ? '확인' : '취소'}
+                {pendingModeChange.blocked ? t('confirm') : t('cancel')}
               </button>
             </div>
           </div>

@@ -46,6 +46,7 @@
     "deleteWarning": "Deleted users can re-register with the same email."
   },
   "org": {
+    "label": "Organization",
     "deleteTitle": "Delete Organization",
     "memberCount": "{{count}} member(s)",
     "assignCount": "{{count}} assignment(s)",
