@@ -2,7 +2,7 @@
 // THEMES 토큰을 그대로 포팅. 다크 변형은 데이터로 보관하되 현재 앱은 다크모드가
 // 비활성 상태라 적용하지 않는다(useDarkMode.ts 참고).
 
-export type ThemePresetKey = 'midnight' | 'forest' | 'salmon' | 'beige' | 'original' | 'butter' | 'pistachio' | 'dusty_lavender' | 'terracotta'
+export type ThemePresetKey = 'midnight' | 'forest' | 'salmon' | 'beige' | 'original' | 'butter' | 'pistachio' | 'dusty_lavender' | 'terracotta' | 'monochrome'
 
 export interface ThemeTokens {
   accent: string
@@ -67,6 +67,11 @@ export const THEME_PRESETS: Record<ThemePresetKey, ThemePreset> = {
     label: '테라코타',
     light: { accent: '#DC7633', accentHover: '#C0651E', accentSoft: '#FDEBD0', accentRing: '#F0C5A0', accentText: '#A85218', accentContrast: '#FFFFFF' },
     dark:  { accent: '#E8904D', accentHover: '#F0A060', accentSoft: '#2A1808', accentRing: '#4A2C14', accentText: '#F5B885', accentContrast: '#18100A' },
+  },
+  monochrome: {
+    label: '모노크롬',
+    light: { accent: '#2C2C2C', accentHover: '#1A1A1A', accentSoft: '#F5F5F5', accentRing: '#C8C8C8', accentText: '#1A1A1A', accentContrast: '#FFFFFF' },
+    dark:  { accent: '#D0D0D0', accentHover: '#E0E0E0', accentSoft: '#1E1E1E', accentRing: '#3A3A3A', accentText: '#E8E8E8', accentContrast: '#0A0A0A' },
   },
 }
 
