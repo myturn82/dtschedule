@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, Fragment } from 'react'
+import { AutoResizeTextarea } from '../components/shared/AutoResizeTextarea'
 import { useTranslation } from 'react-i18next'
 import { DevFileLabel } from '../components/DevFileLabel'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -2040,10 +2041,8 @@ export function AdminPage() {
                           <div className="flex flex-col gap-[10px]" onClick={e => e.stopPropagation()}>
                             <div className="flex flex-col gap-[7px]">
                               <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">필드명</label>
-                              <textarea value={editField.label} placeholder="필드명" rows={1}
-                                ref={el => { if (el) { el.style.height = 'auto'; el.style.height = Math.max(el.scrollHeight, 34) + 'px' } }}
+                              <AutoResizeTextarea minH={34} value={editField.label} placeholder="필드명" rows={1}
                                 onChange={e => setEditField(f => ({ ...f, label: e.target.value }))}
-                                onInput={e => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = Math.max(el.scrollHeight, 34) + 'px' }}
                                 className={inputCls + ' w-full min-h-[34px] resize-none overflow-hidden leading-snug'} />
                             </div>
                             <div className="flex gap-2.5 items-end flex-wrap">
@@ -2207,10 +2206,8 @@ export function AdminPage() {
                   <div className="flex flex-wrap gap-2.5 items-end">
                     <div className="flex-1 min-w-[180px] flex flex-col gap-[7px]">
                       <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">{ta('customField.fieldName')} <span className="text-[var(--color-brand-primary)]">*</span></label>
-                      <textarea required value={newFieldLabel} maxLength={50} rows={1}
-                        ref={el => { if (el) { el.style.height = 'auto'; el.style.height = Math.max(el.scrollHeight, 34) + 'px' } }}
+                      <AutoResizeTextarea minH={34} required value={newFieldLabel} maxLength={50} rows={1}
                         onChange={e => setNewFieldLabel(e.target.value)}
-                        onInput={e => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = Math.max(el.scrollHeight, 34) + 'px' }}
                         placeholder={ta('customField.fieldName')}
                         className={inputCls + ' w-full min-h-[34px] resize-none overflow-hidden leading-snug'} />
                     </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { AutoResizeTextarea } from '../shared/AutoResizeTextarea'
 import { DevFileLabel } from '../DevFileLabel'
 import type { Assignment, CellState, ModalTarget, Profile, TenantRole, MemberType, CustomFieldDef, TenantMode } from '../../types'
 import { getOptionUnit } from '../../types'
@@ -544,18 +545,17 @@ export function SlotEditModal({
             className={inputClass}
           />
         ) : (
-          <textarea
+          <AutoResizeTextarea
+            minH={44}
             value={val}
             rows={1}
-            ref={el => { if (el) { el.style.height = 'auto'; el.style.height = Math.max(el.scrollHeight, 44) + 'px'; el.scrollTop = 0 } }}
             onChange={e => {
               setFieldValues(prev => ({ ...prev, [field.id]: e.target.value }))
               if (isAdmin && isSplitMode && field.id === customFields[0]?.id) setSelectedUserId('')
             }}
-            onInput={e => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = Math.max(el.scrollHeight, 44) + 'px' }}
             placeholder={field.placeholder || `${field.label}${field.required ? ' (필수)' : ' (선택)'}`}
             maxLength={100}
-            className={inputClass + ' !h-auto min-h-[44px] py-[12px] resize-none overflow-hidden'}
+            className={inputClass + ' min-h-[44px] py-[12px] resize-none overflow-hidden'}
           />
         )}
       </div>
@@ -831,15 +831,14 @@ export function SlotEditModal({
                 /* 동적 커스텀 필드 */
                 <>
                   {customFields.map(field => renderFieldInput(field))}
-                  <textarea
+                  <AutoResizeTextarea
+                    minH={44}
                     value={note}
                     rows={1}
-                    ref={el => { if (el) { el.style.height = 'auto'; el.style.height = Math.max(el.scrollHeight, 44) + 'px'; el.scrollTop = 0 } }}
                     onChange={e => setNote(e.target.value)}
-                    onInput={e => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = Math.max(el.scrollHeight, 44) + 'px' }}
                     placeholder="메모 (선택)"
                     maxLength={200}
-                    className={inputClass + ' !h-auto min-h-[44px] py-[12px] resize-none overflow-hidden'}
+                    className={inputClass + ' min-h-[44px] py-[12px] resize-none overflow-hidden'}
                   />
                 </>
               ) : (
@@ -890,14 +889,13 @@ export function SlotEditModal({
                     </div>
                   )}
                   {showExtraCustomFields && customFields.map(field => renderFieldInput(field))}
-                  <textarea
+                  <AutoResizeTextarea
+                    minH={44}
                     value={note}
                     rows={1}
-                    ref={el => { if (el) { el.style.height = 'auto'; el.style.height = Math.max(el.scrollHeight, 44) + 'px'; el.scrollTop = 0 } }}
                     onChange={e => setNote(e.target.value)}
-                    onInput={e => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = Math.max(el.scrollHeight, 44) + 'px' }}
                     placeholder="메모 (선택)"
-                    className={inputClass + ' !h-auto min-h-[44px] py-[12px] resize-none overflow-hidden'}
+                    className={inputClass + ' min-h-[44px] py-[12px] resize-none overflow-hidden'}
                   />
                 </>
               )}
