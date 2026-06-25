@@ -30,6 +30,7 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
   const [showWithdrawModal, setShowWithdrawModal] = useState(false)
   const [joinSuccessMsg, setJoinSuccessMsg] = useState<string | null>(null)
 
+  const feedbackUrl = import.meta.env.VITE_FEEDBACK_URL as string | undefined
   const isPrivileged = profile?.is_super_admin || tenantRole === 'admin'
   const showHamburger = !!isPrivileged || isCustomerAdmin
 
@@ -62,9 +63,19 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
           </div>
 
 
-          {/* Right: rightSlot + name/badge + avatar */}
+          {/* Right: rightSlot + feedback + name/badge + avatar */}
           <div className="flex items-center gap-1.5 shrink-0">
             {rightSlot}
+            {feedbackUrl && profile && (
+              <a
+                href={feedbackUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] text-[12px] font-semibold hover:bg-[var(--color-surface-hover)] transition-colors select-none shrink-0"
+              >
+                💬 피드백
+              </a>
+            )}
             {profile && (
               <div className="flex items-center gap-1.5">
                 <span className="text-sm font-semibold text-[var(--color-text-primary)] max-w-[80px] truncate">{profile.name}</span>
