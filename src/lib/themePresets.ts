@@ -2,7 +2,7 @@
 // THEMES 토큰을 그대로 포팅. 다크 변형은 데이터로 보관하되 현재 앱은 다크모드가
 // 비활성 상태라 적용하지 않는다(useDarkMode.ts 참고).
 
-export type ThemePresetKey = 'midnight' | 'forest' | 'salmon' | 'beige' | 'original' | 'butter' | 'pistachio' | 'dusty_lavender' | 'terracotta' | 'monochrome'
+export type ThemePresetKey = 'midnight' | 'forest' | 'salmon' | 'beige' | 'original' | 'butter' | 'pistachio' | 'dusty_lavender' | 'terracotta' | 'monochrome' | 'deep_midnight' | 'brick' | 'sage' | 'mute_lavender'
 
 export interface ThemeTokens {
   accent: string
@@ -72,6 +72,26 @@ export const THEME_PRESETS: Record<ThemePresetKey, ThemePreset> = {
     label: '모노크롬',
     light: { accent: '#2C2C2C', accentHover: '#1A1A1A', accentSoft: '#F5F5F5', accentRing: '#C8C8C8', accentText: '#1A1A1A', accentContrast: '#FFFFFF' },
     dark:  { accent: '#D0D0D0', accentHover: '#E0E0E0', accentSoft: '#1E1E1E', accentRing: '#3A3A3A', accentText: '#E8E8E8', accentContrast: '#0A0A0A' },
+  },
+  deep_midnight: {
+    label: '딥 미드나잇 블루',
+    light: { accent: '#1E293B', accentHover: '#111827', accentSoft: '#F1F5F9', accentRing: '#CBD5E1', accentText: '#0F172A', accentContrast: '#FFFFFF' },
+    dark:  { accent: '#94A3B8', accentHover: '#B0BDD0', accentSoft: '#0F1520', accentRing: '#1E2D40', accentText: '#CBD5E1', accentContrast: '#080E18' },
+  },
+  brick: {
+    label: '브릭 (테라코타)',
+    light: { accent: '#C05621', accentHover: '#A14418', accentSoft: '#FEF0E6', accentRing: '#FDBA74', accentText: '#9A3412', accentContrast: '#FFFFFF' },
+    dark:  { accent: '#E07840', accentHover: '#EC8A52', accentSoft: '#2A1408', accentRing: '#4A2A14', accentText: '#F8B090', accentContrast: '#180A04' },
+  },
+  sage: {
+    label: '세이지 그린',
+    light: { accent: '#4D7C0F', accentHover: '#3A6009', accentSoft: '#F1F8E9', accentRing: '#C5E1A5', accentText: '#2E5706', accentContrast: '#FFFFFF' },
+    dark:  { accent: '#7CB342', accentHover: '#8DC54F', accentSoft: '#141E08', accentRing: '#2A3C10', accentText: '#AED581', accentContrast: '#0A1204' },
+  },
+  mute_lavender: {
+    label: '무트 라벤더',
+    light: { accent: '#7C3AED', accentHover: '#6D28D9', accentSoft: '#EDE9FE', accentRing: '#C4B5FD', accentText: '#5B21B6', accentContrast: '#FFFFFF' },
+    dark:  { accent: '#A78BFA', accentHover: '#B59DFC', accentSoft: '#1A1030', accentRing: '#312050', accentText: '#DDD6FE', accentContrast: '#0D0820' },
   },
 }
 
