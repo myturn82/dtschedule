@@ -71,9 +71,10 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
                 href={feedbackUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] text-[12px] font-semibold hover:bg-[var(--color-surface-hover)] transition-colors select-none shrink-0"
+                className="inline-flex items-center gap-1 px-2 py-1.5 sm:px-2.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] text-[12px] font-semibold hover:bg-[var(--color-surface-hover)] transition-colors select-none shrink-0"
               >
-                💬 피드백
+                <span className="text-sm leading-none select-none">💬</span>
+                <span className="hidden sm:inline">피드백</span>
               </a>
             )}
             {profile && (
