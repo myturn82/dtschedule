@@ -11,5 +11,5 @@ export interface CreateOrgForm {
   tenant_mode: TenantMode
 }
 
-export const EMPTY_ORG_FORM: CreateOrgForm = { slug: '', name: '', business_type: '', title: '', theme_color: '', theme_preset: '', tenant_mode: '회원공유' }
+export const EMPTY_ORG_FORM: CreateOrgForm = { slug: '', name: '', business_type: '', title: '', theme_color: '#D35438', theme_preset: 'original', tenant_mode: '회원공유' }
 export const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/

@@ -13,8 +13,7 @@ import { CUSTOM_FIELD_TEMPLATES } from '../utils/customFieldTemplates'
 import type { TimeSlot, Tenant, TenantAccessRole, LegendItem, LegendColor, CustomFieldDef, CustomFieldOption, OptionValueType, CustomFieldType } from '../types'
 import { OPTION_VALUE_TYPES, getOptionUnit, FIELD_TYPES_WITH_OPTIONS, FIELD_TYPES_WITH_DASHBOARD } from '../types'
 import { LEGEND_COLOR_STYLES } from '../components/schedule/Legend'
-import { THEME_COLORS } from '../lib/themeColors'
-import { applyThemePreset } from '../lib/themePresets'
+import { applyThemePreset, THEME_PRESET_LIST, type ThemePresetKey } from '../lib/themePresets'
 import { displayMode } from '../lib/tenantMode'
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
@@ -263,6 +262,7 @@ export function AdminPage() {
   const [settingsName, setSettingsName] = useState('')
   const [settingsTitle, setSettingsTitle] = useState('')
   const [settingsTheme, setSettingsTheme] = useState('')
+  const [settingsPreset, setSettingsPreset] = useState<ThemePresetKey | ''>('')
   const [colorOpen, setColorOpen] = useState(false)
 
   const [slotLabels, setSlotLabels] = useState<Record<string, string>>({})
@@ -298,6 +298,7 @@ export function AdminPage() {
     setSettingsName(adminTenant.name)
     setSettingsTitle(s.title ?? '')
     setSettingsTheme(s.theme_color ?? '')
+    setSettingsPreset((s.theme_preset as ThemePresetKey) ?? '')
 
     setSlotLabels(s.slot_labels ?? {})
     setRoleRatios(s.role_ratios ?? {})
@@ -727,6 +728,7 @@ export function AdminPage() {
       updateTenantSettings(adminTenant.id, {
         title: settingsTitle.trim(),
         theme_color: settingsTheme.trim() || undefined,
+        theme_preset: settingsPreset || undefined,
         time_slots: slotList,
         slot_interval_minutes: hasHalf ? 30 : 60,
         slot_labels: slotLabels,
@@ -745,6 +747,7 @@ export function AdminPage() {
           title: settingsTitle.trim(),
           time_slots: slotList,
           theme_color: settingsTheme.trim() || undefined,
+          theme_preset: settingsPreset || undefined,
           slot_interval_minutes: hasHalf ? 30 : 60,
           slot_labels: slotLabels,
           legend_items: legendItems,
@@ -1634,27 +1637,35 @@ export function AdminPage() {
                         <path d="M4 2l4 4-4 4" />
                       </svg>
                       <span>테마 색상 (선택)</span>
-                      {settingsTheme && <span className="w-4 h-4 rounded-sm border border-[var(--color-border-strong)] inline-block" style={{ background: settingsTheme }} />}
+                      {settingsPreset
+                        ? <span className="text-xs font-medium" style={{ color: THEME_PRESET_LIST.find(p => p.key === settingsPreset)?.preset.light.accent }}>{THEME_PRESET_LIST.find(p => p.key === settingsPreset)?.label}</span>
+                        : settingsTheme && <span className="w-4 h-4 rounded-sm border border-[var(--color-border-strong)] inline-block" style={{ background: settingsTheme }} />
+                      }
                     </button>
                     {colorOpen && (
                       <div className="mt-2 space-y-2">
                         <div className="flex flex-wrap gap-1.5">
-                          {THEME_COLORS.map(color => (
-                            <button
-                              key={color}
-                              type="button"
-                              title={color}
-                              onClick={() => setSettingsTheme(prev => prev === color ? '' : color)}
-                              className="w-7 h-7 rounded-lg border-2 transition-transform hover:scale-110 flex items-center justify-center flex-shrink-0"
-                              style={{ background: color, borderColor: settingsTheme === color ? '#1f2937' : 'transparent', boxShadow: settingsTheme === color ? '0 0 0 1px #fff inset' : undefined }}
-                            >
-                              {settingsTheme === color && (
-                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                                  <path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                              )}
-                            </button>
-                          ))}
+                          {THEME_PRESET_LIST.map(({ key, label, preset }) => {
+                            const on = settingsPreset === key
+                            return (
+                              <button
+                                key={key}
+                                type="button"
+                                title={label}
+                                onClick={() => {
+                                  const next = on ? '' : key
+                                  setSettingsPreset(next)
+                                  setSettingsTheme(next ? preset.light.accent : '')
+                                  applyThemePreset(next || null)
+                                }}
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 transition-transform hover:scale-[1.03] flex-shrink-0"
+                                style={{ borderColor: on ? preset.light.accent : 'var(--color-border-strong)', background: on ? preset.light.accentSoft : 'var(--color-surface)' }}
+                              >
+                                <span className="w-4 h-4 rounded-full flex-shrink-0" style={{ background: preset.light.accent }} />
+                                <span className="text-xs font-medium" style={{ color: on ? preset.light.accentText : 'var(--color-text-secondary)' }}>{label}</span>
+                              </button>
+                            )
+                          })}
                         </div>
                         <div className="flex items-center gap-2">
                           {settingsTheme && <span className="w-6 h-6 rounded-md border border-[var(--color-border-strong)] flex-shrink-0" style={{ background: settingsTheme }} />}
@@ -1663,11 +1674,11 @@ export function AdminPage() {
                             placeholder="직접 입력 (#2563eb)"
                             maxLength={7}
                             value={settingsTheme}
-                            onChange={e => setSettingsTheme(e.target.value)}
+                            onChange={e => { setSettingsTheme(e.target.value); setSettingsPreset('') }}
                             className={inputCls + ' text-xs py-1.5 font-mono w-full'}
                           />
-                          {settingsTheme && (
-                            <button type="button" onClick={() => setSettingsTheme('')} className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] flex-shrink-0">
+                          {(settingsTheme || settingsPreset) && (
+                            <button type="button" onClick={() => { setSettingsTheme(''); setSettingsPreset(''); applyThemePreset(null) }} className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] flex-shrink-0">
                               초기화
                             </button>
                           )}
