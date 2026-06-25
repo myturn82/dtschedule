@@ -14,6 +14,8 @@ export interface ThemeTokens {
   pageOverride?: string
   surfaceOverride?: string
   borderOverride?: string
+  tintBrand?: string
+  tintBrandInk?: string
 }
 
 export interface ThemePreset {
@@ -45,7 +47,7 @@ export const THEME_PRESETS: Record<ThemePresetKey, ThemePreset> = {
   },
   original: {
     label: '오리지널 (기존)',
-    light: { accent: '#D35438', accentHover: '#BC4630', accentSoft: '#FBEBE6', accentRing: '#F3C9BC', accentText: '#B23E27', accentContrast: '#FFFFFF', pageOverride: '#F5F4F1', surfaceOverride: '#FFFFFF', borderOverride: '#E9E6E0' },
+    light: { accent: '#D35438', accentHover: '#BC4630', accentSoft: '#FBEBE6', accentRing: '#F3C9BC', accentText: '#B23E27', accentContrast: '#FFFFFF', pageOverride: '#F5F4F1', surfaceOverride: '#FFFFFF', borderOverride: '#E9E6E0', tintBrand: 'oklch(0.93 0.06 70)', tintBrandInk: 'oklch(0.42 0.10 60)' },
     dark: { accent: '#E8694D', accentHover: '#F07A5F', accentSoft: '#2E1812', accentRing: '#5A2D22', accentText: '#F6A892', accentContrast: '#1A0E0A', pageOverride: '#15110F', surfaceOverride: '#1E1916', borderOverride: '#322A25' },
   },
   butter: {
@@ -117,4 +119,9 @@ export function applyThemePreset(key: ThemePresetKey | null | undefined) {
     if (value) root.style.setProperty(cssVar, value)
     else root.style.removeProperty(cssVar)
   }
+  // 셀 tint 오버라이드 — 미설정 시 index.css color-mix 공식으로 폴백
+  if (tokens?.tintBrand) root.style.setProperty('--tint-brand', tokens.tintBrand)
+  else root.style.removeProperty('--tint-brand')
+  if (tokens?.tintBrandInk) root.style.setProperty('--tint-brand-ink', tokens.tintBrandInk)
+  else root.style.removeProperty('--tint-brand-ink')
 }

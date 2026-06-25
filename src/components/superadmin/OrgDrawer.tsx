@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { Tenant, TenantMode } from '../../types'
 import { colorOf, avatarColorFor, initialsOf } from '../../lib/avatarColor'
 import { displayMode } from '../../lib/tenantMode'
@@ -63,6 +64,7 @@ export function OrgDrawer({
   deletingSaving, onDelete, onReactivate,
   onApproveMember, onRejectMember, approvingMemberId,
 }: Props) {
+  const [colorOpen, setColorOpen] = useState(false)
   const { bg, fg } = avatarColorFor(tenant.name, tenant.settings?.theme_color)
   const pendingMembers = members.filter(m => !m.is_approved)
   const approvedMembers = members.filter(m => m.is_approved)
@@ -147,26 +149,38 @@ export function OrgDrawer({
 
       {/* ── 포인트 컬러 ── */}
       <div className="mb-4">
-        <label className="block text-[11px] font-bold text-[var(--color-text-muted)] mb-1">포인트 컬러</label>
-        <div className="flex flex-wrap gap-1.5">
-          {THEME_PRESET_LIST.map(({ key, label, preset }) => {
-            const on = tenant.settings?.theme_preset === key
-            return (
-              <button
-                key={key}
-                type="button"
-                disabled={themeSaving}
-                title={label}
-                onClick={() => onThemeChange(tenant, on ? '' : key)}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 transition-transform hover:scale-[1.03] disabled:opacity-40 flex-shrink-0"
-                style={{ borderColor: on ? preset.light.accent : 'var(--color-border-strong)', background: on ? preset.light.accentSoft : 'var(--color-surface)' }}
-              >
-                <span className="w-4 h-4 rounded-full flex-shrink-0" style={{ background: preset.light.accent }} />
-                <span className="text-[11.5px] font-medium" style={{ color: on ? preset.light.accentText : 'var(--color-text-secondary)' }}>{label}</span>
-              </button>
-            )
-          })}
-        </div>
+        <button
+          type="button"
+          onClick={() => setColorOpen(v => !v)}
+          className="flex items-center gap-2 text-[11px] font-bold text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors mb-1"
+        >
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: colorOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }}>
+            <path d="M4 2l4 4-4 4" />
+          </svg>
+          <span>포인트 컬러</span>
+          {tenant.settings?.theme_color && <span className="w-4 h-4 rounded-sm border border-[var(--color-border-strong)] inline-block" style={{ background: tenant.settings.theme_color }} />}
+        </button>
+        {colorOpen && (
+          <div className="flex flex-wrap gap-1.5 mt-1">
+            {THEME_PRESET_LIST.map(({ key, label, preset }) => {
+              const on = tenant.settings?.theme_preset === key
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  disabled={themeSaving}
+                  title={label}
+                  onClick={() => onThemeChange(tenant, on ? '' : key)}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 transition-transform hover:scale-[1.03] disabled:opacity-40 flex-shrink-0"
+                  style={{ borderColor: on ? preset.light.accent : 'var(--color-border-strong)', background: on ? preset.light.accentSoft : 'var(--color-surface)' }}
+                >
+                  <span className="w-4 h-4 rounded-full flex-shrink-0" style={{ background: preset.light.accent }} />
+                  <span className="text-[11.5px] font-medium" style={{ color: on ? preset.light.accentText : 'var(--color-text-secondary)' }}>{label}</span>
+                </button>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* ── 액션 ── */}
