@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, Fragment } from 'react'
+import { useTranslation } from 'react-i18next'
 import { DevFileLabel } from '../components/DevFileLabel'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
@@ -182,6 +183,9 @@ const TAB_LABELS: Record<Tab, string> = {
 }
 
 export function AdminPage() {
+  const { t } = useTranslation('common')
+  const { t: ta } = useTranslation('admin')
+  const tad = ta as (key: string) => string
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const initOrgId = searchParams.get('org')
@@ -790,7 +794,7 @@ export function AdminPage() {
                 ) : (
                   <div className="text-[15px] font-bold text-[var(--color-text-primary)] truncate leading-tight">{adminTenant?.name ?? '관리자'}</div>
                 )}
-                <div className="text-[11.5px] text-[var(--color-text-muted)] font-medium leading-tight">관리자 콘솔</div>
+                <div className="text-[11.5px] text-[var(--color-text-muted)] font-medium leading-tight">{ta('title')}</div>
               </div>
             </div>
           </div>
@@ -819,7 +823,7 @@ export function AdminPage() {
                       : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
                   }`}
                 >
-                  {TAB_LABELS[t]}
+                  {tad(`tabs.${t === 'custom_fields' ? 'customFields' : t}`)}
                   {count > 0 && (
                     <span className={`text-[11px] font-bold px-[7px] py-px rounded-full ${
                       isActive
@@ -1941,7 +1945,7 @@ export function AdminPage() {
                       className="inline-flex items-center gap-1.5 h-[34px] px-4 bg-[var(--color-brand-primary)] text-white text-sm font-bold rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40 transition-colors"
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-                      추가
+                      {t('add')}
                     </button>
                   </div>
                 </div>
@@ -1955,17 +1959,17 @@ export function AdminPage() {
                 <header className="mb-5">
                   <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10 px-3 py-[5px] rounded-full">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
-                    조직 설정 · 커스텀 필드
+                    {ta('settings.orgName')} · {ta('tabs.customFields')}
                   </span>
-                  <h2 className="mt-3 mb-1.5 text-[clamp(22px,5vw,27px)] font-extrabold tracking-tight text-[var(--color-text-primary)]">커스텀 필드 설정</h2>
+                  <h2 className="mt-3 mb-1.5 text-[clamp(22px,5vw,27px)] font-extrabold tracking-tight text-[var(--color-text-primary)]">{ta('customField.title')}</h2>
                   <p className="text-[14px] font-medium text-[var(--color-text-muted)] leading-relaxed max-w-[52ch]">
                     {adminIsFreeform
-                      ? '비회원 등록 시 추가로 입력받을 정보를 구성합니다. 첫 번째 필드가 이름(성명) 필드로 사용됩니다.'
-                      : '스케줄 등록 시 추가로 입력받을 정보를 구성합니다. 여기서 만든 필드는 예약·스케줄 등록 팝업에 그대로 표시됩니다.'}
+                      ? ta('customField.title')
+                      : ta('customField.title')}
                   </p>
                   <span className="mt-3.5 inline-flex items-center gap-1.5 text-[12.5px] font-bold text-[var(--color-text-secondary)]">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 17l9 5 9-5" opacity="0.5"/></svg>
-                    전체 <b className="text-[var(--color-brand-primary)] font-extrabold">{customFields.length}</b>개 · 필수 {customFields.filter(f => f.required).length}개
+                    {ta('customField.totalFields', { count: customFields.length })} · {ta('customField.requiredFields', { count: customFields.filter(f => f.required).length })}
                   </span>
                 </header>
 
@@ -1992,17 +1996,17 @@ export function AdminPage() {
                             <div className="flex items-center gap-2">
                               <span className={`inline-flex items-center gap-1 rounded-full text-[11.5px] font-bold px-2.5 py-1 shrink-0 ${td?.badgeCls ?? 'bg-slate-100 text-slate-600'}`}>
                                 <CfTypeIcon type={field.type} size={12} />
-                                {td?.label ?? field.type}
+                                {tad(`customField.types.${field.type}`) || field.type}
                               </span>
                               {idx === 0 && adminIsFreeform && (
-                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] font-semibold shrink-0">이름</span>
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] font-semibold shrink-0">{t('name')}</span>
                               )}
                               <span className="text-[15px] font-bold text-[var(--color-text-primary)] tracking-tight truncate flex-1 min-w-0">{field.label}</span>
-                              {field.required && <span className="shrink-0 text-[11px] font-bold px-2.5 py-[3px] rounded-full text-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10">필수</span>}
+                              {field.required && <span className="shrink-0 text-[11px] font-bold px-2.5 py-[3px] rounded-full text-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10">{t('required')}</span>}
                               {field.show_in_dashboard && (
                                 <span className="shrink-0 inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-[3px] rounded-full text-blue-600 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-400">
                                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="5" rx="0.6"/><rect x="12" y="8" width="3" height="9" rx="0.6"/><rect x="17" y="5" width="3" height="12" rx="0.6"/></svg>
-                                  대시보드
+                                  {ta('customField.dashboard')}
                                 </span>
                               )}
                               <div className="flex items-center gap-0.5 shrink-0 ml-0.5" onClick={e => e.stopPropagation()}>
@@ -2047,7 +2051,7 @@ export function AdminPage() {
                                   <select value={editField.type}
                                     onChange={e => setEditField(f => ({ ...f, type: e.target.value as CustomFieldType }))}
                                     className={inputCls + ' w-full pr-8 appearance-none'}>
-                                    {FIELD_TYPE_DEFS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                                    {FIELD_TYPE_DEFS.map(td => <option key={td.value} value={td.value}>{tad(`customField.types.${td.value}`)}</option>)}
                                   </select>
                                   <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-muted)]" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                                 </div>
@@ -2139,17 +2143,17 @@ export function AdminPage() {
                                   {editField.show_in_dashboard && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>}
                                 </span>
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="5" rx="0.6"/><rect x="12" y="8" width="3" height="9" rx="0.6"/><rect x="17" y="5" width="3" height="12" rx="0.6"/></svg>
-                                대시보드 통계 포함
+                                {ta('customField.dashboard')}
                               </button>
                             )}
                             <div className="flex gap-2 pt-1">
                               <button type="button" onClick={saveFieldEdit}
                                 className="inline-flex items-center justify-center h-[34px] px-4 bg-[var(--color-brand-primary)] text-white rounded-lg text-[13.5px] font-bold hover:bg-[var(--color-brand-primary-hover)] transition-colors">
-                                저장
+                                {t('save')}
                               </button>
                               <button type="button" onClick={() => setEditingFieldId(null)}
                                 className="inline-flex items-center justify-center h-[34px] px-4 bg-[var(--color-surface)] text-[var(--color-text-secondary)] border border-[var(--color-border-strong)] rounded-lg text-[13.5px] font-bold hover:bg-[var(--color-surface-secondary)] transition-colors">
-                                취소
+                                {t('cancel')}
                               </button>
                             </div>
                           </div>
@@ -2161,7 +2165,7 @@ export function AdminPage() {
 
                 {/* 자주 쓰는 항목 템플릿 */}
                 <div className="mt-4">
-                  <p className="text-[12px] font-bold text-[var(--color-text-secondary)] mb-2">자주 쓰는 항목</p>
+                  <p className="text-[12px] font-bold text-[var(--color-text-secondary)] mb-2">{ta('customField.frequentItems')}</p>
                   <div className="flex gap-2 flex-wrap">
                     {CUSTOM_FIELD_TEMPLATES.map(tpl => {
                       const added = customFields.some(f => f.label.trim() === tpl.field.label)
@@ -2181,7 +2185,7 @@ export function AdminPage() {
                 {/* 새 항목 구분선 */}
                 <div className="flex items-center gap-3 mt-6">
                   <div className="h-px flex-1 bg-[var(--color-border)]" />
-                  <span className="text-[11px] font-bold text-[var(--color-text-muted)] tracking-[0.4px] uppercase">새 항목</span>
+                  <span className="text-[11px] font-bold text-[var(--color-text-muted)] tracking-[0.4px] uppercase">{ta('customField.addField')}</span>
                   <div className="h-px flex-1 bg-[var(--color-border)]" />
                 </div>
 
@@ -2194,25 +2198,25 @@ export function AdminPage() {
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
                     </span>
                     <div>
-                      <p className="m-0 text-[15px] font-extrabold tracking-tight text-[var(--color-text-primary)]">새 필드 추가</p>
-                      <p className="m-0 mt-0.5 text-[12.5px] font-medium text-[var(--color-text-muted)]">스케줄 등록 팝업에 표시될 입력 항목을 만듭니다</p>
+                      <p className="m-0 text-[15px] font-extrabold tracking-tight text-[var(--color-text-primary)]">{ta('customField.addField')}</p>
+                      <p className="m-0 mt-0.5 text-[12.5px] font-medium text-[var(--color-text-muted)]">{ta('customField.preview')}</p>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2.5 items-end">
                     <div className="flex-1 min-w-[180px] flex flex-col gap-[7px]">
-                      <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">필드명 <span className="text-[var(--color-brand-primary)]">*</span></label>
+                      <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">{ta('customField.fieldName')} <span className="text-[var(--color-brand-primary)]">*</span></label>
                       <input type="text" required value={newFieldLabel} maxLength={50}
                         onChange={e => setNewFieldLabel(e.target.value)}
-                        placeholder="예: 성명, 회비, 동의 여부"
+                        placeholder={ta('customField.fieldName')}
                         className={inputCls + ' w-full'} />
                     </div>
                     <div className="flex-[0_0_132px] flex flex-col gap-[7px]">
-                      <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">타입</label>
+                      <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">{ta('customField.fieldType')}</label>
                       <div className="relative">
                         <select value={newFieldType}
                           onChange={e => { setNewFieldType(e.target.value as CustomFieldType); setNewFieldOptions([]); setNewFieldShowInDashboard(false) }}
                           className={inputCls + ' w-full pr-8 appearance-none font-semibold'}>
-                          {FIELD_TYPE_DEFS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                          {FIELD_TYPE_DEFS.map(td => <option key={td.value} value={td.value}>{tad(`customField.types.${td.value}`)}</option>)}
                         </select>
                         <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-muted)]" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                       </div>
@@ -2225,13 +2229,13 @@ export function AdminPage() {
                           {newFieldRequired && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>}
                         </span>
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 17l-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/></svg>
-                        필수
+                        {t('required')}
                       </button>
                     )}
                     <button type="submit" disabled={!newFieldLabel.trim()}
                       className="inline-flex items-center gap-1.5 h-[34px] px-4 bg-[var(--color-brand-primary)] text-white rounded-lg text-[13.5px] font-bold hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-                      추가
+                      {t('add')}
                     </button>
                   </div>
                   {newFieldType === 'number' && (
