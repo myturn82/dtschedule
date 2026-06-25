@@ -785,7 +785,7 @@ export function SlotEditModal({
                       <div className="flex flex-wrap gap-1.5 mt-2.5 pt-2.5 border-t border-dashed border-[var(--color-border-strong)]">
                         {detailChips.map(c => (
                           <span key={c.key} className="text-[11.5px] font-semibold text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] px-2 py-1 rounded-lg inline-flex gap-1 break-words min-w-0 max-w-full">
-                            <b className="font-extrabold text-[var(--color-text-muted)] shrink-0">{c.label}</b><span className="break-words min-w-0">{c.value}</span>
+                            <b className="font-extrabold text-[var(--color-text-muted)] shrink-0">{c.label}</b><span className="break-words min-w-0 whitespace-pre-wrap">{c.value}</span>
                           </span>
                         ))}
                         {imageChips.map(ic => (
