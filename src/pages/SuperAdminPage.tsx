@@ -23,7 +23,7 @@ import '../styles/account-hub.css'
 export function SuperAdminPage() {
   const { t } = useTranslation('common')
   const { t: ts } = useTranslation('superadmin')
-  const { profile, loading: authLoading } = useAuth()
+  const { profile, loading: authLoading, signOut } = useAuth()
   const { setTenant } = useTenant()
   const navigate = useNavigate()
 
@@ -117,6 +117,9 @@ export function SuperAdminPage() {
   const [ownerEmails, setOwnerEmails] = useState<Record<string, string>>({})
   const [phoneSaving, setPhoneSaving] = useState(false)
 
+  // Reminder sending state
+  const [reminderSending, setReminderSending] = useState(false)
+
   async function loadOwnerEmails(customerList: Customer[]) {
     const ownerIds = customerList.map(c => c.owner_user_id).filter(Boolean) as string[]
     if (ownerIds.length === 0) return
@@ -165,6 +168,23 @@ export function SuperAdminPage() {
       setMessage('전화번호가 수정됐습니다.')
     }
     setPhoneSaving(false)
+  }
+
+  async function sendRemindersManually() {
+    setReminderSending(true)
+    try {
+      const { data, error } = await supabase.functions.invoke('send-reminders', {
+        body: { force: true },
+      })
+      if (error) {
+        setMessage(`오류: ${error.message}`)
+      } else {
+        const result = data as { sent: number; failed: number; orgs: Array<{ org: string; sent: number; failed: number }> }
+        setMessage(`D-1 알림 발송 완료 — 총 ${result.sent}건 성공, ${result.failed}건 실패`)
+      }
+    } finally {
+      setReminderSending(false)
+    }
   }
 
   async function fetchTenants() {
@@ -740,10 +760,19 @@ export function SuperAdminPage() {
             </span>
             {ts('title')}
           </h1>
-          <button onClick={() => navigate('/')} className="ml-auto inline-flex items-center gap-[6px] whitespace-nowrap text-[13.5px] font-semibold text-[var(--color-text-muted)] px-3 py-2 rounded-[10px] hover:bg-[var(--color-surface)] hover:text-[var(--color-text-primary)] transition-colors">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-            {t('back')}
-          </button>
+          <div className="ml-auto flex items-center gap-2">
+            <button onClick={() => navigate('/')} className="inline-flex items-center gap-[6px] whitespace-nowrap text-[13.5px] font-semibold text-[var(--color-text-muted)] px-3 py-2 rounded-[10px] hover:bg-[var(--color-surface)] hover:text-[var(--color-text-primary)] transition-colors">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+              조직선택
+            </button>
+            <button
+              onClick={async () => { await signOut(); navigate('/') }}
+              className="inline-flex items-center gap-[6px] whitespace-nowrap text-[13.5px] font-semibold text-[var(--color-text-muted)] px-3 py-2 rounded-[10px] hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-colors"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              로그아웃
+            </button>
+          </div>
         </div>
 
         {message && (
@@ -753,6 +782,22 @@ export function SuperAdminPage() {
         )}
 
         <PlanLimitsPanel />
+
+        {/* D-1 알림 수동 발송 */}
+        <div className="flex items-center justify-between p-4 mb-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl">
+          <div>
+            <p className="text-sm font-semibold text-[var(--color-text-primary)]">D-1 배정 알림 수동 발송</p>
+            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">활성화된 조직의 내일 배정 알림을 즉시 발송합니다</p>
+          </div>
+          <button
+            onClick={sendRemindersManually}
+            disabled={reminderSending}
+            className="px-4 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition-colors whitespace-nowrap"
+            style={{ background: 'var(--color-brand-primary)' }}
+          >
+            {reminderSending ? '발송 중...' : '지금 발송'}
+          </button>
+        </div>
 
         {/* ── 탭 네비게이션 ── */}
         <div className="flex gap-1 mb-4 p-1 rounded-xl bg-[var(--color-surface-secondary)] w-fit">
