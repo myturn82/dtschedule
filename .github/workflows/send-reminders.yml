@@ -1,0 +1,19 @@
+name: Send D-1 Reminders
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # 매시 정각 UTC 실행 (Asia/Seoul = UTC+9, 예: UTC 09:00 = 서울 18:00)
+  workflow_dispatch:       # 수동 실행 허용
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Edge Function (cron mode)
+        run: |
+          curl -s -X POST \
+            "${{ secrets.SUPABASE_URL }}/functions/v1/send-reminders" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{}'
+        timeout-minutes: 2
