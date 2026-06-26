@@ -197,13 +197,12 @@ Deno.serve(async (req) => {
       const url = `/schedule?date=${dateStr}`
 
       if (dry_run) {
-        // dry_run: 실제 발송 없이 카운트만
-        orgSent++
+        // dry_run: 실제 발송 없이 대상만 조회
         continue
       }
 
       // 1. 인앱 알림 INSERT
-      await supabase.from('notifications').insert({
+      const { error: insertErr } = await supabase.from('notifications').insert({
         tenant_id: setting.tenant_id,
         user_id: userId,
         title,
@@ -211,6 +210,10 @@ Deno.serve(async (req) => {
         type: 'd1_reminder',
         metadata: { date: dateStr, slot: slotLabel },
       })
+      if (insertErr) {
+        orgFailed++
+        continue
+      }
 
       // 2. 웹 푸시 발송 (VAPID 키가 설정된 경우에만)
       if (webPushEnabled) {
