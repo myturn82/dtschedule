@@ -6,49 +6,103 @@ interface ScheduleBackgroundProps {
   children?: React.ReactNode
 }
 
-const DAY_LABELS = ['MON','TUE','WED','THU','FRI','SAT','SUN']
-const TIME_TICKS = ['09','10','11','12','·','13','14','15','16','17','18']
+const DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일']
+const TIME_TICKS = ['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00']
 const MONTH_NAMES = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
-
-function getWeekNumber(d: Date): number {
-  const dt = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
-  const day = dt.getUTCDay() || 7
-  dt.setUTCDate(dt.getUTCDate() + 4 - day)
-  const yearStart = new Date(Date.UTC(dt.getUTCFullYear(), 0, 1))
-  return Math.ceil((((dt.getTime() - yearStart.getTime()) / 86400000) + 1) / 7)
-}
 
 export function ScheduleBackground({ topNavSlot, children }: ScheduleBackgroundProps) {
   const assignGridRef = useRef<HTMLDivElement>(null)
 
   const now = new Date()
-  const weekNum = getWeekNumber(now)
-  const todayDow = now.getDay()
   const monthStr = String(now.getMonth() + 1).padStart(2, '0')
   const yearNum = now.getFullYear()
   const monthName = MONTH_NAMES[now.getMonth()]
+
+  // 이번 주 월~일 날짜 계산
+  const monday = new Date(now)
+  monday.setDate(now.getDate() - ((now.getDay() + 6) % 7))
+  const weekDays = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday)
+    d.setDate(monday.getDate() + i)
+    return d
+  })
 
   const runAssignAnimation = useCallback(() => {
     const grid = assignGridRef.current
     if (!grid) return () => {}
 
     const SHIFTS = [
-      { col:0,row:0, span:2,name:'서용혁',cls:'sun' },{ col:0,row:2, span:3,name:'민지우',cls:'plus' },
-      { col:0,row:5, span:1,name:'·',     cls:'break'},{ col:0,row:6, span:2,name:'이은서',cls:'sat' },
-      { col:0,row:8, span:3,name:'박지훈',cls:'moon' },{ col:1,row:0, span:3,name:'정민석',cls:'plus' },
-      { col:1,row:3, span:2,name:'김지움',cls:'sun' }, { col:1,row:5, span:1,name:'·',     cls:'break'},
-      { col:1,row:6, span:3,name:'한소윤',cls:'sat' }, { col:1,row:9, span:2,name:'조서윤',cls:'moon' },
-      { col:2,row:0, span:2,name:'이하랜',cls:'sat' }, { col:2,row:2, span:2,name:'박지훈',cls:'moon' },
-      { col:2,row:4, span:1,name:'서용혁',cls:'sun' }, { col:2,row:5, span:1,name:'·',     cls:'break'},
-      { col:2,row:6, span:2,name:'민지우',cls:'plus' },{ col:2,row:8, span:3,name:'이은서',cls:'sat' },
-      { col:3,row:0, span:3,name:'박지훈',cls:'moon' },{ col:3,row:3, span:2,name:'조서윤',cls:'sun' },
-      { col:3,row:5, span:1,name:'·',     cls:'break'},{ col:3,row:6, span:3,name:'정민석',cls:'plus' },
-      { col:3,row:9, span:2,name:'김지움',cls:'sat' }, { col:4,row:0, span:2,name:'한소윤',cls:'sat' },
-      { col:4,row:2, span:3,name:'민지우',cls:'plus' },{ col:4,row:5, span:1,name:'·',     cls:'break'},
-      { col:4,row:6, span:2,name:'서용혁',cls:'sun' }, { col:4,row:8, span:3,name:'박지훈',cls:'moon' },
-      { col:5,row:1, span:2,name:'이하랜',cls:'sat' }, { col:5,row:4, span:2,name:'조서윤',cls:'sun' },
-      { col:5,row:7, span:2,name:'김지움',cls:'plus' },{ col:6,row:2, span:3,name:'한소윤',cls:'moon' },
-      { col:6,row:6, span:2,name:'이은서',cls:'sat' },
+      // col 0 — 월
+      { col:0,row:0,  span:1, name:'서용혁', cls:'sun'  },
+      { col:0,row:1,  span:1, name:'민지우', cls:'plus' },
+      { col:0,row:2,  span:1, name:'이하랜', cls:'sat'  },
+      { col:0,row:3,  span:1, name:'박지훈', cls:'moon' },
+      { col:0,row:4,  span:1, name:'조서윤', cls:'sun'  },
+      { col:0,row:5,  span:1, name:'·',      cls:'break'},
+      { col:0,row:6,  span:1, name:'이은서', cls:'sat'  },
+      { col:0,row:7,  span:1, name:'한소윤', cls:'sat'  },
+      { col:0,row:8,  span:1, name:'정민석', cls:'plus' },
+      { col:0,row:9,  span:1, name:'김지움', cls:'moon' },
+      { col:0,row:10, span:1, name:'박지훈', cls:'moon' },
+      // col 1 — 화
+      { col:1,row:0,  span:1, name:'정민석', cls:'plus' },
+      { col:1,row:1,  span:1, name:'서용혁', cls:'sun'  },
+      { col:1,row:2,  span:1, name:'이은서', cls:'sat'  },
+      { col:1,row:3,  span:1, name:'한소윤', cls:'sat'  },
+      { col:1,row:4,  span:1, name:'민지우', cls:'plus' },
+      { col:1,row:5,  span:1, name:'·',      cls:'break'},
+      { col:1,row:6,  span:1, name:'조서윤', cls:'moon' },
+      { col:1,row:7,  span:1, name:'이하랜', cls:'sat'  },
+      { col:1,row:8,  span:1, name:'박지훈', cls:'moon' },
+      { col:1,row:9,  span:1, name:'서용혁', cls:'sun'  },
+      { col:1,row:10, span:1, name:'김지움', cls:'sun'  },
+      // col 2 — 수
+      { col:2,row:0,  span:1, name:'이하랜', cls:'sat'  },
+      { col:2,row:1,  span:1, name:'박지훈', cls:'moon' },
+      { col:2,row:2,  span:1, name:'서용혁', cls:'sun'  },
+      { col:2,row:3,  span:1, name:'민지우', cls:'plus' },
+      { col:2,row:4,  span:1, name:'이은서', cls:'sat'  },
+      { col:2,row:5,  span:1, name:'·',      cls:'break'},
+      { col:2,row:6,  span:1, name:'조서윤', cls:'moon' },
+      { col:2,row:7,  span:1, name:'정민석', cls:'plus' },
+      { col:2,row:8,  span:1, name:'서용혁', cls:'sun'  },
+      { col:2,row:9,  span:1, name:'한소윤', cls:'sat'  },
+      { col:2,row:10, span:1, name:'이하랜', cls:'sat'  },
+      // col 3 — 목
+      { col:3,row:0,  span:1, name:'박지훈', cls:'moon' },
+      { col:3,row:1,  span:1, name:'조서윤', cls:'sun'  },
+      { col:3,row:2,  span:1, name:'한소윤', cls:'moon' },
+      { col:3,row:3,  span:1, name:'이은서', cls:'sat'  },
+      { col:3,row:4,  span:1, name:'정민석', cls:'plus' },
+      { col:3,row:5,  span:1, name:'·',      cls:'break'},
+      { col:3,row:6,  span:1, name:'서용혁', cls:'sun'  },
+      { col:3,row:7,  span:1, name:'민지우', cls:'plus' },
+      { col:3,row:8,  span:1, name:'이하랜', cls:'sat'  },
+      { col:3,row:9,  span:1, name:'김지움', cls:'sun'  },
+      { col:3,row:10, span:1, name:'박지훈', cls:'moon' },
+      // col 4 — 금
+      { col:4,row:0,  span:1, name:'한소윤', cls:'sat'  },
+      { col:4,row:1,  span:1, name:'김지움', cls:'sun'  },
+      { col:4,row:2,  span:1, name:'민지우', cls:'plus' },
+      { col:4,row:3,  span:1, name:'서용혁', cls:'sun'  },
+      { col:4,row:4,  span:1, name:'이하랜', cls:'sat'  },
+      { col:4,row:5,  span:1, name:'·',      cls:'break'},
+      { col:4,row:6,  span:1, name:'박지훈', cls:'moon' },
+      { col:4,row:7,  span:1, name:'이은서', cls:'sat'  },
+      { col:4,row:8,  span:1, name:'조서윤', cls:'moon' },
+      { col:4,row:9,  span:1, name:'정민석', cls:'plus' },
+      { col:4,row:10, span:1, name:'민지우', cls:'plus' },
+      // col 5 — 토 (partial)
+      { col:5,row:0,  span:1, name:'서용혁', cls:'sun'  },
+      { col:5,row:2,  span:1, name:'이하랜', cls:'sat'  },
+      { col:5,row:4,  span:1, name:'조서윤', cls:'sun'  },
+      { col:5,row:7,  span:1, name:'김지움', cls:'plus' },
+      { col:5,row:9,  span:1, name:'한소윤', cls:'moon' },
+      // col 6 — 일 (partial)
+      { col:6,row:1,  span:1, name:'정민석', cls:'plus' },
+      { col:6,row:3,  span:1, name:'이하랜', cls:'sat'  },
+      { col:6,row:6,  span:1, name:'이은서', cls:'sat'  },
+      { col:6,row:8,  span:1, name:'민지우', cls:'plus' },
     ]
 
     const nodes = SHIFTS.map(s => {
@@ -74,7 +128,7 @@ export function ScheduleBackground({ topNavSlot, children }: ScheduleBackgroundP
       order.forEach((idx,i) => {
         timers.push(setTimeout(()=>{
           nodes[idx].classList.add('visible')
-        },i*95))
+        },i*50))
       })
       const done = order.length*95+400
       timers.push(setTimeout(()=>{
@@ -103,19 +157,21 @@ export function ScheduleBackground({ topNavSlot, children }: ScheduleBackgroundP
           height: 100dvh;
           overflow: hidden;
           display: grid;
-          grid-template-rows: var(--bh,52px) var(--dh,32px) 1fr auto;
-          grid-template-columns: var(--tw,48px) 1fr;
+          grid-template-rows: var(--bh,52px) var(--dh,44px) 1fr auto;
+          grid-template-columns: var(--tw,56px) 1fr;
         }
         /* background layers */
         .lmp-bg-grid {
           position: absolute;
-          top: calc(var(--bh,52px) + var(--dh,32px));
-          left: var(--tw,48px); right: 0; bottom: 0;
+          top: calc(var(--bh,52px) + var(--dh,44px));
+          left: var(--tw,56px); right: 0; bottom: 0;
           z-index: 0; pointer-events: none;
           background-image:
             linear-gradient(to right, rgba(20,23,28,0.07) 1px, transparent 1px),
             linear-gradient(to bottom, rgba(20,23,28,0.07) 1px, transparent 1px);
-          background-size: 56px 56px;
+          background-size:
+            calc((100vw - var(--tw,56px)) / 7)
+            calc((100dvh - var(--bh,52px) - var(--dh,44px) - 36px) / 11);
           background-position: -1px -1px;
           mask-image: linear-gradient(to bottom,rgba(0,0,0,0.9) 0%,rgba(0,0,0,0.5) 65%,rgba(0,0,0,0.15) 100%);
           -webkit-mask-image: linear-gradient(to bottom,rgba(0,0,0,0.9) 0%,rgba(0,0,0,0.5) 65%,rgba(0,0,0,0.15) 100%);
@@ -130,15 +186,15 @@ export function ScheduleBackground({ topNavSlot, children }: ScheduleBackgroundP
         .lmp-bg-digit .lbl { display:block; font-family:"Pretendard Variable",Pretendard,sans-serif; font-size:22px; color:rgba(20,23,28,0.18); letter-spacing:4px; font-weight:600; -webkit-text-stroke:0; margin-top:12px; margin-left:20px; }
         .lmp-bg-now {
           position: absolute;
-          left: var(--tw,48px); right: 0; height: 1px;
+          left: var(--tw,56px); right: 0; height: 1px;
           background: oklch(0.66 0.16 28); z-index: 1; pointer-events: none; opacity: 0.7;
           animation: lmpNow 18s ease-in-out infinite alternate;
         }
         .lmp-bg-now::before { content:""; position:absolute; left:-4px; top:50%; transform:translateY(-50%); width:8px; height:8px; background:oklch(0.66 0.16 28); border-radius:50%; box-shadow:0 0 0 3px #F4F1EA; }
         .lmp-bg-now::after { content:"NOW"; position:absolute; right:18px; top:50%; transform:translateY(-50%); background:#F4F1EA; padding:1px 7px; font-family:"JetBrains Mono",monospace; font-size:9px; font-weight:700; letter-spacing:1.2px; color:oklch(0.66 0.16 28); border-radius:3px; border:1px solid oklch(0.66 0.16 28); }
         @keyframes lmpNow {
-          0%   { top: calc(var(--bh,52px) + var(--dh,32px) + 28%); }
-          100% { top: calc(var(--bh,52px) + var(--dh,32px) + 55%); }
+          0%   { top: calc(var(--bh,52px) + var(--dh,44px) + 28%); }
+          100% { top: calc(var(--bh,52px) + var(--dh,44px) + 55%); }
         }
         /* brand bar */
         .lmp-brand-bar {
@@ -159,20 +215,29 @@ export function ScheduleBackground({ topNavSlot, children }: ScheduleBackgroundP
         /* day strip */
         .lmp-day-strip {
           grid-row:2; grid-column:1/-1;
-          display:grid; grid-template-columns:var(--tw,48px) repeat(7,1fr);
+          display:grid; grid-template-columns:var(--tw,56px) repeat(7,1fr);
           background:#FBF9F4; border-bottom:1px solid rgba(20,23,28,0.07); z-index:2; position:relative;
         }
-        .lmp-day-corner { border-right:1px solid rgba(20,23,28,0.07); display:flex; align-items:center; justify-content:center; font-family:"JetBrains Mono",monospace; font-size:9px; font-weight:600; color:#B8BBC2; letter-spacing:0.6px; }
-        .lmp-day-cell { display:flex; align-items:center; justify-content:center; font-family:"JetBrains Mono",monospace; font-size:10px; font-weight:600; letter-spacing:0.8px; color:#8A8F99; border-right:1px solid rgba(20,23,28,0.07); }
+        .lmp-day-corner {
+          border-right:1px solid rgba(20,23,28,0.07);
+          display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+        }
+        .lmp-corner-year { font-family:"JetBrains Mono",monospace; font-size:7px; font-weight:500; color:#C8CDD4; line-height:1; }
+        .lmp-corner-month { font-family:"JetBrains Mono",monospace; font-size:9px; font-weight:700; color:#A0A5AF; line-height:1; }
+        .lmp-day-cell {
+          display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+          color:#8A8F99; border-right:1px solid rgba(20,23,28,0.07);
+        }
         .lmp-day-cell:last-child { border-right:0; }
+        .lmp-day-name { font-size:10px; font-weight:600; line-height:1; }
+        .lmp-day-num  { font-size:13px; font-weight:700; line-height:1; font-family:"JetBrains Mono",monospace; }
         .lmp-day-cell.sat { color:oklch(0.55 0.13 240); }
         .lmp-day-cell.sun { color:oklch(0.55 0.16 25); }
         .lmp-day-cell.today { background:oklch(0.66 0.16 28); color:white; }
         /* time gutter */
         .lmp-time-gutter { grid-row:3; grid-column:1; border-right:1px solid rgba(20,23,28,0.07); background:#FBF9F4; display:flex; flex-direction:column; z-index:2; position:relative; }
-        .lmp-tick { flex:1; display:flex; align-items:center; justify-content:center; font-family:"JetBrains Mono",monospace; font-size:10px; font-weight:500; color:#8A8F99; border-bottom:1px dashed rgba(20,23,28,0.07); }
+        .lmp-tick { flex:1; display:flex; align-items:center; justify-content:center; font-family:"JetBrains Mono",monospace; font-size:8.5px; font-weight:500; color:#8A8F99; border-bottom:1px dashed rgba(20,23,28,0.07); }
         .lmp-tick:last-child { border-bottom:0; }
-        .lmp-tick.lunch { color:#B8BBC2; font-style:italic; }
         /* stage */
         .lmp-stage {
           grid-row:3; grid-column:2; z-index:2; position:relative;
@@ -189,12 +254,12 @@ export function ScheduleBackground({ topNavSlot, children }: ScheduleBackgroundP
         .lmp-foot-dot { width:3px; height:3px; border-radius:50%; background:#B8BBC2; flex-shrink:0; }
         /* ─── responsive ─── */
         @media (max-width: 900px) {
-          .lmp { --bh:48px; --tw:40px; --dh:30px; }
+          .lmp { --bh:48px; --tw:48px; --dh:40px; }
           .lmp-bg-digit { font-size:280px; bottom:-80px; right:-30px; }
           .lmp-bg-digit .lbl { font-size:18px; margin-top:8px; }
         }
         @media (max-width: 720px) {
-          .lmp { --bh:46px; --tw:36px; --dh:28px; }
+          .lmp { --bh:46px; --tw:44px; --dh:36px; }
           .lmp-brand-pill { display:none; }
           .lmp-nav-hint { display:none; }
           .lmp-stage { padding:16px 18px; }
@@ -202,7 +267,7 @@ export function ScheduleBackground({ topNavSlot, children }: ScheduleBackgroundP
           .lmp-bg-digit .lbl { font-size:16px; margin-top:6px; }
         }
         @media (max-width: 540px) {
-          .lmp { --bh:44px; --tw:0px; --dh:28px; grid-template-columns:1fr; }
+          .lmp { --bh:44px; --tw:0px; --dh:36px; grid-template-columns:1fr; }
           .lmp-time-gutter { display:none; }
           .lmp-bg-grid { left:0; }
           .lmp-bg-now { left:0; }
@@ -218,17 +283,19 @@ export function ScheduleBackground({ topNavSlot, children }: ScheduleBackgroundP
         @media (max-height: 620px) and (min-width: 541px) {
           .lmp-stage { padding:10px 20px; }
         }
-        /* assign animation grid */
+        /* assign animation grid — 요일·시간 셀에 정확히 정렬 */
         .lmp-assign-grid {
           position:absolute;
-          top:calc(var(--bh,52px) + var(--dh,32px) + 4px);
-          left:calc(var(--tw,48px) + 4px);
-          right:4px; bottom:40px;
+          top:calc(var(--bh,52px) + var(--dh,44px));
+          left:var(--tw,56px);
+          right:0;
+          bottom:36px;
           z-index:1; pointer-events:none;
           display:grid;
           grid-template-columns:repeat(7,1fr);
           grid-template-rows:repeat(11,1fr);
-          gap:3px;
+          gap:2px;
+          padding:2px;
         }
         .lmp-chip {
           border-radius:4px; font-size:10.5px; font-weight:600;
@@ -247,7 +314,7 @@ export function ScheduleBackground({ topNavSlot, children }: ScheduleBackgroundP
         .lmp-chip.plus  { background:oklch(0.93 0.05 20);  color:oklch(0.42 0.12 20); }
         .lmp-chip.moon  { background:oklch(0.93 0.05 290); color:oklch(0.40 0.11 290); }
         .lmp-chip.break { background:oklch(0.93 0.05 230); color:oklch(0.42 0.10 240); }
-        @media (max-width:540px) { .lmp-assign-grid { opacity:0.55; } }
+        @media (max-width:540px) { .lmp-assign-grid { opacity:0.55; left:0; } }
       `}</style>
 
       {/* background layers */}
@@ -273,11 +340,18 @@ export function ScheduleBackground({ topNavSlot, children }: ScheduleBackgroundP
 
       {/* Row 2 — day strip */}
       <div className="lmp-day-strip" aria-hidden="true">
-        <div className="lmp-day-corner">W{String(weekNum).padStart(2,'0')}</div>
+        <div className="lmp-day-corner">
+          <span className="lmp-corner-year">{yearNum}</span>
+          <span className="lmp-corner-month">{monthStr}월</span>
+        </div>
         {DAY_LABELS.map((d, i) => {
-          const isToday = (i + 1) % 7 === todayDow
+          const date = weekDays[i]
+          const isToday = date.getDate() === now.getDate() && date.getMonth() === now.getMonth()
           return (
-            <div key={d} className={`lmp-day-cell${i===5?' sat':i===6?' sun':''}${isToday?' today':''}`}>{d}</div>
+            <div key={d} className={`lmp-day-cell${i===5?' sat':i===6?' sun':''}${isToday?' today':''}`}>
+              <span className="lmp-day-name">{d}</span>
+              <span className="lmp-day-num">{date.getDate()}</span>
+            </div>
           )
         })}
       </div>
@@ -285,7 +359,7 @@ export function ScheduleBackground({ topNavSlot, children }: ScheduleBackgroundP
       {/* Col 1 — time gutter */}
       <aside className="lmp-time-gutter" aria-hidden="true">
         {TIME_TICKS.map((t, i) => (
-          <div key={i} className={`lmp-tick${t==='·'?' lunch':''}`}>{t}</div>
+          <div key={i} className="lmp-tick">{t}</div>
         ))}
       </aside>
 
