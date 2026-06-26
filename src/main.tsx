@@ -15,3 +15,9 @@ if (import.meta.env.DEV && 'serviceWorker' in navigator) {
 }
 
 createRoot(document.getElementById('root')!).render(<App />)
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {
+    // 서비스 워커 등록 실패는 앱 동작에 영향 없음
+  })
+}
