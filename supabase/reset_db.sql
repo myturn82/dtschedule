@@ -848,6 +848,8 @@ ALTER PUBLICATION supabase_realtime ADD TABLE slot_highlights;
 ALTER TABLE slot_highlights REPLICA IDENTITY FULL;
 ALTER PUBLICATION supabase_realtime ADD TABLE date_overrides;
 ALTER TABLE date_overrides REPLICA IDENTITY FULL;
+ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
+ALTER TABLE notifications REPLICA IDENTITY FULL;
 
 
 -- ────────────────────────────────────────────────────────────
