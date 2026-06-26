@@ -7,6 +7,9 @@ import { DashboardNav } from './DashboardNav'
 import { ProfileModal } from './auth/ProfileModal'
 import { JoinOrgModal } from './modals/JoinOrgModal'
 import { StartServiceModal } from './modals/StartServiceModal'
+import { useNotifications } from '../hooks/useNotifications'
+import { usePushSubscription } from '../hooks/usePushSubscription'
+import { NotificationPanel } from './notifications/NotificationPanel'
 
 interface AppHeaderProps {
   funcMenuItems?: (closeMenu: () => void) => React.ReactNode
@@ -29,6 +32,9 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
   const [showStartService, setShowStartService] = useState(false)
   const [showWithdrawModal, setShowWithdrawModal] = useState(false)
   const [joinSuccessMsg, setJoinSuccessMsg] = useState<string | null>(null)
+  const [showNotifications, setShowNotifications] = useState(false)
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications()
+  const { isSubscribed, isLoading: pushLoading, isSupported: pushSupported, subscribe, unsubscribe } = usePushSubscription()
 
   const feedbackUrl = import.meta.env.VITE_FEEDBACK_URL as string | undefined
   const isPrivileged = profile?.is_super_admin || tenantRole === 'admin'
@@ -63,9 +69,36 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
           </div>
 
 
-          {/* Right: rightSlot + feedback + name/badge + avatar */}
+          {/* Right: rightSlot + bell + feedback + name/badge + avatar */}
           <div className="flex items-center gap-1.5 shrink-0">
             {rightSlot}
+            {profile && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowNotifications(v => !v)}
+                  aria-label="알림"
+                  className="relative w-8 h-8 flex items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-all shrink-0"
+                >
+                  <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10 2a6 6 0 0 1 6 6v3l1.5 2.5H2.5L4 11V8a6 6 0 0 1 6-6z"/>
+                    <path d="M8 16a2 2 0 0 0 4 0"/>
+                  </svg>
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold leading-none select-none">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+                {showNotifications && (
+                  <NotificationPanel
+                    notifications={notifications}
+                    onMarkAsRead={markAsRead}
+                    onMarkAllAsRead={markAllAsRead}
+                    onClose={() => setShowNotifications(false)}
+                  />
+                )}
+              </div>
+            )}
             {feedbackUrl && profile && (
               <a
                 href={feedbackUrl}
@@ -201,6 +234,21 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
                     도움말
                   </span>
                 </button>
+                {pushSupported && (
+                  <button
+                    onClick={async () => { isSubscribed ? await unsubscribe() : await subscribe(); setShowUserMenu(false) }}
+                    disabled={pushLoading}
+                    className={menuBtn}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                      </svg>
+                      {pushLoading ? '처리 중...' : isSubscribed ? '푸시 알림 끄기' : '푸시 알림 켜기'}
+                    </span>
+                  </button>
+                )}
                 {sep}
                 <button onClick={() => { signOut(); setShowUserMenu(false) }} className={menuBtn}>
                   <span className="flex items-center gap-2.5">
