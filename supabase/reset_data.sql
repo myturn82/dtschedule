@@ -21,6 +21,9 @@ DELETE FROM auth.users;
 -- ────────────────────────────────────────────────────────────
 
 TRUNCATE TABLE
+  push_subscriptions,
+  notifications,
+  notification_settings,
   slot_highlights,
   assignment_snapshots,
   date_overrides,
