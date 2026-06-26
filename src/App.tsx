@@ -18,6 +18,7 @@ import { ConsentPage }  from './pages/ConsentPage'
 import { AuthPage }     from './pages/AuthPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { SetupWizardPage } from './pages/SetupWizardPage'
+import { HelpPage } from './pages/HelpPage'
 import { useDarkMode } from './hooks/useDarkMode'
 import { InstallBanner } from './components/InstallBanner'
 import { DevFileLabelDisplay } from './components/DevFileLabel'
@@ -124,6 +125,7 @@ function AppRoutes() {
         <Navigate to="/schedule" replace />
       } />
       <Route path="/schedule" element={<SchedulePage />} />
+      <Route path="/help" element={<HelpPage />} />
       <Route path="/dashboard" element={
         (tenantRole === 'admin' || profile?.is_super_admin || isCustomerAdmin) &&
         (profile?.is_super_admin || isCustomerAdmin || tenantPlan === 'business')
