@@ -2054,23 +2054,25 @@ export function AdminPage() {
                         {/* 읽기 상태 */}
                         {!isEd && (
                           <>
-                            <div className="flex items-center gap-2">
-                              <span className={`inline-flex items-center gap-1 rounded-full text-[11.5px] font-bold px-2.5 py-1 shrink-0 ${td?.badgeCls ?? 'bg-slate-100 text-slate-600'}`}>
-                                <CfTypeIcon type={field.type} size={12} />
-                                {tad(`customField.types.${field.type}`) || field.type}
-                              </span>
-                              {idx === 0 && adminIsFreeform && (
-                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] font-semibold shrink-0">{t('name')}</span>
-                              )}
-                              <span className="text-[15px] font-bold text-[var(--color-text-primary)] tracking-tight break-words flex-1 min-w-0">{field.label}</span>
-                              {field.required && <span className="shrink-0 text-[11px] font-bold px-2.5 py-[3px] rounded-full text-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10">{t('required')}</span>}
-                              {field.show_in_dashboard && (
-                                <span className="shrink-0 inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-[3px] rounded-full text-blue-600 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-400">
-                                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="5" rx="0.6"/><rect x="12" y="8" width="3" height="9" rx="0.6"/><rect x="17" y="5" width="3" height="12" rx="0.6"/></svg>
-                                  {ta('customField.dashboard')}
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2">
+                              <div className="flex items-center gap-2 flex-1 min-w-0">
+                                <span className={`inline-flex items-center gap-1 rounded-full text-[11.5px] font-bold px-2.5 py-1 shrink-0 ${td?.badgeCls ?? 'bg-slate-100 text-slate-600'}`}>
+                                  <CfTypeIcon type={field.type} size={12} />
+                                  {tad(`customField.types.${field.type}`) || field.type}
                                 </span>
-                              )}
-                              <div className="flex items-center gap-0.5 shrink-0 ml-0.5" onClick={e => e.stopPropagation()}>
+                                {idx === 0 && adminIsFreeform && (
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] font-semibold shrink-0">{t('name')}</span>
+                                )}
+                                <span className="text-[15px] font-bold text-[var(--color-text-primary)] tracking-tight truncate flex-1 min-w-0">{field.label}</span>
+                                {field.required && <span className="shrink-0 text-[11px] font-bold px-2.5 py-[3px] rounded-full text-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10">{t('required')}</span>}
+                                {field.show_in_dashboard && (
+                                  <span className="shrink-0 inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-[3px] rounded-full text-blue-600 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-400">
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="5" rx="0.6"/><rect x="12" y="8" width="3" height="9" rx="0.6"/><rect x="17" y="5" width="3" height="12" rx="0.6"/></svg>
+                                    {ta('customField.dashboard')}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-0.5 shrink-0 justify-end sm:ml-0.5" onClick={e => e.stopPropagation()}>
                                 <button type="button" title="위로" disabled={idx === 0} onClick={() => moveField(field.id, -1)}
                                   className="w-[30px] h-[30px] rounded-lg flex items-center justify-center text-[var(--color-text-muted)] hover:bg-[var(--color-surface-secondary)] hover:text-[var(--color-text-primary)] disabled:opacity-30 transition-colors">
                                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
