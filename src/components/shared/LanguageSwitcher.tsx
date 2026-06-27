@@ -17,6 +17,7 @@ export function LanguageSwitcher({ variant = 'compact' }: Props) {
 
   function changeLang(code: SupportedLanguage) {
     i18n.changeLanguage(code)
+    localStorage.setItem('dtschedule-lang', code)
     setOpen(false)
   }
 
