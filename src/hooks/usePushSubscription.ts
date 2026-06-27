@@ -5,12 +5,16 @@ import { useTenant } from '../contexts/TenantContext'
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined
 
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
+function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   const cleaned = base64String.trim()
   const padding = '='.repeat((4 - (cleaned.length % 4)) % 4)
   const base64 = (cleaned + padding).replace(/-/g, '+').replace(/_/g, '/')
   const rawData = window.atob(base64)
-  return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)))
+  const result = new Uint8Array(rawData.length)
+  for (let i = 0; i < rawData.length; i++) {
+    result[i] = rawData.charCodeAt(i)
+  }
+  return result
 }
 
 export function usePushSubscription() {
