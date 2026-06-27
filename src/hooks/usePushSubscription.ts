@@ -36,17 +36,21 @@ export function usePushSubscription() {
   }, [profile?.id, isSupported])
 
   async function subscribe() {
+    console.log('[Push] subscribe() called', { profileId: profile?.id, tenantId: tenant?.id, vapid: !!VAPID_PUBLIC_KEY, supported: isSupported, isSubscribed })
     if (!profile?.id || !tenant?.id || !VAPID_PUBLIC_KEY || !isSupported) {
-      console.warn('Push subscribe blocked:', { profileId: !!profile?.id, tenantId: !!tenant?.id, vapid: !!VAPID_PUBLIC_KEY, supported: isSupported })
+      console.warn('[Push] subscribe blocked:', { profileId: !!profile?.id, tenantId: !!tenant?.id, vapid: !!VAPID_PUBLIC_KEY, supported: isSupported })
       return
     }
     setIsLoading(true)
     try {
+      console.log('[Push] waiting for serviceWorker.ready...')
       const reg = await navigator.serviceWorker.ready
+      console.log('[Push] SW ready, subscribing pushManager...')
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
       })
+      console.log('[Push] pushManager.subscribe() success, endpoint:', sub.endpoint.slice(0, 40))
       const keyBuffer = sub.getKey('p256dh')
       const authBuffer = sub.getKey('auth')
       const p256dh = keyBuffer
@@ -55,31 +59,36 @@ export function usePushSubscription() {
       const auth = authBuffer
         ? btoa(String.fromCharCode(...new Uint8Array(authBuffer)))
         : ''
+      console.log('[Push] upserting to DB...', { user_id: profile.id, tenant_id: tenant.id })
       const { error: upsertErr } = await supabase.from('push_subscriptions').upsert(
         { user_id: profile.id, tenant_id: tenant.id, endpoint: sub.endpoint, p256dh, auth },
         { onConflict: 'endpoint' }
       )
       if (upsertErr) {
-        console.error('Push subscription DB save failed:', upsertErr.message, { tenant_id: tenant.id, user_id: profile.id })
+        console.error('[Push] DB save failed:', upsertErr.message, upsertErr.code, upsertErr.details)
         return
       }
+      console.log('[Push] DB save success!')
       setIsSubscribed(true)
     } catch (err) {
-      console.error('Push subscription failed:', err)
+      console.error('[Push] subscribe failed:', err)
     } finally {
       setIsLoading(false)
     }
   }
 
   async function unsubscribe() {
+    console.log('[Push] unsubscribe() called', { isSubscribed })
     if (!isSupported) return
     setIsLoading(true)
     try {
       const reg = await navigator.serviceWorker.ready
       const sub = await reg.pushManager.getSubscription()
+      console.log('[Push] current browser subscription:', sub ? sub.endpoint.slice(0, 40) : 'none')
       if (sub) {
         await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
         await sub.unsubscribe()
+        console.log('[Push] unsubscribed from browser + DB')
       }
       setIsSubscribed(false)
     } finally {
