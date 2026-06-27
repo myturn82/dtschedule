@@ -301,7 +301,7 @@ export function Step7CustomFields({ fields, isFreeform, error, onChange }: Props
 
   return (
     <div className="step-body">
-      <StepHeader step={WIZARD_STEPS[6]} />
+      <StepHeader step={WIZARD_STEPS[5]} />
       <p className="step-desc" style={{ marginTop: -8 }}>
         {isFreeform ? '첫 번째 필드가 이름으로 사용됩니다. 연락처도 추가해두면 편리합니다.' : '배정 등록 시 이름·연락처 외에 더 받을 정보를 설정합니다. 건너뛰어도 됩니다.'}
       </p>
