@@ -45,6 +45,14 @@ export function usePushSubscription() {
     try {
       console.log('[Push] waiting for serviceWorker.ready...')
       const reg = await navigator.serviceWorker.ready
+
+      // 기존 브라우저 구독 해제 → 새 endpoint 발급 (다른 user의 endpoint 충돌 방지)
+      const existing = await reg.pushManager.getSubscription()
+      if (existing) {
+        console.log('[Push] unsubscribing existing browser subscription first...')
+        await existing.unsubscribe()
+      }
+
       console.log('[Push] SW ready, subscribing pushManager...')
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
@@ -59,13 +67,15 @@ export function usePushSubscription() {
       const auth = authBuffer
         ? btoa(String.fromCharCode(...new Uint8Array(authBuffer)))
         : ''
-      console.log('[Push] upserting to DB...', { user_id: profile.id, tenant_id: tenant.id })
-      const { error: upsertErr } = await supabase.from('push_subscriptions').upsert(
-        { user_id: profile.id, tenant_id: tenant.id, endpoint: sub.endpoint, p256dh, auth },
-        { onConflict: 'endpoint' }
+
+      // 이 사용자의 기존 구독 삭제 후 insert (endpoint 항상 새로 발급됐으므로 충돌 없음)
+      await supabase.from('push_subscriptions').delete().eq('user_id', profile.id)
+      console.log('[Push] inserting to DB...', { user_id: profile.id, tenant_id: tenant.id })
+      const { error: insertErr } = await supabase.from('push_subscriptions').insert(
+        { user_id: profile.id, tenant_id: tenant.id, endpoint: sub.endpoint, p256dh, auth }
       )
-      if (upsertErr) {
-        console.error('[Push] DB save failed:', upsertErr.message, upsertErr.code, upsertErr.details)
+      if (insertErr) {
+        console.error('[Push] DB save failed:', insertErr.message, insertErr.code, insertErr.details)
         return
       }
       console.log('[Push] DB save success!')
