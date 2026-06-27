@@ -215,7 +215,10 @@ Deno.serve(async (req) => {
         continue
       }
 
-      // 2. 웹 푸시 발송 (VAPID 키가 설정된 경우에만)
+      // 인앱 알림 INSERT 성공 → sent 카운트
+      orgSent++
+
+      // 2. 웹 푸시 발송 (VAPID 키가 설정된 경우에만, 실패해도 sent 카운트는 유지)
       if (webPushEnabled) {
         const { data: subs } = await supabase
           .from('push_subscriptions')
@@ -233,10 +236,8 @@ Deno.serve(async (req) => {
               },
               JSON.stringify({ title, body: bodyText, url }),
             )
-            orgSent++
           } catch (pushErr: unknown) {
-            orgFailed++
-            // 410 Gone / 404: 만료된 구독 → 삭제
+            // 410 Gone / 404: 만료된 구독 → 삭제 (sent 카운트는 영향 없음)
             const status = (pushErr as { statusCode?: number })?.statusCode
             if (status === 410 || status === 404) {
               await supabase
@@ -246,9 +247,6 @@ Deno.serve(async (req) => {
             }
           }
         }
-      } else {
-        // 웹 푸시 없이 인앱만 발송한 경우도 sent 카운트
-        orgSent++
       }
     }
 
