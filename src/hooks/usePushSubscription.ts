@@ -36,7 +36,10 @@ export function usePushSubscription() {
   }, [profile?.id, isSupported])
 
   async function subscribe() {
-    if (!profile?.id || !tenant?.id || !VAPID_PUBLIC_KEY || !isSupported) return
+    if (!profile?.id || !tenant?.id || !VAPID_PUBLIC_KEY || !isSupported) {
+      console.warn('Push subscribe blocked:', { profileId: !!profile?.id, tenantId: !!tenant?.id, vapid: !!VAPID_PUBLIC_KEY, supported: isSupported })
+      return
+    }
     setIsLoading(true)
     try {
       const reg = await navigator.serviceWorker.ready
