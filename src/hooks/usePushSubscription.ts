@@ -36,7 +36,7 @@ export function usePushSubscription() {
   }, [profile?.id, isSupported])
 
   async function subscribe() {
-    console.log('[Push] subscribe() called', { profileId: profile?.id, tenantId: tenant?.id, vapid: !!VAPID_PUBLIC_KEY, supported: isSupported, isSubscribed })
+    console.log('[Push] subscribe() called', { profileId: profile?.id, tenantId: tenant?.id, vapidPrefix: VAPID_PUBLIC_KEY?.slice(0, 10), supported: isSupported, isSubscribed })
     if (!profile?.id || !tenant?.id || !VAPID_PUBLIC_KEY || !isSupported) {
       console.warn('[Push] subscribe blocked:', { profileId: !!profile?.id, tenantId: !!tenant?.id, vapid: !!VAPID_PUBLIC_KEY, supported: isSupported })
       return
