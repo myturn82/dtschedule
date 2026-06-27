@@ -71,7 +71,7 @@ export function SetupWizardPage() {
     addDateOverride,
   } = useAdmin(orgId)
 
-  const { roles, addRole, deleteRole } = useTenantRoles(orgId)
+  const { roles, addRole, deleteRole, updateRole } = useTenantRoles(orgId)
 
   // Wizard state
   // 새로고침 시에도 진행 단계를 유지 — org id 기준 sessionStorage에 저장/복원
@@ -303,7 +303,7 @@ export function SetupWizardPage() {
           {step === 4 && (
             <Step4Roles
               roles={roles} error={error}
-              onAdd={addRole} onDelete={deleteRole}
+              onAdd={addRole} onDelete={deleteRole} onUpdate={updateRole}
             />
           )}
           {step === 5 && (
