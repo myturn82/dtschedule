@@ -52,10 +52,14 @@ export function usePushSubscription() {
       const auth = authBuffer
         ? btoa(String.fromCharCode(...new Uint8Array(authBuffer)))
         : ''
-      await supabase.from('push_subscriptions').upsert(
+      const { error: upsertErr } = await supabase.from('push_subscriptions').upsert(
         { user_id: profile.id, tenant_id: tenant.id, endpoint: sub.endpoint, p256dh, auth },
         { onConflict: 'endpoint' }
       )
+      if (upsertErr) {
+        console.error('Push subscription DB save failed:', upsertErr.message, { tenant_id: tenant.id, user_id: profile.id })
+        return
+      }
       setIsSubscribed(true)
     } catch (err) {
       console.error('Push subscription failed:', err)
