@@ -37,16 +37,14 @@ export const resources = {
   },
 } as const
 
-// localStorage에 저장된 언어 읽기 (사용자가 명시적으로 선택한 경우만)
-const LANG_KEY = 'dtschedule-lang'
-const savedLang = localStorage.getItem(LANG_KEY)
-const initialLng = (savedLang === 'ko' || savedLang === 'en') ? savedLang : 'ko'
+// 브라우저 감지로 저장된 이전 'en' 값 제거
+localStorage.removeItem('dtschedule-lang')
 
 i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: initialLng,
+    lng: 'ko',
     fallbackLng: 'ko',
     defaultNS: 'common',
     ns: ['common', 'superadmin', 'admin', 'schedule', 'auth'],
