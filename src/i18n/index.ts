@@ -1,6 +1,5 @@
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
-import LanguageDetector from 'i18next-browser-languagedetector'
 
 import koCommon from './locales/ko/common.json'
 import koSuperadmin from './locales/ko/superadmin.json'
@@ -38,22 +37,21 @@ export const resources = {
   },
 } as const
 
+// localStorage에 저장된 언어 읽기 (사용자가 명시적으로 선택한 경우만)
+const LANG_KEY = 'dtschedule-lang'
+const savedLang = localStorage.getItem(LANG_KEY)
+const initialLng = (savedLang === 'ko' || savedLang === 'en') ? savedLang : 'ko'
+
 i18n
-  .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     resources,
+    lng: initialLng,
     fallbackLng: 'ko',
     defaultNS: 'common',
     ns: ['common', 'superadmin', 'admin', 'schedule', 'auth'],
-    detection: {
-      // localStorage 먼저 확인 → 없으면 브라우저 언어 감지
-      order: ['localStorage', 'navigator'],
-      caches: ['localStorage'],
-      lookupLocalStorage: 'dtschedule-lang',
-    },
     interpolation: {
-      escapeValue: false, // React가 XSS를 처리하므로 불필요
+      escapeValue: false,
     },
   })
 
