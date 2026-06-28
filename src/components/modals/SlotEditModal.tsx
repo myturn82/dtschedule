@@ -223,6 +223,15 @@ export function SlotEditModal({
       }
       const nameFieldId = customFields[0].id
       name = fieldValues[nameFieldId]?.trim() ?? ''
+      if (!name) {
+        name = customFields.slice(1).map(f => {
+          const val = fieldValues[f.id]
+          if (!val || val === 'false') return null
+          if (f.type === 'checkbox' && val === 'true') return f.label
+          if (f.type === 'select') return f.options?.find(o => o.value === val)?.name ?? val
+          return val.trim() || null
+        }).filter(Boolean).join(' / ')
+      }
       if (!name) return
       if (isAdmin && isSplitMode && selectedUserId) userId = selectedUserId
     } else {
@@ -326,6 +335,15 @@ export function SlotEditModal({
       }
       const nameFieldId = customFields[0].id
       name = fieldValues[nameFieldId]?.trim() ?? ''
+      if (!name) {
+        name = customFields.slice(1).map(f => {
+          const val = fieldValues[f.id]
+          if (!val || val === 'false') return null
+          if (f.type === 'checkbox' && val === 'true') return f.label
+          if (f.type === 'select') return f.options?.find(o => o.value === val)?.name ?? val
+          return val.trim() || null
+        }).filter(Boolean).join(' / ')
+      }
       if (!name) return
     } else {
       if (!selectedProfile) return
@@ -431,7 +449,8 @@ export function SlotEditModal({
 
   const isAddDisabled = loading || wouldBeDuplicate || (() => {
     if (useDynamicFields) {
-      return customFields.some(f => f.required && !isFieldFilled(f))
+      if (customFields.some(f => f.required && !isFieldFilled(f))) return true
+      return !customFields.some(f => isFieldFilled(f))
     }
     if (showExtraCustomFields && customFields.some(f => f.required && !isFieldFilled(f))) {
       return true
