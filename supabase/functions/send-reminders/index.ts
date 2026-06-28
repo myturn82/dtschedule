@@ -127,6 +127,8 @@ Deno.serve(async (req) => {
   const { year, month, day, dateStr } = getTomorrowSeoul()
   const dateLabel = formatDateLabel(year, month, day)
 
+  console.log(`[send-reminders] mode=${isCronMode ? 'cron' : force ? 'force' : 'manual'} tomorrow=${dateStr} settings=${settings?.length ?? 0} webPush=${webPushEnabled} vapidPub=${vapidPublic?.slice(0, 10)} subject=${vapidSubject}`)
+
   let totalSent = 0
   let totalFailed = 0
   const orgs: Array<{ org: string; sent: number; failed: number; skipped: number }> = []
@@ -144,6 +146,8 @@ Deno.serve(async (req) => {
       .eq('month', month)
       .eq('day', day)
       .not('user_id', 'is', null)
+
+    console.log(`[send-reminders] org=${tenantName} assignErr=${assignErr?.message ?? 'none'} assignments=${assignments?.length ?? 0}`)
 
     if (assignErr) {
       orgs.push({ org: tenantName, sent: 0, failed: 0, skipped: 1 })
@@ -175,6 +179,8 @@ Deno.serve(async (req) => {
         if (a.user_id) userIds.add(a.user_id)
       }
     }
+
+    console.log(`[send-reminders] org=${tenantName} userIds=${userIds.size}`)
 
     let orgSent = 0
     let orgFailed = 0
@@ -210,6 +216,7 @@ Deno.serve(async (req) => {
         type: 'd1_reminder',
         metadata: { date: dateStr, slot: slotLabel },
       })
+      console.log(`[send-reminders] insert userId=${userId} err=${insertErr?.message ?? 'ok'}`)
       if (insertErr) {
         orgFailed++
         continue
@@ -220,10 +227,12 @@ Deno.serve(async (req) => {
 
       // 2. 웹 푸시 발송 (VAPID 키가 설정된 경우에만, 실패해도 sent 카운트는 유지)
       if (webPushEnabled) {
-        const { data: subs } = await supabase
+        const { data: subs, error: subsErr } = await supabase
           .from('push_subscriptions')
           .select('endpoint, p256dh, auth')
           .eq('user_id', userId)
+
+        console.log(`[send-reminders] push userId=${userId} subsErr=${subsErr?.message ?? 'none'} subs=${subs?.length ?? 0} p256dh_prefix=${subs?.[0]?.p256dh?.slice(0, 10)}`)
 
         for (const sub of subs ?? []) {
           if (!sub.endpoint || !sub.p256dh || !sub.auth) continue
@@ -236,9 +245,11 @@ Deno.serve(async (req) => {
               },
               JSON.stringify({ title, body: bodyText, url }),
             )
+            console.log(`[send-reminders] push sent userId=${userId} endpoint=${sub.endpoint.slice(0, 40)}`)
           } catch (pushErr: unknown) {
-            // 410 Gone / 404: 만료된 구독 → 삭제 (sent 카운트는 영향 없음)
             const status = (pushErr as { statusCode?: number })?.statusCode
+            const body = (pushErr as { body?: string })?.body
+            console.error(`[send-reminders] push FAILED userId=${userId} status=${status} body=${body}`)
             if (status === 410 || status === 404) {
               await supabase
                 .from('push_subscriptions')
@@ -255,6 +266,7 @@ Deno.serve(async (req) => {
     totalFailed += orgFailed
   }
 
+  console.log(`[send-reminders] DONE totalSent=${totalSent} totalFailed=${totalFailed} orgs=${JSON.stringify(orgs)}`)
   return new Response(
     JSON.stringify({
       sent: totalSent,
