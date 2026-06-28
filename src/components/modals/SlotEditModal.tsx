@@ -177,7 +177,16 @@ export function SlotEditModal({
     if (useDynamicFields) {
       const nameFieldId = customFields[0]?.id
       const restored: Record<string, string> = {}
-      if (nameFieldId) restored[nameFieldId] = a.member_name
+      if (nameFieldId) {
+        const derivedFromOthers = customFields.slice(1).map(f => {
+          const val = a.extra_data?.[f.id]
+          if (!val || val === 'false') return null
+          if (f.type === 'checkbox' && val === 'true') return f.label
+          if (f.type === 'select') return f.options?.find(o => o.value === val)?.name ?? val
+          return val.trim() || null
+        }).filter(Boolean).join(' / ')
+        restored[nameFieldId] = (derivedFromOthers && a.member_name === derivedFromOthers) ? '' : a.member_name
+      }
       Object.assign(restored, a.extra_data ?? {})
       setFieldValues(restored)
       if (isAdmin && isSplitMode) setSelectedUserId(a.user_id ?? '')
@@ -718,7 +727,17 @@ export function SlotEditModal({
               {displayedAssignments.map(a => {
                 const canEdit = !a.is_locked && (isAdmin || (a.user_id === profile?.id && !isReadOnly))
                 const isOwnEntry = !isAdmin && a.user_id === profile?.id && a.member_name === profile?.name
-                const displayName = isFreeform && useDynamicFields && customFields[0]
+                const derivedFromOthers = useDynamicFields
+                  ? customFields.slice(1).map(f => {
+                      const val = a.extra_data?.[f.id]
+                      if (!val || val === 'false') return null
+                      if (f.type === 'checkbox' && val === 'true') return f.label
+                      if (f.type === 'select') return f.options?.find(o => o.value === val)?.name ?? val
+                      return val.trim() || null
+                    }).filter(Boolean).join(' / ')
+                  : ''
+                const nameWasDerived = useDynamicFields && !!derivedFromOthers && a.member_name === derivedFromOthers
+                const displayName = isFreeform && useDynamicFields && customFields[0] && !nameWasDerived
                   ? `${customFields[0].label}: ${a.member_name}`
                   : a.member_name
                 const detailChips: { key: string; label: string; value: string }[] = []
