@@ -9,6 +9,8 @@ import { useTenant } from '../contexts/TenantContext'
 import { useTenantRoles } from '../hooks/useTenantRoles'
 import { supabase } from '../lib/supabase'
 import { buildSlot, parseSlotLabel, generateTimeSlots, DEFAULT_TIME_SLOTS, SLOT_TEMPLATES } from '../utils/timeSlots'
+import { SCHEDULE_RULE_TEMPLATES } from '../utils/scheduleRuleTemplates'
+import { getKoreanHolidaysInYear } from '../utils/koreanHolidays'
 import { CUSTOM_FIELD_TEMPLATES } from '../utils/customFieldTemplates'
 import type { TimeSlot, Tenant, TenantAccessRole, LegendItem, LegendColor, CustomFieldDef, CustomFieldOption, OptionValueType, CustomFieldType } from '../types'
 import { OPTION_VALUE_TYPES, getOptionUnit, FIELD_TYPES_WITH_OPTIONS, FIELD_TYPES_WITH_DASHBOARD } from '../types'
@@ -252,6 +254,12 @@ export function AdminPage() {
   const [editingRoleId, setEditingRoleId] = useState<string | null>(null)
   const [editRoleName, setEditRoleName] = useState('')
 
+  // Rules tab
+  const [showMatrix, setShowMatrix] = useState(false)
+  const [closedDays, setClosedDays] = useState<Set<number>>(new Set())
+  const [applyingTemplate, setApplyingTemplate] = useState<number | null>(null)
+  const [applyingHoliday, setApplyingHoliday] = useState(false)
+
   // Dates tab
   const [dateForm, setDateForm] = useState({ date: '', type: 'holiday' as 'holiday' | 'special', label: '' })
 
@@ -416,6 +424,27 @@ export function AdminPage() {
 
   function getRule(dayOfWeek: number, slot: TimeSlot) {
     return scheduleRules.find(r => r.day_of_week === dayOfWeek && r.time_slot === slot)
+  }
+
+  async function applyRuleTemplate(openDays: number[], includeHolidays?: boolean) {
+    const tasks = scheduleRules
+      .filter(r => r.is_open !== openDays.includes(r.day_of_week))
+      .map(r => toggleScheduleRule(r.id, r.is_open))
+    await Promise.all(tasks)
+    if (includeHolidays) {
+      const thisYear = new Date().getFullYear()
+      const holidays = [...getKoreanHolidaysInYear(thisYear), ...getKoreanHolidaysInYear(thisYear + 1)]
+      await Promise.all(holidays.map(h => addDateOverride(h.date, true, false, h.name)))
+    }
+  }
+
+  function openDaysSummary() {
+    const openDays = [0, 1, 2, 3, 4, 5, 6].filter(d =>
+      adminTimeSlots.some(s => getRule(d, s as TimeSlot)?.is_open)
+    )
+    if (openDays.length === 0) return '없음'
+    if (openDays.length === 7) return '매일'
+    return openDays.map(d => DAY_LABELS[d]).join('·')
   }
 
   function msg(text: string, isError = false) { setMessage({ text, isError }) }
@@ -1495,16 +1524,16 @@ export function AdminPage() {
               </div>
             )}
 
-            {/* ── 스케줄 규칙 ── */}
+            {/* ── 스케줄규칙 ── */}
             {tab === 'rules' && (
               <div>
                 {/* 페이지 헤더 */}
                 <header className="mb-5">
                   <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10 px-3 py-[5px] rounded-full">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01"/></svg>
-                    조직 설정 · 스케줄 규칙
+                    조직 설정 · 스케줄규칙
                   </span>
-                  <h2 className="mt-3 mb-1.5 text-[clamp(22px,5vw,27px)] font-extrabold tracking-tight text-[var(--color-text-primary)]">스케줄 규칙</h2>
+                  <h2 className="mt-3 mb-1.5 text-[clamp(22px,5vw,27px)] font-extrabold tracking-tight text-[var(--color-text-primary)]">스케줄규칙</h2>
                   <p className="text-[14px] font-medium text-[var(--color-text-muted)] leading-relaxed max-w-[52ch]">
                     요일별·시간대별 운영 여부를 설정합니다. 버튼 클릭 시 즉시 저장됩니다.
                   </p>
@@ -1534,41 +1563,138 @@ export function AdminPage() {
                   </div>
                 )}
 
-                <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow-sm overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">시간</th>
-                        {DAY_LABELS.map(d => (
-                          <th key={d} className="px-3 py-3 text-xs font-semibold text-[var(--color-text-muted)] text-center">{d}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[var(--color-border)]">
-                      {adminTimeSlots.map(slot => (
-                        <tr key={slot}>
-                          <td className="px-4 py-2.5 font-medium text-[var(--color-text-secondary)] whitespace-nowrap">{parseSlotLabel(slot)}</td>
-                          {DAY_LABELS.map((_, dayIdx) => {
-                            const rule = getRule(dayIdx, slot)
-                            return (
-                              <td key={dayIdx} className="px-3 py-2.5 text-center">
-                                {rule ? (
-                                  <button onClick={async () => {
-                                    const err = await toggleScheduleRule(rule.id, rule.is_open)
-                                    if (err) msg(err, true)
-                                  }}
-                                    className={`px-2.5 py-0.5 rounded-lg text-xs font-semibold transition-colors ${rule.is_open ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)]'}`}>
-                                    {rule.is_open ? '운영' : '미운영'}
-                                  </button>
-                                ) : <span className="text-[var(--color-border-strong)]">-</span>}
-                              </td>
-                            )
-                          })}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                {/* 빠른 선택 */}
+                <div className="mb-4">
+                  <p className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2">빠른 선택</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {SCHEDULE_RULE_TEMPLATES.map((t, i) => (
+                      <button
+                        key={t.label}
+                        disabled={applyingTemplate !== null || applyingHoliday}
+                        onClick={async () => {
+                          setApplyingTemplate(i)
+                          await applyRuleTemplate(t.openDays, t.includeHolidays)
+                          setApplyingTemplate(null)
+                        }}
+                        className={`flex flex-col items-start px-3.5 py-3 rounded-2xl border text-left transition-colors disabled:opacity-60 ${
+                          applyingTemplate === i
+                            ? 'border-[var(--color-brand-primary)] bg-[color-mix(in_srgb,var(--color-brand-primary)_8%,transparent)]'
+                            : 'border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-brand-primary)] hover:bg-[var(--color-surface-hover)]'
+                        }`}
+                      >
+                        <span className="text-[13px] font-bold text-[var(--color-text-primary)]">
+                          {applyingTemplate === i ? '적용 중...' : t.label}
+                        </span>
+                        <span className="text-[11px] font-medium text-[var(--color-text-muted)] mt-0.5">{t.description}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
+
+                {/* 정기휴일 직접 지정 */}
+                <div className="mb-4 border border-[var(--color-border)] rounded-2xl p-4 bg-[var(--color-surface)]">
+                  <p className="text-sm font-semibold text-[var(--color-text-secondary)] mb-0.5">
+                    정기휴일 직접 지정
+                    <span className="ml-1.5 font-normal text-[var(--color-text-muted)]">선택한 요일 = 휴무</span>
+                  </p>
+                  <div className="flex gap-1.5 mt-2.5 flex-wrap">
+                    {DAY_LABELS.map((d, idx) => (
+                      <button
+                        key={idx}
+                        className={`w-9 h-9 rounded-full text-[13px] font-bold transition-colors select-none ${
+                          closedDays.has(idx)
+                            ? idx === 0 ? 'bg-red-500 text-white' : idx === 6 ? 'bg-blue-500 text-white' : 'bg-[var(--color-brand-primary)] text-white'
+                            : idx === 0 ? 'bg-red-50 text-red-500 hover:bg-red-100' : idx === 6 ? 'bg-blue-50 text-blue-500 hover:bg-blue-100' : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
+                        }`}
+                        onClick={() => setClosedDays(prev => {
+                          const next = new Set(prev)
+                          if (next.has(idx)) next.delete(idx); else next.add(idx)
+                          return next
+                        })}
+                      >
+                        {d}
+                      </button>
+                    ))}
+                  </div>
+                  {closedDays.size > 0 ? (
+                    <div className="flex items-center gap-3 mt-3">
+                      <span className="text-sm text-[var(--color-text-secondary)]">
+                        휴무일 <b className="text-[var(--color-text-primary)]">{[...closedDays].sort((a, b) => a - b).map(d => DAY_LABELS[d]).join('·')}</b>
+                      </span>
+                      <button
+                        disabled={applyingHoliday || applyingTemplate !== null}
+                        onClick={async () => {
+                          setApplyingHoliday(true)
+                          const openDays = [0, 1, 2, 3, 4, 5, 6].filter(d => !closedDays.has(d))
+                          await applyRuleTemplate(openDays)
+                          setApplyingHoliday(false)
+                        }}
+                        className="px-3 py-1.5 text-xs font-semibold bg-[var(--color-brand-primary)] text-white rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity"
+                      >
+                        {applyingHoliday ? '적용 중...' : '적용'}
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-xs text-[var(--color-text-muted)]">요일을 선택하면 해당 요일이 정기휴일로 지정됩니다</p>
+                  )}
+                </div>
+
+                {/* 현재 운영 요일 요약 */}
+                {scheduleRules.length > 0 && (
+                  <div className="mb-4 px-4 py-2.5 rounded-xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)] text-sm text-[var(--color-text-secondary)]">
+                    현재 운영 요일 <b className="text-[var(--color-text-primary)]">{openDaysSummary()}</b>
+                  </div>
+                )}
+
+                {/* 시간대별 직접 설정 (접기/펼치기) */}
+                <button
+                  className="flex items-center gap-1.5 text-sm font-semibold text-[var(--color-brand-primary)] mb-3"
+                  onClick={() => setShowMatrix(v => !v)}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                    style={{ transform: showMatrix ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }}>
+                    <path d="m6 9 6 6 6-6"/>
+                  </svg>
+                  시간대별 직접 설정
+                </button>
+
+                {showMatrix && adminTimeSlots.length > 0 && (
+                  <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow-sm overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
+                          <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">시간</th>
+                          {DAY_LABELS.map((d, idx) => (
+                            <th key={d} className={`px-3 py-3 text-xs font-semibold text-center ${idx === 0 ? 'text-red-500' : idx === 6 ? 'text-blue-500' : 'text-[var(--color-text-muted)]'}`}>{d}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[var(--color-border)]">
+                        {adminTimeSlots.map(slot => (
+                          <tr key={slot}>
+                            <td className="px-4 py-2.5 font-medium text-[var(--color-text-secondary)] whitespace-nowrap">{parseSlotLabel(slot)}</td>
+                            {DAY_LABELS.map((_, dayIdx) => {
+                              const rule = getRule(dayIdx, slot)
+                              return (
+                                <td key={dayIdx} className="px-3 py-2.5 text-center">
+                                  {rule ? (
+                                    <button onClick={async () => {
+                                      const err = await toggleScheduleRule(rule.id, rule.is_open)
+                                      if (err) msg(err, true)
+                                    }}
+                                      className={`px-2.5 py-0.5 rounded-lg text-xs font-semibold transition-colors ${rule.is_open ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)]'}`}>
+                                      {rule.is_open ? '운영' : '미운영'}
+                                    </button>
+                                  ) : <span className="text-[var(--color-border-strong)]">—</span>}
+                                </td>
+                              )
+                            })}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
 

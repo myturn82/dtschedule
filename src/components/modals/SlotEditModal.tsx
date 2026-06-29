@@ -116,7 +116,7 @@ export function SlotEditModal({
 
   const pendingName = !editingId
     ? (useDynamicFields
-        ? (fieldValues[customFields[0]?.id]?.trim() ?? '')
+        ? (fieldValues[customFields[0]?.id]?.trim() || profile?.name || '')
         : (selectedProfile?.name ?? ''))
     : ''
   const wouldBeDuplicate = !!pendingName && assignedNames.has(pendingName)
@@ -185,9 +185,11 @@ export function SlotEditModal({
           if (f.type === 'select') return f.options?.find(o => o.value === val)?.name ?? val
           return val.trim() || null
         }).filter(Boolean).join(' / ')
-        restored[nameFieldId] = (derivedFromOthers && a.member_name === derivedFromOthers) ? '' : a.member_name
+        restored[nameFieldId] = (a.extra_data?._nf || (derivedFromOthers && a.member_name === derivedFromOthers)) ? '' : a.member_name
       }
       Object.assign(restored, a.extra_data ?? {})
+      delete restored._nf
+      delete restored._cl
       setFieldValues(restored)
       if (isAdmin && isSplitMode) setSelectedUserId(a.user_id ?? '')
     } else {
@@ -213,6 +215,7 @@ export function SlotEditModal({
     setError(null)
     let name: string
     let userId: string | undefined
+    let usedNameFallback = false
     const customerPhone: string | null = null
 
     if (useDynamicFields) {
@@ -232,15 +235,7 @@ export function SlotEditModal({
       }
       const nameFieldId = customFields[0].id
       name = fieldValues[nameFieldId]?.trim() ?? ''
-      if (!name) {
-        name = customFields.slice(1).map(f => {
-          const val = fieldValues[f.id]
-          if (!val || val === 'false') return null
-          if (f.type === 'checkbox' && val === 'true') return f.label
-          if (f.type === 'select') return f.options?.find(o => o.value === val)?.name ?? val
-          return val.trim() || null
-        }).filter(Boolean).join(' / ')
-      }
+      if (!name) { name = profile?.name ?? ''; usedNameFallback = true }
       if (!name) return
       if (isAdmin && isSplitMode && selectedUserId) userId = selectedUserId
     } else {
@@ -291,6 +286,17 @@ export function SlotEditModal({
         const v = resolvedValues[f.id]
         if (v !== undefined && v !== '') rest[f.id] = v.trim ? v.trim() : v
       })
+      if (usedNameFallback) {
+        rest._nf = '1'
+        const cl = customFields.slice(1).map(f => {
+          const val = resolvedValues[f.id]
+          if (!val || val === 'false') return null
+          if (f.type === 'checkbox' && val === 'true') return f.label
+          if (f.type === 'select') return f.options?.find(o => o.value === val)?.name ?? val
+          return val.trim() || null
+        }).filter(Boolean).join(' / ')
+        if (cl) rest._cl = cl
+      }
       if (Object.keys(rest).length > 0) extraData = rest
     } else if (showExtraCustomFields) {
       const rest: Record<string, string> = {}
@@ -325,6 +331,7 @@ export function SlotEditModal({
     setError(null)
 
     let name: string
+    let usedNameFallback = false
     const customerPhone: string | null = null
 
     if (useDynamicFields) {
@@ -344,15 +351,7 @@ export function SlotEditModal({
       }
       const nameFieldId = customFields[0].id
       name = fieldValues[nameFieldId]?.trim() ?? ''
-      if (!name) {
-        name = customFields.slice(1).map(f => {
-          const val = fieldValues[f.id]
-          if (!val || val === 'false') return null
-          if (f.type === 'checkbox' && val === 'true') return f.label
-          if (f.type === 'select') return f.options?.find(o => o.value === val)?.name ?? val
-          return val.trim() || null
-        }).filter(Boolean).join(' / ')
-      }
+      if (!name) { name = profile?.name ?? ''; usedNameFallback = true }
       if (!name) return
     } else {
       if (!selectedProfile) return
@@ -396,6 +395,17 @@ export function SlotEditModal({
         const v = resolvedValues[f.id]
         if (v !== undefined && v !== '') rest[f.id] = v.trim ? v.trim() : v
       })
+      if (usedNameFallback) {
+        rest._nf = '1'
+        const cl = customFields.slice(1).map(f => {
+          const val = resolvedValues[f.id]
+          if (!val || val === 'false') return null
+          if (f.type === 'checkbox' && val === 'true') return f.label
+          if (f.type === 'select') return f.options?.find(o => o.value === val)?.name ?? val
+          return val.trim() || null
+        }).filter(Boolean).join(' / ')
+        if (cl) rest._cl = cl
+      }
       if (Object.keys(rest).length > 0) extraData = rest
     } else if (showExtraCustomFields) {
       const rest: Record<string, string> = {}
@@ -726,7 +736,11 @@ export function SlotEditModal({
             <div className="flex flex-col gap-2">
               {displayedAssignments.map(a => {
                 const canEdit = !a.is_locked && (isAdmin || (a.user_id === profile?.id && !isReadOnly))
-                const isOwnEntry = !isAdmin && a.user_id === profile?.id && a.member_name === profile?.name
+                const isOwnEntry = !isAdmin && (
+                  useDynamicFields
+                    ? (!!profile?.id && a.user_id === profile.id)
+                    : (a.user_id === profile?.id && a.member_name === profile?.name)
+                )
                 const derivedFromOthers = useDynamicFields
                   ? customFields.slice(1).map(f => {
                       const val = a.extra_data?.[f.id]
@@ -737,9 +751,13 @@ export function SlotEditModal({
                     }).filter(Boolean).join(' / ')
                   : ''
                 const nameWasDerived = useDynamicFields && !!derivedFromOthers && a.member_name === derivedFromOthers
-                const displayName = isFreeform && useDynamicFields && customFields[0] && !nameWasDerived
-                  ? `${customFields[0].label}: ${a.member_name}`
-                  : a.member_name
+                const nameFallback = useDynamicFields && !!a.extra_data?._nf
+                const hideName = nameWasDerived || nameFallback
+                const displayName: string | null = hideName
+                  ? null
+                  : isFreeform && useDynamicFields && customFields[0]
+                    ? `${customFields[0].label}: ${a.member_name}`
+                    : a.member_name
                 const detailChips: { key: string; label: string; value: string }[] = []
                 if (isFreeform) {
                   if (!useDynamicFields && a.customer_phone) detailChips.push({ key: 'phone', label: '연락처', value: fmtPhone(a.customer_phone) })
@@ -785,62 +803,98 @@ export function SlotEditModal({
                     }`}
                     style={{ backgroundColor: !isOwnEntry ? (a.color || undefined) : undefined }}
                   >
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-full grid place-items-center text-[13px] font-extrabold bg-[color-mix(in_srgb,var(--color-brand-primary)_12%,transparent)] text-[var(--color-brand-primary)] shrink-0">
-                        {a.member_name.slice(0, 1)}
-                      </div>
-                      <div className="min-w-0 flex-1 flex flex-col gap-0.5">
-                        <span className="text-sm text-[var(--color-text-primary)] font-bold flex items-center flex-wrap gap-1.5">
-                          {displayName}
-                          {a.time_sub && <span className="text-xs text-[var(--color-text-muted)] font-medium">({formatTimeSub(a.time_sub)})</span>}
-                          {!isFreeform && isAdmin && !isSplitMode && (
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold truncate max-w-[72px] ${a.member_type === '50plus' ? 'bg-orange-100 text-orange-600' : 'bg-blue-50 text-blue-500'}`}>
-                              {a.member_type === '50plus' ? typeLabels['50plus'] : typeLabels.member}
+                    {hideName ? (
+                      <div className="flex items-start gap-2">
+                        <div className="flex flex-wrap gap-1.5 flex-1 min-w-0">
+                          {detailChips.map(c => (
+                            <span key={c.key} className="text-[11.5px] font-semibold text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] px-2 py-1 rounded-lg inline-flex gap-1 break-words min-w-0 max-w-full">
+                              <b className="font-extrabold text-[var(--color-text-muted)] shrink-0">{c.label}</b><span className="break-words min-w-0 whitespace-pre-wrap">{c.value}</span>
                             </span>
-                          )}
-                          {isOwnEntry && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-[var(--color-brand-primary)]/15 text-[var(--color-brand-primary)]">나</span>
-                          )}
-                          {a.is_locked && <span title="관리자에 의해 고정됨"><LockIcon size={12} className="inline -mt-0.5" /></span>}
-                        </span>
+                          ))}
+                          {imageChips.map(ic => (
+                            <button key={ic.fieldId} type="button" onClick={() => setGalleryUrls(ic.urls)}
+                              className="text-[11.5px] font-semibold text-[var(--color-brand-primary)] bg-[color-mix(in_srgb,var(--color-brand-primary)_8%,transparent)] border border-[var(--color-brand-primary)]/20 px-2 py-1 rounded-lg inline-flex items-center gap-1 whitespace-nowrap hover:bg-[color-mix(in_srgb,var(--color-brand-primary)_15%,transparent)] transition-colors select-none">
+                              <span className="select-none">🖼</span> {ic.label} {ic.urls.length}장
+                            </button>
+                          ))}
+                          {isOwnEntry && <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-[var(--color-brand-primary)]/15 text-[var(--color-brand-primary)] self-center">나</span>}
+                          {a.is_locked && <span title="관리자에 의해 고정됨" className="self-center"><LockIcon size={12} /></span>}
+                        </div>
+                        {(canEdit || (onToggleLock && a.is_locked && isSuperAdmin)) && (
+                          <div className="flex gap-0.5 shrink-0">
+                            {canEdit && (
+                              <>
+                                {!(ownAssignment && a.id === ownAssignment.id) && (
+                                  <button onClick={() => startEdit(a)} className="text-xs font-bold text-[var(--color-text-muted)] px-2 py-1 rounded-lg hover:bg-[var(--color-surface-secondary)] hover:text-[var(--color-text-primary)] transition-colors">수정</button>
+                                )}
+                                <button onClick={() => handleDelete(a.id)} className="text-xs font-bold text-[var(--color-text-muted)] px-2 py-1 rounded-lg hover:bg-[var(--color-brand-primary)]/10 hover:text-[var(--color-brand-primary)] transition-colors">삭제</button>
+                                {onToggleLock && isAdmin && (
+                                  <button onClick={() => handleToggleLock(a.id, true)} className="flex items-center gap-1 text-xs font-bold text-[var(--color-text-muted)] px-2 py-1 rounded-lg hover:bg-[var(--color-surface-secondary)] hover:text-[var(--color-text-primary)] transition-colors"><LockIcon size={12} /> 고정</button>
+                                )}
+                              </>
+                            )}
+                            {onToggleLock && a.is_locked && isSuperAdmin && (
+                              <button onClick={() => handleToggleLock(a.id, false)} className="flex items-center gap-1 text-xs font-bold text-[var(--color-text-muted)] px-2 py-1 rounded-lg hover:bg-[var(--color-surface-secondary)] hover:text-[var(--color-text-primary)] transition-colors"><UnlockIcon size={12} /> 해제</button>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      {(canEdit || (onToggleLock && a.is_locked && isSuperAdmin)) && (
-                        <div className="flex gap-0.5 shrink-0">
-                          {canEdit && (
-                            <>
-                              {!(ownAssignment && a.id === ownAssignment.id) && (
-                                <button onClick={() => startEdit(a)} className="text-xs font-bold text-[var(--color-text-muted)] px-2 py-1 rounded-lg hover:bg-[var(--color-surface-secondary)] hover:text-[var(--color-text-primary)] transition-colors">수정</button>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-full grid place-items-center text-[13px] font-extrabold bg-[color-mix(in_srgb,var(--color-brand-primary)_12%,transparent)] text-[var(--color-brand-primary)] shrink-0">
+                            {a.member_name.slice(0, 1)}
+                          </div>
+                          <div className="min-w-0 flex-1 flex flex-col gap-0.5">
+                            <span className="text-sm text-[var(--color-text-primary)] font-bold flex items-center flex-wrap gap-1.5">
+                              {displayName}
+                              {a.time_sub && <span className="text-xs text-[var(--color-text-muted)] font-medium">({formatTimeSub(a.time_sub)})</span>}
+                              {!isFreeform && isAdmin && !isSplitMode && (
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold truncate max-w-[72px] ${a.member_type === '50plus' ? 'bg-orange-100 text-orange-600' : 'bg-blue-50 text-blue-500'}`}>
+                                  {a.member_type === '50plus' ? typeLabels['50plus'] : typeLabels.member}
+                                </span>
                               )}
-                              <button onClick={() => handleDelete(a.id)} className="text-xs font-bold text-[var(--color-text-muted)] px-2 py-1 rounded-lg hover:bg-[var(--color-brand-primary)]/10 hover:text-[var(--color-brand-primary)] transition-colors">삭제</button>
-                              {onToggleLock && isAdmin && (
-                                <button onClick={() => handleToggleLock(a.id, true)} className="flex items-center gap-1 text-xs font-bold text-[var(--color-text-muted)] px-2 py-1 rounded-lg hover:bg-[var(--color-surface-secondary)] hover:text-[var(--color-text-primary)] transition-colors"><LockIcon size={12} /> 고정</button>
+                              {isOwnEntry && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-[var(--color-brand-primary)]/15 text-[var(--color-brand-primary)]">나</span>
                               )}
-                            </>
-                          )}
-                          {onToggleLock && a.is_locked && isSuperAdmin && (
-                            <button onClick={() => handleToggleLock(a.id, false)} className="flex items-center gap-1 text-xs font-bold text-[var(--color-text-muted)] px-2 py-1 rounded-lg hover:bg-[var(--color-surface-secondary)] hover:text-[var(--color-text-primary)] transition-colors"><UnlockIcon size={12} /> 해제</button>
+                              {a.is_locked && <span title="관리자에 의해 고정됨"><LockIcon size={12} className="inline -mt-0.5" /></span>}
+                            </span>
+                          </div>
+                          {(canEdit || (onToggleLock && a.is_locked && isSuperAdmin)) && (
+                            <div className="flex gap-0.5 shrink-0">
+                              {canEdit && (
+                                <>
+                                  {!(ownAssignment && a.id === ownAssignment.id) && (
+                                    <button onClick={() => startEdit(a)} className="text-xs font-bold text-[var(--color-text-muted)] px-2 py-1 rounded-lg hover:bg-[var(--color-surface-secondary)] hover:text-[var(--color-text-primary)] transition-colors">수정</button>
+                                  )}
+                                  <button onClick={() => handleDelete(a.id)} className="text-xs font-bold text-[var(--color-text-muted)] px-2 py-1 rounded-lg hover:bg-[var(--color-brand-primary)]/10 hover:text-[var(--color-brand-primary)] transition-colors">삭제</button>
+                                  {onToggleLock && isAdmin && (
+                                    <button onClick={() => handleToggleLock(a.id, true)} className="flex items-center gap-1 text-xs font-bold text-[var(--color-text-muted)] px-2 py-1 rounded-lg hover:bg-[var(--color-surface-secondary)] hover:text-[var(--color-text-primary)] transition-colors"><LockIcon size={12} /> 고정</button>
+                                  )}
+                                </>
+                              )}
+                              {onToggleLock && a.is_locked && isSuperAdmin && (
+                                <button onClick={() => handleToggleLock(a.id, false)} className="flex items-center gap-1 text-xs font-bold text-[var(--color-text-muted)] px-2 py-1 rounded-lg hover:bg-[var(--color-surface-secondary)] hover:text-[var(--color-text-primary)] transition-colors"><UnlockIcon size={12} /> 해제</button>
+                              )}
+                            </div>
                           )}
                         </div>
-                      )}
-                    </div>
-                    {(detailChips.length > 0 || imageChips.length > 0) && (
-                      <div className="flex flex-wrap gap-1.5 mt-2.5 pt-2.5 border-t border-dashed border-[var(--color-border-strong)]">
-                        {detailChips.map(c => (
-                          <span key={c.key} className="text-[11.5px] font-semibold text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] px-2 py-1 rounded-lg inline-flex gap-1 break-words min-w-0 max-w-full">
-                            <b className="font-extrabold text-[var(--color-text-muted)] shrink-0">{c.label}</b><span className="break-words min-w-0 whitespace-pre-wrap">{c.value}</span>
-                          </span>
-                        ))}
-                        {imageChips.map(ic => (
-                          <button
-                            key={ic.fieldId}
-                            type="button"
-                            onClick={() => setGalleryUrls(ic.urls)}
-                            className="text-[11.5px] font-semibold text-[var(--color-brand-primary)] bg-[color-mix(in_srgb,var(--color-brand-primary)_8%,transparent)] border border-[var(--color-brand-primary)]/20 px-2 py-1 rounded-lg inline-flex items-center gap-1 whitespace-nowrap hover:bg-[color-mix(in_srgb,var(--color-brand-primary)_15%,transparent)] transition-colors select-none"
-                          >
-                            <span className="select-none">🖼</span> {ic.label} {ic.urls.length}장
-                          </button>
-                        ))}
-                      </div>
+                        {(detailChips.length > 0 || imageChips.length > 0) && (
+                          <div className="flex flex-wrap gap-1.5 mt-2.5 pt-2.5 border-t border-dashed border-[var(--color-border-strong)]">
+                            {detailChips.map(c => (
+                              <span key={c.key} className="text-[11.5px] font-semibold text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] px-2 py-1 rounded-lg inline-flex gap-1 break-words min-w-0 max-w-full">
+                                <b className="font-extrabold text-[var(--color-text-muted)] shrink-0">{c.label}</b><span className="break-words min-w-0 whitespace-pre-wrap">{c.value}</span>
+                              </span>
+                            ))}
+                            {imageChips.map(ic => (
+                              <button key={ic.fieldId} type="button" onClick={() => setGalleryUrls(ic.urls)}
+                                className="text-[11.5px] font-semibold text-[var(--color-brand-primary)] bg-[color-mix(in_srgb,var(--color-brand-primary)_8%,transparent)] border border-[var(--color-brand-primary)]/20 px-2 py-1 rounded-lg inline-flex items-center gap-1 whitespace-nowrap hover:bg-[color-mix(in_srgb,var(--color-brand-primary)_15%,transparent)] transition-colors select-none">
+                                <span className="select-none">🖼</span> {ic.label} {ic.urls.length}장
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 )
