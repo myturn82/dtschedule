@@ -733,7 +733,12 @@ export function SlotEditModal({
         <div className="px-5 py-4 flex flex-col gap-3 overflow-y-auto flex-1">
           {/* Existing assignments */}
           {displayedAssignments.length > 0 && (
-            <div className="flex flex-col gap-2">
+            <section className="rounded-2xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)] p-2.5 flex flex-col gap-2">
+              <div className="flex items-center gap-1.5 px-1 pt-0.5">
+                <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="var(--color-text-muted)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M7 5h9M7 10h9M7 15h9"/><circle cx="3.5" cy="5" r="0.5"/><circle cx="3.5" cy="10" r="0.5"/><circle cx="3.5" cy="15" r="0.5"/></svg>
+                <h3 className="text-[12px] font-extrabold text-[var(--color-text-secondary)] m-0 tracking-tight">등록된 스케줄</h3>
+                <span className="text-[11px] font-extrabold text-[var(--color-text-muted)] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-full px-2 py-0.5 leading-none">{displayedAssignments.length}건</span>
+              </div>
               {displayedAssignments.map(a => {
                 const canEdit = !a.is_locked && (isAdmin || (a.user_id === profile?.id && !isReadOnly))
                 const isOwnEntry = !isAdmin && (
@@ -899,7 +904,7 @@ export function SlotEditModal({
                   </div>
                 )
               })}
-            </div>
+            </section>
           )}
 
           {profile && ownLockedAssignment ? (
@@ -918,6 +923,11 @@ export function SlotEditModal({
             </p>
           ) : profile && !isReadOnly ? (
             <>
+              {/* 입력(편집) 영역 헤더 */}
+              <div className="flex items-center gap-2 pt-0.5">
+                <span className="h-[18px] w-[3px] rounded-full bg-[var(--color-brand-primary)]" />
+                <h3 className="text-[12px] font-extrabold text-[var(--color-text-primary)] m-0 tracking-tight">{editingId ? '배정 수정' : '새 스케줄 입력'}</h3>
+              </div>
               {/* Time slot selector */}
               {timeSubOptions && (
                 <div>
