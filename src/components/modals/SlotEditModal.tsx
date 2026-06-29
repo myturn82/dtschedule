@@ -766,13 +766,18 @@ export function SlotEditModal({
                 const detailChips: { key: string; label: string; value: string }[] = []
                 if (isFreeform) {
                   if (!useDynamicFields && a.customer_phone) detailChips.push({ key: 'phone', label: '연락처', value: fmtPhone(a.customer_phone) })
-                  if (useDynamicFields) customFields.slice(1).forEach(f => {
-                    if (f.type === 'image_upload') return
-                    const val = a.extra_data?.[f.id]
-                    if (!val) return
-                    const unit = getOptionUnit(f.options?.find(o => o.value === val)?.value_type)
-                    detailChips.push({ key: f.id, label: f.label, value: `${fmtNumber(val)}${unit}` })
-                  })
+                  if (useDynamicFields) {
+                    if (!hideName && customFields[0] && a.member_name) {
+                      detailChips.push({ key: '_name', label: customFields[0].label, value: a.member_name })
+                    }
+                    customFields.slice(1).forEach(f => {
+                      if (f.type === 'image_upload') return
+                      const val = a.extra_data?.[f.id]
+                      if (!val) return
+                      const unit = getOptionUnit(f.options?.find(o => o.value === val)?.value_type)
+                      detailChips.push({ key: f.id, label: f.label, value: `${fmtNumber(val)}${unit}` })
+                    })
+                  }
                 } else if (showExtraCustomFields) {
                   customFields.forEach(f => {
                     if (f.type === 'image_upload') return
@@ -808,7 +813,7 @@ export function SlotEditModal({
                     }`}
                     style={{ backgroundColor: !isOwnEntry ? (a.color || undefined) : undefined }}
                   >
-                    {hideName ? (
+                    {isFreeform ? (
                       <div className="flex items-start gap-2">
                         <div className="flex flex-wrap gap-1.5 flex-1 min-w-0">
                           {detailChips.map(c => (
@@ -847,9 +852,11 @@ export function SlotEditModal({
                     ) : (
                       <>
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-full grid place-items-center text-[13px] font-extrabold bg-[color-mix(in_srgb,var(--color-brand-primary)_12%,transparent)] text-[var(--color-brand-primary)] shrink-0">
-                            {a.member_name.slice(0, 1)}
-                          </div>
+                          {!isFreeform && (
+                            <div className="w-8 h-8 rounded-full grid place-items-center text-[13px] font-extrabold bg-[color-mix(in_srgb,var(--color-brand-primary)_12%,transparent)] text-[var(--color-brand-primary)] shrink-0">
+                              {a.member_name.slice(0, 1)}
+                            </div>
+                          )}
                           <div className="min-w-0 flex-1 flex flex-col gap-0.5">
                             <span className="text-sm text-[var(--color-text-primary)] font-bold flex items-center flex-wrap gap-1.5">
                               {displayName}
