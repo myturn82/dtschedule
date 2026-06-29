@@ -75,7 +75,8 @@ function NameChips({ assignments, highlightName, tintBg, tintInk, teamLeaderUser
           (a.extra_data && Object.values(a.extra_data).some(v => String(v ?? '').toLowerCase().includes(_hq)))
         ))
         const isWithdrawn = !!(a.user_id && withdrawnUserIds?.has(a.user_id)) || a.account_deleted
-        const displayText = a.note ? `${a.member_name}(${a.note})` : a.member_name
+        const nameLabel = a.extra_data?._nf ? (a.extra_data._cl ?? '') : a.member_name
+        const displayText = a.note ? `${nameLabel}(${a.note})` : nameLabel
         const timeLabel = showTimeSub && a.time_sub ? formatTimeSub(a.time_sub) : null
         return (
           <div

@@ -38,7 +38,8 @@ interface Props {
 
 function PersonChip({ a, withdrawnUserIds, onClick }: { a: Assignment; withdrawnUserIds?: Set<string>; onClick?: () => void }) {
   const isW = !!(a.user_id && withdrawnUserIds?.has(a.user_id)) || a.account_deleted
-  const initial = a.member_name?.charAt(0) ?? '?'
+  const cellLabel = a.extra_data?._nf ? (a.extra_data._cl ?? '') : a.member_name
+  const initial = cellLabel?.charAt(0) ?? '?'
   return (
     <div
       className={`inline-flex items-center gap-2 px-3 py-2 rounded-[10px] self-start max-w-full bg-[var(--color-surface-secondary)] border border-[var(--color-border)] ${onClick ? 'cursor-pointer hover:border-[var(--color-brand-primary)] hover:bg-[var(--color-surface-hover)] transition-colors' : ''}`}
@@ -54,7 +55,7 @@ function PersonChip({ a, withdrawnUserIds, onClick }: { a: Assignment; withdrawn
         {initial}
       </span>
       <span className={`text-sm font-semibold tracking-tight ${isW ? 'line-through text-[var(--color-text-muted)]' : 'text-[var(--color-text-primary)]'}`}>
-        {a.member_name}
+        {cellLabel}
       </span>
       {isW && (
         <span className="text-[10px] px-1.5 rounded" style={{ background: 'oklch(0.97 0.02 25)', color: 'oklch(0.55 0.16 25)' }}>

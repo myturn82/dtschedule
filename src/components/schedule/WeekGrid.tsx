@@ -305,7 +305,7 @@ export function WeekGrid({
                                         : { background: tint.bg, color: tint.ink }}
                                   >
                                     <span className="flex items-center justify-center gap-0.5 w-full">
-                                      <span className="truncate min-w-0" style={isWithdrawn ? { textDecoration: 'line-through' } : undefined}>{a.member_name}</span>
+                                      <span className="truncate min-w-0" style={isWithdrawn ? { textDecoration: 'line-through' } : undefined}>{a.extra_data?._nf ? (a.extra_data._cl ?? '') : a.member_name}</span>
                                       {a.is_locked && <LockIcon size={8} className="shrink-0" />}
                                     </span>
                                     {isWithdrawn && <span className="block text-[6px] sm:text-[8px] font-normal">삭제됨</span>}
@@ -381,7 +381,7 @@ export function WeekGrid({
                                 : { background: chipTint.bg, color: chipTint.ink }}
                           >
                             <span className="flex items-center justify-center gap-0.5 w-full">
-                              <span className="truncate min-w-0" style={isWithdrawn ? { textDecoration: 'line-through' } : undefined}>{a.member_name}</span>
+                              <span className="truncate min-w-0" style={isWithdrawn ? { textDecoration: 'line-through' } : undefined}>{a.extra_data?._nf ? (a.extra_data._cl ?? '') : a.member_name}</span>
                               {a.is_locked && <LockIcon size={8} className="shrink-0" />}
                             </span>
                             {isWithdrawn && <span className="block text-[6px] sm:text-[8px] font-normal">삭제됨</span>}

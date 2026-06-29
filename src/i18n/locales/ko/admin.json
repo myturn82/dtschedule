@@ -4,7 +4,7 @@
     "members": "회원 관리",
     "pending": "승인 대기",
     "roles": "역할 설정",
-    "rules": "배정 규칙",
+    "rules": "스케줄규칙",
     "dates": "날짜 설정",
     "settings": "조직 설정",
     "legend": "범례",
