@@ -310,6 +310,7 @@ export function DashboardPage() {
   const [confirmReject, setConfirmReject] = useState<string | null>(null)
   const [participationTab, setParticipationTab] = useState<'역할별' | '사용자별'>('역할별')
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
+  const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null)
 
   const isFreeform = tenant?.settings?.tenant_mode === '비회원'
 
@@ -489,6 +490,37 @@ export function DashboardPage() {
       return { fieldId: field.id, label: field.label, rows }
     }).filter(f => f.rows.length > 0)
   }, [effectiveCustomFields, assignments, selectedUserId, isFreeform])
+
+  const roleDetailStats = useMemo(() => {
+    if (!selectedRoleId) return []
+    if (isFreeform) {
+      const nameCount = new Map<string, number>()
+      for (const a of assignments) {
+        if (a.role_id === selectedRoleId && a.member_type !== 'close') {
+          nameCount.set(a.member_name, (nameCount.get(a.member_name) ?? 0) + 1)
+        }
+      }
+      return [...nameCount.entries()]
+        .map(([name, count]) => ({ id: name, name, count }))
+        .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
+    } else {
+      const userRoleMap = new Map<string, string>()
+      for (const m of members) {
+        if (m.role_id) userRoleMap.set(m.user_id, m.role_id)
+      }
+      const countById = new Map<string, number>()
+      for (const a of assignments) {
+        const rid = a.user_id ? userRoleMap.get(a.user_id) : undefined
+        if (rid === selectedRoleId && a.user_id) {
+          countById.set(a.user_id, (countById.get(a.user_id) ?? 0) + 1)
+        }
+      }
+      return members
+        .filter(m => m.role_id === selectedRoleId)
+        .map(m => ({ id: m.user_id, name: m.profile.name ?? '?', count: countById.get(m.user_id) ?? 0 }))
+        .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
+    }
+  }, [selectedRoleId, assignments, members, isFreeform])
 
   const activeMemberCount = useMemo(() => userStats.filter(m => m.count > 0).length, [userStats])
   const totalAssignments = assignments.length
@@ -736,7 +768,7 @@ export function DashboardPage() {
                     {(['역할별', '사용자별'] as const).map(tab => (
                       <button
                         key={tab}
-                        onClick={() => { setParticipationTab(tab); setSelectedUserId(null) }}
+                        onClick={() => { setParticipationTab(tab); setSelectedUserId(null); setSelectedRoleId(null) }}
                         className={`flex-1 h-9 text-[13px] font-semibold rounded-[8px] relative z-10 transition-colors duration-150 ${
                           participationTab === tab
                             ? 'text-[var(--color-text-primary)]'
@@ -753,31 +785,135 @@ export function DashboardPage() {
                     roleStats.length === 0 ? (
                       <p className="text-[13px] text-[var(--color-text-muted)] text-center py-6">역할이 없습니다.</p>
                     ) : (
-                      <div className="rounded-[14px] border border-[var(--color-border)] overflow-hidden">
+                      <div className="flex flex-col gap-2">
                         {roleStats.map((r, idx) => {
+                          const isSelected = selectedRoleId === r.id
                           const tint = AVATAR_TINTS[idx % AVATAR_TINTS.length]
                           return (
                             <div
                               key={r.id}
-                              className={`flex items-center gap-3 px-4 py-3 ${idx < roleStats.length - 1 ? 'border-b border-[var(--color-border)]' : ''}`}
+                              className="rounded-[14px] border overflow-hidden transition-[border-color,box-shadow] duration-150"
+                              style={{
+                                borderColor: isSelected ? 'var(--color-brand-primary)' : 'var(--color-border)',
+                                boxShadow: isSelected ? '0 0 0 3px oklch(0.95 0.04 28)' : undefined,
+                              }}
                             >
-                              <div
-                                className="w-[34px] h-[34px] rounded-[10px] text-[14px] font-bold flex items-center justify-center shrink-0 select-none"
-                                style={{ background: tint.bg, color: tint.fg }}
+                              <button
+                                onClick={() => { if (r.count === 0) return; setSelectedRoleId(prev => prev === r.id ? null : r.id); setSelectedUserId(null) }}
+                                className={`flex items-center gap-3 w-full px-4 py-3 text-left transition-colors ${
+                                  isSelected
+                                    ? 'bg-[var(--color-surface-secondary)]'
+                                    : 'bg-[var(--color-surface)] hover:bg-[var(--color-surface-secondary)]'
+                                } ${r.count === 0 ? 'opacity-60' : ''}`}
+                                style={{ cursor: r.count === 0 ? 'default' : 'pointer' }}
                               >
-                                {r.name.charAt(0)}
+                                <div
+                                  className="w-[34px] h-[34px] rounded-[10px] text-[14px] font-bold flex items-center justify-center shrink-0 select-none"
+                                  style={{ background: tint.bg, color: tint.fg }}
+                                >
+                                  {r.name.charAt(0)}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <span className="text-[14px] font-semibold text-[var(--color-text-primary)] truncate block">{r.name}</span>
+                                </div>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <span className={`text-[14px] font-bold font-mono-num ${r.count === 0 ? 'text-[var(--color-text-muted)]' : 'text-[var(--color-text-primary)]'}`}>
+                                    {r.count === 0 ? '—' : r.count}
+                                    {r.count > 0 && <span className="text-[11px] text-[var(--color-text-muted)] font-medium ml-0.5">건</span>}
+                                  </span>
+                                  {r.count > 0 && (
+                                    <svg
+                                      viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor"
+                                      strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+                                      className={`transition-transform duration-200 ${isSelected ? 'rotate-180 text-[var(--color-text-secondary)]' : 'text-[var(--color-text-muted)]'}`}
+                                    >
+                                      <path d="m5 8 5 5 5-5"/>
+                                    </svg>
+                                  )}
+                                </div>
+                              </button>
+
+                              {/* Expandable detail */}
+                              <div
+                                className="grid transition-[grid-template-rows] duration-[280ms] ease-out"
+                                style={{ gridTemplateRows: isSelected ? '1fr' : '0fr' }}
+                              >
+                                <div className="overflow-hidden">
+                                  <div className="px-4 pb-4 pt-1">
+                                    {roleDetailStats.length === 0 ? (
+                                      <p className="text-[12px] text-[var(--color-text-muted)] py-2">참여자가 없습니다.</p>
+                                    ) : (
+                                      <div className="rounded-[10px] border border-[var(--color-border)] overflow-hidden">
+                                        {roleDetailStats.map((item) => {
+                                          const isMemberSelected = selectedUserId === item.id
+                                          return (
+                                            <div key={item.id} className="border-b border-[var(--color-border)] last:border-b-0">
+                                              <button
+                                                onClick={() => item.count > 0 && setSelectedUserId(prev => prev === item.id ? null : item.id)}
+                                                className={`flex items-center gap-2 px-3 py-2.5 w-full text-left transition-colors ${isMemberSelected ? 'bg-[var(--color-surface-secondary)]' : 'bg-[var(--color-surface)] hover:bg-[var(--color-surface-secondary)]'} ${item.count === 0 ? 'opacity-60' : ''}`}
+                                                style={{ cursor: item.count === 0 ? 'default' : 'pointer' }}
+                                              >
+                                                <span className="text-[12px] font-medium text-[var(--color-text-primary)] flex-1 min-w-0 truncate">{item.name}</span>
+                                                <div className="flex items-center gap-1.5 shrink-0">
+                                                  <span className="text-[12px] font-semibold tabular-nums text-[var(--color-text-primary)]">
+                                                    {item.count}<span className="text-[11px] text-[var(--color-text-muted)] font-normal ml-0.5">건</span>
+                                                  </span>
+                                                  {item.count > 0 && (
+                                                    <svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+                                                      className={`transition-transform duration-200 ${isMemberSelected ? 'rotate-180 text-[var(--color-text-secondary)]' : 'text-[var(--color-text-muted)]'}`}>
+                                                      <path d="m5 8 5 5 5-5"/>
+                                                    </svg>
+                                                  )}
+                                                </div>
+                                              </button>
+                                              <div
+                                                className="grid transition-[grid-template-rows] duration-[280ms] ease-out"
+                                                style={{ gridTemplateRows: isMemberSelected ? '1fr' : '0fr' }}
+                                              >
+                                                <div className="overflow-hidden">
+                                                  <div className="px-3 pb-3 pt-1.5 border-t border-[var(--color-border)] bg-[var(--color-surface-secondary)]">
+                                                    {userFieldStats.length === 0 ? (
+                                                      <p className="text-[11px] text-[var(--color-text-muted)] py-1">통계 항목이 없습니다.</p>
+                                                    ) : (
+                                                      <div className="space-y-2">
+                                                        {userFieldStats.map(stat => (
+                                                          <div key={stat.fieldId}>
+                                                            <p className="text-[10px] font-semibold text-[var(--color-text-muted)] uppercase tracking-[0.6px] mb-1">{stat.label}</p>
+                                                            <div className="rounded-[8px] border border-[var(--color-border)] overflow-hidden">
+                                                              {stat.rows.map(row => (
+                                                                <div key={row.value} className="flex items-center gap-2 px-2.5 py-1.5 bg-[var(--color-surface)] border-b border-[var(--color-border)] last:border-b-0">
+                                                                  <span className="text-[11px] font-medium text-[var(--color-text-primary)] flex-1 min-w-0 truncate">{row.name}</span>
+                                                                  <span className="text-[11px] font-semibold tabular-nums text-[var(--color-text-primary)] shrink-0">{row.count}건</span>
+                                                                </div>
+                                                              ))}
+                                                            </div>
+                                                          </div>
+                                                        ))}
+                                                      </div>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          )
+                                        })}
+                                        <div className="flex items-center gap-2 px-3 py-2 bg-[var(--color-surface-secondary)] border-t border-[var(--color-border)]">
+                                          <span className="text-[12px] font-semibold text-[var(--color-text-primary)] flex-1">합계</span>
+                                          <span className="text-[12px] font-semibold tabular-nums text-[var(--color-text-primary)] shrink-0">
+                                            {roleDetailStats.reduce((acc, item) => acc + item.count, 0)}<span className="text-[11px] text-[var(--color-text-muted)] font-normal ml-0.5">건</span>
+                                          </span>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
                               </div>
-                              <div className="flex-1 min-w-0">
-                                <span className="text-[14px] font-semibold text-[var(--color-text-primary)] truncate block">{r.name}</span>
-                              </div>
-                              <span className={`text-[14px] font-bold font-mono-num shrink-0 ${r.count === 0 ? 'text-[var(--color-text-muted)]' : 'text-[var(--color-text-primary)]'}`}>
-                                {r.count === 0 ? '—' : r.count}
-                                {r.count > 0 && <span className="text-[11px] text-[var(--color-text-muted)] font-medium ml-0.5">건</span>}
-                              </span>
                             </div>
                           )
                         })}
-                        <div className="flex items-center gap-3 px-4 py-3 border-t border-[var(--color-border)] bg-[var(--color-surface-secondary)]">
+
+                        {/* Total */}
+                        <div className="flex items-center gap-3 px-4 py-3 rounded-[14px] bg-[var(--color-surface-secondary)] border border-[var(--color-border)]">
                           <div className="w-[34px] h-[34px] shrink-0" />
                           <div className="flex-1 min-w-0">
                             <span className="text-[13px] font-semibold text-[var(--color-text-primary)]">합계</span>
