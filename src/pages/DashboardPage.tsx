@@ -314,13 +314,16 @@ export function DashboardPage() {
   const isFreeform = tenant?.settings?.tenant_mode === '비회원'
 
   const isCurrentMonth = viewYear === thisYear && viewMonth === thisMonth
+  const limitYear = thisMonth === 12 ? thisYear + 1 : thisYear
+  const limitMonth = thisMonth === 12 ? 1 : thisMonth + 1
+  const isAtLimit = viewYear === limitYear && viewMonth === limitMonth
 
   function prevMonth() {
     if (viewMonth === 1) { setViewYear(y => y - 1); setViewMonth(12) }
     else setViewMonth(m => m - 1)
   }
   function nextMonth() {
-    if (isCurrentMonth) return
+    if (isAtLimit) return
     if (viewMonth === 12) { setViewYear(y => y + 1); setViewMonth(1) }
     else setViewMonth(m => m + 1)
   }
@@ -571,7 +574,7 @@ export function DashboardPage() {
                     </span>
                     <button
                       onClick={nextMonth}
-                      disabled={isCurrentMonth}
+                      disabled={isAtLimit}
                       className="w-7 h-7 flex items-center justify-center rounded-lg border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                     >
                       <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="m8 5 5 5-5 5"/></svg>
