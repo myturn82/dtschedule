@@ -30,7 +30,7 @@ export function NotificationPanel({ notifications, onMarkAsRead, onMarkAllAsRead
   return (
     <>
       <div className="fixed inset-0 z-40" onClick={onClose} />
-      <div className="absolute top-full right-0 mt-1 w-80 max-h-[480px] flex flex-col bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-xl z-50 overflow-hidden">
+      <div className="absolute top-full right-3 sm:right-5 mt-1 w-[min(320px,calc(100vw-24px))] max-h-[480px] flex flex-col bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-xl z-50 overflow-hidden">
         {/* 헤더 */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)] shrink-0">
           <span className="text-sm font-semibold text-[var(--color-text-primary)]">알림</span>

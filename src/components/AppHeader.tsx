@@ -73,7 +73,7 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
           <div className="flex items-center gap-1.5 shrink-0">
             {rightSlot}
             {profile && (
-              <div className="relative">
+              <div>
                 <button
                   onClick={() => setShowNotifications(v => !v)}
                   aria-label="알림"
@@ -89,14 +89,6 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
                     </span>
                   )}
                 </button>
-                {showNotifications && (
-                  <NotificationPanel
-                    notifications={notifications}
-                    onMarkAsRead={markAsRead}
-                    onMarkAllAsRead={markAllAsRead}
-                    onClose={() => setShowNotifications(false)}
-                  />
-                )}
               </div>
             )}
             {feedbackUrl && profile && (
@@ -145,6 +137,16 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
             )}
           </div>
         </div>
+
+        {/* Notification panel — 헤더 전체 기준으로 우측 정렬 (벨 버튼 기준 시 모바일 좌측 잘림 발생) */}
+        {showNotifications && (
+          <NotificationPanel
+            notifications={notifications}
+            onMarkAsRead={markAsRead}
+            onMarkAllAsRead={markAllAsRead}
+            onClose={() => setShowNotifications(false)}
+          />
+        )}
 
         {/* Hamburger dropdown */}
         {showFuncMenu && (

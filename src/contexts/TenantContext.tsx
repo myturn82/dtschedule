@@ -46,8 +46,10 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       else setLoading(false)
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
+        // TOKEN_REFRESHED는 멤버십 변경 없음 — 재조회 불필요 (실패 시 빈 배열 덮어쓰기 방지)
+        if (event === 'TOKEN_REFRESHED') return
         fetchMemberships(session.user.id)
       } else {
         setMemberships([])
@@ -63,10 +65,14 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   }, [])
 
   async function fetchMemberships(userId: string) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('tenant_members')
       .select('*, tenant:tenants(*), tenant_role:tenant_roles(name)')
       .eq('user_id', userId)
+
+    // 쿼리 실패 시(네트워크 오류, 토큰 갱신 직후 일시 불안정 등) 기존 멤버십 상태 유지
+    // 빈 배열로 덮어쓰면 memberships.length===0 → SetupWizard/PendingPage로 잘못 라우팅됨
+    if (error) { setLoading(false); return }
 
     const list = (data ?? []) as MembershipWithTenant[]
 

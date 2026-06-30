@@ -8,7 +8,8 @@
     "dates": "Date Settings",
     "settings": "Org Settings",
     "legend": "Legend",
-    "customFields": "Custom Fields"
+    "customFields": "Custom Fields",
+    "notifications": "Notifications"
   },
   "org": {
     "label": "Organization",

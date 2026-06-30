@@ -8,7 +8,8 @@
     "dates": "날짜 설정",
     "settings": "조직 설정",
     "legend": "범례",
-    "customFields": "커스텀 필드"
+    "customFields": "커스텀 필드",
+    "notifications": "배정알림"
   },
   "org": {
     "label": "조직",
