@@ -973,7 +973,7 @@ export function SlotEditModal({
                         value={note}
                         rows={1}
                         onChange={e => setNote(e.target.value)}
-                        placeholder="달력에 표시됨"
+                        placeholder="달력()안에 표시됨"
                         maxLength={200}
                         className={inputClass + ' min-h-[44px] py-[12px] resize-none overflow-hidden'}
                       />
@@ -1034,7 +1034,7 @@ export function SlotEditModal({
                       value={note}
                       rows={1}
                       onChange={e => setNote(e.target.value)}
-                      placeholder="달력에 표시됨"
+                      placeholder="달력()안에 표시됨"
                       className={inputClass + ' min-h-[44px] py-[12px] resize-none overflow-hidden'}
                     />
                   )}

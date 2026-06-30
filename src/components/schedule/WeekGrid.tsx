@@ -130,7 +130,7 @@ export function WeekGrid({
           style={{ gridTemplateColumns: `${timeColW}px repeat(7, 1fr)` }}
         >
           {/* Corner */}
-          <div className="px-2 py-2 text-[9px] font-medium text-[var(--color-text-muted)] uppercase tracking-wide border-r border-[var(--color-border)] flex items-center justify-center">
+          <div className="px-2 py-2 text-[9px] font-medium text-[var(--color-text-muted)] uppercase tracking-wide border-r border-[var(--color-border)] flex items-center justify-center sticky left-0 z-20 bg-[var(--color-surface-secondary)]">
             시간
           </div>
 
@@ -197,7 +197,7 @@ export function WeekGrid({
               style={{ gridTemplateColumns: `${timeColW}px repeat(7, 1fr)`, minHeight: isRowClosed ? 28 : 52 }}
             >
               {/* Time label */}
-              <div className="px-1 py-1 sm:px-1.5 sm:py-1.5 flex flex-col justify-center items-center text-center border-r border-[var(--color-border)]">
+              <div className={`px-1 py-1 sm:px-1.5 sm:py-1.5 flex flex-col justify-center items-center text-center border-r border-[var(--color-border)] sticky left-0 z-[1] ${isMoon ? 'bg-[oklch(0.99_0.005_280)]' : 'bg-[var(--color-surface-secondary)]'}`}>
                 <span className="text-[9px] font-medium text-[var(--color-text-secondary)] leading-snug break-all">
                   {slotLabels[slot] ?? (
                     <>
