@@ -72,6 +72,7 @@ export function SlotEditModal({
   const [editingId, setEditingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [isInputExpanded, setIsInputExpanded] = useState(false)
 
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(
     initialRoleId ?? (!isAdmin && memberRoleId ? memberRoleId : (splitRoles[0]?.id ?? null))
@@ -931,10 +932,43 @@ export function SlotEditModal({
           ) : profile && !isReadOnly ? (
             <>
               {/* 입력(편집) 영역 헤더 */}
-              <div className="flex items-center gap-2 pt-0.5">
-                <span className="h-[18px] w-[3px] rounded-full bg-[var(--color-brand-primary)]" />
-                <h3 className="text-[12px] font-extrabold text-[var(--color-text-primary)] m-0 tracking-tight">{editingId ? '배정 수정' : '새 스케줄 입력'}</h3>
-              </div>
+              {displayedAssignments.length > 0 && !editingId ? (
+                <button
+                  onClick={() => setIsInputExpanded(prev => !prev)}
+                  className={`flex items-center gap-3 w-full px-3.5 py-3 rounded-xl border transition-all duration-200 text-left ${
+                    isInputExpanded
+                      ? 'bg-[var(--color-surface-secondary)] border-[var(--color-border)]'
+                      : 'bg-[color-mix(in_srgb,var(--color-brand-primary)_8%,var(--color-surface))] border-[color-mix(in_srgb,var(--color-brand-primary)_30%,var(--color-border))] hover:bg-[color-mix(in_srgb,var(--color-brand-primary)_13%,var(--color-surface))]'
+                  }`}
+                >
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-[18px] font-bold leading-none transition-colors ${
+                    isInputExpanded ? 'bg-[var(--color-border-strong)] text-[var(--color-text-muted)]' : 'bg-[var(--color-brand-primary)] text-white'
+                  }`}>
+                    {isInputExpanded ? '−' : '+'}
+                  </div>
+                  <span className={`text-[13px] font-bold flex-1 ${isInputExpanded ? 'text-[var(--color-text-secondary)]' : 'text-[var(--color-brand-primary)]'}`}>
+                    새 스케줄 입력
+                  </span>
+                  {!isInputExpanded && (
+                    <span className="text-[11px] text-[var(--color-text-muted)] shrink-0">탭하여 펼치기</span>
+                  )}
+                  <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                    className={`transition-transform duration-200 shrink-0 ${isInputExpanded ? 'rotate-180 text-[var(--color-text-muted)]' : 'text-[var(--color-brand-primary)]'}`}>
+                    <path d="m5 8 5 5 5-5"/>
+                  </svg>
+                </button>
+              ) : (
+                <div className="flex items-center gap-2 pt-0.5">
+                  <span className="h-[18px] w-[3px] rounded-full bg-[var(--color-brand-primary)]" />
+                  <h3 className="text-[12px] font-extrabold text-[var(--color-text-primary)] m-0 tracking-tight">{editingId ? '배정 수정' : '새 스케줄 입력'}</h3>
+                </div>
+              )}
+              {/* Accordion body */}
+              <div
+                className="grid transition-[grid-template-rows] duration-[280ms] ease-out"
+                style={{ gridTemplateRows: (!displayedAssignments.length || !!editingId || isInputExpanded) ? '1fr' : '0fr' }}
+              >
+              <div className="overflow-hidden flex flex-col gap-3">
               {/* Time slot selector */}
               {timeSubOptions && (
                 <div>
@@ -1040,6 +1074,8 @@ export function SlotEditModal({
                   )}
                 </>
               )}
+              </div>
+              </div>
 
             </>
           ) : profile && isReadOnly ? (
