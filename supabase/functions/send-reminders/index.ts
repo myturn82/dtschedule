@@ -198,6 +198,10 @@ function renderTemplate(template: string, vars: Record<string, string>): string 
   return Object.entries(vars).reduce((t, [k, v]) => t.replaceAll(`{{${k}}}`, v), template)
 }
 
+function formatSlot(slot: string): string {
+  return slot.split('-').map(h => `${h}시`).join('-')
+}
+
 // ── 메인 핸들러 ──────────────────────────────────────────────────────────────
 
 Deno.serve(async (req) => {
@@ -289,15 +293,26 @@ Deno.serve(async (req) => {
     let orgSent = 0
     let orgFailed = 0
 
+    const allDaySlots = [...new Set(
+      assignments.map(a => a.time_slot).filter(Boolean),
+    )].sort().map(formatSlot).join(', ')
+
+    const { data: profilesData } = await supabase
+      .from('profiles').select('id, name').in('id', [...userIds])
+    const nameMap = new Map<string, string>(
+      (profilesData ?? []).map(p => [p.id as string, p.name as string]),
+    )
+
     for (const userId of userIds) {
       const userSlots = assignments
         .filter(a => a.user_id === userId)
-        .map(a => a.time_slot).filter(Boolean).join(', ')
-      const slotLabel = userSlots || '미정'
+        .map(a => a.time_slot).filter(Boolean).sort().map(formatSlot).join(', ')
+      const slotLabel = userSlots || allDaySlots || '미정'
+      const userName = nameMap.get(userId) ?? ''
       const title = '📅 내일 배정 알림'
       const bodyText = renderTemplate(
-        setting.msg_template ?? '안녕하세요! 내일 {{date}} {{slot}} 배정이 있습니다. ({{org}})',
-        { date: dateLabel, slot: slotLabel, org: tenantName },
+        setting.msg_template ?? '안녕하세요 {{name}}님! 내일 {{date}} {{slot}} 배정이 있습니다. ({{org}})',
+        { date: dateLabel, slot: slotLabel, org: tenantName, name: userName },
       )
       const url = `/schedule?date=${dateStr}`
 

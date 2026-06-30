@@ -171,7 +171,7 @@ function makeTimeOpt(halfHours: number) {
 const START_OPTIONS = Array.from({ length: 48 }, (_, i) => makeTimeOpt(i))
 const END_OPTIONS   = Array.from({ length: 48 }, (_, i) => makeTimeOpt(i + 1))
 
-type Tab = 'members' | 'pending' | 'roles' | 'rules' | 'dates' | 'settings' | 'legend' | 'custom_fields'
+type Tab = 'members' | 'pending' | 'roles' | 'rules' | 'dates' | 'settings' | 'legend' | 'custom_fields' | 'notifications'
 
 const TAB_LABELS: Record<Tab, string> = {
   members: '회원 관리',
@@ -182,6 +182,7 @@ const TAB_LABELS: Record<Tab, string> = {
   settings: '조직 설정',
   legend: '범례 관리',
   custom_fields: '커스텀 필드',
+  notifications: '배정알림',
 }
 
 export function AdminPage() {
@@ -306,6 +307,8 @@ export function AdminPage() {
     msg_template: string
   } | null>(null)
   const [notifSaving, setNotifSaving] = useState(false)
+  const [manualSending, setManualSending] = useState(false)
+  const [manualSendResult, setManualSendResult] = useState<{ sent: number; failed: number } | null>(null)
 
   // Sync settings form when adminTenant changes
   useEffect(() => {
@@ -383,7 +386,7 @@ export function AdminPage() {
           is_enabled: false,
           send_time: '18:00',
           recipients: { assigned_members: true, admins: false },
-          msg_template: '안녕하세요! 내일 {{date}} {{slot}} 배정이 있습니다. ({{org}})',
+          msg_template: '안녕하세요 {{name}}님! 내일 {{date}} {{slot}} 배정이 있습니다. ({{org}})',
         })
       })
   }, [adminTenant?.id])
@@ -819,6 +822,19 @@ export function AdminPage() {
     }
   }
 
+  async function sendManualReminder() {
+    if (!adminTenant?.id) return
+    setManualSending(true)
+    setManualSendResult(null)
+    const { data, error } = await supabase.functions.invoke('send-reminders', {
+      body: { tenant_id: adminTenant.id },
+    })
+    setManualSending(false)
+    if (error) { msg(`발송 오류: ${error.message}`, true); return }
+    const result = data as { sent: number; failed: number } | null
+    setManualSendResult({ sent: result?.sent ?? 0, failed: result?.failed ?? 0 })
+  }
+
   async function saveNotifSettings() {
     if (!adminTenant?.id || !notifSettings) return
     setNotifSaving(true)
@@ -833,7 +849,8 @@ export function AdminPage() {
         updated_at: new Date().toISOString(),
       }, { onConflict: 'tenant_id' })
     setNotifSaving(false)
-    if (error) alert(`저장 오류: ${error.message}`)
+    if (error) msg(`저장 오류: ${error.message}`, true)
+    else msg('저장됐습니다.')
   }
 
   const inputCls = 'border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]'
@@ -2515,98 +2532,140 @@ export function AdminPage() {
                 </form>
               </div>
             )}
+            {/* ── 배정알림 ── */}
+            {tab === 'notifications' && (
+              <div className="max-w-lg space-y-4">
+                <header className="mb-5">
+                  <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10 px-3 py-[5px] rounded-full">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                    조직 설정 · 배정알림
+                  </span>
+                  <h2 className="mt-3 mb-1.5 text-[clamp(22px,5vw,27px)] font-extrabold tracking-tight text-[var(--color-text-primary)]">배정알림</h2>
+                  <p className="text-[14px] font-medium text-[var(--color-text-muted)] leading-relaxed max-w-[52ch]">
+                    배정된 멤버에게 전날 자동으로 알림을 발송합니다. 발송 시간과 메시지 템플릿을 설정하세요.
+                  </p>
+                </header>
+
+                {notifSettings ? (
+                  <>
+                  <section className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-base font-bold text-[var(--color-text-primary)]">D-1 배정 알림</h2>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <span className="text-sm text-[var(--color-text-secondary)]">
+                          {notifSettings.is_enabled ? '활성' : '비활성'}
+                        </span>
+                        <button
+                          role="switch"
+                          aria-checked={notifSettings.is_enabled}
+                          onClick={() => setNotifSettings(s => s ? { ...s, is_enabled: !s.is_enabled } : s)}
+                          className={`relative w-10 h-6 rounded-full transition-colors ${notifSettings.is_enabled ? 'bg-[var(--color-brand-primary)]' : 'bg-[var(--color-border-strong)]'}`}
+                        >
+                          <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${notifSettings.is_enabled ? 'translate-x-4' : 'translate-x-0'}`} />
+                        </button>
+                      </label>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5">발송 시간</label>
+                        <select
+                          value={notifSettings.send_time}
+                          onChange={e => setNotifSettings(s => s ? { ...s, send_time: e.target.value } : s)}
+                          className="w-full px-3 py-2 text-sm rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30"
+                        >
+                          {Array.from({ length: 48 }, (_, i) => {
+                            const h = String(Math.floor(i / 2)).padStart(2, '0')
+                            const m = i % 2 === 0 ? '00' : '30'
+                            return `${h}:${m}`
+                          }).map(timeOpt => <option key={timeOpt} value={timeOpt}>{timeOpt}</option>)}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5">수신 대상</label>
+                        <div className="space-y-1.5">
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={notifSettings.recipients.assigned_members}
+                              onChange={e => setNotifSettings(s => s ? { ...s, recipients: { ...s.recipients, assigned_members: e.target.checked } } : s)}
+                              className="w-4 h-4 rounded accent-[var(--color-brand-primary)]"
+                            />
+                            <span className="text-sm text-[var(--color-text-primary)]">배정된 멤버</span>
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={notifSettings.recipients.admins}
+                              onChange={e => setNotifSettings(s => s ? { ...s, recipients: { ...s.recipients, admins: e.target.checked } } : s)}
+                              className="w-4 h-4 rounded accent-[var(--color-brand-primary)]"
+                            />
+                            <span className="text-sm text-[var(--color-text-primary)]">관리자</span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5">메시지 템플릿</label>
+                      <textarea
+                        value={notifSettings.msg_template}
+                        onChange={e => setNotifSettings(s => s ? { ...s, msg_template: e.target.value } : s)}
+                        rows={3}
+                        className="w-full px-3 py-2 text-sm rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 resize-none"
+                      />
+                      <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                        변수: <code className="bg-[var(--color-surface-secondary)] px-1 rounded">{'{{name}}'}</code> 이름,{' '}
+                        <code className="bg-[var(--color-surface-secondary)] px-1 rounded">{'{{date}}'}</code> 날짜,{' '}
+                        <code className="bg-[var(--color-surface-secondary)] px-1 rounded">{'{{slot}}'}</code> 시간대,{' '}
+                        <code className="bg-[var(--color-surface-secondary)] px-1 rounded">{'{{org}}'}</code> 조직명
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={saveNotifSettings}
+                      disabled={notifSaving}
+                      className="px-4 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition-colors"
+                      style={{ background: 'var(--color-brand-primary)' }}
+                    >
+                      {notifSaving ? '저장 중...' : '저장'}
+                    </button>
+                  </section>
+
+                  <section className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 space-y-3">
+                    <div>
+                      <h2 className="text-base font-bold text-[var(--color-text-primary)]">수동 발송</h2>
+                      <p className="text-sm text-[var(--color-text-muted)] mt-0.5">
+                        현재 설정 기준으로 내일 배정된 멤버에게 즉시 발송합니다.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={sendManualReminder}
+                        disabled={manualSending}
+                        className="px-4 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition-colors"
+                        style={{ background: 'var(--color-brand-primary)' }}
+                      >
+                        {manualSending ? '발송 중...' : '지금 발송'}
+                      </button>
+                      {manualSendResult && (
+                        <span className="text-sm text-[var(--color-text-secondary)]">
+                          발송 완료: {manualSendResult.sent}건
+                          {manualSendResult.failed > 0 && ` / 실패: ${manualSendResult.failed}건`}
+                        </span>
+                      )}
+                    </div>
+                  </section>
+                  </>
+                ) : (
+                  <div className="text-center py-8 text-[var(--color-text-muted)] text-sm">로딩 중...</div>
+                )}
+              </div>
+            )}
           </>
         )}
       </div>
-      {/* ── 알림 설정 ── */}
-      {notifSettings && (
-        <section className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-[var(--color-text-primary)]">D-1 배정 알림</h2>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <span className="text-sm text-[var(--color-text-secondary)]">
-                {notifSettings.is_enabled ? '활성' : '비활성'}
-              </span>
-              <button
-                role="switch"
-                aria-checked={notifSettings.is_enabled}
-                onClick={() => setNotifSettings(s => s ? { ...s, is_enabled: !s.is_enabled } : s)}
-                className={`relative w-10 h-6 rounded-full transition-colors ${notifSettings.is_enabled ? 'bg-[var(--color-brand-primary)]' : 'bg-[var(--color-border-strong)]'}`}
-              >
-                <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${notifSettings.is_enabled ? 'translate-x-4' : 'translate-x-0'}`} />
-              </button>
-            </label>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            {/* 발송 시간 */}
-            <div>
-              <label className="block text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5">발송 시간</label>
-              <select
-                value={notifSettings.send_time}
-                onChange={e => setNotifSettings(s => s ? { ...s, send_time: e.target.value } : s)}
-                className="w-full px-3 py-2 text-sm rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30"
-              >
-                {Array.from({ length: 48 }, (_, i) => {
-                  const h = String(Math.floor(i / 2)).padStart(2, '0')
-                  const m = i % 2 === 0 ? '00' : '30'
-                  return `${h}:${m}`
-                }).map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </div>
-
-            {/* 수신 대상 */}
-            <div>
-              <label className="block text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5">수신 대상</label>
-              <div className="space-y-1.5">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={notifSettings.recipients.assigned_members}
-                    onChange={e => setNotifSettings(s => s ? { ...s, recipients: { ...s.recipients, assigned_members: e.target.checked } } : s)}
-                    className="w-4 h-4 rounded accent-[var(--color-brand-primary)]"
-                  />
-                  <span className="text-sm text-[var(--color-text-primary)]">배정된 멤버</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={notifSettings.recipients.admins}
-                    onChange={e => setNotifSettings(s => s ? { ...s, recipients: { ...s.recipients, admins: e.target.checked } } : s)}
-                    className="w-4 h-4 rounded accent-[var(--color-brand-primary)]"
-                  />
-                  <span className="text-sm text-[var(--color-text-primary)]">관리자</span>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          {/* 메시지 템플릿 */}
-          <div>
-            <label className="block text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5">메시지 템플릿</label>
-            <textarea
-              value={notifSettings.msg_template}
-              onChange={e => setNotifSettings(s => s ? { ...s, msg_template: e.target.value } : s)}
-              rows={3}
-              className="w-full px-3 py-2 text-sm rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 resize-none"
-            />
-            <p className="text-xs text-[var(--color-text-muted)] mt-1">
-              변수: <code className="bg-[var(--color-surface-secondary)] px-1 rounded">{'{{date}}'}</code> 날짜,{' '}
-              <code className="bg-[var(--color-surface-secondary)] px-1 rounded">{'{{slot}}'}</code> 시간대,{' '}
-              <code className="bg-[var(--color-surface-secondary)] px-1 rounded">{'{{org}}'}</code> 조직명
-            </p>
-          </div>
-
-          <button
-            onClick={saveNotifSettings}
-            disabled={notifSaving}
-            className="px-4 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition-colors"
-            style={{ background: 'var(--color-brand-primary)' }}
-          >
-            {notifSaving ? '저장 중...' : '저장'}
-          </button>
-        </section>
-      )}
       <DevFileLabel file="AdminPage.tsx" />
     </div>
   )
