@@ -19,12 +19,16 @@
 
 ## 🔴 Critical
 
-### C-1. `send-reminders` Edge Function 호출자 인증 없음
+### C-1. `send-reminders` Edge Function 호출자 인증 없음 — ✅ 조치 완료 (2026-07-01)
 
 - **파일**: `supabase/functions/send-reminders/index.ts`
 - **문제**: 다른 Edge Function과 달리 `auth.getUser()` 검증이 없음. Supabase `verify_jwt=true`이지만 공개 anon key가 유효 JWT이므로 인증 없이 통과 가능.
 - **영향**: 외부인이 `{"force":true}` 바디로 전 조직 알림 강제 발송 + `notifications` 대량 삽입 + 조직명 노출 + 비용 폭증
-- **권장 조치**: cron 모드에는 비밀 헤더(`x-cron-secret`) 검증, 수동 모드에는 admin JWT + 본인 조직 여부 검증 추가
+- **조치 내용**:
+  - cron 모드: 전용 헤더 `x-cron-secret` 검증 (`CRON_SECRET` 시크릿, dev/prod 각각 별도 값으로 설정)
+  - 수동/강제 모드: 호출자 JWT 검증 + 본인 조직 admin 또는 super_admin 권한 확인
+  - `.github/workflows/send-reminders.yml`에 `x-cron-secret` 헤더 전달 추가
+  - dev(`mcuszdvophmqrwostcah`)·prod(`bjnmaajhcmhxwonybnqc`) 모두 배포 및 curl로 인증 거부/통과 시나리오 검증 완료
 
 ---
 
@@ -98,7 +102,7 @@
 
 | 순위 | 항목 | 긴급도 | 작업 유형 |
 |------|------|--------|-----------|
-| 1 | C-1 send-reminders 인증 추가 | 즉시 | 코드 수정 |
+| 1 | C-1 send-reminders 인증 추가 | 즉시 | ✅ 완료 (2026-07-01) |
 | 2 | H-2 시드 파일 비밀번호 재설정 | 즉시 | 운영 조치 |
 | 3 | H-1 customers RLS 정책 교체 | 단기 | 마이그레이션 |
 | 4 | M-1 마스킹 함수 실제 구현 | 단기 | 코드 수정 |
