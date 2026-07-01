@@ -231,6 +231,60 @@ Deno.serve(async (req) => {
   const { tenant_id, dry_run = false, force = false, test_empty = false } = body
 
   const isCronMode = !tenant_id && !force
+
+  // ── 호출자 인증 ──────────────────────────────────────────────────────────
+  // cron 모드: GitHub Actions가 전용 비밀 헤더(x-cron-secret)를 실어 호출 (워크플로우 참고)
+  // 수동/강제 모드: 로그인한 사용자의 JWT로 본인 권한 확인
+  if (isCronMode) {
+    const cronSecret = Deno.env.get('CRON_SECRET')
+    const providedSecret = req.headers.get('x-cron-secret')
+    if (!cronSecret || providedSecret !== cronSecret) {
+      return new Response(
+        JSON.stringify({ error: '인증 실패' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+  } else {
+    const authHeader = req.headers.get('Authorization')
+    const callerToken = authHeader?.replace(/^Bearer\s+/i, '') ?? ''
+    if (!callerToken) {
+      return new Response(
+        JSON.stringify({ error: '인증 필요' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+    const { data: { user: caller }, error: callerErr } = await supabase.auth.getUser(callerToken)
+    if (callerErr || !caller) {
+      return new Response(
+        JSON.stringify({ error: '인증 실패' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+
+    const { data: callerProfile } = await supabase
+      .from('profiles').select('is_super_admin').eq('id', caller.id).single()
+    const isSuperAdmin = callerProfile?.is_super_admin === true
+
+    if (force) {
+      if (!isSuperAdmin) {
+        return new Response(
+          JSON.stringify({ error: '권한 없음' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        )
+      }
+    } else {
+      const { data: callerMember } = await supabase
+        .from('tenant_members').select('role')
+        .eq('tenant_id', tenant_id).eq('user_id', caller.id).eq('is_approved', true).maybeSingle()
+      if (!isSuperAdmin && callerMember?.role !== 'admin') {
+        return new Response(
+          JSON.stringify({ error: '권한 없음' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        )
+      }
+    }
+  }
+
   const seoulHHMM = isCronMode ? getCurrentSeoulHHMM() : null
 
   let settingsQuery = supabase
