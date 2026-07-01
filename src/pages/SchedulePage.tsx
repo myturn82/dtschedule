@@ -403,7 +403,7 @@ export function SchedulePage() {
     swipeTouchStartX.current = null
     swipeTouchStartY.current = null
     // 수평 이동이 수직 이동의 2배 이상일 때만 스와이프로 인식 (약 27도 이내)
-    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 2) return
+    if (Math.abs(dx) < 80 || Math.abs(dx) < Math.abs(dy) * 2) return
     // 가로 스크롤 가능 영역에서 스크롤 방향으로 이동 중이면 네비게이션 무시
     const sc = swipeScrollableEl.current
     if (sc) {
