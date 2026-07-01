@@ -14,6 +14,7 @@ jobs:
           curl -s -X POST \
             "${{ secrets.SUPABASE_URL }}/functions/v1/send-reminders" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
             -H "Content-Type: application/json" \
             -d '{}'
         timeout-minutes: 2
