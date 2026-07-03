@@ -34,12 +34,17 @@
 
 ## 🟠 High
 
-### H-1. `customers` 테이블 anon 전체 접근 허용
+### H-1. `customers` 테이블 anon 전체 접근 허용 — ✅ 조치 완료 (2026-07-03)
 
 - **파일**: `supabase/reset_db.sql` (RLS 정책 `customers_select_has_active_tenant`)
 - **문제**: `auth.uid()` 없이 anon을 포함한 전체 접근 허용. RLS는 컬럼 단위 제한 불가 → `phone`, `owner_user_id`, `plan` 전부 노출.
 - **영향**: 공개 anon key로 전 사업주 이름·전화번호 열람 가능
-- **권장 조치**: 해당 정책 제거 후 `id/name`만 반환하는 View 또는 SECURITY DEFINER RPC로 대체
+- **조치 내용** (마이그레이션 `059_customers_public_access_rpc.sql`):
+  - `customers_select_has_active_tenant` 정책 삭제
+  - `list_active_org_customers()` RPC 추가 — id/name/tenant_id만 반환, anon 포함 호출 가능 (가입/조직가입 화면용)
+  - `get_customer_plan_for_tenant(tenant_id)` RPC 추가 — 호출자가 해당 테넌트 admin 또는 super_admin일 때만 plan 반환 (회원추가 플랜한도 체크용)
+  - `AuthPage.tsx`/`PendingPage.tsx`/`useAdmin.ts`의 관련 쿼리를 RPC 호출로 교체
+  - dev·prod 모두 적용 후 anon 직접 조회 차단(빈 배열)·RPC 정상 동작 curl 검증 완료
 
 ### H-2. 시드 파일에 실명 + 평문 비밀번호 git 커밋
 
@@ -55,11 +60,13 @@
 
 ## 🟡 Medium
 
-### M-1. 마스킹 함수가 실제로 전체 노출
+### M-1. 마스킹 함수가 실제로 전체 노출 — ✅ 조치 완료 (2026-07-03)
 
 - **파일**: `src/lib/format.ts` (`maskPhone`, `maskEmail`, `maskName`)
 - **문제**: 현재 모든 mask* 함수가 pass-through(전체 노출) 상태. `customer_phone`이 전 멤버에게 그대로 노출.
-- **권장 조치**: `maskPhone` → `010-****-5678`, `maskEmail` → `us**@example.com` 형태로 실제 마스킹 구현
+- **조치 내용**:
+  - `format.ts`: `maskPhone`/`maskEmail`/`maskName` 실제 마스킹 로직 구현 (`010-****-5678` 등)
+  - 관리자만 `customer_phone` 전체 번호를 보고 나머지는 마스킹되도록 월간(`TimeSlotCell`)/일간(`DayView`)/모달(`SlotEditModal`)/엑셀·CSV·Word·PDF 내보내기(`exportSchedule`) 전체에 동일 규칙 적용
 
 ### M-2. `tenant_roles` / `tenants` 교차 테넌트 정보 노출
 
@@ -104,8 +111,8 @@
 |------|------|--------|-----------|
 | 1 | C-1 send-reminders 인증 추가 | 즉시 | ✅ 완료 (2026-07-01) |
 | 2 | H-2 시드 파일 비밀번호 재설정 | 즉시 | 운영 조치 |
-| 3 | H-1 customers RLS 정책 교체 | 단기 | 마이그레이션 |
-| 4 | M-1 마스킹 함수 실제 구현 | 단기 | 코드 수정 |
+| 3 | H-1 customers RLS 정책 교체 | 단기 | ✅ 완료 (2026-07-03) |
+| 4 | M-1 마스킹 함수 실제 구현 | 단기 | ✅ 완료 (2026-07-03) |
 | 5 | M-2 tenant_roles/tenants 정책 강화 | 중기 | 마이그레이션 |
 | 6 | M-3 로깅 PII 제거 | 중기 | 코드 수정 |
 | 7 | M-4 CORS 오리진 제한 | 중기 | 설정 변경 |
