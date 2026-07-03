@@ -474,6 +474,7 @@ export function ScheduleGrid({
                                     ? () => onCellClick({ year, month, day, timeSlot: slot, memberType: 'member', roleId: memberRoleId! })
                                     : undefined}
                                   withdrawnUserIds={withdrawnUserIds}
+                                  isAdmin={isAdmin}
                                   highlighted={highlightedSlots?.has(`${year}-${pad2(month)}-${pad2(day)}|${slot}`) ?? false}
                                 />
                               </td>
@@ -529,6 +530,7 @@ export function ScheduleGrid({
                                 indicatorBarRoles={indicatorBarRoles}
                                 canInteract={canAdd}
                                 withdrawnUserIds={withdrawnUserIds}
+                                isAdmin={isAdmin}
                                 highlighted={highlightedSlots?.has(`${year}-${pad2(month)}-${pad2(day)}|${slot}`) ?? false}
                               />
                             </td>
@@ -554,6 +556,7 @@ export function ScheduleGrid({
                                 teamLeaderUserIds={teamLeaderUserIds}
                                 canInteract={canAdd}
                                 withdrawnUserIds={withdrawnUserIds}
+                                isAdmin={isAdmin}
                               />
                             </td>
                           )}

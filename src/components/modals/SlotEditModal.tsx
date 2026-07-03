@@ -7,7 +7,7 @@ import { parseSlotLabel, getTimeSubOptions, formatTimeSub } from '../../utils/ti
 import { useProfiles } from '../../hooks/useProfiles'
 import type { ProfileWithRole } from '../../hooks/useProfiles'
 import { LockIcon, UnlockIcon } from '../icons/LockIcons'
-import { fmtPhone, fmtNumber } from '../../lib/format'
+import { fmtPhone, fmtNumber, maskPhone } from '../../lib/format'
 import { formatPhone, isValidPhone } from '../../lib/phone'
 import { ImageUploadField } from '../schedule/ImageUploadField'
 import type { PendingImage } from '../schedule/ImageUploadField'
@@ -766,7 +766,7 @@ export function SlotEditModal({
                     : a.member_name
                 const detailChips: { key: string; label: string; value: string }[] = []
                 if (isFreeform) {
-                  if (!useDynamicFields && a.customer_phone) detailChips.push({ key: 'phone', label: '연락처', value: fmtPhone(a.customer_phone) })
+                  if (!useDynamicFields && a.customer_phone) detailChips.push({ key: 'phone', label: '연락처', value: isAdmin ? fmtPhone(a.customer_phone) : maskPhone(a.customer_phone) })
                   if (useDynamicFields) {
                     if (!hideName && customFields[0] && a.member_name) {
                       detailChips.push({ key: '_name', label: customFields[0].label, value: a.member_name })

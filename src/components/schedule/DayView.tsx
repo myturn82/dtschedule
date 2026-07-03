@@ -2,7 +2,7 @@ import type { Assignment, SlotSetting, ScheduleRule, DateOverride, ModalTarget, 
 import { getCellState } from '../../utils/cellState'
 import { parseSlotLabel } from '../../utils/timeSlots'
 import { LockIcon } from '../icons/LockIcons'
-import { fmtPhone } from '../../lib/format'
+import { fmtPhone, maskPhone } from '../../lib/format'
 
 const DAY_KR = ['일', '월', '화', '수', '목', '금', '토']
 
@@ -34,9 +34,10 @@ interface Props {
   withdrawnUserIds?: Set<string>
   selectionRange?: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number; minColIdx: number; maxColIdx: number } | null
   copyRange?: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number; minColIdx: number; maxColIdx: number } | null
+  isAdmin?: boolean
 }
 
-function PersonChip({ a, withdrawnUserIds, onClick }: { a: Assignment; withdrawnUserIds?: Set<string>; onClick?: () => void }) {
+function PersonChip({ a, withdrawnUserIds, onClick, isAdmin }: { a: Assignment; withdrawnUserIds?: Set<string>; onClick?: () => void; isAdmin?: boolean }) {
   const isW = !!(a.user_id && withdrawnUserIds?.has(a.user_id)) || a.account_deleted
   const cellLabel = a.extra_data?._nf ? (a.extra_data._cl ?? '') : a.member_name
   const initial = cellLabel?.charAt(0) ?? '?'
@@ -63,7 +64,7 @@ function PersonChip({ a, withdrawnUserIds, onClick }: { a: Assignment; withdrawn
         </span>
       )}
       {!isW && a.customer_phone && (
-        <span className="text-xs text-[var(--color-text-muted)] truncate">· {fmtPhone(a.customer_phone)}</span>
+        <span className="text-xs text-[var(--color-text-muted)] truncate">· {isAdmin ? fmtPhone(a.customer_phone) : maskPhone(a.customer_phone)}</span>
       )}
       {!isW && a.note && (
         <span className="text-xs text-[var(--color-text-muted)] truncate">· {a.note}</span>
@@ -90,7 +91,7 @@ export function DayView({
   year, month, day, timeSlots, assignments, slotSettings, scheduleRules, dateOverrides,
   profile: _profile, splitRoles = [], isSplitMode = false, slotLabels = {},
   canAdd = true, onCellClick, displayAssignmentFilter, withdrawnUserIds,
-  selectionRange, copyRange,
+  selectionRange, copyRange, isAdmin,
 }: Props) {
   function inRange(d: number, si: number, ci: number, r: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number; minColIdx: number; maxColIdx: number }) {
     return d >= r.minDay && d <= r.maxDay && si >= r.minSlotIdx && si <= r.maxSlotIdx && ci >= r.minColIdx && ci <= r.maxColIdx
@@ -225,7 +226,7 @@ export function DayView({
                           {role.name}
                         </span>
                         {roleAssigns.map(a => (
-                          <PersonChip key={a.id} a={a} withdrawnUserIds={withdrawnUserIds} onClick={() => onCellClick({ year, month, day, timeSlot: slot, memberType: 'member', roleId: role.id })} />
+                          <PersonChip key={a.id} a={a} withdrawnUserIds={withdrawnUserIds} isAdmin={isAdmin} onClick={() => onCellClick({ year, month, day, timeSlot: slot, memberType: 'member', roleId: role.id })} />
                         ))}
                         {canAdd && <AssignButton onClick={() => onCellClick({ year, month, day, timeSlot: slot, memberType: 'member', roleId: role.id })} />}
                       </div>
@@ -241,7 +242,7 @@ export function DayView({
                     <div className="absolute inset-0 border-2 border-dashed border-blue-500 pointer-events-none z-10" />
                   )}
                   {visible.map(a => (
-                    <PersonChip key={a.id} a={a} withdrawnUserIds={withdrawnUserIds} onClick={() => onCellClick({ year, month, day, timeSlot: slot, memberType: 'member' })} />
+                    <PersonChip key={a.id} a={a} withdrawnUserIds={withdrawnUserIds} isAdmin={isAdmin} onClick={() => onCellClick({ year, month, day, timeSlot: slot, memberType: 'member' })} />
                   ))}
                   {canAdd && <AssignButton onClick={() => onCellClick({ year, month, day, timeSlot: slot, memberType: 'member' })} />}
                 </div>

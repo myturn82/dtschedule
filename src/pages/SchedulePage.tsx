@@ -480,6 +480,7 @@ export function SchedulePage() {
     tenantName: tenant?.settings?.title || tenant?.name || '스케줄',
     timeSlots, assignments, slotSettings, scheduleRules, dateOverrides,
     slotLabels, splitRoles, isSplitMode, withdrawnUserIds, displayAssignmentFilter,
+    isAdmin: isPrivileged,
   })
   async function handleExportExcel() { await exportMonthScheduleToExcel(exportParams()) }
   function handleExportCsv() { exportMonthScheduleToCsv(exportParams()) }
@@ -839,6 +840,7 @@ export function SchedulePage() {
                 splitRoles={splitRoles}
                 isSplitMode={isSplitMode}
                 slotLabels={slotLabels}
+                isAdmin={isPrivileged}
                 canAdd={tenantMode !== '비회원' || isPrivileged}
                 onCellClick={handleCellClick}
                 displayAssignmentFilter={displayAssignmentFilter}

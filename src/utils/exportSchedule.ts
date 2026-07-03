@@ -6,6 +6,7 @@ import type { Assignment, SlotSetting, ScheduleRule, DateOverride, TimeSlot, Ten
 import { getCellState } from './cellState'
 import { rangeSlotLabel } from './timeSlots'
 import { getKoreanHolidayName } from './koreanHolidays'
+import { maskPhone } from '../lib/format'
 
 // Mon(0) … Sat(5), Sun(6)
 const DOW_LABELS = ['월', '화', '수', '목', '금', '토', '일']
@@ -25,6 +26,7 @@ export interface ExportMonthScheduleParams {
   isSplitMode?: boolean
   withdrawnUserIds?: Set<string>
   displayAssignmentFilter?: (a: Assignment) => boolean
+  isAdmin?: boolean
 }
 
 // ── 공통 헬퍼 ────────────────────────────────────────────────────────────────
@@ -55,7 +57,8 @@ function formatAssignmentText(
   a: Assignment,
   withdrawnUserIds: Set<string> | undefined,
   isSplitMode: boolean,
-  splitRoles: TenantRole[]
+  splitRoles: TenantRole[],
+  isAdmin: boolean
 ): string {
   const isWithdrawn = !!(a.user_id && withdrawnUserIds?.has(a.user_id)) || a.account_deleted
   let text = a.member_name
@@ -64,7 +67,7 @@ function formatAssignmentText(
     if (role) text = `[${role.name}] ${text}`
   }
   if (a.note) text += `(${a.note})`
-  if (a.customer_name) text += ` - ${a.customer_name}${a.customer_phone ? ` (${a.customer_phone})` : ''}`
+  if (a.customer_name) text += ` - ${a.customer_name}${a.customer_phone ? ` (${isAdmin ? a.customer_phone : maskPhone(a.customer_phone)})` : ''}`
   if (a.is_locked) text += ' [고정]'
   if (isWithdrawn) text += ' [삭제됨]'
   return text
@@ -76,7 +79,7 @@ function buildCellText(
   dateOverrides: DateOverride[], assignments: Assignment[],
   displayAssignmentFilter: ((a: Assignment) => boolean) | undefined,
   withdrawnUserIds: Set<string> | undefined,
-  isSplitMode: boolean, splitRoles: TenantRole[]
+  isSplitMode: boolean, splitRoles: TenantRole[], isAdmin: boolean
 ): string {
   const cs = getCellState(day, slot, year, month, scheduleRules, slotSettings, dateOverrides, assignments)
   if (cs.isHoliday) {
@@ -87,7 +90,7 @@ function buildCellText(
   if (cs.isClosed) return '휴무'
   const visible = (displayAssignmentFilter ? cs.assignments.filter(displayAssignmentFilter) : cs.assignments)
     .filter(a => a.member_type !== 'admin_note')
-  return visible.map(a => formatAssignmentText(a, withdrawnUserIds, isSplitMode, splitRoles)).join('\n')
+  return visible.map(a => formatAssignmentText(a, withdrawnUserIds, isSplitMode, splitRoles, isAdmin)).join('\n')
 }
 
 function downloadBlob(blob: Blob, filename: string) {
@@ -113,7 +116,7 @@ function hairBorder(): Partial<ExcelJS.Borders> {
 export async function exportMonthScheduleToExcel(p: ExportMonthScheduleParams): Promise<void> {
   const { year, month, tenantName, timeSlots, assignments, slotSettings, scheduleRules,
     dateOverrides, slotLabels = {}, splitRoles = [], isSplitMode = false,
-    withdrawnUserIds, displayAssignmentFilter } = p
+    withdrawnUserIds, displayAssignmentFilter, isAdmin = false } = p
 
   const wb = new ExcelJS.Workbook()
   const sheet = wb.addWorksheet(`${year}-${String(month).padStart(2, '0')}`)
@@ -154,7 +157,7 @@ export async function exportMonthScheduleToExcel(p: ExportMonthScheduleParams): 
         ...week.map(d => {
           if (!d) return ''
           return buildCellText(d, slot, year, month, scheduleRules, slotSettings, dateOverrides,
-            assignments, displayAssignmentFilter, withdrawnUserIds, isSplitMode, splitRoles)
+            assignments, displayAssignmentFilter, withdrawnUserIds, isSplitMode, splitRoles, isAdmin)
         }),
       ])
       row.eachCell((cell, col) => {
@@ -185,7 +188,7 @@ export async function exportMonthScheduleToExcel(p: ExportMonthScheduleParams): 
 export function exportMonthScheduleToCsv(p: ExportMonthScheduleParams): void {
   const { year, month, tenantName, timeSlots, assignments, slotSettings, scheduleRules,
     dateOverrides, slotLabels = {}, splitRoles = [], isSplitMode = false,
-    withdrawnUserIds, displayAssignmentFilter } = p
+    withdrawnUserIds, displayAssignmentFilter, isAdmin = false } = p
 
   const csvCell = (s: string) => {
     const v = s.replace(/"/g, '""')
@@ -200,7 +203,7 @@ export function exportMonthScheduleToCsv(p: ExportMonthScheduleParams): void {
       rows.push([
         slotLabels[slot] ?? rangeSlotLabel(slot),
         ...week.map(d => !d ? '' : buildCellText(d, slot, year, month, scheduleRules, slotSettings,
-          dateOverrides, assignments, displayAssignmentFilter, withdrawnUserIds, isSplitMode, splitRoles)),
+          dateOverrides, assignments, displayAssignmentFilter, withdrawnUserIds, isSplitMode, splitRoles, isAdmin)),
       ])
     }
     rows.push([])
@@ -215,7 +218,7 @@ export function exportMonthScheduleToCsv(p: ExportMonthScheduleParams): void {
 export async function exportMonthScheduleToDocx(p: ExportMonthScheduleParams): Promise<void> {
   const { year, month, tenantName, timeSlots, assignments, slotSettings, scheduleRules,
     dateOverrides, slotLabels = {}, splitRoles = [], isSplitMode = false,
-    withdrawnUserIds, displayAssignmentFilter } = p
+    withdrawnUserIds, displayAssignmentFilter, isAdmin = false } = p
 
   const pct = (n: number) => ({ size: n, type: WidthType.PERCENTAGE })
   const cell = (text: string, opts?: { bold?: boolean; shading?: string; align?: typeof AlignmentType[keyof typeof AlignmentType] }) =>
@@ -247,7 +250,7 @@ export async function exportMonthScheduleToDocx(p: ExportMonthScheduleParams): P
       children: [
         cell(slotLabels[slot] ?? rangeSlotLabel(slot), { shading: 'F8F8F8', align: AlignmentType.CENTER }),
         ...week.map(d => cell(!d ? '' : buildCellText(d, slot, year, month, scheduleRules, slotSettings,
-          dateOverrides, assignments, displayAssignmentFilter, withdrawnUserIds, isSplitMode, splitRoles))),
+          dateOverrides, assignments, displayAssignmentFilter, withdrawnUserIds, isSplitMode, splitRoles, isAdmin))),
       ],
     }))
     return [
@@ -274,7 +277,7 @@ export async function exportMonthScheduleToDocx(p: ExportMonthScheduleParams): P
 export async function exportMonthScheduleToPdf(p: ExportMonthScheduleParams): Promise<void> {
   const { year, month, tenantName, timeSlots, assignments, slotSettings, scheduleRules,
     dateOverrides, slotLabels = {}, splitRoles = [], isSplitMode = false,
-    withdrawnUserIds, displayAssignmentFilter } = p
+    withdrawnUserIds, displayAssignmentFilter, isAdmin = false } = p
 
   const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')
 
@@ -286,7 +289,7 @@ export async function exportMonthScheduleToPdf(p: ExportMonthScheduleParams): Pr
     const trs = timeSlots.map(slot => {
       const tds = week.map(d => {
         const txt = !d ? '' : buildCellText(d, slot, year, month, scheduleRules, slotSettings,
-          dateOverrides, assignments, displayAssignmentFilter, withdrawnUserIds, isSplitMode, splitRoles)
+          dateOverrides, assignments, displayAssignmentFilter, withdrawnUserIds, isSplitMode, splitRoles, isAdmin)
         return `<td>${esc(txt)}</td>`
       }).join('')
       return `<tr><td class="time">${esc(slotLabels[slot] ?? rangeSlotLabel(slot))}</td>${tds}</tr>`
