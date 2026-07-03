@@ -79,11 +79,8 @@ export function useAdmin(tenantId: string): AdminState {
       .eq('id', tenantId)
       .maybeSingle()
     if (tenantData?.customer_id) {
-      const { data: customerData } = await supabase
-        .from('customers')
-        .select('plan')
-        .eq('id', tenantData.customer_id)
-        .maybeSingle()
+      const { data: planRows } = await supabase.rpc('get_customer_plan_for_tenant', { p_tenant_id: tenantId })
+      const customerData = (planRows as { plan: string }[] | null)?.[0]
       if (customerData?.plan) {
         const plan = customerData.plan as PlanType
         const limit = planLimits[plan].maxUsers

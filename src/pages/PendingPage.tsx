@@ -106,11 +106,11 @@ export function PendingPage() {
       const available = (tenantsData ?? []).filter(
         (t: { id: string; customer_id: string | null }) => !mine.has(t.id) && t.customer_id
       ) as { id: string; name: string; customer_id: string }[]
-      const customerIds = [...new Set(available.map(t => t.customer_id))]
-      const { data: customersData } = customerIds.length > 0
-        ? await supabase.from('customers').select('id, name').in('id', customerIds)
-        : { data: [] as { id: string; name: string }[] }
-      const customerMap = new Map((customersData ?? []).map(c => [c.id, c.name]))
+      const { data: activeOrgs } = await supabase.rpc('list_active_org_customers')
+      const customerMap = new Map(
+        ((activeOrgs ?? []) as { customer_id: string; customer_name: string }[])
+          .map(row => [row.customer_id, row.customer_name])
+      )
       setAllTenants(available.map(t => ({
         id: t.id, name: t.name, customerId: t.customer_id,
         customerName: customerMap.get(t.customer_id) ?? '',

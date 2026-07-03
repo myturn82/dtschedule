@@ -226,13 +226,10 @@ export function AuthPage() {
   }
 
   async function loadOrgList() {
-    const { data } = await supabase.from('customers').select('id, name, tenants(id)').order('name')
+    const { data } = await supabase.rpc('list_active_org_customers')
     if (!data) return
-    const opts: { name: string; tenantId: string }[] = []
-    for (const c of data) {
-      const ts = (c as unknown as { tenants: { id: string }[] }).tenants ?? []
-      for (const t of ts) opts.push({ name: c.name, tenantId: t.id })
-    }
+    const opts = (data as { customer_name: string; tenant_id: string }[])
+      .map(row => ({ name: row.customer_name, tenantId: row.tenant_id }))
     setOrgOptions(opts)
   }
 

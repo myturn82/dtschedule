@@ -1,7 +1,7 @@
 -- ============================================================
 -- 운영 DB 초기화 스크립트 (전체 재생성)
 -- 생성일: 2026-06-10
--- 기준 마이그레이션: 001 ~ 058
+-- 기준 마이그레이션: 001 ~ 059
 --
 -- ⚠️  주의: 이 스크립트는 모든 데이터를 삭제합니다.
 --           Supabase SQL Editor에서 직접 실행하세요.
@@ -29,6 +29,8 @@ DROP FUNCTION IF EXISTS public.is_super_admin_caller()          CASCADE;
 DROP FUNCTION IF EXISTS public.admin_delete_users(uuid[])       CASCADE;
 DROP FUNCTION IF EXISTS public.shares_tenant_with(uuid)         CASCADE;
 DROP FUNCTION IF EXISTS public.customer_has_active_tenant(uuid) CASCADE;
+DROP FUNCTION IF EXISTS public.list_active_org_customers()      CASCADE;
+DROP FUNCTION IF EXISTS public.get_customer_plan_for_tenant(uuid) CASCADE;
 DROP FUNCTION IF EXISTS public.cascade_customer_soft_delete()   CASCADE;
 DROP FUNCTION IF EXISTS public.admin_update_member_name(uuid, text) CASCADE;
 DROP FUNCTION IF EXISTS public.check_assignment_lock_update()   CASCADE;
@@ -405,6 +407,43 @@ SET search_path = public AS $$
   );
 $$;
 
+-- 회원가입/조직가입 화면에서 "가입 가능한 조직" 목록 표시용 (id/name/tenant_id만 반환, anon 포함 누구나 호출 가능)
+CREATE OR REPLACE FUNCTION public.list_active_org_customers()
+RETURNS TABLE(customer_id uuid, customer_name text, tenant_id uuid)
+LANGUAGE sql SECURITY DEFINER STABLE
+SET search_path = public AS $$
+  SELECT c.id, c.name, t.id
+  FROM customers c
+  JOIN tenants t ON t.customer_id = c.id
+  WHERE t.is_active = true
+  ORDER BY c.name;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.list_active_org_customers() TO anon, authenticated;
+
+-- 회원 추가 시 플랜 한도 체크용 (호출자가 해당 테넌트의 승인된 admin 또는 super_admin일 때만 plan 반환)
+CREATE OR REPLACE FUNCTION public.get_customer_plan_for_tenant(p_tenant_id uuid)
+RETURNS TABLE(plan text)
+LANGUAGE sql SECURITY DEFINER STABLE
+SET search_path = public AS $$
+  SELECT c.plan
+  FROM customers c
+  JOIN tenants t ON t.customer_id = c.id
+  WHERE t.id = p_tenant_id
+    AND (
+      is_super_admin()
+      OR EXISTS (
+        SELECT 1 FROM tenant_members tm
+        WHERE tm.tenant_id = p_tenant_id
+          AND tm.user_id = auth.uid()
+          AND tm.role = 'admin'
+          AND tm.is_approved = true
+      )
+    );
+$$;
+
+GRANT EXECUTE ON FUNCTION public.get_customer_plan_for_tenant(uuid) TO authenticated;
+
 -- 조직 관리자(이상)가 멤버의 성명을 직접 수정할 수 있는 RPC
 -- 카카오 등 소셜 로그인 시 닉네임/계정ID가 성명으로 들어가는 경우를 관리자가 보정할 수 있도록 함
 CREATE OR REPLACE FUNCTION public.admin_update_member_name(p_user_id uuid, p_name text)
@@ -469,9 +508,8 @@ CREATE POLICY "profiles_superadmin_delete" ON profiles
 CREATE POLICY "customers_select_own" ON customers
   FOR SELECT USING (owner_user_id = auth.uid() OR is_super_admin());
 
--- 활성 테넌트가 있는 고객 (가입 UI에서 서비스명 표시용)
-CREATE POLICY "customers_select_has_active_tenant" ON customers
-  FOR SELECT USING (customer_has_active_tenant(id));
+-- 가입 UI에서 서비스명 표시용 접근은 RLS가 아닌 SECURITY DEFINER RPC로 제공한다
+-- (list_active_org_customers, get_customer_plan_for_tenant — STEP 5 참고)
 
 CREATE POLICY "customers_insert_own" ON customers
   FOR INSERT WITH CHECK (owner_user_id = auth.uid() OR is_super_admin());
