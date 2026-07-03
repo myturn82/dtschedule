@@ -230,9 +230,6 @@ export function SlotEditModal({
         if (field.type === 'phone' && fieldValues[field.id]?.trim()) {
           if (!isValidPhone(fieldValues[field.id])) { setError(`"${field.label}"의 전화번호 형식이 올바르지 않습니다 (예: 010-1234-5678)`); return }
         }
-        if (field.type === 'account_number' && fieldValues[field.id]?.trim()) {
-          if (fieldValues[field.id].replace(/\D/g, '').length < 8) { setError(`"${field.label}"의 계좌번호는 숫자 8자리 이상이어야 합니다`); return }
-        }
       }
       const nameFieldId = customFields[0].id
       name = fieldValues[nameFieldId]?.trim() ?? ''
@@ -255,9 +252,6 @@ export function SlotEditModal({
         }
         if (field.type === 'phone' && fieldValues[field.id]?.trim()) {
           if (!isValidPhone(fieldValues[field.id])) { setError(`"${field.label}"의 전화번호 형식이 올바르지 않습니다 (예: 010-1234-5678)`); return }
-        }
-        if (field.type === 'account_number' && fieldValues[field.id]?.trim()) {
-          if (fieldValues[field.id].replace(/\D/g, '').length < 8) { setError(`"${field.label}"의 계좌번호는 숫자 8자리 이상이어야 합니다`); return }
         }
       }
     }
@@ -346,9 +340,6 @@ export function SlotEditModal({
         if (field.type === 'phone' && fieldValues[field.id]?.trim()) {
           if (!isValidPhone(fieldValues[field.id])) { setError(`"${field.label}"의 전화번호 형식이 올바르지 않습니다 (예: 010-1234-5678)`); return }
         }
-        if (field.type === 'account_number' && fieldValues[field.id]?.trim()) {
-          if (fieldValues[field.id].replace(/\D/g, '').length < 8) { setError(`"${field.label}"의 계좌번호는 숫자 8자리 이상이어야 합니다`); return }
-        }
       }
       const nameFieldId = customFields[0].id
       name = fieldValues[nameFieldId]?.trim() ?? ''
@@ -369,9 +360,6 @@ export function SlotEditModal({
         }
         if (field.type === 'phone' && fieldValues[field.id]?.trim()) {
           if (!isValidPhone(fieldValues[field.id])) { setError(`"${field.label}"의 전화번호 형식이 올바르지 않습니다 (예: 010-1234-5678)`); return }
-        }
-        if (field.type === 'account_number' && fieldValues[field.id]?.trim()) {
-          if (fieldValues[field.id].replace(/\D/g, '').length < 8) { setError(`"${field.label}"의 계좌번호는 숫자 8자리 이상이어야 합니다`); return }
         }
       }
     }
@@ -592,16 +580,6 @@ export function SlotEditModal({
             onChange={e => setFieldValues(prev => ({ ...prev, [field.id]: formatPhone(e.target.value) }))}
             placeholder={field.placeholder || '010-0000-0000'}
             maxLength={14}
-            className={inputClass}
-          />
-        ) : field.type === 'account_number' ? (
-          <input
-            type="text"
-            inputMode="numeric"
-            value={val}
-            onChange={e => setFieldValues(prev => ({ ...prev, [field.id]: e.target.value.replace(/[^\d-]/g, '').slice(0, 25) }))}
-            placeholder={field.placeholder || '계좌번호 입력 (숫자)'}
-            maxLength={25}
             className={inputClass}
           />
         ) : (

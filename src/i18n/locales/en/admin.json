@@ -52,7 +52,6 @@
       "checkbox": "Consent",
       "checkbox_group": "Checkbox",
       "phone": "Phone",
-      "account_number": "Account No.",
       "image_upload": "Image Upload"
     },
     "placeholder": "Placeholder",

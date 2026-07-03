@@ -84,7 +84,6 @@ const FIELD_TYPE_DEFS: { value: CustomFieldType; label: string; badgeCls: string
   { value: 'checkbox',      label: '체크박스', badgeCls: 'bg-purple-100 text-purple-700' },
   { value: 'checkbox_group',label: '다중선택', badgeCls: 'bg-pink-100 text-pink-700' },
   { value: 'phone',         label: '전화번호', badgeCls: 'bg-teal-100 text-teal-700' },
-  { value: 'account_number',label: '계좌번호', badgeCls: 'bg-violet-100 text-violet-700' },
   { value: 'image_upload',  label: '이미지첨부', badgeCls: 'bg-rose-100 text-rose-700' },
 ]
 
@@ -97,7 +96,6 @@ function CfTypeIcon({ type, size = 12 }: { type: CustomFieldType; size?: number 
   if (type === 'checkbox') return <svg {...p}><rect x="4" y="4" width="16" height="16" rx="3"/><path d="m8 12 3 3 5-6"/></svg>
   if (type === 'checkbox_group') return <svg {...p}><rect x="2" y="4" width="7" height="7" rx="1.5"/><path d="m3.5 7.5 1.5 1.5 3-3"/><rect x="2" y="13" width="7" height="7" rx="1.5"/><path d="m3.5 16.5 1.5 1.5 3-3"/><path d="M12 7h10M12 17h10"/></svg>
   if (type === 'phone') return <svg {...p}><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-1Z"/></svg>
-  if (type === 'account_number') return <svg {...p}><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3 10h18"/></svg>
   if (type === 'image_upload') return <svg {...p}><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
   return null
 }
@@ -150,9 +148,6 @@ function FieldPreview({ field }: { field: CustomFieldDef }) {
       )}
       {field.type === 'phone' && (
         <input type="tel" disabled placeholder={field.placeholder || '010-0000-0000'} className={cls} />
-      )}
-      {field.type === 'account_number' && (
-        <input type="text" disabled placeholder={field.placeholder || '계좌번호 입력 (숫자)'} className={cls} />
       )}
       {field.type === 'image_upload' && (
         <div className="flex items-center gap-2 h-[34px] border border-dashed border-[var(--color-border-strong)] rounded-lg px-3 text-[13px] text-[var(--color-text-muted)]">
@@ -549,7 +544,7 @@ export function AdminPage() {
       type: newFieldType,
       required: newFieldType !== 'checkbox' && newFieldRequired,
       options: FIELD_TYPES_WITH_OPTIONS.includes(newFieldType) ? newFieldOptions.filter(o => o.name.trim() || o.value.trim()) : undefined,
-      placeholder: ['text', 'number', 'select', 'phone', 'account_number'].includes(newFieldType) ? (newFieldPlaceholder.trim() || undefined) : undefined,
+      placeholder: ['text', 'number', 'select', 'phone'].includes(newFieldType) ? (newFieldPlaceholder.trim() || undefined) : undefined,
       show_in_dashboard: FIELD_TYPES_WITH_DASHBOARD.includes(newFieldType) && newFieldShowInDashboard ? true : undefined,
       min: newFieldType === 'number' && newFieldMin.trim() !== '' ? Number(newFieldMin) : undefined,
       max: newFieldType === 'number' && newFieldMax.trim() !== '' ? Number(newFieldMax) : undefined,
@@ -612,7 +607,7 @@ export function AdminPage() {
             type: editField.type,
             required: editField.type !== 'checkbox' && editField.required,
             options: FIELD_TYPES_WITH_OPTIONS.includes(editField.type) ? (editField.options ?? []).filter(o => o.name.trim() || o.value.trim()) : undefined,
-            placeholder: ['text', 'number', 'select', 'phone', 'account_number'].includes(editField.type) ? (editField.placeholder?.trim() || undefined) : undefined,
+            placeholder: ['text', 'number', 'select', 'phone'].includes(editField.type) ? (editField.placeholder?.trim() || undefined) : undefined,
             show_in_dashboard: FIELD_TYPES_WITH_DASHBOARD.includes(editField.type) && editField.show_in_dashboard ? true : undefined,
             min: editField.type === 'number' ? editField.min : undefined,
             max: editField.type === 'number' ? editField.max : undefined,
@@ -2338,7 +2333,7 @@ export function AdminPage() {
                                 </div>
                               </div>
                             )}
-                            {['text', 'number', 'select', 'phone', 'account_number'].includes(editField.type) && (
+                            {['text', 'number', 'select', 'phone'].includes(editField.type) && (
                               <div className="flex flex-col gap-[7px]">
                                 <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">플레이스홀더 <span className="font-semibold text-[var(--color-text-muted)] ml-1">선택</span></label>
                                 <input type="text" value={editField.placeholder ?? ''} placeholder="입력 안내 문구"
@@ -2526,7 +2521,7 @@ export function AdminPage() {
                       </button>
                     </div>
                   )}
-                  {['text', 'number', 'select', 'phone', 'account_number'].includes(newFieldType) && (
+                  {['text', 'number', 'select', 'phone'].includes(newFieldType) && (
                     <div className="flex flex-col gap-[7px] pt-2 border-t border-[var(--color-border)]">
                       <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">플레이스홀더 <span className="font-semibold text-[var(--color-text-muted)]">선택</span></label>
                       <input type="text" value={newFieldPlaceholder} maxLength={100} placeholder="입력 안내 문구"
