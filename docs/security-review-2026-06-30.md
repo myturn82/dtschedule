@@ -67,21 +67,26 @@
   - `format.ts`: `maskPhone`/`maskEmail`/`maskName` 실제 마스킹 로직 구현 (`010-****-5678` 등)
   - 관리자만 `customer_phone` 전체 번호를 보고 나머지는 마스킹되도록 월간(`TimeSlotCell`)/일간(`DayView`)/모달(`SlotEditModal`)/엑셀·CSV·Word·PDF 내보내기(`exportSchedule`) 전체에 동일 규칙 적용
 
-### M-2. `tenant_roles` / `tenants` 교차 테넌트 정보 노출
+### M-2. `tenant_roles` / `tenants` 교차 테넌트 정보 노출 — 🔵 검토 결과: 현상 유지 (2026-07-03)
 
 - **문제**: `tenant_roles_select_all`이 `USING(true)`로 전 조직 역할 열람 허용. `tenants_select`가 anon에게 `settings` JSONB 전체 노출.
-- **권장 조치**: 본인 소속 조직 데이터만 반환하도록 정책 조건 추가
+- **재검토 결과**: `LoginModal.tsx`/`JoinOrgModal.tsx`/`PendingPage.tsx`가 전부 **가입 전(비회원) 사용자**에게 대상 조직의 `tenant_roles`(가입 시 역할 선택)와 `tenants.settings`(가입 폼 커스텀 필드·제목 등)를 미리 보여줘야 하는 구조 — 회원가입/조직가입 플로우의 의도된 설계.
+  - `tenants.settings`/`tenant_roles`에는 API 키 등 실제 비밀값은 없음(테마색상·커스텀필드 정의·슬롯 라벨·메시지 템플릿 등) — PII 유출이 아닌 "타 조직 설정 열람 가능" 수준의 정보노출.
+  - "본인 소속 조직만 반환"으로 좁히면 가입 플로우 자체가 깨짐. 완전히 고치려면 공개 가능한 필드만 반환하는 별도 RPC로 약 5곳의 호출부를 교체해야 하는 큰 작업 — 현재는 리스크 대비 비용이 커서 보류로 결정.
 
-### M-3. Edge Function에서 PII 대량 로깅
+### M-3. Edge Function에서 PII 대량 로깅 — ✅ 조치 완료 (2026-07-03)
 
 - **파일**: `supabase/functions/send-reminders/index.ts`, `supabase/functions/admin-create-user/index.ts`
 - **문제**: `console.log`에 userId, 조직명 등 PII 기록. `admin-create-user`가 내부 에러 메시지를 클라이언트에 그대로 반환하며 모든 오류를 HTTP 200으로 응답.
-- **권장 조치**: 로그에서 PII 제거 또는 마스킹, 에러 응답 상태코드 정상화
+- **조치 내용**:
+  - `send-reminders`: userId·조직명·VAPID 키 일부를 찍던 로그 제거, 실패 케이스만 `tenant_id` 기준으로 `console.error` 기록
+  - `admin-create-user`: 각 실패 케이스에 맞는 실제 상태코드(401/400/403/500) 적용, 내부 에러 메시지(`pwErr.message` 등)를 클라이언트에 그대로 반환하던 것을 일반 문구로 교체하고 상세 내용은 `console.error`로만 기록
+  - 클라이언트(`AdminPage.tsx`/`SuperAdminPage.tsx`)에 `getFunctionErrorMessage()` 헬퍼 추가 — non-2xx 응답의 실제 JSON 에러 메시지를 `error.context`에서 꺼내 표시하도록 수정(상태코드 정상화로 인한 UX 회귀 방지)
 
-### M-4. CORS 와일드카드 + 무인증 함수 결합
+### M-4. CORS 와일드카드 + 무인증 함수 결합 — ✅ 조치 완료 (2026-07-03)
 
 - **문제**: `Access-Control-Allow-Origin: *` + 인증 없는 함수 조합으로 외부 사이트에서 직접 호출 가능
-- **권장 조치**: 운영 환경에서는 허용 오리진을 서비스 도메인으로 제한
+- **조치 내용**: `supabase/functions/_shared/cors.ts`에 오리진 허용목록(`https://dtschedule.vercel.app`, `http://localhost:5173`) 구현, `send-reminders`/`admin-create-user`/`delete-account` 3개 함수 모두 이 공유 헬퍼 사용하도록 통일. curl로 허용/비허용 오리진 응답 헤더 차이 검증 완료 (server-to-server 호출은 Origin 헤더가 없어 영향 없음)
 
 ---
 
@@ -112,6 +117,6 @@
 | 2 | H-2 시드 파일 비밀번호 재설정 | 즉시 | 🟡 부분 완료 — git 이력 제거는 완료, 계정 비밀번호 재설정은 보류 |
 | 3 | H-1 customers RLS 정책 교체 | 단기 | ✅ 완료 (2026-07-03) |
 | 4 | M-1 마스킹 함수 실제 구현 | 단기 | ✅ 완료 (2026-07-03) |
-| 5 | M-2 tenant_roles/tenants 정책 강화 | 중기 | 마이그레이션 |
-| 6 | M-3 로깅 PII 제거 | 중기 | 코드 수정 |
-| 7 | M-4 CORS 오리진 제한 | 중기 | 설정 변경 |
+| 5 | M-2 tenant_roles/tenants 정책 강화 | 중기 | 🔵 검토 완료 — 가입 플로우상 의도된 노출로 판단, 현상 유지 |
+| 6 | M-3 로깅 PII 제거 | 중기 | ✅ 완료 (2026-07-03) |
+| 7 | M-4 CORS 오리진 제한 | 중기 | ✅ 완료 (2026-07-03) |

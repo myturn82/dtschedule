@@ -17,6 +17,7 @@ import { OPTION_VALUE_TYPES, getOptionUnit, FIELD_TYPES_WITH_OPTIONS, FIELD_TYPE
 import { LEGEND_COLOR_STYLES } from '../components/schedule/Legend'
 import { applyThemePreset, THEME_PRESET_LIST, type ThemePresetKey } from '../lib/themePresets'
 import { displayMode } from '../lib/tenantMode'
+import { getFunctionErrorMessage } from '../lib/functionsError'
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
 const HEX_COLOR_RE = /^#[0-9A-Fa-f]{6}$/
@@ -684,7 +685,7 @@ export function AdminPage() {
     })
     setDirectSaving(false)
     if (error || data?.error) {
-      msg(data?.error ?? error?.message ?? '오류가 발생했습니다.', true)
+      msg(data?.error ?? await getFunctionErrorMessage(error), true)
       return
     }
     await reloadMembers()
@@ -834,7 +835,7 @@ export function AdminPage() {
       body: { tenant_id: adminTenant.id },
     })
     setManualSending(false)
-    if (error) { msg(`발송 오류: ${error.message}`, true); return }
+    if (error) { msg(`발송 오류: ${await getFunctionErrorMessage(error)}`, true); return }
     const result = data as { sent: number; failed: number } | null
     setManualSendResult({ sent: result?.sent ?? 0, failed: result?.failed ?? 0 })
   }

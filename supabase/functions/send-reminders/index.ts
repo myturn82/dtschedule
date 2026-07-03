@@ -1,10 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-}
+import { getCorsHeaders } from '../_shared/cors.ts'
 
 // ── WebCrypto 네이티브 Web Push 구현 ────────────────────────────────────────
 
@@ -205,6 +200,7 @@ function formatSlot(slot: string): string {
 // ── 메인 핸들러 ──────────────────────────────────────────────────────────────
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req)
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
@@ -309,7 +305,7 @@ Deno.serve(async (req) => {
   const { year, month, day, dateStr } = getTomorrowSeoul()
   const dateLabel = formatDateLabel(year, month, day)
 
-  console.log(`[send-reminders] mode=${isCronMode ? 'cron' : force ? 'force' : 'manual'} tomorrow=${dateStr} settings=${settings?.length ?? 0} webPush=${webPushEnabled} vapidPub=${vapidPublic?.slice(0, 10)} vapidPriv=${vapidPrivate?.slice(0, 5)}`)
+  console.log(`[send-reminders] mode=${isCronMode ? 'cron' : force ? 'force' : 'manual'} tomorrow=${dateStr} settings=${settings?.length ?? 0} webPush=${webPushEnabled}`)
 
   let totalSent = 0
   let totalFailed = 0
@@ -329,7 +325,7 @@ Deno.serve(async (req) => {
       .eq('year', year).eq('month', month).eq('day', day)
       .not('user_id', 'is', null)
 
-    console.log(`[send-reminders] org=${tenantName} assignErr=${assignErr?.message ?? 'none'} assignments=${assignments?.length ?? 0}`)
+    if (assignErr) console.error(`[send-reminders] tenant_id=${setting.tenant_id} assignErr=${assignErr.message}`)
 
     if (assignErr) { orgs.push({ org: tenantName, sent: 0, failed: 0, skipped: 1 }); continue }
     if (!assignments?.length) { orgs.push({ org: tenantName, sent: 0, failed: 0, skipped: 0 }); continue }
@@ -344,8 +340,6 @@ Deno.serve(async (req) => {
         .eq('tenant_id', setting.tenant_id).eq('role', 'admin').eq('is_approved', true)
       for (const a of admins ?? []) { if (a.user_id) userIds.add(a.user_id) }
     }
-
-    console.log(`[send-reminders] org=${tenantName} userIds=${userIds.size}`)
 
     let orgSent = 0
     let orgFailed = 0
@@ -380,31 +374,34 @@ Deno.serve(async (req) => {
         title, body: bodyText, type: 'd1_reminder',
         metadata: { date: dateStr, slot: slotLabel },
       })
-      console.log(`[send-reminders] insert userId=${userId} err=${insertErr?.message ?? 'ok'}`)
-      if (insertErr) { orgFailed++; continue }
+      if (insertErr) {
+        console.error(`[send-reminders] tenant_id=${setting.tenant_id} insert failed: ${insertErr.message}`)
+        orgFailed++; continue
+      }
       orgSent++
 
       if (webPushEnabled) {
         const { data: subs, error: subsErr } = await supabase
           .from('push_subscriptions').select('endpoint, p256dh, auth').eq('user_id', userId)
 
-        console.log(`[send-reminders] push userId=${userId} subsErr=${subsErr?.message ?? 'none'} subs=${subs?.length ?? 0}`)
+        if (subsErr) console.error(`[send-reminders] tenant_id=${setting.tenant_id} push subscription lookup failed: ${subsErr.message}`)
 
         for (const sub of subs ?? []) {
           if (!sub.endpoint || !sub.p256dh || !sub.auth) continue
           try {
             const pushPayload = test_empty ? undefined : JSON.stringify({ title, body: bodyText, url })
-            const { status, text } = await sendWebPush(
+            const { status } = await sendWebPush(
               sub.endpoint, sub.p256dh, sub.auth,
               vapidPublic!, vapidPrivate!, vapidSubject!,
               pushPayload,
             )
-            console.log(`[send-reminders] push userId=${userId} fcmStatus=${status} fcmBody=${text.slice(0, 50)}`)
             if (status === 410 || status === 404) {
               await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
+            } else if (status >= 400) {
+              console.error(`[send-reminders] tenant_id=${setting.tenant_id} push failed with status=${status}`)
             }
           } catch (pushErr: unknown) {
-            console.error(`[send-reminders] push ERROR userId=${userId} err=${String(pushErr).slice(0, 100)}`)
+            console.error(`[send-reminders] tenant_id=${setting.tenant_id} push error: ${pushErr instanceof Error ? pushErr.message : 'unknown'}`)
           }
         }
       }
@@ -415,7 +412,7 @@ Deno.serve(async (req) => {
     totalFailed += orgFailed
   }
 
-  console.log(`[send-reminders] DONE totalSent=${totalSent} totalFailed=${totalFailed} orgs=${JSON.stringify(orgs)}`)
+  console.log(`[send-reminders] DONE totalSent=${totalSent} totalFailed=${totalFailed} orgCount=${orgs.length}`)
   return new Response(
     JSON.stringify({
       sent: totalSent, failed: totalFailed, orgs,

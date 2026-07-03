@@ -1,14 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-function getCorsHeaders(req: Request) {
-  const origin = req.headers.get('origin') ?? '*'
-  return {
-    'Access-Control-Allow-Origin': origin,
-    'Vary': 'Origin',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  }
-}
+import { getCorsHeaders } from '../_shared/cors.ts'
 
 function json(body: unknown, status = 200, corsHeaders: Record<string, string>) {
   return new Response(JSON.stringify(body), {

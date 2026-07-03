@@ -16,6 +16,7 @@ import { EMPTY_ORG_FORM, SLUG_RE, type CreateOrgForm } from '../components/super
 import { displayMode } from '../lib/tenantMode'
 import { isValidPhone } from '../lib/phone'
 import { THEME_PRESETS, type ThemePresetKey } from '../lib/themePresets'
+import { getFunctionErrorMessage } from '../lib/functionsError'
 import '../styles/account-hub.css'
 
 // ─── SuperAdminPage ───────────────────────────────────────────────────────────
@@ -177,7 +178,7 @@ export function SuperAdminPage() {
         body: { force: true },
       })
       if (error) {
-        setMessage(`오류: ${error.message}`)
+        setMessage(`오류: ${await getFunctionErrorMessage(error)}`)
       } else {
         const result = data as { sent: number; failed: number; orgs: Array<{ org: string; sent: number; failed: number }> }
         setMessage(`D-1 알림 발송 완료 — 총 ${result.sent}건 성공, ${result.failed}건 실패`)
