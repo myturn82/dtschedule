@@ -289,7 +289,7 @@ Deno.serve(async (req) => {
 
   let settingsQuery = supabase
     .from('notification_settings')
-    .select('*, tenant:tenants(id, name)')
+    .select('*, tenant:tenants(id, name, settings)')
     .eq('is_enabled', true)
 
   if (tenant_id) {
@@ -316,8 +316,11 @@ Deno.serve(async (req) => {
   const orgs: Array<{ org: string; sent: number; failed: number; skipped: number }> = []
 
   for (const setting of settings ?? []) {
-    const tenantData = setting.tenant as { id: string; name: string } | null
+    const tenantData = setting.tenant as { id: string; name: string; settings?: { tenant_mode?: string } } | null
     const tenantName = tenantData?.name ?? setting.tenant_id
+
+    // 비회원(방문자 예약) 모드는 배정에 계정이 연결되지 않아 리마인더 대상이 될 수 없음
+    if (tenantData?.settings?.tenant_mode === '비회원') continue
 
     const { data: assignments, error: assignErr } = await supabase
       .from('assignments')

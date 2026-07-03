@@ -202,6 +202,8 @@ export function AdminPage() {
   const [orgLoading, setOrgLoading] = useState(true)
 
   const adminTenantId = adminTenant?.id ?? ''
+  const adminTenantMode = displayMode(adminTenant?.settings?.tenant_mode)
+  const adminIsFreeform = adminTenantMode === '비회원'
 
   // adminTenant은 TenantContext와 독립적이라 포인트 컬러도 별도로 주입해야 한다 —
   // 이 화면을 벗어나면 전역 tenant 기준 색상으로 되돌린다
@@ -227,6 +229,11 @@ export function AdminPage() {
   )
   const [message, setMessage] = useState<{ text: string; isError: boolean } | null>(null)
   const [saving, setSaving] = useState(false)
+
+  // 비회원 모드는 배정알림 기능을 지원하지 않으므로 탭 자체를 노출하지 않는다
+  useEffect(() => {
+    if (adminIsFreeform && tab === 'notifications') setTab('members')
+  }, [adminIsFreeform, tab])
 
   // Members tab
   const [showAddMember, setShowAddMember] = useState(false)
@@ -368,9 +375,9 @@ export function AdminPage() {
     loadOrgs()
   }, [profile?.id, authLoading, adminMemberKey])
 
-  // 알림 설정 로드
+  // 알림 설정 로드 (비회원 모드는 배정알림 기능 자체를 지원하지 않음)
   useEffect(() => {
-    if (!adminTenant?.id) return
+    if (!adminTenant?.id || adminIsFreeform) return
     supabase
       .from('notification_settings')
       .select('*')
@@ -390,9 +397,6 @@ export function AdminPage() {
         })
       })
   }, [adminTenant?.id])
-
-  const adminTenantMode = displayMode(adminTenant?.settings?.tenant_mode)
-  const adminIsFreeform = adminTenantMode === '비회원'
 
   // timeSlots derived from adminTenant (not from TenantContext)
   const adminTimeSlots = useMemo<TimeSlot[]>(() => {
@@ -905,7 +909,7 @@ export function AdminPage() {
           <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-[var(--color-surface)] to-transparent z-10" />
           <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-[var(--color-surface)] to-transparent z-10" />
           <nav className="max-w-5xl mx-auto flex gap-0.5 px-4 sm:px-6 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {(Object.keys(TAB_LABELS) as Tab[]).map(t => {
+            {(Object.keys(TAB_LABELS) as Tab[]).filter(t => !(adminIsFreeform && t === 'notifications')).map(t => {
               const count = t === 'members'
                 ? members.filter(m => m.is_approved !== false).length
                 : t === 'pending'
@@ -2532,8 +2536,8 @@ export function AdminPage() {
                 </form>
               </div>
             )}
-            {/* ── 배정알림 ── */}
-            {tab === 'notifications' && (
+            {/* ── 배정알림 (비회원 모드는 지원하지 않음) ── */}
+            {tab === 'notifications' && !adminIsFreeform && (
               <div className="max-w-lg space-y-4">
                 <header className="mb-5">
                   <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10 px-3 py-[5px] rounded-full">

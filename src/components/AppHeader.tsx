@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useCustomerAdmin } from '../hooks/useCustomerAdmin'
 import { useTenant } from '../contexts/TenantContext'
+import { displayMode } from '../lib/tenantMode'
 import { DashboardNav } from './DashboardNav'
 import { ProfileModal } from './auth/ProfileModal'
 import { JoinOrgModal } from './modals/JoinOrgModal'
@@ -37,6 +38,7 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
   const { isSubscribed, isLoading: pushLoading, isSupported: pushSupported, subscribe, unsubscribe } = usePushSubscription()
 
   const feedbackUrl = import.meta.env.VITE_FEEDBACK_URL as string | undefined
+  const isTenantFreeform = displayMode(tenant?.settings?.tenant_mode) === '비회원'
   const isPrivileged = profile?.is_super_admin || tenantRole === 'admin'
   const showHamburger = !!isPrivileged || isCustomerAdmin
 
@@ -236,7 +238,7 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
                     도움말
                   </span>
                 </button>
-                {pushSupported && (
+                {pushSupported && !isTenantFreeform && (
                   <button
                     onClick={async () => { isSubscribed ? await unsubscribe() : await subscribe(); setShowUserMenu(false) }}
                     disabled={pushLoading}
