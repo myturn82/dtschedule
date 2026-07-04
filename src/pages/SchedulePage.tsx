@@ -601,11 +601,8 @@ export function SchedulePage() {
       }
     }
 
-    // 비회원 모드 일반회원: 빈 슬롯은 팝업 없음
-    if (tenantMode === '비회원' && !isPrivileged) {
-      const cs = getCellState(target.day, target.timeSlot, target.year, target.month, scheduleRules, slotSettings, dateOverrides, assignments)
-      if (cs.assignments.length === 0) return
-    }
+    // 비회원 모드 일반회원: 모달 없음
+    if (tenantMode === '비회원' && !isPrivileged) return
 
     setModalTarget(target)
   }
