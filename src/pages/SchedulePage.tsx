@@ -110,6 +110,7 @@ export function SchedulePage() {
   const tenantMode: TenantMode =
     rawMode === '회원선택' ? '회원공유' :
     rawMode as TenantMode
+  const canAdd = tenantMode !== '비회원' || isPrivileged
 
   const { highlightSet: highlightedSlots, loadHighlights, toggleHighlight, clearAndSnapshotHighlights, restoreHighlights } = useSlotHighlights(tenant?.id ?? '')
   useEffect(() => { if (tenant?.id) loadHighlights(year, month) }, [tenant?.id, year, month]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -786,7 +787,7 @@ export function SchedulePage() {
                 indicatorBarRoles={indicatorBarRoles}
                 isSplitMode={isSplitMode}
                 slotLabels={slotLabels}
-                canAdd={tenantMode !== '비회원' || isPrivileged}
+                canAdd={canAdd}
                 onCellClick={handleCellClick}
                 onHolidayCellClick={profile && isPrivileged
                   ? (d, startHour, endHour) => setHolidayTarget({ day: d, startHour, endHour })
@@ -819,7 +820,7 @@ export function SchedulePage() {
                   setMonth(d.getMonth() + 1)
                   setDay(d.getDate())
                 }}
-                canAdd={tenantMode !== '비회원' || isPrivileged}
+                canAdd={canAdd}
                 onCellClick={handleCellClick}
                 displayAssignmentFilter={displayAssignmentFilter}
                 withdrawnUserIds={withdrawnUserIds}
@@ -838,7 +839,7 @@ export function SchedulePage() {
                 isSplitMode={isSplitMode}
                 slotLabels={slotLabels}
                 isAdmin={isPrivileged}
-                canAdd={tenantMode !== '비회원' || isPrivileged}
+                canAdd={canAdd}
                 onCellClick={handleCellClick}
                 displayAssignmentFilter={displayAssignmentFilter}
                 withdrawnUserIds={withdrawnUserIds}
