@@ -7,6 +7,7 @@
     "rules": "스케줄규칙",
     "dates": "날짜 설정",
     "settings": "조직 설정",
+    "autoassign": "자동배정",
     "legend": "범례",
     "customFields": "커스텀 필드",
     "notifications": "배정알림"

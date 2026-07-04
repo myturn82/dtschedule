@@ -7,6 +7,7 @@
     "rules": "Schedule Rules",
     "dates": "Date Settings",
     "settings": "Org Settings",
+    "autoassign": "자동배정",
     "legend": "Legend",
     "customFields": "Custom Fields",
     "notifications": "Notifications"
