@@ -16,12 +16,13 @@ interface Props {
   highlightName: string | null
   splitRoles?: TenantRole[]
   isSplitMode?: boolean
+  displayAssignmentFilter?: (a: Assignment) => boolean
   onCellClick: (target: ModalTarget) => void
 }
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
 
-export function MobileScheduleView({ year, month, timeSlots, slotLabels = {}, assignments, slotSettings, scheduleRules, dateOverrides, highlightName, splitRoles = [], isSplitMode = false, onCellClick }: Props) {
+export function MobileScheduleView({ year, month, timeSlots, slotLabels = {}, assignments, slotSettings, scheduleRules, dateOverrides, highlightName, splitRoles = [], isSplitMode = false, displayAssignmentFilter, onCellClick }: Props) {
   const daysCount = new Date(year, month, 0).getDate()
   const days = Array.from({ length: daysCount }, (_, i) => i + 1)
   const [selectedDay, setSelectedDay] = useState(1)
@@ -63,6 +64,9 @@ export function MobileScheduleView({ year, month, timeSlots, slotLabels = {}, as
       <div className="space-y-1">
         {timeSlots.map(slot => {
           const cellState = getCellState(selectedDay, slot, year, month, scheduleRules, slotSettings, dateOverrides, assignments)
+          const displayCellState = displayAssignmentFilter
+            ? { ...cellState, assignments: cellState.assignments.filter(displayAssignmentFilter) }
+            : cellState
           return (
             <div key={slot} className="flex items-stretch gap-2">
               <div className="w-16 text-xs font-medium text-[var(--tint-brand-ink)] flex items-center justify-center bg-[var(--tint-brand)] rounded px-1 truncate">{slotLabels[slot] ?? slotStartLabel(slot)}</div>
@@ -71,7 +75,7 @@ export function MobileScheduleView({ year, month, timeSlots, slotLabels = {}, as
                   splitRoles.map(role => (
                     <div key={role.id} className="flex-1 min-w-0">
                       <TimeSlotCell
-                        cellState={cellState}
+                        cellState={displayCellState}
                         timeSlot={slot}
                         colType="role"
                         roleId={role.id}
@@ -84,7 +88,7 @@ export function MobileScheduleView({ year, month, timeSlots, slotLabels = {}, as
                   <>
                     <div className="flex-1">
                       <TimeSlotCell
-                        cellState={cellState}
+                        cellState={displayCellState}
                         timeSlot={slot}
                         colType="vol"
                         highlightName={highlightName}
@@ -94,7 +98,7 @@ export function MobileScheduleView({ year, month, timeSlots, slotLabels = {}, as
                     {!isSat && (
                       <div className="w-[40%]">
                         <TimeSlotCell
-                          cellState={cellState}
+                          cellState={displayCellState}
                           timeSlot={slot}
                           colType="plus"
                           highlightName={highlightName}
