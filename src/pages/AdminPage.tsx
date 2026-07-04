@@ -1807,6 +1807,10 @@ export function AdminPage() {
                   <p className="text-[14px] font-medium text-[var(--color-text-muted)] leading-relaxed max-w-[52ch]">
                     조직 이름·타이틀·테마 색상·타임슬롯·역할 비율을 설정합니다.
                   </p>
+                  <button type="submit" disabled={saving}
+                    className="mt-4 px-5 py-2 bg-[var(--color-brand-primary)] text-white text-sm font-semibold rounded-xl hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50">
+                    {saving ? '저장 중...' : '저장'}
+                  </button>
                 </header>
 
                 <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow-sm p-5 space-y-4">
