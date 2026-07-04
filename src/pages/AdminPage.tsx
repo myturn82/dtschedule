@@ -167,7 +167,7 @@ function makeTimeOpt(halfHours: number) {
 const START_OPTIONS = Array.from({ length: 48 }, (_, i) => makeTimeOpt(i))
 const END_OPTIONS   = Array.from({ length: 48 }, (_, i) => makeTimeOpt(i + 1))
 
-type Tab = 'members' | 'pending' | 'roles' | 'rules' | 'dates' | 'settings' | 'legend' | 'custom_fields' | 'notifications'
+type Tab = 'members' | 'pending' | 'roles' | 'rules' | 'dates' | 'settings' | 'autoassign' | 'legend' | 'custom_fields' | 'notifications'
 
 const TAB_LABELS: Record<Tab, string> = {
   members: '회원 관리',
@@ -176,6 +176,7 @@ const TAB_LABELS: Record<Tab, string> = {
   rules: '스케줄 규칙',
   dates: '날짜 설정',
   settings: '조직 설정',
+  autoassign: '자동배정',
   legend: '범례 관리',
   custom_fields: '커스텀 필드',
   notifications: '배정알림',
@@ -926,7 +927,7 @@ export function AdminPage() {
           <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-[var(--color-surface)] to-transparent z-10" />
           <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-[var(--color-surface)] to-transparent z-10" />
           <nav className="max-w-5xl mx-auto flex gap-0.5 px-4 sm:px-6 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {(Object.keys(TAB_LABELS) as Tab[]).filter(t => !(adminIsFreeform && t === 'notifications')).map(t => {
+            {(Object.keys(TAB_LABELS) as Tab[]).filter(t => !(adminIsFreeform && (t === 'notifications' || t === 'autoassign'))).map(t => {
               const count = t === 'members'
                 ? members.filter(m => m.is_approved !== false).length
                 : t === 'pending'
@@ -1179,21 +1180,6 @@ export function AdminPage() {
                             </td>
                             <td className="px-2 py-2 sm:px-4 sm:py-3">
                               <div className="flex flex-wrap gap-1 items-center justify-center">
-                                {/* 자동배정 설정 버튼 */}
-                                <button
-                                  onClick={() => {
-                                    if (expandedPrefUserId === m.user_id) {
-                                      setExpandedPrefUserId(null)
-                                      return
-                                    }
-                                    setExpandedPrefUserId(m.user_id)
-                                    setPrefDays(m.available_days ?? [])
-                                    setPrefLimit(m.monthly_limit?.toString() ?? '')
-                                  }}
-                                  className="px-2 py-1 text-[10px] border border-[var(--color-border)] rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)]"
-                                >
-                                  자동배정
-                                </button>
                                 {m.user_id !== profile.id && (
                                   <button
                                     onClick={async () => {
@@ -1209,68 +1195,6 @@ export function AdminPage() {
                               </div>
                             </td>
                           </tr>
-                          {/* 인라인 패널 */}
-                          {expandedPrefUserId === m.user_id && (
-                            <tr>
-                              <td colSpan={5} className="px-4 pb-3">
-                                <div className="mt-2 p-3 rounded-xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)] space-y-3">
-                                  {/* 이메일 */}
-                                  <div>
-                                    <p className="text-[10px] font-semibold text-[var(--color-text-muted)] mb-1.5">이메일</p>
-                                    <input
-                                      type="email"
-                                      readOnly
-                                      value={m.profile?.email ?? ''}
-                                      className="w-full border border-[var(--color-border)] rounded-lg px-2 py-1.5 text-xs bg-[var(--color-surface)] text-[var(--color-text-muted)] cursor-default focus:outline-none select-all"
-                                    />
-                                  </div>
-                                  {/* 가능 요일 */}
-                                  <div>
-                                    <p className="text-[10px] font-semibold text-[var(--color-text-muted)] mb-1.5">가능 요일 (미선택 = 모든 요일)</p>
-                                    <div className="flex gap-2">
-                                      {['일','월','화','수','목','금','토'].map((label, idx) => (
-                                        <label key={idx} className="flex flex-col items-center gap-0.5 cursor-pointer">
-                                          <input
-                                            type="checkbox"
-                                            checked={prefDays.includes(idx)}
-                                            onChange={() => setPrefDays(prev =>
-                                              prev.includes(idx) ? prev.filter(d => d !== idx) : [...prev, idx].sort((a,b) => a-b)
-                                            )}
-                                            className="accent-[var(--color-brand-primary)]"
-                                          />
-                                          <span className="text-[10px] text-[var(--color-text-secondary)]">{label}</span>
-                                        </label>
-                                      ))}
-                                    </div>
-                                  </div>
-                                  {/* 월별 횟수 제한 */}
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-[10px] font-semibold text-[var(--color-text-muted)]">월별 최대 횟수</span>
-                                    <input
-                                      type="number" min={1} max={99}
-                                      value={prefLimit}
-                                      onChange={e => setPrefLimit(e.target.value)}
-                                      placeholder="제한없음"
-                                      className="w-16 border border-[var(--color-border-strong)] rounded-lg px-2 py-1 text-xs text-center bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none"
-                                    />
-                                    <span className="text-[10px] text-[var(--color-text-muted)]">회 (빈칸=무제한)</span>
-                                  </div>
-                                  {/* 저장 */}
-                                  <button
-                                    onClick={async () => {
-                                      const days = prefDays.length === 0 ? null : prefDays
-                                      const limit = prefLimit ? parseInt(prefLimit, 10) : null
-                                      const err = await saveMemberPreference(m.user_id, days, limit)
-                                      if (!err) setExpandedPrefUserId(null)
-                                    }}
-                                    className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[var(--color-brand-primary)] text-white hover:bg-[var(--color-brand-primary-hover)]"
-                                  >
-                                    저장
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          )}
                         </Fragment>
                       ))}
                     </tbody>
@@ -1971,10 +1895,33 @@ export function AdminPage() {
                   )}
                 </div>
 
+                <button type="submit" disabled={saving}
+                  className="px-5 py-2 bg-[var(--color-brand-primary)] text-white text-sm font-semibold rounded-xl hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50">
+                  {saving ? '저장 중...' : '저장'}
+                </button>
+              </form>
+            )}
+
+            {/* ── 자동배정 ── */}
+            {tab === 'autoassign' && (
+              <div className="max-w-lg space-y-6">
+                {/* 페이지 헤더 */}
+                <header className="mb-5">
+                  <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10 px-3 py-[5px] rounded-full">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8 19 13M17.8 6.2 19 5M12.2 6.2 11 5M12.2 11.8 11 13"/><path d="M3 21l9-9"/><path d="M12.2 6.2 3 15l3 3 9.2-9.2"/></svg>
+                    조직 설정 · 자동배정
+                  </span>
+                  <h2 className="mt-3 mb-1.5 text-[clamp(22px,5vw,27px)] font-extrabold tracking-tight text-[var(--color-text-primary)]">자동배정</h2>
+                  <p className="text-[14px] font-medium text-[var(--color-text-muted)] leading-relaxed max-w-[52ch]">
+                    역할 비율과 회원별 가능 요일·횟수를 설정합니다.
+                  </p>
+                </header>
+
+                {/* 역할 비율 */}
                 {roles.length > 0 && (
                   <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow-sm p-5">
                     <p className="text-[12px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
-                      자동배정 역할 비율 (합계 100%)
+                      역할 비율 (합계 100%)
                     </p>
                     <div className="space-y-2">
                       {roles.map(role => (
@@ -2007,11 +1954,92 @@ export function AdminPage() {
                   </div>
                 )}
 
-                <button type="submit" disabled={saving}
-                  className="px-5 py-2 bg-[var(--color-brand-primary)] text-white text-sm font-semibold rounded-xl hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50">
-                  {saving ? '저장 중...' : '저장'}
-                </button>
-              </form>
+                {/* 회원별 설정 */}
+                <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow-sm p-5 space-y-3">
+                  <p className="text-[12px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">회원별 설정</p>
+                  <p className="text-xs text-[var(--color-text-muted)]">가능 요일 미선택 시 모든 요일로 처리됩니다.</p>
+                  {members.filter(m => m.is_approved !== false).length === 0 ? (
+                    <p className="text-sm text-[var(--color-text-muted)] py-2">등록된 회원이 없습니다.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {members.filter(m => m.is_approved !== false).map(m => (
+                        <div key={m.user_id} className="rounded-xl border border-[var(--color-border)] overflow-hidden">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (expandedPrefUserId === m.user_id) { setExpandedPrefUserId(null); return }
+                              setExpandedPrefUserId(m.user_id)
+                              setPrefDays(m.available_days ?? [])
+                              setPrefLimit(m.monthly_limit?.toString() ?? '')
+                            }}
+                            className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-[var(--color-surface-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors text-left"
+                          >
+                            <span className="text-sm font-semibold text-[var(--color-text-primary)]">{m.profile?.name ?? '(이름 없음)'}</span>
+                            <div className="flex items-center gap-2 shrink-0">
+                              {(m.available_days?.length ?? 0) > 0 && (
+                                <span className="text-[10px] text-[var(--color-text-muted)]">
+                                  {['일','월','화','수','목','금','토'].filter((_, i) => m.available_days?.includes(i)).join('·')}
+                                </span>
+                              )}
+                              {m.monthly_limit && (
+                                <span className="text-[10px] text-[var(--color-text-muted)]">월{m.monthly_limit}회</span>
+                              )}
+                              <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: expandedPrefUserId === m.user_id ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }}><path d="M4 2l4 4-4 4"/></svg>
+                            </div>
+                          </button>
+                          {expandedPrefUserId === m.user_id && (
+                            <div className="px-4 py-3 space-y-3 border-t border-[var(--color-border)]">
+                              {/* 가능 요일 */}
+                              <div>
+                                <p className="text-[10px] font-semibold text-[var(--color-text-muted)] mb-1.5">가능 요일</p>
+                                <div className="flex gap-2">
+                                  {['일','월','화','수','목','금','토'].map((label, idx) => (
+                                    <label key={idx} className="flex flex-col items-center gap-0.5 cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={prefDays.includes(idx)}
+                                        onChange={() => setPrefDays(prev =>
+                                          prev.includes(idx) ? prev.filter(d => d !== idx) : [...prev, idx].sort((a, b) => a - b)
+                                        )}
+                                        className="accent-[var(--color-brand-primary)]"
+                                      />
+                                      <span className="text-[10px] text-[var(--color-text-secondary)]">{label}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                              {/* 월별 횟수 제한 */}
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-semibold text-[var(--color-text-muted)]">월별 최대 횟수</span>
+                                <input
+                                  type="number" min={1} max={99}
+                                  value={prefLimit}
+                                  onChange={e => setPrefLimit(e.target.value)}
+                                  placeholder="제한없음"
+                                  className="w-16 border border-[var(--color-border-strong)] rounded-lg px-2 py-1 text-xs text-center bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none"
+                                />
+                                <span className="text-[10px] text-[var(--color-text-muted)]">회 (빈칸=무제한)</span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  const days = prefDays.length === 0 ? null : prefDays
+                                  const limit = prefLimit ? parseInt(prefLimit, 10) : null
+                                  const err = await saveMemberPreference(m.user_id, days, limit)
+                                  if (!err) setExpandedPrefUserId(null)
+                                }}
+                                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[var(--color-brand-primary)] text-white hover:bg-[var(--color-brand-primary-hover)]"
+                              >
+                                저장
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
 
             {/* ── 범례 관리 ── */}
