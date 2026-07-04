@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useCustomerAdmin } from '../hooks/useCustomerAdmin'
@@ -41,6 +41,12 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
   const isTenantFreeform = displayMode(tenant?.settings?.tenant_mode) === '비회원'
   const isPrivileged = profile?.is_super_admin || tenantRole === 'admin'
   const showHamburger = !!isPrivileged || isCustomerAdmin
+
+  useEffect(() => {
+    if (!showHamburger) return
+    document.body.setAttribute('data-sidebar', showFuncMenu ? 'open' : 'closed')
+    return () => document.body.removeAttribute('data-sidebar')
+  }, [showFuncMenu, showHamburger])
 
   const menuBtn = 'w-full text-left px-3 py-2 text-sm rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors'
   const sep = <div className="h-px bg-[var(--color-border)] mx-1 my-1" />
@@ -150,11 +156,15 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
           />
         )}
 
-        {/* Hamburger dropdown */}
+        {/* Hamburger menu — mobile: dropdown, desktop: fixed sidebar */}
         {showFuncMenu && (
           <>
             <div className="fixed inset-0 z-40 lg:hidden" onClick={() => setShowFuncMenu(false)} />
-            <div className="absolute top-full left-3 sm:left-5 mt-1 w-52 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-lg z-50 overflow-hidden">
+            <div className="
+              w-52 bg-[var(--color-surface)] z-40 overflow-y-auto
+              absolute top-full left-3 sm:left-5 mt-1 rounded-2xl shadow-lg border border-[var(--color-border)]
+              lg:fixed lg:top-14 lg:left-0 lg:bottom-0 lg:mt-0 lg:rounded-none lg:shadow-none lg:border-0 lg:border-r lg:border-r-[var(--color-border)]
+            ">
               <div className="p-2">
                 {profile?.is_super_admin && (
                   <>
