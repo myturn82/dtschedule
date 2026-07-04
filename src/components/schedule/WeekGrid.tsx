@@ -19,11 +19,7 @@ function EmptyOrLockHint({ isLocked }: { isLocked: boolean }) {
   if (isLocked) {
     return <LockIcon size={11} className="text-[var(--color-text-muted)]" />
   }
-  return (
-    <span className="text-base leading-none text-[var(--color-border-strong)] group-hover:text-[var(--color-brand-primary)] transition-colors select-none">
-      +
-    </span>
-  )
+  return null
 }
 
 interface Props {

@@ -109,11 +109,7 @@ function NameChips({ assignments, highlightName, tintBg, tintInk, teamLeaderUser
 }
 
 function EmptyHint() {
-  return (
-    <span className="text-[var(--color-border-strong)] group-hover:text-[var(--color-brand-primary)] text-lg leading-none transition-colors duration-150 select-none">
-      +
-    </span>
-  )
+  return null
 }
 
 function EmptyOrLockHint({ isLocked }: { isLocked: boolean }) {
