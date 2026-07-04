@@ -748,6 +748,21 @@ export function AdminPage() {
     if (err) msg(`슬롯이 추가됐으나 규칙 생성에 실패했습니다: ${err}`, true)
   }
 
+  async function handleDeleteSlot(slot: string) {
+    const savedSlots = adminTenant?.settings?.time_slots ?? []
+    if (savedSlots.includes(slot)) {
+      const { count } = await supabase.from('assignments')
+        .select('*', { count: 'exact', head: true })
+        .eq('tenant_id', adminTenant!.id)
+        .eq('time_slot', slot)
+      if ((count ?? 0) > 0) {
+        if (!window.confirm(`이 슬롯에 기존 배정 ${count}건이 있습니다.\n삭제 후 저장하면 스케줄 화면에서 보이지 않게 됩니다.\n계속하시겠습니까?`)) return
+      }
+    }
+    setSlotList(prev => prev.filter(s => s !== slot))
+    setSlotLabels(prev => { const n = { ...prev }; delete n[slot]; return n })
+  }
+
   async function handleRatioSave() {
     const total = Object.values(roleRatios).reduce((s, v) => s + v, 0)
     if (Object.keys(roleRatios).length > 0 && total !== 100) {
@@ -1943,10 +1958,7 @@ export function AdminPage() {
                             })}
                             className="min-w-0 text-sm border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]"
                           />
-                          <button type="button" onClick={() => {
-                            setSlotList(prev => prev.filter(s => s !== slot))
-                            setSlotLabels(prev => { const n = { ...prev }; delete n[slot]; return n })
-                          }} className="text-xs font-semibold text-red-500 hover:text-red-700 shrink-0">삭제</button>
+                          <button type="button" onClick={() => handleDeleteSlot(slot)} className="text-xs font-semibold text-red-500 hover:text-red-700 shrink-0">삭제</button>
                         </li>
                       ))}
                     </ul>
