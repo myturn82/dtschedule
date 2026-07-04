@@ -1002,10 +1002,10 @@ export function SlotEditModal({
                       {lockedUserId ? (
                         <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)]">
                           <div className="w-8 h-8 rounded-full grid place-items-center text-[13px] font-extrabold bg-[color-mix(in_srgb,var(--color-brand-primary)_12%,transparent)] text-[var(--color-brand-primary)] shrink-0">
-                            {(profiles.find(p => p.id === lockedUserId)?.name ?? '?').slice(0, 1)}
+                            {(lockedProfile?.name ?? '?').slice(0, 1)}
                           </div>
                           <span className="text-sm text-[var(--color-text-primary)] font-bold">
-                            {profiles.find(p => p.id === lockedUserId)?.name ?? '알 수 없음'}
+                            {lockedProfile?.name ?? '알 수 없음'}
                           </span>
                         </div>
                       ) : selectableProfiles.length === 0 ? (
