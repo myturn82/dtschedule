@@ -26,7 +26,7 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
   const { profile, loading: authLoading, signOut, deleteAccount, linkGoogle, linkKakao, getIdentities } = useAuth()
   const { isCustomerAdmin } = useCustomerAdmin()
   const { tenant, tenantRole, tenantPlan, memberships, resetTenantSelection, reloadMemberships } = useTenant()
-  const [showFuncMenu, setShowFuncMenu] = useState(false)
+  const [showFuncMenu, setShowFuncMenu] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 1024)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
   const [showJoinOrg, setShowJoinOrg] = useState(false)
@@ -153,7 +153,7 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
         {/* Hamburger dropdown */}
         {showFuncMenu && (
           <>
-            <div className="fixed inset-0 z-40" onClick={() => setShowFuncMenu(false)} />
+            <div className="fixed inset-0 z-40 lg:hidden" onClick={() => setShowFuncMenu(false)} />
             <div className="absolute top-full left-3 sm:left-5 mt-1 w-52 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-lg z-50 overflow-hidden">
               <div className="p-2">
                 {profile?.is_super_admin && (
