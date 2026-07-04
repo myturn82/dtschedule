@@ -751,12 +751,18 @@ export function AdminPage() {
   async function handleDeleteSlot(slot: string) {
     const savedSlots = adminTenant?.settings?.time_slots ?? []
     if (savedSlots.includes(slot)) {
-      const { count } = await supabase.from('assignments')
-        .select('*', { count: 'exact', head: true })
-        .eq('tenant_id', adminTenant!.id)
-        .eq('time_slot', slot)
-      if ((count ?? 0) > 0) {
-        if (!window.confirm(`이 슬롯에 기존 배정 ${count}건이 있습니다.\n삭제 후 저장하면 스케줄 화면에서 보이지 않게 됩니다.\n계속하시겠습니까?`)) return
+      try {
+        const { count, error } = await supabase.from('assignments')
+          .select('*', { count: 'exact', head: true })
+          .eq('tenant_id', adminTenant!.id)
+          .eq('time_slot', slot)
+        if (error) throw error
+        if ((count ?? 0) > 0) {
+          if (!window.confirm(`이 슬롯에 기존 배정 ${count}건이 있습니다.\n삭제 후 저장하면 스케줄 화면에서 보이지 않게 됩니다.\n계속하시겠습니까?`)) return
+        }
+      } catch {
+        msg('배정 건수를 확인할 수 없습니다. 네트워크 상태를 확인해주세요.', true)
+        return
       }
     }
     setSlotList(prev => prev.filter(s => s !== slot))
