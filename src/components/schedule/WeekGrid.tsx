@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+﻿import { useState, useRef, useEffect } from 'react'
 import type { Assignment, SlotSetting, ScheduleRule, DateOverride, ModalTarget, Profile, TenantRole, TimeSlot, TenantAccessRole } from '../../types'
 import { getCellState } from '../../utils/cellState'
 import { shortSlotLabel, slotStartLabel, formatTimeSub } from '../../utils/timeSlots'
@@ -63,6 +63,13 @@ export function WeekGrid({
 
   const pad2 = (n: number) => String(n).padStart(2, '0')
   const today = new Date()
+  const todayColRef = useRef<HTMLButtonElement>(null)
+
+  // 주간 뷰 진입 시 오늘 열이 화면에 보이도록 스크롤
+  useEffect(() => {
+    todayColRef.current?.scrollIntoView({ behavior: 'instant' as ScrollBehavior, block: 'nearest', inline: 'center' })
+  }, [weekDays])
+
   const activeRoles = isSplitMode && splitRoles.length > 0 ? splitRoles : []
   const [hiddenRoleIds, setHiddenRoleIds] = useState<Set<string>>(new Set())
   const visibleActiveRoles = activeRoles.length > 0
@@ -140,6 +147,7 @@ export function WeekGrid({
             return (
               <button
                 key={i}
+                ref={isToday ? todayColRef : undefined}
                 onClick={() => onDateHeaderClick?.(d)}
                 className={`border-l border-[var(--color-border)] px-1 pt-1 pb-0.5 sm:pt-2 sm:pb-1 text-center transition-colors hover:bg-[var(--color-surface-hover)] ${
                   isSelected ? 'bg-[var(--color-brand-primary)]/8' : ''
