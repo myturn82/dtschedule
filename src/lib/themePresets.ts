@@ -108,23 +108,12 @@ const TOKEN_TO_CSS_VAR: Record<keyof Pick<ThemeTokens, 'accent' | 'accentHover' 
   accentContrast: '--color-brand-primary-contrast',
 }
 
-// 다크모드 브랜드 토큰 — 애플 스타일 흑백. 프리셋 무관하게 다크 시 항상 적용된다.
-const APPLE_DARK_TOKENS: ThemeTokens = {
-  accent: '#FFFFFF',
-  accentHover: '#E8E8ED',
-  accentSoft: 'rgba(255,255,255,0.08)',
-  accentRing: 'rgba(255,255,255,0.18)',
-  accentText: '#FFFFFF',
-  accentContrast: '#000000',
-  tintBrand: 'rgba(255,255,255,0.08)',
-  tintBrandInk: '#E8E8ED',
-}
-
 // 조직의 포인트 컬러 프리셋을 전역 CSS 변수로 주입한다.
-// 다크모드(isDark=true) 시 프리셋과 무관하게 애플 스타일 흑백 토큰을 적용한다.
+// 다크모드(isDark=true) 시 각 프리셋의 dark 토큰을 사용해 조직 색상 정체성을 유지한다.
 export function applyThemePreset(key: ThemePresetKey | null | undefined, isDark = false) {
   const root = document.documentElement
-  const tokens = isDark ? APPLE_DARK_TOKENS : (key ? THEME_PRESETS[key]?.light : undefined)
+  const preset = key ? THEME_PRESETS[key] : undefined
+  const tokens = isDark ? preset?.dark : preset?.light
   for (const [tokenKey, cssVar] of Object.entries(TOKEN_TO_CSS_VAR) as [keyof typeof TOKEN_TO_CSS_VAR, string][]) {
     const value = tokens?.[tokenKey]
     if (value) root.style.setProperty(cssVar, value)
