@@ -83,6 +83,20 @@
   --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.6), 0 4px 8px rgba(0, 0, 0, 0.4);
   --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.7), 0 8px 16px rgba(0, 0, 0, 0.5);
+
+  /* 배정 슬롯 tint — 다크모드에서 surface에 브랜드색을 혼합해 어두운 tint 생성 */
+  --tint-brand: color-mix(in srgb, var(--color-brand-primary) 22%, var(--color-surface));
+  --tint-brand-ink: var(--color-brand-primary-text, var(--color-brand-primary));
+  --tint-sun:   oklch(0.24 0.06 70);
+  --tint-sun-ink: oklch(0.78 0.10 70);
+  --tint-break: oklch(0.22 0.05 230);
+  --tint-break-ink: oklch(0.75 0.09 230);
+  --tint-sat:   oklch(0.22 0.05 160);
+  --tint-sat-ink: oklch(0.74 0.09 160);
+  --tint-moon:  oklch(0.20 0.06 290);
+  --tint-moon-ink: oklch(0.78 0.10 290);
+  --tint-plus:  oklch(0.22 0.06 20);
+  --tint-plus-ink: oklch(0.78 0.12 20);
 }
 /* ─────────────────────────────────────────────────────────────── */
 
