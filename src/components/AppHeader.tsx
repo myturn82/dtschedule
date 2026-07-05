@@ -91,7 +91,7 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
               <button
                 onClick={() => setShowFuncMenu(v => !v)}
                 aria-label="기능 메뉴"
-                className="hidden lg:flex w-8 h-8 items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-all shrink-0"
+                className="w-8 h-8 flex items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-all shrink-0"
               >
                 {showFuncMenu
                   ? <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 5l10 10M15 5L5 15"/></svg>
