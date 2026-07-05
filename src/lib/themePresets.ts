@@ -1,6 +1,5 @@
-// 조직별 포인트 컬러 프리셋 — claude.ai/design "Org Setup Wizard" 트윅스 패널의
-// THEMES 토큰을 그대로 포팅. 다크 변형은 데이터로 보관하되 현재 앱은 다크모드가
-// 비활성 상태라 적용하지 않는다(useDarkMode.ts 참고).
+// 조직별 포인트 컬러 프리셋 — THEMES 토큰 포팅.
+// 다크모드 시 모든 프리셋은 애플 스타일 흑백(APPLE_DARK_TOKENS)으로 오버라이드된다.
 
 export type ThemePresetKey = 'midnight' | 'forest' | 'salmon' | 'beige' | 'original' | 'butter' | 'pistachio' | 'dusty_lavender' | 'terracotta' | 'monochrome' | 'deep_midnight' | 'brick' | 'sage' | 'mute_lavender'
 
@@ -109,17 +108,28 @@ const TOKEN_TO_CSS_VAR: Record<keyof Pick<ThemeTokens, 'accent' | 'accentHover' 
   accentContrast: '--color-brand-primary-contrast',
 }
 
-// 조직의 포인트 컬러 프리셋을 전역 CSS 변수로 주입한다. 기존 31개 파일이 참조하는
-// --color-brand-primary(-hover)를 이 한 곳에서만 바꾸면 버튼·포커스링 등에 자동 반영된다.
-export function applyThemePreset(key: ThemePresetKey | null | undefined) {
+// 다크모드 브랜드 토큰 — 애플 스타일 흑백. 프리셋 무관하게 다크 시 항상 적용된다.
+const APPLE_DARK_TOKENS: ThemeTokens = {
+  accent: '#FFFFFF',
+  accentHover: '#E8E8ED',
+  accentSoft: 'rgba(255,255,255,0.08)',
+  accentRing: 'rgba(255,255,255,0.18)',
+  accentText: '#FFFFFF',
+  accentContrast: '#000000',
+  tintBrand: 'rgba(255,255,255,0.08)',
+  tintBrandInk: '#E8E8ED',
+}
+
+// 조직의 포인트 컬러 프리셋을 전역 CSS 변수로 주입한다.
+// 다크모드(isDark=true) 시 프리셋과 무관하게 애플 스타일 흑백 토큰을 적용한다.
+export function applyThemePreset(key: ThemePresetKey | null | undefined, isDark = false) {
   const root = document.documentElement
-  const tokens = key ? THEME_PRESETS[key]?.light : undefined
+  const tokens = isDark ? APPLE_DARK_TOKENS : (key ? THEME_PRESETS[key]?.light : undefined)
   for (const [tokenKey, cssVar] of Object.entries(TOKEN_TO_CSS_VAR) as [keyof typeof TOKEN_TO_CSS_VAR, string][]) {
     const value = tokens?.[tokenKey]
     if (value) root.style.setProperty(cssVar, value)
     else root.style.removeProperty(cssVar)
   }
-  // 셀 tint 오버라이드 — 미설정 시 index.css color-mix 공식으로 폴백
   if (tokens?.tintBrand) root.style.setProperty('--tint-brand', tokens.tintBrand)
   else root.style.removeProperty('--tint-brand')
   if (tokens?.tintBrandInk) root.style.setProperty('--tint-brand-ink', tokens.tintBrandInk)

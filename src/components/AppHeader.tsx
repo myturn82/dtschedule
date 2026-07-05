@@ -11,6 +11,7 @@ import { StartServiceModal } from './modals/StartServiceModal'
 import { useNotifications } from '../hooks/useNotifications'
 import { usePushSubscription } from '../hooks/usePushSubscription'
 import { NotificationPanel } from './notifications/NotificationPanel'
+import { useDarkMode } from '../contexts/DarkModeContext'
 
 function IconChip({ children, active, danger }: { children: React.ReactNode; active?: boolean; danger?: boolean }) {
   return (
@@ -57,6 +58,7 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications()
   const { isSubscribed, isLoading: pushLoading, isSupported: pushSupported, subscribe, unsubscribe } = usePushSubscription()
 
+  const { isDark, toggle: toggleDark } = useDarkMode()
   const feedbackUrl = import.meta.env.VITE_FEEDBACK_URL as string | undefined
   const isTenantFreeform = displayMode(tenant?.settings?.tenant_mode) === '비회원'
   const isPrivileged = profile?.is_super_admin || tenantRole === 'admin'
@@ -204,7 +206,7 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
                     {tenant?.settings?.title || tenant?.name}
                   </span>
                 </div>
-                <div className="lg:flex-1 lg:overflow-y-auto lg:px-2 lg:py-2">
+                <div className="lg:flex-1 lg:overflow-y-auto lg:px-2 lg:py-2 lg:pb-0">
                   <NavLabel>콘솔</NavLabel>
                   {profile?.is_super_admin && (
                     <button onClick={() => { navigate('/superadmin'); setShowFuncMenu(false) }} className={navItemCls}>
@@ -230,6 +232,18 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
                   </button>
                   {funcMenuItems && <div className="h-px bg-[var(--color-border)] mx-2.5 my-2.5" />}
                   {funcMenuItems?.(() => { if (window.innerWidth < 1024) setShowFuncMenu(false) })}
+                </div>
+                {/* PC 사이드바 하단 다크모드 토글 */}
+                <div className="hidden lg:block border-t border-[var(--color-border)] px-2 py-2 mt-auto">
+                  <button onClick={toggleDark} className={navItemCls}>
+                    <IconChip>
+                      {isDark
+                        ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                        : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                      }
+                    </IconChip>
+                    {isDark ? '라이트 모드' : '다크 모드'}
+                  </button>
                 </div>
               </div>
             </div>
@@ -299,6 +313,15 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
                   </button>
                 )}
                 {sep}
+                <button onClick={() => { toggleDark(); setShowUserMenu(false) }} className={menuBtn}>
+                  <span className="flex items-center gap-2.5">
+                    {isDark
+                      ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                      : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                    }
+                    {isDark ? '라이트 모드' : '다크 모드'}
+                  </span>
+                </button>
                 <button onClick={() => { signOut(); setShowUserMenu(false) }} className={menuBtn}>
                   <span className="flex items-center gap-2.5">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>

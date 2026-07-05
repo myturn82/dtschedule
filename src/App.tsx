@@ -19,12 +19,11 @@ import { AuthPage }     from './pages/AuthPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { SetupWizardPage } from './pages/SetupWizardPage'
 import { HelpPage } from './pages/HelpPage'
-import { useDarkMode } from './hooks/useDarkMode'
+import { DarkModeProvider } from './contexts/DarkModeContext'
 import { InstallBanner } from './components/InstallBanner'
 import { DevFileLabelDisplay } from './components/DevFileLabel'
 
 function AppRoutes() {
-  useDarkMode()
   const { profile, loading: authLoading } = useAuth()
   const { isCustomerAdmin } = useCustomerAdmin()
   const { tenant, tenantRole, tenantPlan, memberships, loading: tenantLoading, tenantSelectedByUser } = useTenant()
@@ -149,16 +148,18 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <PlanLimitsProvider>
-          <TenantProvider>
-            <AppRoutes />
-            <InstallBanner />
-            <DevFileLabelDisplay />
-          </TenantProvider>
-        </PlanLimitsProvider>
-      </AuthProvider>
-    </BrowserRouter>
+    <DarkModeProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <PlanLimitsProvider>
+            <TenantProvider>
+              <AppRoutes />
+              <InstallBanner />
+              <DevFileLabelDisplay />
+            </TenantProvider>
+          </PlanLimitsProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </DarkModeProvider>
   )
 }
