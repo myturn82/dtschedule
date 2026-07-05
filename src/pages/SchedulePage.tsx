@@ -25,6 +25,7 @@ import { HolidayNoteModal } from '../components/modals/HolidayNoteModal'
 import { ConfirmDialog } from '../components/shared/ConfirmDialog'
 import { LockIcon, UnlockIcon } from '../components/icons/LockIcons'
 import { AutoAssignPreviewModal } from '../components/modals/AutoAssignPreviewModal'
+import { SmsModal } from '../components/modals/SmsModal'
 import { computeAutoAssignments } from '../utils/autoAssign'
 import { exportMonthScheduleToExcel, exportMonthScheduleToCsv, exportMonthScheduleToDocx, exportMonthScheduleToPdf } from '../utils/exportSchedule'
 import type { ProposedAssignment } from '../utils/autoAssign'
@@ -86,6 +87,7 @@ export function SchedulePage() {
   const [modalTarget, setModalTarget] = useState<ModalTarget | null>(null)
   const [directRegMsg, setDirectRegMsg] = useState<string | null>(null)
   const [showRecurring, setShowRecurring] = useState(false)
+  const [showSms, setShowSms] = useState(false)
   const [holidayTarget, setHolidayTarget] = useState<{ day: number; startHour: number; endHour: number } | null>(null)
   const [memberNotice, setMemberNotice] = useState<string | null>(null)
   const [lastSnapshot, setLastSnapshot] = useState<SnapshotInfo | null>(null)
@@ -718,6 +720,14 @@ export function SchedulePage() {
               </button>
             )}
             {isPrivileged && (
+              <button onClick={() => { setShowSms(true); close() }} className={menuItemCls}>
+                <NavIcon>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                </NavIcon>
+                문자 발송
+              </button>
+            )}
+            {isPrivileged && (
               <>
                 <p className={navLabelCls}>잠금</p>
                 <button onClick={() => { handleLockClick(true); close() }} className={menuItemCls}>
@@ -947,6 +957,13 @@ export function SchedulePage() {
               alert(`${selected.length - errors.length}건 저장 완료, ${errors.length}건 실패`)
             }
           }}
+        />
+      )}
+
+      {showSms && (
+        <SmsModal
+          assignments={assignments}
+          onClose={() => setShowSms(false)}
         />
       )}
 
