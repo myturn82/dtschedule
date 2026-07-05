@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { DevFileLabel } from '../DevFileLabel'
 import { supabase } from '../../lib/supabase'
 
@@ -118,7 +118,7 @@ export function JoinOrgModal({ userId, onClose, onSuccess }: Props) {
             <p className="text-sm text-[var(--color-text-secondary)]">신청이 완료됐습니다. 관리자의 승인을 기다려 주세요.</p>
             <button
               onClick={onClose}
-              className="mt-2 px-4 py-2 text-sm font-medium rounded-xl bg-[var(--color-brand-primary)] text-white hover:bg-[var(--color-brand-primary-hover)] transition-colors"
+              className="mt-2 px-4 py-2 text-sm font-medium rounded-xl bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] hover:bg-[var(--color-brand-primary-hover)] transition-colors"
             >
               닫기
             </button>
@@ -188,7 +188,7 @@ export function JoinOrgModal({ userId, onClose, onSuccess }: Props) {
               <button
                 onClick={handleSubmit}
                 disabled={submitting || !!hasNoRoles}
-                className="flex-1 py-2 text-sm font-semibold rounded-xl bg-[var(--color-brand-primary)] text-white hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50 transition-colors"
+                className="flex-1 py-2 text-sm font-semibold rounded-xl bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50 transition-colors"
               >
                 {submitting ? '신청 중...' : '신청하기'}
               </button>

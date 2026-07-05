@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useCustomerAdmin } from '../hooks/useCustomerAdmin'
@@ -18,7 +18,7 @@ function IconChip({ children, active, danger }: { children: React.ReactNode; act
     <span
       className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border transition-colors ${
         active
-          ? 'bg-[var(--color-brand-primary)] border-transparent text-white'
+          ? 'bg-[var(--color-brand-primary)] border-transparent text-[var(--color-brand-primary-contrast)]'
           : danger
           ? 'bg-[var(--color-surface)] border-[var(--color-border)] text-red-500 group-hover:border-red-200 group-hover:bg-red-50'
           : 'bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-muted)] group-hover:text-[var(--color-text-primary)] group-hover:border-[var(--color-border-strong)]'
@@ -168,7 +168,7 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
               onShowLogin && (
                 <button
                   onClick={onShowLogin}
-                  className="px-3 py-1.5 text-sm font-semibold rounded-xl bg-[var(--color-brand-primary)] text-white hover:bg-[var(--color-brand-primary-hover)] transition-all"
+                  className="px-3 py-1.5 text-sm font-semibold rounded-xl bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] hover:bg-[var(--color-brand-primary-hover)] transition-all"
                 >
                   로그인
                 </button>
@@ -199,7 +199,7 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
             ">
               <div className="p-2 lg:p-0 lg:h-full lg:flex lg:flex-col">
                 <div className="hidden lg:flex items-center gap-2.5 px-3 shrink-0 h-[59px] border-b border-[var(--color-border)]">
-                  <div className="w-7 h-7 rounded-lg bg-[var(--color-brand-primary)] text-white flex items-center justify-center text-[13px] font-bold shrink-0">
+                  <div className="w-7 h-7 rounded-lg bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] flex items-center justify-center text-[13px] font-bold shrink-0">
                     {(tenant?.settings?.title || tenant?.name || '?').charAt(0)}
                   </div>
                   <span className="text-[13px] font-semibold text-[var(--color-text-primary)] truncate">

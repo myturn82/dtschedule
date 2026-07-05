@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { DevFileLabel } from '../DevFileLabel'
 import type { CustomFieldDef, DashboardWidgetConfig, WidgetAggOp, WidgetChartType } from '../../types'
 
@@ -52,7 +52,7 @@ export function DashboardWidgetModal({ customFields, existing, onSave, onClose }
   const aggBtnCls = (active: boolean) =>
     `px-3 py-1.5 text-sm rounded-lg border transition-colors ${
       active
-        ? 'bg-[var(--color-brand-primary)] text-white border-[var(--color-brand-primary)]'
+        ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] border-[var(--color-brand-primary)]'
         : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
     }`
 
@@ -137,7 +137,7 @@ export function DashboardWidgetModal({ customFields, existing, onSave, onClose }
                 onClick={() => setChartType(ct.value)}
                 className={`flex-1 py-2.5 text-sm rounded-xl border transition-colors flex flex-col items-center gap-1 ${
                   chartType === ct.value
-                    ? 'bg-[var(--color-brand-primary)] text-white border-[var(--color-brand-primary)]'
+                    ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] border-[var(--color-brand-primary)]'
                     : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
                 }`}
               >
@@ -154,7 +154,7 @@ export function DashboardWidgetModal({ customFields, existing, onSave, onClose }
 
         <div className="flex gap-2 pt-1">
           <button type="button" onClick={handleSave}
-            className="flex-1 py-2.5 bg-[var(--color-brand-primary)] text-white rounded-xl font-semibold hover:bg-[var(--color-brand-primary-hover)] transition-colors">
+            className="flex-1 py-2.5 bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] rounded-xl font-semibold hover:bg-[var(--color-brand-primary-hover)] transition-colors">
             저장
           </button>
           <button type="button" onClick={onClose}

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+﻿import { useMemo, useState } from 'react'
 import type { Customer, PlanType, Tenant } from '../../types'
 import { colorOf, initialsOf } from '../../lib/avatarColor'
 
@@ -160,7 +160,7 @@ export function AccountRail({
                 <option value="business">Business</option>
               </select>
               <div className="flex gap-2">
-                <button type="submit" disabled={customerSaving} className="flex-1 px-3 py-1.5 rounded-lg bg-[var(--color-brand-primary)] text-white text-xs font-semibold hover:opacity-90 disabled:opacity-40">
+                <button type="submit" disabled={customerSaving} className="flex-1 px-3 py-1.5 rounded-lg bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-xs font-semibold hover:opacity-90 disabled:opacity-40">
                   {customerSaving ? '저장 중...' : '생성'}
                 </button>
                 <button type="button" onClick={() => setShowCreateCustomer(false)} className="px-3 py-1.5 rounded-lg border border-[var(--color-border)] text-xs text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]">취소</button>

@@ -1,4 +1,4 @@
-interface Props {
+﻿interface Props {
   title: string
   message: string
   confirmLabel?: string
@@ -35,7 +35,7 @@ export function ConfirmDialog({
             className={`flex-1 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 ${
               danger
                 ? 'bg-red-500 hover:bg-red-600 text-white'
-                : 'bg-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary-hover)] text-white'
+                : 'bg-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary-hover)] text-[var(--color-brand-primary-contrast)]'
             }`}
           >
             {confirmLabel}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import type { Customer, PlanType, Tenant } from '../../types'
 import { colorOf, initialsOf } from '../../lib/avatarColor'
 import { SlotEditor } from '../shared/SlotEditor'
@@ -262,7 +262,7 @@ export function HubMain({
                 <button
                   onClick={handleSaveAll}
                   disabled={fieldSaving || phoneSaving || ownerSaving}
-                  className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[var(--color-brand-primary)] text-white hover:opacity-90 disabled:opacity-40 transition-colors"
+                  className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] hover:opacity-90 disabled:opacity-40 transition-colors"
                 >
                   {fieldSaving || phoneSaving || ownerSaving ? '저장 중...' : '변경사항 저장'}
                 </button>
@@ -447,7 +447,7 @@ export function HubMain({
             <button
               type="submit"
               disabled={saving || !form.slug || !form.name}
-              className="px-4 py-2 rounded-xl bg-[var(--color-brand-primary)] text-white text-sm font-medium hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40"
+              className="px-4 py-2 rounded-xl bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-sm font-medium hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40"
             >
               {saving ? '저장 중...' : '생성'}
             </button>

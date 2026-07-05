@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+﻿import { useState, useEffect, useMemo, useRef } from 'react'
 import { rangeFromCells, nextCellSelection, legacyCellSelection, colIdxForRole, colIdxForMemberType, type CellPos } from '../utils/excelSelection'
 import { DevFileLabel } from '../components/DevFileLabel'
 import { useAssignmentSnapshot, type SnapshotInfo, type SnapshotScope } from '../hooks/useAssignmentSnapshot'
@@ -45,7 +45,7 @@ function NavIcon({ children, active, danger }: { children: React.ReactNode; acti
     <span
       className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border transition-colors ${
         active
-          ? 'bg-[var(--color-brand-primary)] border-transparent text-white'
+          ? 'bg-[var(--color-brand-primary)] border-transparent text-[var(--color-brand-primary-contrast)]'
           : danger
           ? 'bg-[var(--color-surface)] border-[var(--color-border)] text-red-500 group-hover:border-red-200 group-hover:bg-red-50'
           : 'bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-muted)] group-hover:text-[var(--color-text-primary)] group-hover:border-[var(--color-border-strong)]'
@@ -656,7 +656,7 @@ export function SchedulePage() {
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
                   </NavIcon>
                   <span className="flex-1">엑셀 모드</span>
-                  {excelMode && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-[var(--color-brand-primary)] text-white">ON</span>}
+                  {excelMode && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]">ON</span>}
                 </button>
               </>
             )}
@@ -780,7 +780,7 @@ export function SchedulePage() {
             <div className="framed:mx-3 mt-2 mb-0 flex items-center gap-2 px-3 py-2 framed:rounded-xl bg-[color-mix(in_srgb,var(--color-brand-primary)_10%,transparent)] border border-[var(--color-brand-primary)]/30 text-sm text-[var(--color-brand-primary)]">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
               <span className="flex-1 font-semibold text-xs">엑셀 모드 — 클릭으로 셀 선택, Shift+클릭으로 범위, Ctrl+C/V 복사·붙여넣기</span>
-              {copyBuf && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[var(--color-brand-primary)] text-white">복사됨</span>}
+              {copyBuf && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]">복사됨</span>}
               <button
                 onClick={() => { setExcelMode(false); setCellSel(null); setCopyBuf(null); setPasteHistory([]) }}
                 className="ml-1 opacity-60 hover:opacity-100 transition-opacity text-xs leading-none"
@@ -1218,7 +1218,7 @@ export function SchedulePage() {
       )}
 
       {directRegMsg && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl bg-[var(--color-brand-primary)] text-white text-sm font-medium shadow-lg animate-fade-up pointer-events-none">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-sm font-medium shadow-lg animate-fade-up pointer-events-none">
           {directRegMsg}
         </div>
       )}
@@ -1228,7 +1228,7 @@ export function SchedulePage() {
             type="button"
             onClick={runCopy}
             disabled={!selRange}
-            className="select-none px-3 py-1.5 rounded-xl text-sm font-semibold bg-[var(--color-brand-primary)] text-white hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+            className="select-none px-3 py-1.5 rounded-xl text-sm font-semibold bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
           >
             📋 복사
           </button>
@@ -1236,7 +1236,7 @@ export function SchedulePage() {
             type="button"
             onClick={runPaste}
             disabled={!copyBuf || !isPrivileged}
-            className="select-none px-3 py-1.5 rounded-xl text-sm font-semibold bg-[var(--color-brand-primary)] text-white hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+            className="select-none px-3 py-1.5 rounded-xl text-sm font-semibold bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
           >
             📥 붙여넣기
           </button>

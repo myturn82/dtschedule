@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { AutoResizeTextarea } from '../shared/AutoResizeTextarea'
 import { DevFileLabel } from '../DevFileLabel'
 import type { Assignment, CellState, ModalTarget, Profile, TenantRole, MemberType, CustomFieldDef, TenantMode } from '../../types'
@@ -667,7 +667,7 @@ export function SlotEditModal({
                     }}
                     className={`px-3.5 h-9 rounded-xl text-[13px] font-bold border transition-colors whitespace-nowrap ${
                       selectedRoleId === r.id
-                        ? 'bg-[var(--color-brand-primary)] border-[var(--color-brand-primary)] text-white shadow-[0_4px_10px_-6px_var(--color-brand-primary)]'
+                        ? 'bg-[var(--color-brand-primary)] border-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] shadow-[0_4px_10px_-6px_var(--color-brand-primary)]'
                         : 'bg-[var(--color-surface)] border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:border-[var(--color-brand-primary)]/40'
                     }`}
                   >
@@ -920,7 +920,7 @@ export function SlotEditModal({
                   }`}
                 >
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-[18px] font-bold leading-none transition-colors ${
-                    isInputExpanded ? 'bg-[var(--color-border-strong)] text-[var(--color-text-muted)]' : 'bg-[var(--color-brand-primary)] text-white'
+                    isInputExpanded ? 'bg-[var(--color-border-strong)] text-[var(--color-text-muted)]' : 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]'
                   }`}>
                     {isInputExpanded ? '−' : '+'}
                   </div>
@@ -958,7 +958,7 @@ export function SlotEditModal({
                         onClick={() => setTimeSub(timeSub === opt.value ? null : opt.value)}
                         className={`px-3.5 h-9 rounded-xl text-[13px] font-bold border transition-all duration-200
                           ${timeSub === opt.value
-                            ? 'bg-[var(--color-brand-primary)] text-white border-[var(--color-brand-primary)] shadow-[0_4px_10px_-6px_var(--color-brand-primary)]'
+                            ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] border-[var(--color-brand-primary)] shadow-[0_4px_10px_-6px_var(--color-brand-primary)]'
                             : 'bg-[var(--color-surface)] border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:border-[var(--color-brand-primary)]/40'}`}
                       >
                         {opt.label}
@@ -1036,7 +1036,7 @@ export function SlotEditModal({
                         {profile.name.slice(0, 1)}
                       </div>
                       <span className="text-sm text-[var(--color-text-primary)] font-bold">{profile.name}</span>
-                      <span className="ml-auto text-[11px] font-extrabold text-white bg-[var(--color-brand-primary)] px-2 py-0.5 rounded-full">나</span>
+                      <span className="ml-auto text-[11px] font-extrabold bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] px-2 py-0.5 rounded-full">나</span>
                     </div>
                   )}
                   {showExtraCustomFields && !!selectedUserId && customFields.map(field => renderFieldInput(field))}
@@ -1079,7 +1079,7 @@ export function SlotEditModal({
                 <>
                   <button
                     onClick={() => startEdit(ownAssignment)}
-                    className="flex-1 h-11 bg-[var(--color-brand-primary)] text-white rounded-xl text-sm font-bold hover:bg-[var(--color-brand-primary-hover)] transition-all duration-200 shadow-[0_8px_18px_-10px_var(--color-brand-primary)]"
+                    className="flex-1 h-11 bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] rounded-xl text-sm font-bold hover:bg-[var(--color-brand-primary-hover)] transition-all duration-200 shadow-[0_8px_18px_-10px_var(--color-brand-primary)]"
                   >
                     내 스케줄 수정
                   </button>
@@ -1104,7 +1104,7 @@ export function SlotEditModal({
                   <button
                     onClick={editingId ? handleUpdate : handleAdd}
                     disabled={isAddDisabled}
-                    className="flex-1 h-11 bg-[var(--color-brand-primary)] text-white rounded-xl text-sm font-bold hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50 transition-all duration-200 shadow-[0_8px_18px_-10px_var(--color-brand-primary)]"
+                    className="flex-1 h-11 bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] rounded-xl text-sm font-bold hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50 transition-all duration-200 shadow-[0_8px_18px_-10px_var(--color-brand-primary)]"
                   >
                     {loading ? '저장 중...' : editingId ? '수정 완료' : '저장'}
                   </button>

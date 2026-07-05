@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+﻿import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DevFileLabel } from '../components/DevFileLabel'
 import { useNavigate } from 'react-router-dom'
@@ -1184,7 +1184,7 @@ export function SuperAdminPage() {
                 <button
                   disabled={modeSaving}
                   onClick={confirmModeChange}
-                  className="flex-1 px-4 py-2 rounded-xl bg-[var(--color-brand-primary)] text-white text-sm font-medium hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40"
+                  className="flex-1 px-4 py-2 rounded-xl bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-sm font-medium hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40"
                 >
                   {modeSaving ? t('saving') : t('apply')}
                 </button>

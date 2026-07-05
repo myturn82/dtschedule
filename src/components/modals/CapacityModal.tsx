@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { DevFileLabel } from '../DevFileLabel'
 import { DEFAULT_MAX_CAPACITY } from '../../types'
 import type { SlotSetting, TimeSlot } from '../../types'
@@ -97,7 +97,7 @@ export function CapacityModal({ slotSettings, timeSlots, slotLabels = {}, onClos
             <button
               onClick={handleBulkApply}
               disabled={bulkApplying || !bulkValue}
-              className="px-3 py-1 text-xs font-semibold rounded-lg bg-[var(--color-brand-primary)] text-white hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40 transition-colors"
+              className="px-3 py-1 text-xs font-semibold rounded-lg bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40 transition-colors"
             >
               {bulkApplying ? '적용 중...' : bulkDone ? '완료 ✓' : '전체 적용'}
             </button>
@@ -145,7 +145,7 @@ export function CapacityModal({ slotSettings, timeSlots, slotLabels = {}, onClos
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex-1 bg-[var(--color-brand-primary)] text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50 transition-all duration-200"
+            className="flex-1 bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] rounded-xl py-2.5 text-sm font-semibold hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50 transition-all duration-200"
           >
             {saving ? '저장 중...' : saved ? '저장 완료 ✓' : '저장'}
           </button>

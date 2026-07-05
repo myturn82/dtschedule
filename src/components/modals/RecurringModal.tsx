@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+﻿import { useState, useMemo, useEffect } from 'react'
 import { DevFileLabel } from '../DevFileLabel'
 import { supabase } from '../../lib/supabase'
 import type { Profile, TenantRole, ScheduleRule, DateOverride, TenantMode, TenantAccessRole } from '../../types'
@@ -203,7 +203,7 @@ export function RecurringModal({
 
   const inputCls = 'w-full border border-[var(--color-border-strong)] rounded-xl px-3 py-2.5 text-sm bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500/60 transition-all duration-200'
   const tabCls = (active: boolean) =>
-    `px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${active ? 'bg-[var(--color-brand-primary)] text-white' : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'}`
+    `px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${active ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]' : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'}`
 
   const roleName = isSplitMode && roleId ? splitRoles.find(r => r.id === roleId)?.name ?? null : null
   const previewDates = uniqueDateKeys.slice(0, 10).map(k => {
@@ -253,7 +253,7 @@ export function RecurringModal({
                 const active = selectedDays.includes(dow)
                 let cls = 'flex-1 py-2 rounded-xl text-xs font-semibold transition-colors '
                 if (active) {
-                  cls += dow === 0 ? 'bg-red-500 text-white' : dow === 6 ? 'bg-blue-500 text-white' : 'bg-[var(--color-brand-primary)] text-white'
+                  cls += dow === 0 ? 'bg-red-500 text-white' : dow === 6 ? 'bg-blue-500 text-white' : 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]'
                 } else {
                   cls += dow === 0
                     ? 'bg-[var(--color-surface-secondary)] text-red-500 hover:bg-red-50'
@@ -278,7 +278,7 @@ export function RecurringModal({
             <div className="grid grid-cols-6 gap-1.5">
               {Array.from({length:12},(_,i)=>i+1).map(m=>(
                 <button key={m} onClick={()=>setMonthOfYear(m)}
-                  className={`py-1.5 rounded-xl text-xs font-semibold transition-colors ${monthOfYear===m ? 'bg-[var(--color-brand-primary)] text-white' : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'}`}>
+                  className={`py-1.5 rounded-xl text-xs font-semibold transition-colors ${monthOfYear===m ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]' : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'}`}>
                   {m}월
                 </button>
               ))}
@@ -295,7 +295,7 @@ export function RecurringModal({
             <div className="grid grid-cols-7 gap-1">
               {Array.from({length:31},(_,i)=>i+1).map(d=>(
                 <button key={d} onClick={()=>setDayOfMonth(d)}
-                  className={`py-1.5 rounded-lg text-xs font-semibold transition-colors ${dayOfMonth===d ? 'bg-[var(--color-brand-primary)] text-white' : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'}`}>
+                  className={`py-1.5 rounded-lg text-xs font-semibold transition-colors ${dayOfMonth===d ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]' : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'}`}>
                   {d}
                 </button>
               ))}
@@ -317,7 +317,7 @@ export function RecurringModal({
                     onClick={() => toggleSlot(slot)}
                     className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors border ${
                       active
-                        ? 'bg-[var(--color-brand-primary)] text-white border-[var(--color-brand-primary)]'
+                        ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] border-[var(--color-brand-primary)]'
                         : 'border-[var(--color-border)] text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] hover:bg-[var(--color-surface-hover)]'
                     }`}
                   >
@@ -458,7 +458,7 @@ export function RecurringModal({
           <button
             onClick={handleSubmit}
             disabled={loading || targetPairs.length === 0 || !volunteerName.trim()}
-            className="w-full py-2.5 rounded-xl bg-[var(--color-brand-primary)] text-white text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full py-2.5 rounded-xl bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {loading ? '등록 중...' : `${targetPairs.length}건 일괄 등록`}
           </button>

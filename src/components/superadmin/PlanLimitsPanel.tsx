@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { usePlanLimits } from '../../contexts/PlanLimitsContext'
 import { PLAN_LABELS } from '../../types'
 import type { PlanType, PlanLimitsMap } from '../../types'
@@ -96,7 +96,7 @@ function PlanLimitsTable({ planLimits, updatePlanLimit }: {
                 <button
                   onClick={() => handleSave(plan)}
                   disabled={savingPlan === plan}
-                  className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[var(--color-brand-primary)] text-white hover:opacity-90 disabled:opacity-40 transition-colors"
+                  className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] hover:opacity-90 disabled:opacity-40 transition-colors"
                 >
                   {savingPlan === plan ? '저장 중...' : '저장'}
                 </button>

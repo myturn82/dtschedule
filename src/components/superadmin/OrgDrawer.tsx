@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import type { Tenant, TenantMode } from '../../types'
 import { colorOf, avatarColorFor, initialsOf } from '../../lib/avatarColor'
 import { displayMode } from '../../lib/tenantMode'
@@ -84,7 +84,7 @@ export function OrgDrawer({
                 autoFocus
               />
               <button onClick={() => saveName(tenant)} disabled={nameSaving}
-                className="px-2 py-1 text-xs bg-[var(--color-brand-primary)] text-white rounded-lg disabled:opacity-40">
+                className="px-2 py-1 text-xs bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] rounded-lg disabled:opacity-40">
                 {nameSaving ? '...' : '저장'}
               </button>
               <button onClick={() => setEditingNameId(null)}
@@ -109,7 +109,7 @@ export function OrgDrawer({
                 autoFocus
               />
               <button onClick={() => saveSlug(tenant)} disabled={slugSaving}
-                className="px-1.5 py-0.5 text-xs bg-[var(--color-brand-primary)] text-white rounded-lg disabled:opacity-40">
+                className="px-1.5 py-0.5 text-xs bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] rounded-lg disabled:opacity-40">
                 {slugSaving ? '...' : '저장'}
               </button>
               <button onClick={() => setEditingSlugId(null)}

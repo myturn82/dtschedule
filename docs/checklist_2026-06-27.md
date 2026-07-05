@@ -29,7 +29,6 @@
 - [ ] Supabase 대시보드 → Edge Functions 목록에 `send-reminders` 표시됨
 
 ---
-
 ## 1. 슈퍼관리자 로그인 리다이렉트
 
 배경: 슈퍼관리자 계정으로 로그인하면 조직 선택 화면이 아닌 SuperAdminPage로 바로 이동해야 함.

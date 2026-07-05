@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { DevFileLabel } from '../DevFileLabel'
 import type { ProposedAssignment, MemberPreference } from '../../utils/autoAssign'
 import type { TenantRole } from '../../types'
@@ -188,7 +188,7 @@ export function AutoAssignPreviewModal({ proposals, onConfirm, onClose, memberPr
           <button
             onClick={handleConfirm}
             disabled={loading || selected.length === 0}
-            className="flex-1 bg-[var(--color-brand-primary)] text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50 transition-all duration-200 shadow-[0_2px_8px_rgba(37,99,235,0.25)]"
+            className="flex-1 bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] rounded-xl py-2.5 text-sm font-semibold hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50 transition-all duration-200 shadow-[0_2px_8px_rgba(37,99,235,0.25)]"
           >
             {loading ? '저장 중...' : `${selected.length}건 저장`}
           </button>

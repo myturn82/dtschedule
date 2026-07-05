@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+﻿import { useState, useEffect, useCallback } from 'react'
 import { DevFileLabel } from '../components/DevFileLabel'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
@@ -368,7 +368,7 @@ export function CustomerAdminPage() {
                         autoFocus
                       />
                       <button onClick={savePhone} disabled={phoneSaving}
-                        className="px-1.5 py-1 text-xs bg-[var(--color-brand-primary)] text-white rounded-lg disabled:opacity-40">
+                        className="px-1.5 py-1 text-xs bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] rounded-lg disabled:opacity-40">
                         {phoneSaving ? '...' : '저장'}
                       </button>
                       <button onClick={() => setEditingPhone(false)}
@@ -564,7 +564,7 @@ export function CustomerAdminPage() {
 
                 <div className="flex gap-2 pt-1">
                   <button type="submit" disabled={saving || !form.name}
-                    className="px-4 py-2 rounded-xl bg-[var(--color-brand-primary)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-40">
+                    className="px-4 py-2 rounded-xl bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-sm font-medium hover:opacity-90 disabled:opacity-40">
                     {saving ? '저장 중...' : '생성'}
                   </button>
                   <button type="button" onClick={() => setShowCreate(false)}

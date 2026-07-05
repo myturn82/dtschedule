@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react'
+﻿import { Fragment, useState } from 'react'
 import { getCellState } from '../../utils/cellState'
 import { rangeSlotLabel, slotStartLabel } from '../../utils/timeSlots'
 import { getKoreanHolidayName } from '../../utils/koreanHolidays'
@@ -218,7 +218,7 @@ export function ScheduleGrid({
               onClick={() => toggleRole(role.id)}
               className={`px-2.5 py-0.5 text-xs rounded-full border transition-colors select-none ${
                 !hiddenRoleIds.has(role.id)
-                  ? 'bg-[var(--color-brand-primary)] text-white border-[var(--color-brand-primary)]'
+                  ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] border-[var(--color-brand-primary)]'
                   : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]'
               }`}
             >

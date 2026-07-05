@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { getCellState } from '../../utils/cellState'
 import { slotStartLabel } from '../../utils/timeSlots'
 import { TimeSlotCell } from './TimeSlotCell'
@@ -42,7 +42,7 @@ export function MobileScheduleView({ year, month, timeSlots, slotLabels = {}, as
               key={d}
               onClick={() => setSelectedDay(d)}
               className={`flex-shrink-0 w-10 h-12 rounded text-xs font-medium border
-                ${selectedDay === d ? 'bg-[var(--color-brand-primary)] text-white border-[var(--color-brand-primary)]' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 dark:text-gray-200'}
+                ${selectedDay === d ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] border-[var(--color-brand-primary)]' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 dark:text-gray-200'}
                 ${isSunDay && selectedDay !== d ? 'text-red-500' : ''}
                 ${isSatDay && selectedDay !== d ? 'text-blue-600' : ''}`}
             >

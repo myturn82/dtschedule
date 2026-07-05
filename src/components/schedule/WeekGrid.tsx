@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import type { Assignment, SlotSetting, ScheduleRule, DateOverride, ModalTarget, Profile, TenantRole, TimeSlot, TenantAccessRole } from '../../types'
 import { getCellState } from '../../utils/cellState'
 import { shortSlotLabel, slotStartLabel, formatTimeSub } from '../../utils/timeSlots'
@@ -100,7 +100,7 @@ export function WeekGrid({
               onClick={() => toggleRole(role.id)}
               className={`px-2.5 py-0.5 text-xs rounded-full border transition-colors select-none ${
                 !hiddenRoleIds.has(role.id)
-                  ? 'bg-[var(--color-brand-primary)] text-white border-[var(--color-brand-primary)]'
+                  ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] border-[var(--color-brand-primary)]'
                   : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]'
               }`}
             >

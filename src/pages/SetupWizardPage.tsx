@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+﻿import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAdmin } from '../hooks/useAdmin'
@@ -248,7 +248,7 @@ export function SetupWizardPage() {
         <p className="text-sm text-[var(--color-text-secondary)]">조직 정보를 불러올 수 없습니다.</p>
         <button
           onClick={() => { window.location.href = '/setup?org=' + orgId }}
-          className="px-4 py-2 rounded-xl bg-[var(--color-brand-primary)] text-white text-sm font-semibold"
+          className="px-4 py-2 rounded-xl bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-sm font-semibold"
         >
           다시 시도
         </button>

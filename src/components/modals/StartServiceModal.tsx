@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { DevFileLabel } from '../DevFileLabel'
 import { supabase } from '../../lib/supabase'
@@ -156,7 +156,7 @@ export function StartServiceModal({ userId, onClose }: Props) {
           <button
             onClick={handleSubmit}
             disabled={creating || !name.trim()}
-            className="flex-1 py-2 text-sm font-semibold rounded-xl bg-[var(--color-brand-primary)] text-white hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50 transition-colors"
+            className="flex-1 py-2 text-sm font-semibold rounded-xl bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50 transition-colors"
           >
             {creating ? '설정 중...' : '시작하기'}
           </button>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, Fragment } from 'react'
+﻿import { useState, useEffect, useMemo, Fragment } from 'react'
 import { AutoResizeTextarea } from '../components/shared/AutoResizeTextarea'
 import { useTranslation } from 'react-i18next'
 import { DevFileLabel } from '../components/DevFileLabel'
@@ -893,7 +893,7 @@ export function AdminPage() {
             </button>
             <div className="flex items-center gap-2.5 min-w-0">
               <div
-                className={`w-8 h-8 rounded-xl text-white flex items-center justify-center text-[13px] font-bold shrink-0 ${adminTenant?.settings?.theme_color ? '' : 'bg-[var(--color-brand-primary)] shadow-[0_4px_12px_-4px_var(--color-brand-primary)]'}`}
+                className={`w-8 h-8 rounded-xl text-[var(--color-brand-primary-contrast)] flex items-center justify-center text-[13px] font-bold shrink-0 ${adminTenant?.settings?.theme_color ? '' : 'bg-[var(--color-brand-primary)] shadow-[0_4px_12px_-4px_var(--color-brand-primary)]'}`}
                 style={adminTenant?.settings?.theme_color ? { background: adminTenant.settings.theme_color } : undefined}
               >
                 {adminTenant?.name?.[0] ?? '관'}
@@ -1014,7 +1014,7 @@ export function AdminPage() {
                   </button>
                   <button
                     onClick={() => { setShowAddMember(v => !v); setShowDirectCreate(false) }}
-                    className="px-3 py-1.5 text-xs font-medium bg-[var(--color-brand-primary)] text-white rounded-lg hover:bg-[var(--color-brand-primary-hover)]"
+                    className="px-3 py-1.5 text-xs font-medium bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] rounded-lg hover:bg-[var(--color-brand-primary-hover)]"
                   >
                     + 회원 추가
                   </button>
@@ -1093,7 +1093,7 @@ export function AdminPage() {
                           placeholder="member@example.com" required className={inputCls + ' w-full mt-1'} />
                       </div>
                       <button type="submit" disabled={saving}
-                        className="px-4 py-1.5 bg-[var(--color-brand-primary)] text-white text-sm rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50">
+                        className="px-4 py-1.5 bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-sm rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50">
                         {saving ? '추가 중...' : '추가'}
                       </button>
                       <button type="button" onClick={() => setShowAddMember(false)}
@@ -1130,7 +1130,7 @@ export function AdminPage() {
                                     autoFocus
                                   />
                                   <button onClick={() => handleSaveMemberName(m.user_id)} disabled={nameSaving}
-                                    className="px-1.5 py-1 text-[10px] bg-[var(--color-brand-primary)] text-white rounded-lg disabled:opacity-40">
+                                    className="px-1.5 py-1 text-[10px] bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] rounded-lg disabled:opacity-40">
                                     {nameSaving ? '...' : '저장'}
                                   </button>
                                   <button onClick={() => setEditingNameUserId(null)}
@@ -1368,7 +1368,7 @@ export function AdminPage() {
                                     if (err) msg(err, true)
                                     else setEditingRoleId(null)
                                   }}
-                                  className="px-2 py-1 text-xs bg-[var(--color-brand-primary)] text-white rounded-lg hover:bg-[var(--color-brand-primary-hover)]">
+                                  className="px-2 py-1 text-xs bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] rounded-lg hover:bg-[var(--color-brand-primary-hover)]">
                                   저장
                                 </button>
                                 <button type="button" onClick={() => setEditingRoleId(null)}
@@ -1480,7 +1480,7 @@ export function AdminPage() {
                         className="rounded border-[var(--color-border-strong)] accent-[var(--color-brand-primary)]" />
                       <span className="text-sm text-[var(--color-text-secondary)]">바 표시 (좌측 컬러 바로 표시)</span>
                     </label>
-                    <button type="submit" className="px-4 py-1.5 bg-[var(--color-brand-primary)] text-white text-sm font-semibold rounded-lg hover:bg-[var(--color-brand-primary-hover)]">추가</button>
+                    <button type="submit" className="px-4 py-1.5 bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-sm font-semibold rounded-lg hover:bg-[var(--color-brand-primary-hover)]">추가</button>
                   </div>
                 </form>
               </div>
@@ -1565,7 +1565,7 @@ export function AdminPage() {
                         key={idx}
                         className={`w-9 h-9 rounded-full text-[13px] font-bold transition-colors select-none ${
                           closedDays.has(idx)
-                            ? idx === 0 ? 'bg-red-500 text-white' : idx === 6 ? 'bg-blue-500 text-white' : 'bg-[var(--color-brand-primary)] text-white'
+                            ? idx === 0 ? 'bg-red-500 text-white' : idx === 6 ? 'bg-blue-500 text-white' : 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]'
                             : idx === 0 ? 'bg-red-50 text-red-500 hover:bg-red-100' : idx === 6 ? 'bg-blue-50 text-blue-500 hover:bg-blue-100' : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
                         }`}
                         onClick={() => setClosedDays(prev => {
@@ -1591,7 +1591,7 @@ export function AdminPage() {
                           await applyRuleTemplate(openDays)
                           setApplyingHoliday(false)
                         }}
-                        className="px-3 py-1.5 text-xs font-semibold bg-[var(--color-brand-primary)] text-white rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity"
+                        className="px-3 py-1.5 text-xs font-semibold bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity"
                       >
                         {applyingHoliday ? '적용 중...' : '적용'}
                       </button>
@@ -1708,7 +1708,7 @@ export function AdminPage() {
                       <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">레이블 (선택)</label>
                       <input type="text" value={dateForm.label} onChange={e => setDateForm(f => ({ ...f, label: e.target.value }))} placeholder="예: 추석연휴" maxLength={100} className={inputCls + ' block mt-1 w-36'} />
                     </div>
-                    <button type="submit" disabled={saving} className="px-4 py-1.5 bg-[var(--color-brand-primary)] text-white text-sm font-semibold rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50">
+                    <button type="submit" disabled={saving} className="px-4 py-1.5 bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-sm font-semibold rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50">
                       {saving ? '저장 중...' : '추가'}
                     </button>
                   </div>
@@ -1753,7 +1753,7 @@ export function AdminPage() {
                     조직 이름·타이틀·테마 색상·타임슬롯·역할 비율을 설정합니다.
                   </p>
                   <button type="submit" disabled={saving}
-                    className="mt-4 px-5 py-2 bg-[var(--color-brand-primary)] text-white text-sm font-semibold rounded-xl hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50">
+                    className="mt-4 px-5 py-2 bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-sm font-semibold rounded-xl hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50">
                     {saving ? '저장 중...' : '저장'}
                   </button>
                 </header>
@@ -1896,7 +1896,7 @@ export function AdminPage() {
                 </div>
 
                 <button type="submit" disabled={saving}
-                  className="px-5 py-2 bg-[var(--color-brand-primary)] text-white text-sm font-semibold rounded-xl hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50">
+                  className="px-5 py-2 bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-sm font-semibold rounded-xl hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50">
                   {saving ? '저장 중...' : '저장'}
                 </button>
               </form>
@@ -1947,7 +1947,7 @@ export function AdminPage() {
                       type="button"
                       onClick={handleRatioSave}
                       disabled={ratioSaving}
-                      className="mt-3 px-4 py-2 text-sm font-semibold rounded-xl bg-[var(--color-brand-primary)] text-white hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50"
+                      className="mt-3 px-4 py-2 text-sm font-semibold rounded-xl bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50"
                     >
                       {ratioSaving ? '저장 중...' : '비율 저장'}
                     </button>
@@ -2028,7 +2028,7 @@ export function AdminPage() {
                                   const err = await saveMemberPreference(m.user_id, days, limit)
                                   if (!err) setExpandedPrefUserId(null)
                                 }}
-                                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[var(--color-brand-primary)] text-white hover:bg-[var(--color-brand-primary-hover)]"
+                                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] hover:bg-[var(--color-brand-primary-hover)]"
                               >
                                 저장
                               </button>
@@ -2100,7 +2100,7 @@ export function AdminPage() {
                             </select>
                             <button type="button" onClick={saveLegendEdit}
                               disabled={!editLegendLabel.trim()}
-                              className="px-3 py-1.5 text-xs font-semibold bg-[var(--color-brand-primary)] text-white rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40 shrink-0">
+                              className="px-3 py-1.5 text-xs font-semibold bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40 shrink-0">
                               저장
                             </button>
                             <button type="button" onClick={() => setEditingLegendId(null)}
@@ -2196,7 +2196,7 @@ export function AdminPage() {
                       type="button"
                       onClick={addLegendItem}
                       disabled={!newLegendLabel.trim()}
-                      className="inline-flex items-center gap-1.5 h-[34px] px-4 bg-[var(--color-brand-primary)] text-white text-sm font-bold rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40 transition-colors"
+                      className="inline-flex items-center gap-1.5 h-[34px] px-4 bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-sm font-bold rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40 transition-colors"
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
                       {t('add')}
@@ -2404,7 +2404,7 @@ export function AdminPage() {
                             )}
                             <div className="flex gap-2 pt-1">
                               <button type="button" onClick={saveFieldEdit}
-                                className="inline-flex items-center justify-center h-[34px] px-4 bg-[var(--color-brand-primary)] text-white rounded-lg text-[13.5px] font-bold hover:bg-[var(--color-brand-primary-hover)] transition-colors">
+                                className="inline-flex items-center justify-center h-[34px] px-4 bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] rounded-lg text-[13.5px] font-bold hover:bg-[var(--color-brand-primary-hover)] transition-colors">
                                 {t('save')}
                               </button>
                               <button type="button" onClick={() => setEditingFieldId(null)}
@@ -2489,7 +2489,7 @@ export function AdminPage() {
                       </button>
                     )}
                     <button type="submit" disabled={!newFieldLabel.trim()}
-                      className="inline-flex items-center gap-1.5 h-[34px] px-4 bg-[var(--color-brand-primary)] text-white rounded-lg text-[13.5px] font-bold hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0">
+                      className="inline-flex items-center gap-1.5 h-[34px] px-4 bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] rounded-lg text-[13.5px] font-bold hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
                       {t('add')}
                     </button>

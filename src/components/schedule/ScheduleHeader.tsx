@@ -1,4 +1,4 @@
-import { useTranslation } from 'react-i18next'
+﻿import { useTranslation } from 'react-i18next'
 import type { ViewType } from '../../types'
 
 const DAY_KR = ['일', '월', '화', '수', '목', '금', '토']
@@ -115,7 +115,7 @@ export function ScheduleHeader({ year, month, title, filledCount, openCount, ope
                 onClick={() => onViewTypeChange(v)}
                 className={`px-3 h-9 text-xs font-medium transition-colors border-r border-[var(--color-border)] last:border-r-0 ${
                   viewType === v
-                    ? 'bg-[var(--color-brand-primary)] text-white'
+                    ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]'
                     : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
                 }`}
               >

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+﻿import { useState, useMemo } from 'react'
 import type { Assignment, CustomFieldDef } from '../../types'
 import { formatPhone } from '../../lib/phone'
 import { DevFileLabel } from '../DevFileLabel'
@@ -125,7 +125,7 @@ export function SmsModal({ assignments, customFields, onClose }: SmsModalProps) 
             <button
               onClick={handleSend}
               disabled={validPhones.length === 0 || !message.trim()}
-              className="w-full py-2.5 text-sm font-semibold rounded-xl bg-[var(--color-brand-primary)] text-white hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="w-full py-2.5 text-sm font-semibold rounded-xl bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               📱 문자 발송 ({validPhones.length}명)
             </button>
