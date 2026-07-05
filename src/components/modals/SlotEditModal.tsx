@@ -709,7 +709,7 @@ export function SlotEditModal({
           </div>
         )}
 
-        <div className="px-5 py-4 flex flex-col gap-3 overflow-y-auto flex-1">
+        <div className="px-5 py-4 flex flex-col gap-3 overflow-y-auto overflow-x-hidden flex-1">
           {/* Existing assignments */}
           {displayedAssignments.length > 0 && (
             <section className="rounded-2xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)] p-2.5 flex flex-col gap-2">
@@ -796,8 +796,8 @@ export function SlotEditModal({
                       <div className="flex items-start gap-2">
                         <div className="flex flex-wrap gap-1.5 flex-1 min-w-0">
                           {detailChips.map(c => (
-                            <span key={c.key} className="text-[11.5px] font-semibold text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] px-2 py-1 rounded-lg inline-flex gap-1 min-w-0 overflow-hidden max-w-full">
-                              <b className="font-extrabold text-[var(--color-text-muted)] shrink-0 whitespace-nowrap">{c.label}</b><span className="truncate">{c.value}</span>
+                            <span key={c.key} className="text-[11.5px] font-semibold text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] px-2 py-1 rounded-lg inline-flex gap-1 flex-wrap min-w-0">
+                              <b className="font-extrabold text-[var(--color-text-muted)] whitespace-nowrap">{c.label}</b><span className="break-words min-w-0">{c.value}</span>
                             </span>
                           ))}
                           {imageChips.map(ic => (
