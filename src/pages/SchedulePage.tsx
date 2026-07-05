@@ -39,6 +39,22 @@ function hasDateLockTarget(dateOverrides: DateOverride[], dates: string[], locke
   })
 }
 
+function NavIcon({ children, active, danger }: { children: React.ReactNode; active?: boolean; danger?: boolean }) {
+  return (
+    <span
+      className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border transition-colors ${
+        active
+          ? 'bg-[var(--color-brand-primary)] border-transparent text-white'
+          : danger
+          ? 'bg-[var(--color-surface)] border-[var(--color-border)] text-red-500 group-hover:border-red-200 group-hover:bg-red-50'
+          : 'bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-muted)] group-hover:text-[var(--color-text-primary)] group-hover:border-[var(--color-border-strong)]'
+      }`}
+    >
+      {children}
+    </span>
+  )
+}
+
 export function SchedulePage() {
   const today = new Date()
   const [year, setYear] = useState(today.getFullYear())
@@ -612,7 +628,8 @@ export function SchedulePage() {
     ? getCellState(modalTarget.day, modalTarget.timeSlot, modalTarget.year, modalTarget.month, scheduleRules, slotSettings, dateOverrides, assignments)
     : null
 
-  const menuItemCls = 'w-full text-left px-3 py-2 text-sm rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors'
+  const menuItemCls = 'group w-full flex items-center gap-2.5 text-left px-2.5 py-2 text-[13px] font-medium rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] transition-colors'
+  const navLabelCls = 'px-2.5 pt-3 pb-1 text-[10.5px] font-bold uppercase tracking-wide text-[var(--color-text-muted)] first:pt-1'
 
   return (
     <div className="min-h-[100dvh] bg-[var(--color-bg)]" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
@@ -625,28 +642,29 @@ export function SchedulePage() {
           <>
             {isPrivileged && viewType === 'month' && (
               <>
+                <p className={navLabelCls}>보기</p>
                 <button
                   onClick={() => {
                     setExcelMode(v => { setCellSel(null); setCopyBuf(null); setPasteHistory([]); return !v })
                     close()
                   }}
-                  className={`${menuItemCls} ${excelMode ? 'bg-[color-mix(in_srgb,var(--color-brand-primary)_12%,transparent)] text-[var(--color-brand-primary)]' : ''}`}
+                  className={`${menuItemCls} ${excelMode ? 'bg-[color-mix(in_srgb,var(--color-brand-primary)_10%,transparent)] text-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary)]' : ''}`}
                 >
-                  <span className="flex items-center gap-2.5 w-full">
+                  <NavIcon active={excelMode}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
-                    <span className="flex-1">엑셀 모드</span>
-                    {excelMode && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-[var(--color-brand-primary)] text-white">ON</span>}
-                  </span>
+                  </NavIcon>
+                  <span className="flex-1">엑셀 모드</span>
+                  {excelMode && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-[var(--color-brand-primary)] text-white">ON</span>}
                 </button>
-                <div className="h-px bg-[var(--color-border)] mx-1 my-1" />
               </>
             )}
+            <p className={navLabelCls}>문서</p>
             <button onClick={() => setExportOpen(o => !o)} className={menuItemCls}>
-              <span className="flex items-center gap-2.5 w-full">
+              <NavIcon>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
-                <span className="flex-1">문서 다운로드</span>
-                <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: exportOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }}><path d="M4 2l4 4-4 4"/></svg>
-              </span>
+              </NavIcon>
+              <span className="flex-1">문서 다운로드</span>
+              <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: exportOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }}><path d="M4 2l4 4-4 4"/></svg>
             </button>
             {exportOpen && (
               <div className="ml-3 pl-3 border-l-2 border-[var(--color-border)] flex flex-col gap-0.5 mb-1">
@@ -676,50 +694,48 @@ export function SchedulePage() {
                 </button>
               </div>
             )}
+            <p className={navLabelCls}>운영</p>
             <button onClick={() => { setShowCapacity(true); close() }} className={menuItemCls}>
-              <span className="flex items-center gap-2.5">
+              <NavIcon>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                인원 설정
-              </span>
+              </NavIcon>
+              인원 설정
             </button>
             {tenantMode !== '비회원' && (
               <button onClick={() => { handleAutoAssign(); close() }} className={menuItemCls}>
-                <span className="flex items-center gap-2.5">
+                <NavIcon>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8 19 13M17.8 6.2 19 5M12.2 6.2 11 5M12.2 11.8 11 13"/><path d="M3 21l9-9"/><path d="M12.2 6.2 3 15l3 3 9.2-9.2"/></svg>
-                  자동배정
-                </span>
+                </NavIcon>
+                자동배정
               </button>
             )}
             {profile && (tenantMode !== '비회원' || isPrivileged) && (
               <button onClick={() => { setShowRecurring(true); close() }} className={menuItemCls}>
-                <span className="flex items-center gap-2.5">
+                <NavIcon>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg>
-                  반복 등록
-                </span>
+                </NavIcon>
+                반복 등록
               </button>
             )}
             {isPrivileged && (
-              <button onClick={() => { handleLockClick(true); close() }} className={menuItemCls}>
-                <span className="flex items-center gap-2.5">
-                  <LockIcon />
+              <>
+                <p className={navLabelCls}>잠금</p>
+                <button onClick={() => { handleLockClick(true); close() }} className={menuItemCls}>
+                  <NavIcon><LockIcon /></NavIcon>
                   전체 고정
-                </span>
-              </button>
-            )}
-            {isPrivileged && (
-              <button onClick={() => { handleLockClick(false); close() }} className={menuItemCls}>
-                <span className="flex items-center gap-2.5">
-                  <UnlockIcon />
+                </button>
+                <button onClick={() => { handleLockClick(false); close() }} className={menuItemCls}>
+                  <NavIcon><UnlockIcon /></NavIcon>
                   전체 고정 해제
-                </span>
-              </button>
+                </button>
+              </>
             )}
-            <div className="h-px bg-[var(--color-border)] mx-1 my-1" />
+            <div className="h-px bg-[var(--color-border)] mx-2.5 my-2.5" />
             <button onClick={() => { handleClearClick(); close() }} className={menuItemCls}>
-              <span className="flex items-center gap-2.5">
+              <NavIcon danger>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                초기화
-              </span>
+              </NavIcon>
+              <span className="text-red-500 group-hover:text-red-600">초기화</span>
             </button>
           </>
         )}
