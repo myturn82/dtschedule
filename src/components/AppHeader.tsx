@@ -192,7 +192,7 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
             <div className="
               w-56 bg-[var(--color-surface)] z-40 overflow-y-auto
               absolute top-full left-3 sm:left-5 mt-1 rounded-2xl shadow-lg border border-[var(--color-border)]
-              lg:fixed lg:top-0 lg:left-0 lg:bottom-0 lg:mt-0 lg:w-64 lg:rounded-none lg:shadow-none
+              lg:fixed lg:top-0 lg:left-0 lg:bottom-0 lg:mt-0 lg:w-44 lg:rounded-none lg:shadow-none
               lg:border-0 lg:border-r lg:border-[var(--color-border)]
             ">
               <div className="p-2 lg:p-0 lg:h-full lg:flex lg:flex-col">
