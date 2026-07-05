@@ -768,7 +768,15 @@ export function SchedulePage() {
               filledCount={filledCount}
               operatingDays={operatingDays}
               viewType={viewType}
-              onViewTypeChange={setViewType}
+              onViewTypeChange={(v) => {
+                if (v === 'week' || v === 'day') {
+                  const t = new Date()
+                  setYear(t.getFullYear())
+                  setMonth(t.getMonth() + 1)
+                  setDay(t.getDate())
+                }
+                setViewType(v)
+              }}
               weekDays={weekDays}
               onPrev={() => { setSwipeAnim('prev'); setAnimKey(k => k + 1); viewType === 'month' ? prevMonth() : shiftDate(viewType === 'week' ? -7 : -1) }}
               onNext={() => { setSwipeAnim('next'); setAnimKey(k => k + 1); viewType === 'month' ? nextMonth() : shiftDate(viewType === 'week' ? 7 : 1) }}
