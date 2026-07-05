@@ -188,18 +188,13 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
               lg:border-0 lg:border-r lg:border-[var(--color-border)]
             ">
               <div className="p-2 lg:p-0 lg:h-full lg:flex lg:flex-col">
-                <div className="hidden lg:block shrink-0">
-                  <div className="flex items-center gap-2.5 px-3 h-14 border-b border-[var(--color-border)]">
-                    <div className="w-7 h-7 rounded-lg bg-[var(--color-brand-primary)] text-white flex items-center justify-center text-[13px] font-bold shrink-0">
-                      {(tenant?.settings?.title || tenant?.name || '?').charAt(0)}
-                    </div>
-                    <span className="text-[13px] font-semibold text-[var(--color-text-primary)] truncate">
-                      {tenant?.settings?.title || tenant?.name}
-                    </span>
+                <div className="hidden lg:flex items-center gap-2.5 px-3 shrink-0 h-14 border-b border-[var(--color-border)]">
+                  <div className="w-7 h-7 rounded-lg bg-[var(--color-brand-primary)] text-white flex items-center justify-center text-[13px] font-bold shrink-0">
+                    {(tenant?.settings?.title || tenant?.name || '?').charAt(0)}
                   </div>
-                  {isPrivileged && (profile?.is_super_admin || tenantPlan === 'business') && (
-                    <div className="h-[52px] border-b border-[var(--color-border)]" />
-                  )}
+                  <span className="text-[13px] font-semibold text-[var(--color-text-primary)] truncate">
+                    {tenant?.settings?.title || tenant?.name}
+                  </span>
                 </div>
                 <div className="lg:flex-1 lg:overflow-y-auto lg:px-2 lg:py-2">
                   <NavLabel>콘솔</NavLabel>
