@@ -229,7 +229,7 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
                     관리자콘솔
                   </button>
                   {funcMenuItems && <div className="h-px bg-[var(--color-border)] mx-2.5 my-2.5" />}
-                  {funcMenuItems?.(() => setShowFuncMenu(false))}
+                  {funcMenuItems?.(() => { if (window.innerWidth < 1024) setShowFuncMenu(false) })}
                 </div>
               </div>
             </div>
