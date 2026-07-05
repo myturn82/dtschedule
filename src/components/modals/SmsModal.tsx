@@ -1,10 +1,11 @@
 import { useState, useMemo } from 'react'
-import type { Assignment } from '../../types'
+import type { Assignment, CustomFieldDef } from '../../types'
 import { formatPhone } from '../../lib/phone'
 import { DevFileLabel } from '../DevFileLabel'
 
 interface SmsModalProps {
   assignments: Assignment[]
+  customFields?: CustomFieldDef[]
   onClose: () => void
 }
 
@@ -15,20 +16,28 @@ interface Recipient {
   selected: boolean
 }
 
-export function SmsModal({ assignments, onClose }: SmsModalProps) {
+export function SmsModal({ assignments, customFields, onClose }: SmsModalProps) {
+  const phoneFieldIds = useMemo(
+    () => (customFields ?? []).filter(f => f.type === 'phone').map(f => f.id),
+    [customFields]
+  )
+
   const initialRecipients = useMemo<Recipient[]>(() => {
     const seen = new Map<string, Recipient>()
     for (const a of assignments) {
       if (a.account_deleted) continue
       const key = a.user_id ?? a.member_name
+      // phone 우선순위: customer_phone → phone 타입 커스텀 필드 → 빈 문자열
+      const cfPhone = phoneFieldIds.map(id => a.extra_data?.[id]).find(v => v?.trim()) ?? ''
+      const phone = a.customer_phone ?? cfPhone
       if (!seen.has(key)) {
-        seen.set(key, { key, name: a.member_name, phone: a.customer_phone ?? '', selected: true })
-      } else if (!seen.get(key)!.phone && a.customer_phone) {
-        seen.set(key, { ...seen.get(key)!, phone: a.customer_phone })
+        seen.set(key, { key, name: a.member_name, phone, selected: true })
+      } else if (!seen.get(key)!.phone && phone) {
+        seen.set(key, { ...seen.get(key)!, phone })
       }
     }
     return [...seen.values()].sort((a, b) => a.name.localeCompare(b.name, 'ko'))
-  }, [assignments])
+  }, [assignments, phoneFieldIds])
 
   const [recipients, setRecipients] = useState<Recipient[]>(initialRecipients)
   const [message, setMessage] = useState('')

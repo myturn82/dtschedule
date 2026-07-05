@@ -963,6 +963,7 @@ export function SchedulePage() {
       {showSms && (
         <SmsModal
           assignments={assignments}
+          customFields={effectiveCustomFields}
           onClose={() => setShowSms(false)}
         />
       )}
