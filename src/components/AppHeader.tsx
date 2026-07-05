@@ -83,7 +83,7 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
               <button
                 onClick={() => setShowFuncMenu(v => !v)}
                 aria-label="기능 메뉴"
-                className="w-8 h-8 flex items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-all shrink-0"
+                className="hidden lg:flex w-8 h-8 items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-all shrink-0"
               >
                 {showFuncMenu
                   ? <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 5l10 10M15 5L5 15"/></svg>
@@ -188,7 +188,7 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
               lg:border-0 lg:border-r lg:border-[var(--color-border)]
             ">
               <div className="p-2 lg:p-0 lg:h-full lg:flex lg:flex-col">
-                <div className="hidden lg:flex items-center gap-2.5 px-3 shrink-0 h-14 border-b border-[var(--color-border)]">
+                <div className="hidden lg:flex items-center gap-2.5 px-3 shrink-0 h-[59px] border-b border-[var(--color-border)]">
                   <div className="w-7 h-7 rounded-lg bg-[var(--color-brand-primary)] text-white flex items-center justify-center text-[13px] font-bold shrink-0">
                     {(tenant?.settings?.title || tenant?.name || '?').charAt(0)}
                   </div>
