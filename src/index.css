@@ -110,7 +110,7 @@ body {
 
 @media (min-width: 1024px) {
   body[data-sidebar="open"] > #root {
-    padding-left: 13rem; /* w-52 = 208px */
+    padding-left: 16rem; /* w-64 = 256px */
     transition: padding-left 0.2s ease;
   }
   body[data-sidebar="closed"] > #root {

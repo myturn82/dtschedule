@@ -12,6 +12,26 @@ import { useNotifications } from '../hooks/useNotifications'
 import { usePushSubscription } from '../hooks/usePushSubscription'
 import { NotificationPanel } from './notifications/NotificationPanel'
 
+function IconChip({ children, active, danger }: { children: React.ReactNode; active?: boolean; danger?: boolean }) {
+  return (
+    <span
+      className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border transition-colors ${
+        active
+          ? 'bg-[var(--color-brand-primary)] border-transparent text-white'
+          : danger
+          ? 'bg-[var(--color-surface)] border-[var(--color-border)] text-red-500 group-hover:border-red-200 group-hover:bg-red-50'
+          : 'bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-muted)] group-hover:text-[var(--color-text-primary)] group-hover:border-[var(--color-border-strong)]'
+      }`}
+    >
+      {children}
+    </span>
+  )
+}
+
+function NavLabel({ children }: { children: React.ReactNode }) {
+  return <p className="px-2.5 pt-3 pb-1 text-[10.5px] font-bold uppercase tracking-wide text-[var(--color-text-muted)] first:pt-1">{children}</p>
+}
+
 interface AppHeaderProps {
   funcMenuItems?: (closeMenu: () => void) => React.ReactNode
   leftSlot?: React.ReactNode
@@ -49,6 +69,7 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
   }, [showFuncMenu, showHamburger])
 
   const menuBtn = 'w-full text-left px-3 py-2 text-sm rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors'
+  const navItemCls = 'group w-full flex items-center gap-2.5 text-left px-2.5 py-2 text-[13px] font-medium rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] transition-colors'
   const sep = <div className="h-px bg-[var(--color-border)] mx-1 my-1" />
 
   return (
@@ -161,41 +182,52 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
           <>
             <div className="fixed inset-0 z-40 lg:hidden" onClick={() => setShowFuncMenu(false)} />
             <div className="
-              w-52 bg-[var(--color-surface)] z-40 overflow-y-auto
+              w-56 bg-[var(--color-surface)] z-40 overflow-y-auto
               absolute top-full left-3 sm:left-5 mt-1 rounded-2xl shadow-lg border border-[var(--color-border)]
-              lg:fixed lg:top-14 lg:left-0 lg:bottom-0 lg:mt-0 lg:rounded-none lg:shadow-none lg:border-0 lg:border-r lg:border-r-[var(--color-border)]
+              lg:fixed lg:top-0 lg:left-0 lg:bottom-0 lg:mt-0 lg:w-64 lg:rounded-none lg:shadow-none
+              lg:border-0 lg:border-r lg:border-[var(--color-border)]
             ">
-              <div className="p-2">
-                {profile?.is_super_admin && (
-                  <>
-                    <button onClick={() => { navigate('/superadmin'); setShowFuncMenu(false) }} className={menuBtn}>
-                      <span className="flex items-center gap-2.5">
+              <div className="p-2 lg:p-0 lg:h-full lg:flex lg:flex-col">
+                <div className="hidden lg:block shrink-0">
+                  <div className="flex items-center gap-2.5 px-3 h-14 border-b border-[var(--color-border)]">
+                    <div className="w-7 h-7 rounded-lg bg-[var(--color-brand-primary)] text-white flex items-center justify-center text-[13px] font-bold shrink-0">
+                      {(tenant?.settings?.title || tenant?.name || '?').charAt(0)}
+                    </div>
+                    <span className="text-[13px] font-semibold text-[var(--color-text-primary)] truncate">
+                      {tenant?.settings?.title || tenant?.name}
+                    </span>
+                  </div>
+                  {isPrivileged && (profile?.is_super_admin || tenantPlan === 'business') && (
+                    <div className="h-[52px] border-b border-[var(--color-border)]" />
+                  )}
+                </div>
+                <div className="lg:flex-1 lg:overflow-y-auto lg:px-2 lg:py-2">
+                  <NavLabel>콘솔</NavLabel>
+                  {profile?.is_super_admin && (
+                    <button onClick={() => { navigate('/superadmin'); setShowFuncMenu(false) }} className={navItemCls}>
+                      <IconChip>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                        조직관리
-                      </span>
+                      </IconChip>
+                      조직관리
                     </button>
-                    {sep}
-                  </>
-                )}
-                {(isCustomerAdmin && !profile?.is_super_admin) && (
-                  <>
-                    <button onClick={() => { navigate('/customer-admin'); setShowFuncMenu(false) }} className={menuBtn}>
-                      <span className="flex items-center gap-2.5">
+                  )}
+                  {(isCustomerAdmin && !profile?.is_super_admin) && (
+                    <button onClick={() => { navigate('/customer-admin'); setShowFuncMenu(false) }} className={navItemCls}>
+                      <IconChip>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01"/></svg>
-                        고객 어드민
-                      </span>
+                      </IconChip>
+                      고객 어드민
                     </button>
-                    {sep}
-                  </>
-                )}
-                <button onClick={() => { navigate('/admin'); setShowFuncMenu(false) }} className={menuBtn}>
-                  <span className="flex items-center gap-2.5">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+                  )}
+                  <button onClick={() => { navigate('/admin'); setShowFuncMenu(false) }} className={navItemCls}>
+                    <IconChip>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+                    </IconChip>
                     관리자콘솔
-                  </span>
-                </button>
-                {funcMenuItems && sep}
-                {funcMenuItems?.(() => setShowFuncMenu(false))}
+                  </button>
+                  {funcMenuItems && <div className="h-px bg-[var(--color-border)] mx-2.5 my-2.5" />}
+                  {funcMenuItems?.(() => setShowFuncMenu(false))}
+                </div>
               </div>
             </div>
           </>
