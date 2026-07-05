@@ -14,14 +14,6 @@ type JoinStep  = 'name' | 'password' | 'confirm' | 'choice' | 'org-name' | 'org-
 const COUNTABLE: JoinStep[] = ['name', 'password', 'confirm', 'org-name']
 
 // ── SVG icons ──────────────────────────────────────────────────
-const IGoogle = () => (
-  <svg width="18" height="18" viewBox="0 0 48 48">
-    <path fill="#FFC107" d="M43.6 20.5H42V20.4H24v7.1h11.3c-1.5 4.1-5.4 7-11.3 7-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5-5C32.9 5.1 28.7 3.4 24 3.4 12.5 3.4 3.4 12.5 3.4 24S12.5 44.6 24 44.6c11 0 20-8 20-20 0-1.4-.1-2.7-.4-4.1z"/>
-    <path fill="#FF3D00" d="M5.3 13.6l5.8 4.3C12.8 14.1 18 11 24 11c3 0 5.8 1.1 7.9 3l5-5C32.9 5.1 28.7 3.4 24 3.4 16.4 3.4 9.8 7.6 5.3 13.6z"/>
-    <path fill="#4CAF50" d="M24 44.6c4.6 0 8.7-1.7 11.9-4.5l-5.5-4.6c-1.7 1.3-3.9 2.1-6.4 2.1-5.8 0-10.7-3.9-11.2-7H7v4.7C10.5 40.6 16.8 44.6 24 44.6z"/>
-    <path fill="#1976D2" d="M43.6 20.5H42V20.4H24v7.1h11.3c-.7 2-2 3.7-3.6 5l5.5 4.6c-.4.4 5.8-4.2 5.8-13.2 0-1.4-.1-2.7-.4-3.4z"/>
-  </svg>
-)
 const IKakao = () => (
   <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
     <path d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.9 5.3 4.7 6.7-.2.7-.7 2.7-.8 3.1-.1.5.2.5.4.4.2-.1 2.6-1.7 3.6-2.4.7.1 1.4.2 2.1.2 5.5 0 10-3.6 10-8s-4.5-8-10-8Z"/>
@@ -90,7 +82,7 @@ const IPlus = () => (
 )
 
 export function AuthPage() {
-  const { profile, signIn, signUp, signInWithGoogle, signInWithKakao, resetPassword } = useAuth()
+  const { profile, signIn, signUp, signInWithKakao, resetPassword } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
@@ -303,13 +295,6 @@ export function AuthPage() {
     }
   }
 
-  async function handleGoogle() {
-    setLoading(true); setError(null)
-    if (tab === 'login') sessionStorage.setItem('vs_just_logged_in', '1')
-    const err = await signInWithGoogle()
-    setLoading(false); if (err) setError(err)
-  }
-
   async function handleKakao() {
     setLoading(true); setError(null)
     if (tab === 'login') sessionStorage.setItem('vs_just_logged_in', '1')
@@ -378,9 +363,6 @@ export function AuthPage() {
           <>
             {loginStep === 'buttons' && (
               <div className="af-socials">
-                <button className="af-btn-social" onClick={handleGoogle} disabled={loading}>
-                  <IGoogle /> Google로 계속하기
-                </button>
                 <button className="af-btn-social kakao" onClick={handleKakao} disabled={loading}>
                   <IKakao /> 카카오로 계속하기
                 </button>
@@ -500,9 +482,6 @@ export function AuthPage() {
           <>
             {!signupEmailInCard ? (
               <div className="af-socials">
-                <button className="af-btn-social" onClick={handleGoogle} disabled={loading}>
-                  <IGoogle /> Google로 계속하기
-                </button>
                 <button className="af-btn-social kakao" onClick={handleKakao} disabled={loading}>
                   <IKakao /> 카카오로 계속하기
                 </button>
