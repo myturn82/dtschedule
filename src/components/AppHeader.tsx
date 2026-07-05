@@ -63,6 +63,14 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
   const showHamburger = !!isPrivileged || isCustomerAdmin
 
   useEffect(() => {
+    const handleResize = () => {
+      setShowFuncMenu(window.innerWidth >= 1024)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  useEffect(() => {
     if (!showHamburger) return
     document.body.setAttribute('data-sidebar', showFuncMenu ? 'open' : 'closed')
     return () => document.body.removeAttribute('data-sidebar')
