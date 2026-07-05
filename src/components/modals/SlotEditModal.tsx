@@ -796,8 +796,8 @@ export function SlotEditModal({
                       <div className="flex items-start gap-2">
                         <div className="flex flex-wrap gap-1.5 flex-1 min-w-0">
                           {detailChips.map(c => (
-                            <span key={c.key} className="text-[11.5px] font-semibold text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] px-2 py-1 rounded-lg inline-flex gap-1 shrink-0 whitespace-nowrap">
-                              <b className="font-extrabold text-[var(--color-text-muted)] shrink-0">{c.label}</b><span className="whitespace-nowrap">{c.value}</span>
+                            <span key={c.key} className="text-[11.5px] font-semibold text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] px-2 py-1 rounded-lg inline-flex gap-1 min-w-0 overflow-hidden max-w-full">
+                              <b className="font-extrabold text-[var(--color-text-muted)] shrink-0 whitespace-nowrap">{c.label}</b><span className="truncate">{c.value}</span>
                             </span>
                           ))}
                           {imageChips.map(ic => (
