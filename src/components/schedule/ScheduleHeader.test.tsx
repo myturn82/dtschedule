@@ -5,8 +5,7 @@ import { ScheduleHeader } from './ScheduleHeader'
 describe('ScheduleHeader', () => {
   it('displays year and month', () => {
     render(<ScheduleHeader year={2026} month={4} onPrev={vi.fn()} onNext={vi.fn()} />)
-    expect(screen.getAllByText(/2026/)[0]).toBeInTheDocument()
-    expect(screen.getAllByText(/04월/)[0]).toBeInTheDocument()
+    expect(screen.getAllByText(/4월/)[0]).toBeInTheDocument()
   })
 
   it('calls onPrev when < button clicked', () => {

@@ -220,20 +220,6 @@ export function SchedulePage() {
     </select>
   ) : null
 
-  const filledCount = useMemo(
-    () => assignments.filter(a => a.member_type !== 'admin_note').length,
-    [assignments]
-  )
-  const operatingDays = useMemo(() => {
-    const daysInMonth = new Date(year, month, 0).getDate()
-    let count = 0
-    for (let d = 1; d <= daysInMonth; d++) {
-      const dow = new Date(year, month - 1, d).getDay()
-      if (dow !== 0) count++
-    }
-    return count
-  }, [year, month])
-
   function prevMonth() {
     if (month === 1) { setYear(y => y - 1); setMonth(12) }
     else setMonth(m => m - 1)
@@ -765,8 +751,6 @@ export function SchedulePage() {
             <ScheduleHeader
               year={year} month={month} day={day}
               title={tenant?.settings?.title || tenant?.name}
-              filledCount={filledCount}
-              operatingDays={operatingDays}
               viewType={viewType}
               onViewTypeChange={(v) => {
                 if (v === 'week' || v === 'day') {
@@ -780,6 +764,11 @@ export function SchedulePage() {
               weekDays={weekDays}
               onPrev={() => { setSwipeAnim('prev'); setAnimKey(k => k + 1); viewType === 'month' ? prevMonth() : shiftDate(viewType === 'week' ? -7 : -1) }}
               onNext={() => { setSwipeAnim('next'); setAnimKey(k => k + 1); viewType === 'month' ? nextMonth() : shiftDate(viewType === 'week' ? 7 : 1) }}
+              onDateSelect={(y, m, d) => {
+                setYear(y)
+                setMonth(m)
+                if (d !== undefined) setDay(d)
+              }}
             />
             <Legend legendItems={legendItems} />
           </div>
