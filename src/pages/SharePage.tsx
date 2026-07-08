@@ -4,6 +4,7 @@ import { DevFileLabel } from '../components/DevFileLabel'
 import { useSchedule } from '../hooks/useSchedule'
 import { useTenant } from '../contexts/TenantContext'
 import { useAuth } from '../hooks/useAuth'
+import { displayMode } from '../lib/tenantMode'
 import { ScheduleHeader } from '../components/schedule/ScheduleHeader'
 import { ScheduleGrid } from '../components/schedule/ScheduleGrid'
 import { Legend } from '../components/schedule/Legend'
@@ -32,11 +33,13 @@ export function SharePage() {
   const [fetchedTimeSlots, setFetchedTimeSlots] = useState<TimeSlot[] | null>(null)
   const [fetchedLegendItems, setFetchedLegendItems] = useState<LegendItem[] | null>(null)
   const [fetchedSlotLabels, setFetchedSlotLabels] = useState<Record<string, string> | null>(null)
+  const [fetchedTenantMode, setFetchedTenantMode] = useState<string | undefined>(undefined)
   useEffect(() => {
     if (!tidFromUrl || tidFromUrl === tenant?.id) {
       setFetchedTimeSlots(null)
       setFetchedLegendItems(null)
       setFetchedSlotLabels(null)
+      setFetchedTenantMode(undefined)
       return
     }
     supabase.from('tenants').select('settings').eq('id', tidFromUrl).single()
@@ -53,12 +56,15 @@ export function SharePage() {
         setFetchedTimeSlots(slots)
         setFetchedLegendItems((s.legend_items as LegendItem[] | undefined) ?? [])
         setFetchedSlotLabels((s.slot_labels as Record<string, string> | undefined) ?? {})
+        setFetchedTenantMode(s.tenant_mode as string | undefined)
       })
   }, [tidFromUrl, tenant?.id])
 
   const timeSlots = fetchedTimeSlots ?? contextTimeSlots
   const legendItems = fetchedLegendItems ?? contextLegendItems
   const slotLabels = fetchedSlotLabels ?? contextSlotLabels
+  const isFreeformTenant = displayMode((fetchedTenantMode ?? tenant?.settings?.tenant_mode) as string | undefined) === '비회원'
+  const tenantModeReady = !tidFromUrl || tidFromUrl === tenant?.id || fetchedTenantMode !== undefined
 
   const { roles: tenantRoles } = useTenantRoles(tenantId)
   const splitRoles = tenantRoles.filter(r => r.split_cell && !r.indicator_bar)
@@ -67,7 +73,14 @@ export function SharePage() {
 
   const { assignments, slotSettings, scheduleRules, dateOverrides, loading } = useSchedule(tenantId, year, month)
 
-  if (!profile) {
+  if (!profile && !isFreeformTenant) {
+    if (!tenantModeReady) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+          <div className="text-gray-400 dark:text-gray-500 text-sm">로딩 중...</div>
+        </div>
+      )
+    }
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center p-8">

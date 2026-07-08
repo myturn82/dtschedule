@@ -1,7 +1,7 @@
 -- ============================================================
 -- 운영 DB 초기화 스크립트 (전체 재생성)
 -- 생성일: 2026-06-10
--- 기준 마이그레이션: 001 ~ 059
+-- 기준 마이그레이션: 001 ~ 060
 --
 -- ⚠️  주의: 이 스크립트는 모든 데이터를 삭제합니다.
 --           Supabase SQL Editor에서 직접 실행하세요.
@@ -344,6 +344,19 @@ SET search_path = public AS $$
   );
 $$;
 
+-- 비회원(프리폼) 모드 테넌트인지 (공유 뷰 익명 조회 허용 여부 판단용)
+CREATE OR REPLACE FUNCTION public.is_freeform_tenant(tid uuid)
+RETURNS boolean
+LANGUAGE sql SECURITY DEFINER STABLE
+SET search_path = public AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM tenants
+    WHERE id = tid
+      AND is_active = true
+      AND settings->>'tenant_mode' = '비회원'
+  );
+$$;
+
 -- 단순 bool 반환 (coalesce 방식)
 CREATE OR REPLACE FUNCTION public.is_super_admin()
 RETURNS boolean
@@ -631,12 +644,20 @@ CREATE POLICY "assignments_own_delete" ON assignments
 CREATE POLICY "assignments_admin_all" ON assignments
   FOR ALL USING (is_tenant_admin(tenant_id) OR is_super_admin_caller());
 
+-- 비회원 모드 공유 뷰: 익명 조회 허용
+CREATE POLICY "assignments_public_share_select" ON assignments
+  FOR SELECT USING (is_freeform_tenant(tenant_id));
+
 -- ── slot_settings ────────────────────────────────────────────
 CREATE POLICY "slot_settings_tenant_select" ON slot_settings
   FOR SELECT USING (is_tenant_member(tenant_id) OR is_super_admin_caller());
 
 CREATE POLICY "slot_settings_admin_all" ON slot_settings
   FOR ALL USING (is_tenant_admin(tenant_id) OR is_super_admin_caller());
+
+-- 비회원 모드 공유 뷰: 익명 조회 허용
+CREATE POLICY "slot_settings_public_share_select" ON slot_settings
+  FOR SELECT USING (is_freeform_tenant(tenant_id));
 
 -- ── schedule_rules ───────────────────────────────────────────
 CREATE POLICY "schedule_rules_tenant_select" ON schedule_rules
@@ -645,12 +666,20 @@ CREATE POLICY "schedule_rules_tenant_select" ON schedule_rules
 CREATE POLICY "schedule_rules_admin_all" ON schedule_rules
   FOR ALL USING (is_tenant_admin(tenant_id) OR is_super_admin_caller());
 
+-- 비회원 모드 공유 뷰: 익명 조회 허용
+CREATE POLICY "schedule_rules_public_share_select" ON schedule_rules
+  FOR SELECT USING (is_freeform_tenant(tenant_id));
+
 -- ── date_overrides ───────────────────────────────────────────
 CREATE POLICY "date_overrides_tenant_select" ON date_overrides
   FOR SELECT USING (is_tenant_member(tenant_id) OR is_super_admin_caller());
 
 CREATE POLICY "date_overrides_admin_all" ON date_overrides
   FOR ALL USING (is_tenant_admin(tenant_id) OR is_super_admin_caller());
+
+-- 비회원 모드 공유 뷰: 익명 조회 허용
+CREATE POLICY "date_overrides_public_share_select" ON date_overrides
+  FOR SELECT USING (is_freeform_tenant(tenant_id));
 
 -- ── plan_limits ──────────────────────────────────────────────
 CREATE POLICY "plan_limits_select_authenticated" ON plan_limits
