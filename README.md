@@ -51,6 +51,7 @@
 ### 📆 스케줄 & 멤버
 
 - 🗓 **월·주·일 뷰** — 동일 비즈니스 로직을 모든 뷰에 일관 적용 (ScheduleGrid · WeekGrid · DayView)
+- 📆 **날짜 선택 모달** — 헤더 타이틀 클릭 시 연/월/일을 스크롤 휠로 골라 바로 이동
 - 📸 **이미지 첨부** — Canvas API 기반 WebP 자동 압축(최대 3장, 500KB 이하), Supabase Storage 저장
 - 💡 **라이트박스 갤러리** — 등록된 이미지를 전체화면 뷰어에서 키보드 탐색 가능
 - 🔔 **Realtime 동기화** — Supabase CDC 구독으로 멀티 유저 동시 편집 즉시 반영
@@ -64,7 +65,7 @@
 |------|------|
 | **Frontend** | React 18, TypeScript 5, Tailwind CSS, Vite |
 | **Backend** | Supabase (PostgreSQL, Auth, Storage, Realtime) |
-| **DB 관리** | Supabase Migrations (SQL 파일 57개+) |
+| **DB 관리** | Supabase Migrations (SQL 파일 60개+) |
 | **상태 관리** | React Context (TenantContext, AuthContext, PlanLimitsContext) |
 | **이미지 처리** | HTML5 Canvas API — WebP 압축, Supabase Storage 업로드 |
 | **다국어 (i18n)** | react-i18next, i18next-browser-languagedetector — 한국어/영어, 브라우저 자동 감지 |
@@ -134,7 +135,7 @@ dtschedule/
 ├── src/
 │   ├── components/
 │   │   ├── modals/              # SlotEditModal 등 스케줄 등록·수정 모달
-│   │   ├── schedule/            # ScheduleGrid, WeekGrid, DayView, ImageUploadField
+│   │   ├── schedule/            # ScheduleGrid, WeekGrid, DayView, DatePickerModal, ImageUploadField
 │   │   ├── setup/               # 조직 셋업 위자드 단계별 컴포넌트 (Step1~7)
 │   │   ├── superadmin/          # AccountRail, HubMain, OrgDrawer, UserManagementPanel
 │   │   └── shared/              # LanguageSwitcher, AutoResizeTextarea 등 공통 UI 컴포넌트
@@ -147,6 +148,7 @@ dtschedule/
 │   │   ├── supabase.ts
 │   │   ├── themePresets.ts      # 포인트 컬러 프리셋 14종
 │   │   ├── imageCompress.ts     # Canvas API WebP 압축
+│   │   ├── datePicker.ts        # 날짜 선택 모달용 연도/일수/스크롤 인덱스 계산
 │   │   └── uploadScheduleImage.ts
 │   ├── pages/
 │   │   ├── SuperAdminPage.tsx   # 슈퍼관리자 허브
@@ -161,7 +163,7 @@ dtschedule/
 │       ├── customFieldTemplates.ts
 │       └── timeSlots.ts
 ├── supabase/
-│   ├── migrations/              # 001 ~ 057+ 순차 마이그레이션 SQL
+│   ├── migrations/              # 001 ~ 060+ 순차 마이그레이션 SQL
 │   ├── reset_db.sql             # 전체 스키마 초기화용 통합 SQL
 │   └── reset_data.sql
 ├── docs/                        # 체크리스트, 설계 문서
