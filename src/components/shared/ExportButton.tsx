@@ -17,9 +17,9 @@ export function ExportButton({ year, month }: Props) {
   return (
     <button
       onClick={handleShareUrl}
-      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+      className="flex items-center justify-center gap-1.5 w-8 h-8 sm:w-auto sm:h-auto px-0 py-0 sm:px-3 sm:py-1.5 text-xs font-medium rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shrink-0"
     >
-      <span>🔗</span>
+      <span className="text-sm leading-none select-none">🔗</span>
       <span className="hidden sm:inline">공유</span>
     </button>
   )

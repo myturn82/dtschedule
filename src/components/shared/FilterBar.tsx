@@ -7,8 +7,8 @@ export function FilterBar({ value, onChange }: Props) {
   return (
     <div className="flex items-center gap-2 min-w-0 flex-1">
       <div className="relative flex-1 min-w-0">
-        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] text-xs pointer-events-none select-none">
-          🔍
+        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] pointer-events-none flex items-center">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
         </span>
         <input
           type="text"

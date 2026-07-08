@@ -109,7 +109,7 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
 
 
           {/* Right: rightSlot + bell + feedback + name/badge + avatar */}
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex items-center gap-1 shrink-0">
             {rightSlot}
             {profile && (
               <div>
@@ -143,7 +143,7 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
             )}
             {profile && (
               <div className="flex items-center gap-1.5">
-                <span className="text-sm font-semibold text-[var(--color-text-primary)] max-w-[80px] truncate">{profile.name}</span>
+                <span className="hidden sm:block text-sm font-semibold text-[var(--color-text-primary)] max-w-[80px] truncate">{profile.name}</span>
                 {roleLabel && (
                   <span className="text-xs text-[var(--color-text-muted)] bg-[var(--color-surface-secondary)] px-2 py-0.5 rounded-lg border border-[var(--color-border)] whitespace-nowrap hidden sm:block">
                     {roleLabel}

@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 
 export function DashboardNav() {
-  const base = 'relative flex items-center gap-[7px] px-4 h-[52px] text-[14px] font-semibold bg-transparent border-0 transition-colors duration-[120ms] whitespace-nowrap'
+  const base = 'relative flex items-center gap-[7px] px-4 h-10 sm:h-[52px] text-[14px] font-semibold bg-transparent border-0 transition-colors duration-[120ms] whitespace-nowrap'
 
   return (
     <nav className="flex items-center bg-[var(--color-surface)] border-b border-[var(--color-border)] px-3 sm:px-5 gap-0.5">
