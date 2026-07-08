@@ -17,6 +17,8 @@ interface Props {
   day?: number
   weekDays?: Date[]
   onDateSelect?: (year: number, month: number, day?: number) => void
+  hideViewSwitcher?: boolean
+  roleToggleSlot?: React.ReactNode
 }
 
 function weekRangeLabel(weekDays: Date[]): string {
@@ -31,7 +33,7 @@ function weekRangeLabel(weekDays: Date[]): string {
   return `${sm}월 ${start.getDate()}일 ~ ${em}월 ${end.getDate()}일`
 }
 
-export function ScheduleHeader({ year, month, title, openCount, onPrev, onNext, viewType = 'month', onViewTypeChange, day, weekDays, onDateSelect }: Props) {
+export function ScheduleHeader({ year, month, title, openCount, onPrev, onNext, viewType = 'month', onViewTypeChange, day, weekDays, onDateSelect, hideViewSwitcher, roleToggleSlot }: Props) {
   const { t } = useTranslation('schedule')
   const [showDatePicker, setShowDatePicker] = useState(false)
   const VIEW_LABELS: Record<ViewType, string> = { month: t('views.month'), week: t('views.week'), day: t('views.day') }
@@ -130,10 +132,11 @@ export function ScheduleHeader({ year, month, title, openCount, onPrev, onNext, 
           )}
         </div>
 
-        {/* Right: view switcher */}
+        {/* Right: role toggle + view switcher */}
         <div className="flex items-center gap-2 shrink-0 flex-wrap">
+          {roleToggleSlot}
           {/* View type switcher */}
-          {onViewTypeChange && (
+          {onViewTypeChange && !hideViewSwitcher && (
             <div className="flex items-center rounded-xl border border-[var(--color-border)] overflow-hidden">
               {(['month', 'week', 'day'] as ViewType[]).map(v => (
                 <button

@@ -11,8 +11,7 @@ const BREAK_STRIPE = {
 } as const
 
 const HOLIDAY_STRIPE = {
-  background: 'repeating-linear-gradient(135deg, transparent 0 8px, oklch(0.96 0.02 25 / 0.5) 8px 16px)',
-  borderColor: 'oklch(0.88 0.04 25)',
+  background: 'var(--color-schedule-close)',
 } as const
 
 interface Props {
@@ -161,11 +160,11 @@ export function DayView({
 
           if (cs.isHoliday) {
             return (
-              <div key={slot} className="rounded-[18px] overflow-hidden border" style={HOLIDAY_STRIPE}>
+              <div key={slot} className="rounded-[18px] border border-[var(--color-border)] overflow-hidden" style={HOLIDAY_STRIPE}>
                 <div className="flex items-center gap-3 px-4 py-3.5">
-                  <span className="text-sm font-bold font-mono" style={{ color: 'oklch(0.65 0.12 25)' }}>{timeLabel}</span>
-                  {customLabel && <span className="text-xs" style={{ color: 'oklch(0.65 0.12 25)' }}>{customLabel}</span>}
-                  <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full" style={{ background: 'oklch(0.97 0.02 25)', color: 'oklch(0.55 0.16 25)' }}>
+                  <span className="text-sm font-bold font-mono text-[var(--color-text-muted)]">{timeLabel}</span>
+                  {customLabel && <span className="text-xs text-[var(--color-text-muted)]">{customLabel}</span>}
+                  <span className="text-[10px] font-bold bg-[var(--color-surface)] border border-[var(--color-border)] px-2.5 py-0.5 rounded-full text-[var(--color-text-muted)]">
                     휴관
                   </span>
                 </div>

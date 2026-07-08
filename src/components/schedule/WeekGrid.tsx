@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect } from 'react'
+﻿import { useRef, useEffect } from 'react'
 import type { Assignment, SlotSetting, ScheduleRule, DateOverride, ModalTarget, Profile, TenantRole, TimeSlot, TenantAccessRole } from '../../types'
 import { getCellState } from '../../utils/cellState'
 import { shortSlotLabel, slotStartLabel, formatTimeSub } from '../../utils/timeSlots'
@@ -6,12 +6,13 @@ import { LockIcon } from '../icons/LockIcons'
 
 const DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일']
 const INDICATOR_BAR_COLOR = 'var(--color-brand-primary)'
+const EMPTY_SET: Set<string> = new Set()
 
 const STRIPE_STYLE = {
   background: 'repeating-linear-gradient(135deg, transparent 0 6px, rgba(20,23,28,0.03) 6px 12px)',
 } as const
 const HOLIDAY_STRIPE = {
-  background: 'repeating-linear-gradient(135deg, transparent 0 8px, oklch(0.96 0.02 25 / 0.6) 8px 16px)',
+  background: 'var(--color-schedule-close)',
 } as const
 
 
@@ -34,6 +35,7 @@ interface Props {
   splitRoles?: TenantRole[]
   indicatorBarRoles?: TenantRole[]
   isSplitMode?: boolean
+  hiddenRoleIds?: Set<string>
   slotLabels?: Record<string, string>
   selectedDay?: Date | null
   onDateHeaderClick?: (date: Date) => void
@@ -52,7 +54,7 @@ interface Props {
 
 export function WeekGrid({
   weekDays, timeSlots, assignments, slotSettings, scheduleRules, dateOverrides,
-  highlightName, splitRoles = [], indicatorBarRoles = [], isSplitMode = false, slotLabels = {},
+  highlightName, splitRoles = [], indicatorBarRoles = [], isSplitMode = false, hiddenRoleIds = EMPTY_SET, slotLabels = {},
   selectedDay, onDateHeaderClick, onCellClick,
   memberRoleId, teamLeaderUserIds, isPrivileged = false, displayAssignmentFilter, withdrawnUserIds, highlightedSlots, canAdd = true,
   selectionRange, copyRange,
@@ -71,7 +73,6 @@ export function WeekGrid({
   }, [weekDays])
 
   const activeRoles = isSplitMode && splitRoles.length > 0 ? splitRoles : []
-  const [hiddenRoleIds, setHiddenRoleIds] = useState<Set<string>>(new Set())
   const visibleActiveRoles = activeRoles.length > 0
     ? (() => { const v = activeRoles.filter(r => !hiddenRoleIds.has(r.id)); return v.length > 0 ? v : activeRoles })()
     : activeRoles
@@ -88,42 +89,8 @@ export function WeekGrid({
   const dayColMinW = visibleActiveRoles.length > 1 ? visibleActiveRoles.length * 52 : 64
   const minTotalW = timeColW + 7 * dayColMinW
 
-  function toggleRole(id: string) {
-    setHiddenRoleIds(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) { next.delete(id) } else if (visibleActiveRoles.length > 1) { next.add(id) }
-      return next
-    })
-  }
-
   return (
     <div>
-      {isSplitMode && activeRoles.length > 1 && (
-        <div className="flex flex-wrap items-center gap-1.5 mb-2 px-1">
-          <span className="text-[11px] text-[var(--color-text-muted)] shrink-0">역할 표시:</span>
-          {activeRoles.map(role => (
-            <button
-              key={role.id}
-              onClick={() => toggleRole(role.id)}
-              className={`px-2.5 py-0.5 text-xs rounded-full border transition-colors select-none ${
-                !hiddenRoleIds.has(role.id)
-                  ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] border-[var(--color-brand-primary)]'
-                  : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]'
-              }`}
-            >
-              {role.name}
-            </button>
-          ))}
-          {hiddenRoleIds.size > 0 && (
-            <button
-              onClick={() => setHiddenRoleIds(new Set())}
-              className="px-2.5 py-0.5 text-xs rounded-full border border-dashed border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)] transition-colors"
-            >
-              전체
-            </button>
-          )}
-        </div>
-      )}
       <div className="overflow-x-auto -mx-1 framed:mx-0 rounded-xl border border-[var(--color-border)]">
       <div style={{ minWidth: minTotalW }}>
 
@@ -226,12 +193,7 @@ export function WeekGrid({
                       className="border-l border-[var(--color-border)] flex items-center justify-center"
                       style={HOLIDAY_STRIPE}
                     >
-                      <span
-                        className="text-[8px] font-bold px-1.5 py-0.5 rounded-full"
-                        style={{ background: 'oklch(0.97 0.02 25)', color: 'oklch(0.55 0.16 25)' }}
-                      >
-                        휴관
-                      </span>
+                      <span className="text-[9px] text-[var(--color-text-muted)] font-medium">휴관</span>
                     </div>
                   )
                 }

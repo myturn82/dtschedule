@@ -62,6 +62,7 @@ export function SchedulePage() {
   const [month, setMonth] = useState(today.getMonth() + 1)
   const [day, setDay] = useState(today.getDate())
   const [viewType, setViewType] = useState<ViewType>('month')
+  const [hiddenRoleIds, setHiddenRoleIds] = useState<Set<string>>(new Set())
   const [highlightName, setHighlightName] = useState('')
   const [showCapacity, setShowCapacity] = useState(false)
   const [exportOpen, setExportOpen] = useState(false)
@@ -227,6 +228,26 @@ export function SchedulePage() {
   function nextMonth() {
     if (month === 12) { setYear(y => y + 1); setMonth(1) }
     else setMonth(m => m + 1)
+  }
+  function handleViewTypeChange(v: ViewType) {
+    if (v === 'week' || v === 'day') {
+      const t = new Date()
+      setYear(t.getFullYear())
+      setMonth(t.getMonth() + 1)
+      setDay(t.getDate())
+    }
+    setViewType(v)
+  }
+  function toggleRole(id: string) {
+    setHiddenRoleIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else if (splitRoles.filter(r => !next.has(r.id)).length > 1) {
+        next.add(id)
+      }
+      return next
+    })
   }
 
   // ── 복사/붙여넣기 실행 (키보드·버튼 공용) ──────────────────────────────────
@@ -628,22 +649,40 @@ export function SchedulePage() {
         roleLabel={memberTenantRoleName ?? undefined}
         funcMenuItems={(close) => (
           <>
-            {isPrivileged && viewType === 'month' && (
+            {isPrivileged && (
               <>
-                <p className={navLabelCls}>보기</p>
-                <button
-                  onClick={() => {
-                    setExcelMode(v => { setCellSel(null); setCopyBuf(null); setPasteHistory([]); return !v })
-                    close()
-                  }}
-                  className={`${menuItemCls} ${excelMode ? 'bg-[color-mix(in_srgb,var(--color-brand-primary)_10%,transparent)] text-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary)]' : ''}`}
-                >
-                  <NavIcon active={excelMode}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
-                  </NavIcon>
-                  <span className="flex-1">엑셀 모드</span>
-                  {excelMode && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]">ON</span>}
-                </button>
+                <p className={navLabelCls}>화면</p>
+                {([
+                  { v: 'month' as const, label: '월간' },
+                  { v: 'week' as const, label: '주간' },
+                  { v: 'day' as const, label: '일간' },
+                ]).map(({ v, label }) => (
+                  <button
+                    key={v}
+                    onClick={() => { handleViewTypeChange(v); close() }}
+                    className={`${menuItemCls} ${viewType === v ? 'bg-[color-mix(in_srgb,var(--color-brand-primary)_10%,transparent)] text-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary)]' : ''}`}
+                  >
+                    <NavIcon active={viewType === v}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v16" /></svg>
+                    </NavIcon>
+                    <span className="flex-1">{label}</span>
+                  </button>
+                ))}
+                {viewType === 'month' && (
+                  <button
+                    onClick={() => {
+                      setExcelMode(v => { setCellSel(null); setCopyBuf(null); setPasteHistory([]); return !v })
+                      close()
+                    }}
+                    className={`${menuItemCls} ${excelMode ? 'bg-[color-mix(in_srgb,var(--color-brand-primary)_10%,transparent)] text-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary)]' : ''}`}
+                  >
+                    <NavIcon active={excelMode}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+                    </NavIcon>
+                    <span className="flex-1">엑셀 모드</span>
+                    {excelMode && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]">ON</span>}
+                  </button>
+                )}
               </>
             )}
             <p className={navLabelCls}>문서</p>
@@ -752,15 +791,34 @@ export function SchedulePage() {
               year={year} month={month} day={day}
               title={tenant?.settings?.title || tenant?.name}
               viewType={viewType}
-              onViewTypeChange={(v) => {
-                if (v === 'week' || v === 'day') {
-                  const t = new Date()
-                  setYear(t.getFullYear())
-                  setMonth(t.getMonth() + 1)
-                  setDay(t.getDate())
-                }
-                setViewType(v)
-              }}
+              onViewTypeChange={handleViewTypeChange}
+              hideViewSwitcher={isPrivileged}
+              roleToggleSlot={isSplitMode && splitRoles.length > 1 && viewType !== 'day' ? (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-[11px] text-[var(--color-text-muted)] shrink-0">역할 표시:</span>
+                  {splitRoles.map(role => (
+                    <button
+                      key={role.id}
+                      onClick={() => toggleRole(role.id)}
+                      className={`px-2.5 py-0.5 text-xs rounded-full border transition-colors select-none ${
+                        !hiddenRoleIds.has(role.id)
+                          ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] border-[var(--color-brand-primary)]'
+                          : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]'
+                      }`}
+                    >
+                      {role.name}
+                    </button>
+                  ))}
+                  {hiddenRoleIds.size > 0 && (
+                    <button
+                      onClick={() => setHiddenRoleIds(new Set())}
+                      className="px-2.5 py-0.5 text-xs rounded-full border border-dashed border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)] transition-colors"
+                    >
+                      전체
+                    </button>
+                  )}
+                </div>
+              ) : undefined}
               weekDays={weekDays}
               onPrev={() => { setSwipeAnim('prev'); setAnimKey(k => k + 1); viewType === 'month' ? prevMonth() : shiftDate(viewType === 'week' ? -7 : -1) }}
               onNext={() => { setSwipeAnim('next'); setAnimKey(k => k + 1); viewType === 'month' ? nextMonth() : shiftDate(viewType === 'week' ? 7 : 1) }}
@@ -809,6 +867,7 @@ export function SchedulePage() {
                 splitRoles={splitRoles}
                 indicatorBarRoles={indicatorBarRoles}
                 isSplitMode={isSplitMode}
+                hiddenRoleIds={hiddenRoleIds}
                 slotLabels={slotLabels}
                 canAdd={canAdd}
                 onCellClick={handleCellClick}
@@ -832,6 +891,7 @@ export function SchedulePage() {
                 splitRoles={splitRoles}
                 indicatorBarRoles={indicatorBarRoles}
                 isSplitMode={isSplitMode}
+                hiddenRoleIds={hiddenRoleIds}
                 slotLabels={slotLabels}
                 selectedDay={new Date(year, month - 1, day)}
                 memberRoleId={memberRoleId}
