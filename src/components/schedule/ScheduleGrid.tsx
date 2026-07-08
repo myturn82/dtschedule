@@ -435,7 +435,6 @@ export function ScheduleGrid({
                               className="border border-[var(--color-border-table)] p-0 bg-schedule-breaktime text-center"
                             >
                               <div className="flex items-center justify-center min-h-[1.25rem] sm:min-h-[1.75rem]">
-                                <span className="sm:hidden text-[8px] text-[var(--color-text-muted)] font-medium">✕</span>
                                 <span className="hidden sm:inline text-[9px] text-[var(--color-text-muted)] font-medium">CLOSE</span>
                               </div>
                             </td>
@@ -496,7 +495,6 @@ export function ScheduleGrid({
                             className="border border-[var(--color-border-table)] p-0 bg-schedule-close text-center"
                           >
                             <div className="flex items-center justify-center min-h-[1.25rem] sm:min-h-[1.75rem]">
-                              <span className="sm:hidden text-[8px] text-[var(--color-text-muted)] font-medium">✕</span>
                               <span className="hidden sm:inline text-[9px] text-[var(--color-text-muted)] font-medium">CLOSE</span>
                             </div>
                           </td>

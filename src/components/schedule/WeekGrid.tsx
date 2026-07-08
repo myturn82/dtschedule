@@ -231,7 +231,16 @@ export function WeekGrid({
                   )
                 }
 
-                if (cs.isBreaktime || cs.isClosed) {
+                if (cs.isBreaktime) {
+                  return (
+                    <div key={di}
+                      className="border-l border-[var(--color-border)] flex items-center justify-center text-[9px] text-[var(--color-text-muted)]"
+                      style={STRIPE_STYLE}
+                    />
+                  )
+                }
+
+                if (cs.isClosed) {
                   return (
                     <div key={di}
                       className="border-l border-[var(--color-border)] flex items-center justify-center text-[9px] text-[var(--color-text-muted)]"

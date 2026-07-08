@@ -135,7 +135,6 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
     if (colType === 'plus') return <div className={`h-full ${cellMinH}`} style={STRIPE_STYLE} />
     return (
       <div className={`h-full ${cellMinH} flex items-center justify-center`} style={STRIPE_STYLE}>
-        <span className="sm:hidden text-[8px] text-[var(--color-text-muted)] font-medium">✕</span>
         <span className="hidden sm:inline text-[9px] text-[var(--color-text-muted)] font-medium tracking-wide">CLOSE</span>
       </div>
     )
