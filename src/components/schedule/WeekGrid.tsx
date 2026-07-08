@@ -226,7 +226,12 @@ export function WeekGrid({
                       className="border-l border-[var(--color-border)] flex items-center justify-center"
                       style={HOLIDAY_STRIPE}
                     >
-                      <span className="text-[9px] font-medium" style={{ color: 'oklch(0.55 0.16 25)' }}>휴관</span>
+                      <span
+                        className="text-[8px] font-bold px-1.5 py-0.5 rounded-full"
+                        style={{ background: 'oklch(0.97 0.02 25)', color: 'oklch(0.55 0.16 25)' }}
+                      >
+                        휴관
+                      </span>
                     </div>
                   )
                 }
