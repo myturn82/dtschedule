@@ -7,6 +7,7 @@ import { useAuth } from './hooks/useAuth'
 import { useCustomerAdmin } from './hooks/useCustomerAdmin'
 import { SchedulePage } from './pages/SchedulePage'
 import { SharePage } from './pages/SharePage'
+import { EmbedPage } from './pages/EmbedPage'
 import { AdminPage } from './pages/AdminPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { TenantSelectPage } from './pages/TenantSelectPage'
@@ -60,6 +61,7 @@ function AppRoutes() {
         <Route path="/auth"           element={<AuthPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/share"          element={<SharePage />} />
+        <Route path="/embed"          element={<EmbedPage />} />
         <Route path="*"               element={<Navigate to="/" replace />} />
       </Routes>
     )
@@ -71,6 +73,7 @@ function AppRoutes() {
     return (
       <Routes>
         <Route path="/share" element={<SharePage />} />
+        <Route path="/embed" element={<EmbedPage />} />
         <Route path="/superadmin" element={<SuperAdminPage />} />
         <Route path="/setup" element={<SetupWizardPage />} />
         <Route path="*" element={<PendingPage />} />
@@ -84,6 +87,7 @@ function AppRoutes() {
     return (
       <Routes>
         <Route path="/share" element={<SharePage />} />
+        <Route path="/embed" element={<EmbedPage />} />
         <Route path="/superadmin" element={<SuperAdminPage />} />
         <Route path="*" element={<TenantSelectPage />} />
       </Routes>
@@ -96,6 +100,7 @@ function AppRoutes() {
     return (
       <Routes>
         <Route path="/share" element={<SharePage />} />
+        <Route path="/embed" element={<EmbedPage />} />
         <Route path="/superadmin" element={<SuperAdminPage />} />
         <Route path="/customer-admin" element={<CustomerAdminPage />} />
         <Route path="/admin" element={<AdminPage />} />
@@ -111,6 +116,7 @@ function AppRoutes() {
     return (
       <Routes>
         <Route path="/share" element={<SharePage />} />
+        <Route path="/embed" element={<EmbedPage />} />
         <Route path="/setup" element={<SetupWizardPage />} />
         <Route path="/customer-admin" element={<CustomerAdminPage />} />
         <Route path="*" element={<CustomerAdminPage />} />
@@ -132,6 +138,7 @@ function AppRoutes() {
           : <Navigate to="/" replace />
       } />
       <Route path="/share" element={<SharePage />} />
+      <Route path="/embed" element={<EmbedPage />} />
       <Route path="/admin" element={<AdminPage />} />
       <Route path="/setup" element={<SetupWizardPage />} />
       <Route path="/select-org" element={<TenantSelectPage />} />

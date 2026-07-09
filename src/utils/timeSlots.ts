@@ -105,3 +105,15 @@ export function remapTimeSub(sourceSlot: string, sourceTimeSub: string | null | 
   if (sourceTimeSub === `${srcStart}~${srcStart + 1}`) return destOptions[2].value
   return destOptions[2].value
 }
+
+export function getWeekDays(year: number, month: number, day: number): Date[] {
+  const anchor = new Date(year, month - 1, day)
+  const dow = anchor.getDay()
+  const monday = new Date(anchor)
+  monday.setDate(anchor.getDate() - ((dow + 6) % 7))
+  return Array.from({ length: 7 }, (_, i) => {
+    const dd = new Date(monday)
+    dd.setDate(monday.getDate() + i)
+    return dd
+  })
+}

@@ -164,11 +164,11 @@ export function WeekGrid({
           return (
             <div
               key={slot}
-              className={`grid border-t border-[var(--color-border)] ${isMoon ? 'bg-[oklch(0.99_0.005_280)]' : ''}`}
+              className={`grid border-t border-[var(--color-border)] ${isMoon ? 'bg-[color-mix(in_srgb,var(--color-text-muted)_6%,var(--color-surface))]' : ''}`}
               style={{ gridTemplateColumns: `${timeColW}px repeat(7, 1fr)`, minHeight: isRowClosed ? 28 : 52 }}
             >
               {/* Time label */}
-              <div className={`px-1 py-1 sm:px-1.5 sm:py-1.5 flex flex-col justify-center items-center text-center border-r border-[var(--color-border)] sticky left-0 z-[1] ${isMoon ? 'bg-[oklch(0.99_0.005_280)]' : 'bg-[var(--color-surface-secondary)]'}`}>
+              <div className={`px-1 py-1 sm:px-1.5 sm:py-1.5 flex flex-col justify-center items-center text-center border-r border-[var(--color-border)] sticky left-0 z-[1] ${isMoon ? 'bg-[color-mix(in_srgb,var(--color-text-muted)_6%,var(--color-surface-secondary))]' : 'bg-[var(--color-surface-secondary)]'}`}>
                 <span className="text-[9px] font-medium text-[var(--color-text-secondary)] leading-snug break-all">
                   {slotLabels[slot] ?? (
                     <>

@@ -1,21 +1,18 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { DevFileLabel } from '../components/DevFileLabel'
 import { useSchedule } from '../hooks/useSchedule'
-import { useTenant } from '../contexts/TenantContext'
 import { useAuth } from '../hooks/useAuth'
-import { displayMode } from '../lib/tenantMode'
+import { useShareTenantSettings } from '../hooks/useShareTenantSettings'
 import { ScheduleHeader } from '../components/schedule/ScheduleHeader'
 import { ScheduleGrid } from '../components/schedule/ScheduleGrid'
 import { Legend } from '../components/schedule/Legend'
-import { supabase } from '../lib/supabase'
-import { generateTimeSlots, slotStartLabel } from '../utils/timeSlots'
+import { slotStartLabel } from '../utils/timeSlots'
 import { getCellState } from '../utils/cellState'
 import { useTenantRoles } from '../hooks/useTenantRoles'
 import { fmtNumber } from '../lib/format'
-import type { TimeSlot } from '../utils/timeSlots'
 import { getOptionUnit } from '../types'
-import type { CustomFieldDef, LegendItem, ModalTarget } from '../types'
+import type { ModalTarget } from '../types'
 
 const DAY_KR = ['일', '월', '화', '수', '목', '금', '토']
 
@@ -26,53 +23,12 @@ export function SharePage() {
   const tidFromUrl = params.get('tid') ?? ''
 
   const { profile } = useAuth()
-  const { tenant, timeSlots: contextTimeSlots, legendItems: contextLegendItems, slotLabels: contextSlotLabels } = useTenant()
-  const tenantId = tidFromUrl || tenant?.id || ''
+  const {
+    tenantId, timeSlots, legendItems, slotLabels,
+    isFreeformTenant, tenantModeReady, detailFields,
+  } = useShareTenantSettings(tidFromUrl)
 
   const [modalTarget, setModalTarget] = useState<ModalTarget | null>(null)
-
-  // tid가 컨텍스트 테넌트와 다를 때 직접 테넌트 설정을 조회해 timeSlots·legendItems 계산
-  const [fetchedTimeSlots, setFetchedTimeSlots] = useState<TimeSlot[] | null>(null)
-  const [fetchedLegendItems, setFetchedLegendItems] = useState<LegendItem[] | null>(null)
-  const [fetchedSlotLabels, setFetchedSlotLabels] = useState<Record<string, string> | null>(null)
-  const [fetchedTenantMode, setFetchedTenantMode] = useState<string | undefined>(undefined)
-  const [fetchedCustomFields, setFetchedCustomFields] = useState<CustomFieldDef[] | null>(null)
-  useEffect(() => {
-    if (!tidFromUrl || tidFromUrl === tenant?.id) {
-      setFetchedTimeSlots(null)
-      setFetchedLegendItems(null)
-      setFetchedSlotLabels(null)
-      setFetchedTenantMode(undefined)
-      setFetchedCustomFields(null)
-      return
-    }
-    supabase.from('tenants').select('settings').eq('id', tidFromUrl).single()
-      .then(({ data }) => {
-        if (!data?.settings) return
-        const s = data.settings as Record<string, unknown>
-        const slots = Array.isArray(s.time_slots) && (s.time_slots as string[]).length > 0
-          ? s.time_slots as TimeSlot[]
-          : generateTimeSlots(
-              (s.open_from as string | undefined) ?? '09:00',
-              (s.open_to as string | undefined) ?? '22:00',
-              (s.slot_interval_minutes as number | undefined) ?? 120
-            )
-        setFetchedTimeSlots(slots)
-        setFetchedLegendItems((s.legend_items as LegendItem[] | undefined) ?? [])
-        setFetchedSlotLabels((s.slot_labels as Record<string, string> | undefined) ?? {})
-        setFetchedTenantMode(s.tenant_mode as string | undefined)
-        setFetchedCustomFields((s.custom_fields as CustomFieldDef[] | undefined) ?? [])
-      })
-  }, [tidFromUrl, tenant?.id])
-
-  const timeSlots = fetchedTimeSlots ?? contextTimeSlots
-  const legendItems = fetchedLegendItems ?? contextLegendItems
-  const slotLabels = fetchedSlotLabels ?? contextSlotLabels
-  const isFreeformTenant = displayMode((fetchedTenantMode ?? tenant?.settings?.tenant_mode) as string | undefined) === '비회원'
-  const tenantModeReady = !tidFromUrl || tidFromUrl === tenant?.id || fetchedTenantMode !== undefined
-  const customFields = fetchedCustomFields ?? tenant?.settings?.custom_fields ?? []
-  const useDynamicFields = isFreeformTenant && customFields.length > 0
-  const detailFields = useDynamicFields ? customFields.slice(1) : customFields
 
   const { roles: tenantRoles } = useTenantRoles(tenantId)
   const splitRoles = tenantRoles.filter(r => r.split_cell && !r.indicator_bar)

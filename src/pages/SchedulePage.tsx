@@ -9,7 +9,7 @@ import { useSchedule } from '../hooks/useSchedule'
 import { useProfiles } from '../hooks/useProfiles'
 import { useTenantRoles } from '../hooks/useTenantRoles'
 import { getCellState } from '../utils/cellState'
-import { getTimeSubOptions, remapTimeSub } from '../utils/timeSlots'
+import { getTimeSubOptions, remapTimeSub, getWeekDays } from '../utils/timeSlots'
 import { AppHeader } from '../components/AppHeader'
 import { ScheduleHeader } from '../components/schedule/ScheduleHeader'
 import { ScheduleGrid } from '../components/schedule/ScheduleGrid'
@@ -454,18 +454,6 @@ export function SchedulePage() {
     setDay(d.getDate())
   }
 
-  function getWeekDays(y: number, m: number, d: number): Date[] {
-    const anchor = new Date(y, m - 1, d)
-    const dow = anchor.getDay()
-    const monday = new Date(anchor)
-    monday.setDate(anchor.getDate() - ((dow + 6) % 7))
-    return Array.from({ length: 7 }, (_, i) => {
-      const dd = new Date(monday)
-      dd.setDate(monday.getDate() + i)
-      return dd
-    })
-  }
-
   const weekDays = getWeekDays(year, month, day)
 
   function getTargetDays(): Date[] {
@@ -683,6 +671,26 @@ export function SchedulePage() {
                     {excelMode && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]">ON</span>}
                   </button>
                 )}
+              </>
+            )}
+            {isPrivileged && tenantMode === '비회원' && (
+              <>
+                <p className={navLabelCls}>공유</p>
+                <button
+                  onClick={() => {
+                    const url = `${window.location.origin}/embed?tid=${tenant?.id ?? ''}`
+                    const elId = `dts-widget-${(tenant?.id ?? '').slice(0, 8)}`
+                    const code = `<iframe id="${elId}" src="${url}" style="width:100%;border:0;" scrolling="no"></iframe>\n<script>\n(function () {\n  window.addEventListener('message', function (e) {\n    if (e.data && e.data.source === 'dts-embed' && e.data.type === 'resize') {\n      var el = document.getElementById('${elId}');\n      if (el) el.style.height = e.data.height + 'px';\n    }\n  });\n})();\n</script>`
+                    navigator.clipboard.writeText(code).then(() => alert('임베드 코드가 클립보드에 복사되었습니다.\n조직 홈페이지의 원하는 위치에 붙여넣으세요.'))
+                    close()
+                  }}
+                  className={menuItemCls}
+                >
+                  <NavIcon>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                  </NavIcon>
+                  <span className="flex-1">임베드 코드 복사</span>
+                </button>
               </>
             )}
             <p className={navLabelCls}>문서</p>
