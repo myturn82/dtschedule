@@ -12,8 +12,10 @@ import { supabase } from '../lib/supabase'
 import { generateTimeSlots, slotStartLabel } from '../utils/timeSlots'
 import { getCellState } from '../utils/cellState'
 import { useTenantRoles } from '../hooks/useTenantRoles'
+import { fmtNumber } from '../lib/format'
 import type { TimeSlot } from '../utils/timeSlots'
-import type { LegendItem, ModalTarget } from '../types'
+import { getOptionUnit } from '../types'
+import type { CustomFieldDef, LegendItem, ModalTarget } from '../types'
 
 const DAY_KR = ['일', '월', '화', '수', '목', '금', '토']
 
@@ -34,12 +36,14 @@ export function SharePage() {
   const [fetchedLegendItems, setFetchedLegendItems] = useState<LegendItem[] | null>(null)
   const [fetchedSlotLabels, setFetchedSlotLabels] = useState<Record<string, string> | null>(null)
   const [fetchedTenantMode, setFetchedTenantMode] = useState<string | undefined>(undefined)
+  const [fetchedCustomFields, setFetchedCustomFields] = useState<CustomFieldDef[] | null>(null)
   useEffect(() => {
     if (!tidFromUrl || tidFromUrl === tenant?.id) {
       setFetchedTimeSlots(null)
       setFetchedLegendItems(null)
       setFetchedSlotLabels(null)
       setFetchedTenantMode(undefined)
+      setFetchedCustomFields(null)
       return
     }
     supabase.from('tenants').select('settings').eq('id', tidFromUrl).single()
@@ -57,6 +61,7 @@ export function SharePage() {
         setFetchedLegendItems((s.legend_items as LegendItem[] | undefined) ?? [])
         setFetchedSlotLabels((s.slot_labels as Record<string, string> | undefined) ?? {})
         setFetchedTenantMode(s.tenant_mode as string | undefined)
+        setFetchedCustomFields((s.custom_fields as CustomFieldDef[] | undefined) ?? [])
       })
   }, [tidFromUrl, tenant?.id])
 
@@ -65,6 +70,9 @@ export function SharePage() {
   const slotLabels = fetchedSlotLabels ?? contextSlotLabels
   const isFreeformTenant = displayMode((fetchedTenantMode ?? tenant?.settings?.tenant_mode) as string | undefined) === '비회원'
   const tenantModeReady = !tidFromUrl || tidFromUrl === tenant?.id || fetchedTenantMode !== undefined
+  const customFields = fetchedCustomFields ?? tenant?.settings?.custom_fields ?? []
+  const useDynamicFields = isFreeformTenant && customFields.length > 0
+  const detailFields = useDynamicFields ? customFields.slice(1) : customFields
 
   const { roles: tenantRoles } = useTenantRoles(tenantId)
   const splitRoles = tenantRoles.filter(r => r.split_cell && !r.indicator_bar)
@@ -98,9 +106,9 @@ export function SharePage() {
     : null
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 max-w-full">
-        <div className="mb-2 text-xs text-gray-400 dark:text-gray-500 text-right">읽기 전용 공유 뷰</div>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-1">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-1.5 max-w-full">
+        <div className="mb-1 text-xs text-gray-400 dark:text-gray-500 text-right">읽기 전용 공유 뷰</div>
         <ScheduleHeader
           year={year} month={month}
           onPrev={() => {
@@ -165,15 +173,38 @@ export function SharePage() {
             <div className="flex flex-col gap-2 max-h-64 overflow-y-auto">
               {modalCellState.assignments
                 .filter(a => a.member_type !== 'admin_note')
-                .map(a => (
-                  <div key={a.id} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)]">
-                    <span className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold bg-[oklch(0.95_0.045_28)] text-[oklch(0.45_0.14_28)]">
-                      {a.member_name?.charAt(0) ?? '?'}
-                    </span>
-                    <span className="text-sm font-semibold text-[var(--color-text-primary)]">{a.member_name}</span>
-                    {a.note && <span className="text-xs text-[var(--color-text-muted)] truncate">· {a.note}</span>}
-                  </div>
-                ))}
+                .map(a => {
+                  const detailChips = detailFields
+                    .filter(f => f.type !== 'image_upload')
+                    .map(f => {
+                      const val = a.extra_data?.[f.id]
+                      if (!val) return null
+                      const unit = getOptionUnit(f.options?.find(o => o.value === val)?.value_type)
+                      return { key: f.id, label: f.label, value: `${fmtNumber(val)}${unit}` }
+                    })
+                    .filter((c): c is { key: string; label: string; value: string } => c !== null)
+                  if (a.note) detailChips.push({ key: 'note', label: '메모', value: a.note })
+
+                  return (
+                    <div key={a.id} className="flex flex-col gap-1.5 px-3 py-2 rounded-xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)]">
+                      <div className="flex items-center gap-2">
+                        <span className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold bg-[oklch(0.95_0.045_28)] text-[oklch(0.45_0.14_28)]">
+                          {a.member_name?.charAt(0) ?? '?'}
+                        </span>
+                        <span className="text-sm font-semibold text-[var(--color-text-primary)]">{a.member_name}</span>
+                      </div>
+                      {detailChips.length > 0 && (
+                        <div className="flex flex-wrap gap-1 pl-9">
+                          {detailChips.map(c => (
+                            <span key={c.key} className="text-[11px] font-medium text-[var(--color-text-secondary)] bg-[var(--color-surface)] border border-[var(--color-border)] px-1.5 py-0.5 rounded-md">
+                              {c.label}: {c.value}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
             </div>
           </div>
         </div>
