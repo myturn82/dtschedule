@@ -55,6 +55,10 @@ export default defineConfig({
       },
       workbox: {
         navigateFallback: '/index.html',
+        // /embed는 iframe 최상위 문서로 로드되므로, SW가 캐시된 index.html(전역 CSP 헤더)로
+        // 가로채면 vercel.json의 /embed 전용 frame-ancestors 허용이 적용되지 않아 임베드가 깨진다.
+        // 네트워크로 직접 요청이 가도록 SW 폴백 대상에서 제외한다.
+        navigateFallbackDenylist: [/^\/embed/],
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         runtimeCaching: [
