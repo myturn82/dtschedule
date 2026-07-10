@@ -14,6 +14,8 @@ import { AppHeader } from '../components/AppHeader'
 import { ScheduleHeader } from '../components/schedule/ScheduleHeader'
 import { ScheduleGrid } from '../components/schedule/ScheduleGrid'
 import { WeekGrid } from '../components/schedule/WeekGrid'
+import { MonthScheduleByDay } from '../components/schedule/MonthScheduleByDay'
+import { WeekScheduleByDay } from '../components/schedule/WeekScheduleByDay'
 import { DayView } from '../components/schedule/DayView'
 import { Legend } from '../components/schedule/Legend'
 import { FilterBar } from '../components/shared/FilterBar'
@@ -62,6 +64,7 @@ export function SchedulePage() {
   const [month, setMonth] = useState(today.getMonth() + 1)
   const [day, setDay] = useState(today.getDate())
   const [viewType, setViewType] = useState<ViewType>('month')
+  const [displayMode, setDisplayMode] = useState<'time' | 'day'>('time')
   const [hiddenRoleIds, setHiddenRoleIds] = useState<Set<string>>(new Set())
   const [highlightName, setHighlightName] = useState('')
   const [showCapacity, setShowCapacity] = useState(false)
@@ -801,6 +804,8 @@ export function SchedulePage() {
               viewType={viewType}
               onViewTypeChange={handleViewTypeChange}
               hideViewSwitcher={isPrivileged}
+              displayMode={displayMode}
+              onDisplayModeChange={excelMode ? undefined : setDisplayMode}
               roleToggleSlot={isSplitMode && splitRoles.length > 1 && viewType !== 'day' ? (
                 <div className="flex flex-wrap items-center gap-1.5">
                   <span className="text-[11px] text-[var(--color-text-muted)] shrink-0">역할 표시:</span>
@@ -862,63 +867,93 @@ export function SchedulePage() {
                 <span className="text-sm text-[var(--color-text-muted)]">스케줄을 불러오는 중...</span>
               </div>
             ) : viewType === 'month' ? (
-              <ScheduleGrid
-                year={year} month={month}
-                timeSlots={timeSlots}
-                assignments={assignments} slotSettings={slotSettings}
-                scheduleRules={scheduleRules} dateOverrides={dateOverrides}
-                highlightName={highlightName || null}
-                profile={profile}
-                tenantRole={tenantRole}
-                memberRoleId={memberRoleId}
-                teamLeaderUserIds={teamLeaderUserIds}
-                splitRoles={splitRoles}
-                indicatorBarRoles={indicatorBarRoles}
-                isSplitMode={isSplitMode}
-                hiddenRoleIds={hiddenRoleIds}
-                slotLabels={slotLabels}
-                canAdd={canAdd}
-                onCellClick={handleCellClick}
-                onHolidayCellClick={profile && isPrivileged
-                  ? (d, startHour, endHour) => setHolidayTarget({ day: d, startHour, endHour })
-                  : undefined}
-                displayAssignmentFilter={displayAssignmentFilter}
-                withdrawnUserIds={withdrawnUserIds}
-                highlightedSlots={highlightedSlots}
-                selectionRange={selRange}
-                copyRange={cpRange}
-              />
+              displayMode === 'day' ? (
+                <MonthScheduleByDay
+                  year={year} month={month}
+                  timeSlots={timeSlots}
+                  assignments={assignments} slotSettings={slotSettings}
+                  scheduleRules={scheduleRules} dateOverrides={dateOverrides}
+                  splitRoles={splitRoles}
+                  isSplitMode={isSplitMode}
+                  hiddenRoleIds={hiddenRoleIds}
+                  displayAssignmentFilter={displayAssignmentFilter}
+                  withdrawnUserIds={withdrawnUserIds}
+                  onCellClick={handleCellClick}
+                />
+              ) : (
+                <ScheduleGrid
+                  year={year} month={month}
+                  timeSlots={timeSlots}
+                  assignments={assignments} slotSettings={slotSettings}
+                  scheduleRules={scheduleRules} dateOverrides={dateOverrides}
+                  highlightName={highlightName || null}
+                  profile={profile}
+                  tenantRole={tenantRole}
+                  memberRoleId={memberRoleId}
+                  teamLeaderUserIds={teamLeaderUserIds}
+                  splitRoles={splitRoles}
+                  indicatorBarRoles={indicatorBarRoles}
+                  isSplitMode={isSplitMode}
+                  hiddenRoleIds={hiddenRoleIds}
+                  slotLabels={slotLabels}
+                  canAdd={canAdd}
+                  onCellClick={handleCellClick}
+                  onHolidayCellClick={profile && isPrivileged
+                    ? (d, startHour, endHour) => setHolidayTarget({ day: d, startHour, endHour })
+                    : undefined}
+                  displayAssignmentFilter={displayAssignmentFilter}
+                  withdrawnUserIds={withdrawnUserIds}
+                  highlightedSlots={highlightedSlots}
+                  selectionRange={selRange}
+                  copyRange={cpRange}
+                />
+              )
             ) : viewType === 'week' ? (
-              <WeekGrid
-                weekDays={weekDays}
-                timeSlots={timeSlots}
-                assignments={assignments} slotSettings={slotSettings}
-                scheduleRules={scheduleRules} dateOverrides={weekDateOverrides}
-                highlightName={highlightName || null}
-                profile={profile}
-                splitRoles={splitRoles}
-                indicatorBarRoles={indicatorBarRoles}
-                isSplitMode={isSplitMode}
-                hiddenRoleIds={hiddenRoleIds}
-                slotLabels={slotLabels}
-                selectedDay={new Date(year, month - 1, day)}
-                memberRoleId={memberRoleId}
-                tenantRole={tenantRole}
-                teamLeaderUserIds={teamLeaderUserIds}
-                isPrivileged={isPrivileged}
-                onDateHeaderClick={d => {
-                  setYear(d.getFullYear())
-                  setMonth(d.getMonth() + 1)
-                  setDay(d.getDate())
-                }}
-                canAdd={canAdd}
-                onCellClick={handleCellClick}
-                displayAssignmentFilter={displayAssignmentFilter}
-                withdrawnUserIds={withdrawnUserIds}
-                highlightedSlots={highlightedSlots}
-                selectionRange={selRange}
-                copyRange={cpRange}
-              />
+              displayMode === 'day' ? (
+                <WeekScheduleByDay
+                  weekDays={weekDays}
+                  timeSlots={timeSlots}
+                  assignments={assignments} slotSettings={slotSettings}
+                  scheduleRules={scheduleRules} dateOverrides={weekDateOverrides}
+                  splitRoles={splitRoles}
+                  isSplitMode={isSplitMode}
+                  hiddenRoleIds={hiddenRoleIds}
+                  displayAssignmentFilter={displayAssignmentFilter}
+                  withdrawnUserIds={withdrawnUserIds}
+                  onCellClick={handleCellClick}
+                />
+              ) : (
+                <WeekGrid
+                  weekDays={weekDays}
+                  timeSlots={timeSlots}
+                  assignments={assignments} slotSettings={slotSettings}
+                  scheduleRules={scheduleRules} dateOverrides={weekDateOverrides}
+                  highlightName={highlightName || null}
+                  profile={profile}
+                  splitRoles={splitRoles}
+                  indicatorBarRoles={indicatorBarRoles}
+                  isSplitMode={isSplitMode}
+                  hiddenRoleIds={hiddenRoleIds}
+                  slotLabels={slotLabels}
+                  selectedDay={new Date(year, month - 1, day)}
+                  memberRoleId={memberRoleId}
+                  tenantRole={tenantRole}
+                  teamLeaderUserIds={teamLeaderUserIds}
+                  isPrivileged={isPrivileged}
+                  onDateHeaderClick={d => {
+                    setYear(d.getFullYear())
+                    setMonth(d.getMonth() + 1)
+                    setDay(d.getDate())
+                  }}
+                  canAdd={canAdd}
+                  onCellClick={handleCellClick}
+                  displayAssignmentFilter={displayAssignmentFilter}
+                  withdrawnUserIds={withdrawnUserIds}
+                  highlightedSlots={highlightedSlots}
+                  selectionRange={selRange}
+                  copyRange={cpRange}
+                />
+              )
             ) : (
               <DayView
                 year={year} month={month} day={day}
