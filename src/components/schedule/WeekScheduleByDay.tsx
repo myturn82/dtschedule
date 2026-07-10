@@ -34,7 +34,7 @@ export function WeekScheduleByDay({
   const todayColRef = useRef<HTMLTableCellElement>(null)
 
   useEffect(() => {
-    todayColRef.current?.scrollIntoView?.({ behavior: 'instant' as ScrollBehavior, block: 'nearest', inline: 'center' })
+    todayColRef.current?.scrollIntoView({ behavior: 'instant' as ScrollBehavior, block: 'nearest', inline: 'center' })
   }, [weekDays])
 
   function isSameDay(a: Date, b: Date) {
@@ -86,6 +86,7 @@ export function WeekScheduleByDay({
               const month = date.getMonth() + 1
               const day = date.getDate()
               const key = `${year}-${month}-${day}`
+              const holidayName = getKoreanHolidayName(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`)
               const allEntries = getDayAssignmentEntries(day, year, month, timeSlots, scheduleRules, slotSettings, dateOverrides, assignments, displayAssignmentFilter)
               const entries = isSplitMode
                 ? allEntries.filter(e => !e.assignment.role_id || !hiddenRoleIds.has(e.assignment.role_id))
@@ -99,7 +100,7 @@ export function WeekScheduleByDay({
                   key={i}
                   ref={isToday ? todayColRef : undefined}
                   className={`border border-[var(--color-border-table)] align-top px-1 py-1
-                    ${dow === 0 ? 'bg-red-50/50 dark:bg-red-950/30' : dow === 6 ? 'bg-blue-50/50 dark:bg-blue-950/30' : ''}
+                    ${holidayName || dow === 0 ? 'bg-red-50/50 dark:bg-red-950/30' : dow === 6 ? 'bg-blue-50/50 dark:bg-blue-950/30' : ''}
                     ${isToday ? 'ring-2 ring-inset ring-[var(--color-brand-primary)]' : ''}`}
                   style={{ height: '12rem' }}
                 >
