@@ -38,7 +38,7 @@ interface Props {
 const DOW_ORDER = [1, 2, 3, 4, 5, 6, 0]
 const DOW_LABELS = ['월', '화', '수', '목', '금', '토', '일']
 
-function getCalendarWeeks(year: number, month: number): (number | null)[][] {
+export function getCalendarWeeks(year: number, month: number): (number | null)[][] {
   const count = new Date(year, month, 0).getDate()
   const weeks: (number | null)[][] = []
   let currentWeek: (number | null)[] = new Array(7).fill(null)
