@@ -1,0 +1,526 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1783641603768,
+  "projectRoot": "C:\\claudePrj\\dtschedule",
+  "techStack": {
+    "languages": [
+      {
+        "name": "JavaScript/TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "package.json"
+        ]
+      },
+      {
+        "name": "TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "tsconfig.json"
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "react",
+        "version": "19.2.5",
+        "category": "frontend"
+      },
+      {
+        "name": "react-dom",
+        "version": "19.2.5",
+        "category": "frontend"
+      },
+      {
+        "name": "vite",
+        "version": "8.0.10",
+        "category": "build"
+      },
+      {
+        "name": "vitest",
+        "version": "3.2.0",
+        "category": "testing"
+      }
+    ],
+    "packageManager": "npm",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": "cd C:/claudePrj/dtschedule && npx tsc -b 2>&1 | tail -40",
+    "testCommand": "npm test -- --run src/components/schedule/ScheduleHeader.test.tsx 2>&1 | grep -E \"✓|✗|×|PASS|FAIL|passed|failed\" ",
+    "lintCommand": "npm run lint",
+    "devCommand": "npm run dev",
+    "scripts": {
+      "dev": "vite",
+      "predev": "npm run build:tokens",
+      "build": "tsc -b && vite build",
+      "prebuild": "npm run build:tokens",
+      "build:tokens": "style-dictionary build --config style-dictionary.config.js",
+      "lint": "eslint .",
+      "preview": "vite preview",
+      "test": "vitest"
+    }
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": "type-based"
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "docs",
+      "public",
+      "src"
+    ],
+    "gitBranches": {
+      "defaultBranch": "master",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "dist": {
+      "path": "dist",
+      "purpose": "Distribution/build output",
+      "fileCount": 10,
+      "lastAccessed": 1783641603734,
+      "keyFiles": [
+        "favicon.svg",
+        "icons.svg",
+        "index.html",
+        "logo-colon-time.png",
+        "logo-timetable-stack.png"
+      ]
+    },
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 26,
+      "lastAccessed": 1783641603746,
+      "keyFiles": [
+        "blog_series_1.md",
+        "CHANGE_TEST_CHECKLIST_TEMPLATE.md",
+        "checklist_2026-06-11.md",
+        "checklist_2026-06-12.md",
+        "checklist_2026-06-13.md"
+      ]
+    },
+    "public": {
+      "path": "public",
+      "purpose": "Public files",
+      "fileCount": 6,
+      "lastAccessed": 1783641603746,
+      "keyFiles": [
+        "favicon.svg",
+        "icons.svg",
+        "logo-colon-time.png",
+        "logo-timetable-stack.png",
+        "manifest.json"
+      ]
+    },
+    "publicicons": {
+      "path": "publicicons",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1783641603747,
+      "keyFiles": []
+    },
+    "src": {
+      "path": "src",
+      "purpose": "Source code",
+      "fileCount": 5,
+      "lastAccessed": 1783641603747,
+      "keyFiles": [
+        "App.css",
+        "App.tsx",
+        "index.css",
+        "main.tsx",
+        "test-setup.ts"
+      ]
+    },
+    "supabase": {
+      "path": "supabase",
+      "purpose": null,
+      "fileCount": 6,
+      "lastAccessed": 1783641603747,
+      "keyFiles": [
+        "CLAUDE.md",
+        "config.toml",
+        "reset_data.sql",
+        "reset_db.sql",
+        "seed_members_202606.sql"
+      ]
+    },
+    "dist\\assets": {
+      "path": "dist\\assets",
+      "purpose": "Static assets",
+      "fileCount": 8,
+      "lastAccessed": 1783641603748,
+      "keyFiles": [
+        "html2canvas-DAUDsNMm.js",
+        "index-BEkYfel2.js",
+        "index-C15MP2Wo.css"
+      ]
+    },
+    "src\\assets": {
+      "path": "src\\assets",
+      "purpose": "Static assets",
+      "fileCount": 3,
+      "lastAccessed": 1783641603748,
+      "keyFiles": [
+        "hero.png",
+        "react.svg",
+        "vite.svg"
+      ]
+    },
+    "src\\components": {
+      "path": "src\\components",
+      "purpose": "UI components",
+      "fileCount": 6,
+      "lastAccessed": 1783641603749,
+      "keyFiles": [
+        "AppHeader.tsx",
+        "DashboardNav.tsx",
+        "DevFileLabel.tsx"
+      ]
+    },
+    "src\\data": {
+      "path": "src\\data",
+      "purpose": "Data files",
+      "fileCount": 1,
+      "lastAccessed": 1783641603749,
+      "keyFiles": [
+        "industryCategories.ts"
+      ]
+    },
+    "src\\lib": {
+      "path": "src\\lib",
+      "purpose": "Library code",
+      "fileCount": 14,
+      "lastAccessed": 1783641603750,
+      "keyFiles": [
+        "avatarColor.ts",
+        "datePicker.test.ts",
+        "datePicker.ts"
+      ]
+    },
+    "supabase\\migrations": {
+      "path": "supabase\\migrations",
+      "purpose": "Database migrations",
+      "fileCount": 60,
+      "lastAccessed": 1783641603751,
+      "keyFiles": [
+        "001_schema.sql",
+        "002_rls.sql",
+        "003_seed.sql"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "src\\pages\\SchedulePage.tsx",
+      "accessCount": 616,
+      "lastAccessed": 1783659034789,
+      "type": "file"
+    },
+    {
+      "path": "src\\pages\\AdminPage.tsx",
+      "accessCount": 387,
+      "lastAccessed": 1783407851347,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\modals\\SlotEditModal.tsx",
+      "accessCount": 281,
+      "lastAccessed": 1783562933093,
+      "type": "file"
+    },
+    {
+      "path": "src",
+      "accessCount": 242,
+      "lastAccessed": 1783658477701,
+      "type": "directory"
+    },
+    {
+      "path": "src\\pages\\SuperAdminPage.tsx",
+      "accessCount": 218,
+      "lastAccessed": 1783065984045,
+      "type": "file"
+    },
+    {
+      "path": "src\\pages\\TenantSelectPage.tsx",
+      "accessCount": 153,
+      "lastAccessed": 1783064184415,
+      "type": "file"
+    },
+    {
+      "path": "src\\types\\index.ts",
+      "accessCount": 144,
+      "lastAccessed": 1783659802042,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\schedule\\ScheduleGrid.tsx",
+      "accessCount": 124,
+      "lastAccessed": 1783659957654,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\schedule\\WeekGrid.tsx",
+      "accessCount": 122,
+      "lastAccessed": 1783660302261,
+      "type": "file"
+    },
+    {
+      "path": "src\\pages\\PendingPage.tsx",
+      "accessCount": 102,
+      "lastAccessed": 1783064499225,
+      "type": "file"
+    },
+    {
+      "path": "src\\contexts\\TenantContext.tsx",
+      "accessCount": 99,
+      "lastAccessed": 1782783489505,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\schedule\\TimeSlotCell.tsx",
+      "accessCount": 91,
+      "lastAccessed": 1783657911359,
+      "type": "file"
+    },
+    {
+      "path": "",
+      "accessCount": 83,
+      "lastAccessed": 1783660447188,
+      "type": "directory"
+    },
+    {
+      "path": "src\\components\\auth\\LoginModal.tsx",
+      "accessCount": 78,
+      "lastAccessed": 1780647126853,
+      "type": "file"
+    },
+    {
+      "path": "src\\App.tsx",
+      "accessCount": 74,
+      "lastAccessed": 1783581034417,
+      "type": "file"
+    },
+    {
+      "path": "src\\hooks\\useAdmin.ts",
+      "accessCount": 49,
+      "lastAccessed": 1783064504942,
+      "type": "file"
+    },
+    {
+      "path": "src\\hooks\\useSchedule.ts",
+      "accessCount": 42,
+      "lastAccessed": 1783571939865,
+      "type": "file"
+    },
+    {
+      "path": "supabase\\functions\\admin-create-user\\index.ts",
+      "accessCount": 28,
+      "lastAccessed": 1783066135058,
+      "type": "file"
+    },
+    {
+      "path": "src\\pages\\SharePage.tsx",
+      "accessCount": 28,
+      "lastAccessed": 1783571857631,
+      "type": "file"
+    },
+    {
+      "path": "src\\hooks\\useAuth.ts",
+      "accessCount": 26,
+      "lastAccessed": 1782781287562,
+      "type": "file"
+    },
+    {
+      "path": "supabase\\migrations",
+      "accessCount": 22,
+      "lastAccessed": 1781582560179,
+      "type": "directory"
+    },
+    {
+      "path": "src\\utils\\cellState.ts",
+      "accessCount": 21,
+      "lastAccessed": 1783659624270,
+      "type": "file"
+    },
+    {
+      "path": "supabase\\migrations\\001_schema.sql",
+      "accessCount": 17,
+      "lastAccessed": 1781582563863,
+      "type": "file"
+    },
+    {
+      "path": "vite.config.ts",
+      "accessCount": 17,
+      "lastAccessed": 1783587619736,
+      "type": "file"
+    },
+    {
+      "path": "supabase\\functions\\delete-account\\index.ts",
+      "accessCount": 14,
+      "lastAccessed": 1783066141135,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\modals\\CapacityModal.tsx",
+      "accessCount": 12,
+      "lastAccessed": 1780378665538,
+      "type": "file"
+    },
+    {
+      "path": "index.html",
+      "accessCount": 12,
+      "lastAccessed": 1781741336981,
+      "type": "directory"
+    },
+    {
+      "path": "src\\hooks\\useProfiles.ts",
+      "accessCount": 12,
+      "lastAccessed": 1781747817704,
+      "type": "file"
+    },
+    {
+      "path": "src\\hooks\\useTenantRoles.ts",
+      "accessCount": 12,
+      "lastAccessed": 1783571939855,
+      "type": "file"
+    },
+    {
+      "path": "package.json",
+      "accessCount": 10,
+      "lastAccessed": 1782113804259,
+      "type": "file"
+    },
+    {
+      "path": "supabase",
+      "accessCount": 10,
+      "lastAccessed": 1783498926605,
+      "type": "directory"
+    },
+    {
+      "path": "supabase\\migrations\\014_security_hardening.sql",
+      "accessCount": 9,
+      "lastAccessed": 1780639400917,
+      "type": "file"
+    },
+    {
+      "path": "supabase\\migrations\\012_profile_approval.sql",
+      "accessCount": 8,
+      "lastAccessed": 1780902191770,
+      "type": "file"
+    },
+    {
+      "path": "supabase\\migrations\\002_rls.sql",
+      "accessCount": 8,
+      "lastAccessed": 1781224060992,
+      "type": "file"
+    },
+    {
+      "path": "vercel.json",
+      "accessCount": 8,
+      "lastAccessed": 1783571949209,
+      "type": "file"
+    },
+    {
+      "path": ".env",
+      "accessCount": 7,
+      "lastAccessed": 1780991709214,
+      "type": "file"
+    },
+    {
+      "path": "supabase\\migrations\\013_tenant_member_approval.sql",
+      "accessCount": 6,
+      "lastAccessed": 1780639413613,
+      "type": "file"
+    },
+    {
+      "path": "supabase\\migrations\\010_assignment_extra_data.sql",
+      "accessCount": 5,
+      "lastAccessed": 1781582563175,
+      "type": "file"
+    },
+    {
+      "path": "src\\lib\\supabase.ts",
+      "accessCount": 4,
+      "lastAccessed": 1780360936984,
+      "type": "file"
+    },
+    {
+      "path": "supabase\\migrations\\011_tenant_role_indicator_bar.sql",
+      "accessCount": 4,
+      "lastAccessed": 1780902156101,
+      "type": "file"
+    },
+    {
+      "path": "supabase\\migrations\\005_volunteer_type.sql",
+      "accessCount": 4,
+      "lastAccessed": 1781581434497,
+      "type": "file"
+    },
+    {
+      "path": "supabase\\config.toml",
+      "accessCount": 4,
+      "lastAccessed": 1782805630104,
+      "type": "file"
+    },
+    {
+      "path": "supabase\\migrations\\003_seed.sql",
+      "accessCount": 3,
+      "lastAccessed": 1780639409710,
+      "type": "file"
+    },
+    {
+      "path": "supabase\\migrations\\008_team_leader.sql",
+      "accessCount": 3,
+      "lastAccessed": 1780639429998,
+      "type": "file"
+    },
+    {
+      "path": "supabase\\migrations\\007_schedule_rules.sql",
+      "accessCount": 3,
+      "lastAccessed": 1781072800427,
+      "type": "file"
+    },
+    {
+      "path": "public\\favicon.svg",
+      "accessCount": 3,
+      "lastAccessed": 1781672385331,
+      "type": "file"
+    },
+    {
+      "path": "supabase\\migrations\\006_assignment_color.sql",
+      "accessCount": 2,
+      "lastAccessed": 1779596214870,
+      "type": "file"
+    },
+    {
+      "path": "supabase\\migrations\\004_auth_social.sql",
+      "accessCount": 2,
+      "lastAccessed": 1779770081124,
+      "type": "file"
+    },
+    {
+      "path": "supabase\\migrations\\009_assignment_unique.sql",
+      "accessCount": 2,
+      "lastAccessed": 1780537254793,
+      "type": "file"
+    },
+    {
+      "path": "gen_icons.py",
+      "accessCount": 1,
+      "lastAccessed": 1779538107634,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

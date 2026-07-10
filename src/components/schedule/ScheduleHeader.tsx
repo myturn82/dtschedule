@@ -19,6 +19,8 @@ interface Props {
   onDateSelect?: (year: number, month: number, day?: number) => void
   hideViewSwitcher?: boolean
   roleToggleSlot?: React.ReactNode
+  displayMode?: 'time' | 'day'
+  onDisplayModeChange?: (v: 'time' | 'day') => void
 }
 
 function weekRangeLabel(weekDays: Date[]): string {
@@ -33,7 +35,7 @@ function weekRangeLabel(weekDays: Date[]): string {
   return `${sm}월 ${start.getDate()}일 ~ ${em}월 ${end.getDate()}일`
 }
 
-export function ScheduleHeader({ year, month, title, openCount, onPrev, onNext, viewType = 'month', onViewTypeChange, day, weekDays, onDateSelect, hideViewSwitcher, roleToggleSlot }: Props) {
+export function ScheduleHeader({ year, month, title, openCount, onPrev, onNext, viewType = 'month', onViewTypeChange, day, weekDays, onDateSelect, hideViewSwitcher, roleToggleSlot, displayMode = 'time', onDisplayModeChange }: Props) {
   const { t } = useTranslation('schedule')
   const [showDatePicker, setShowDatePicker] = useState(false)
   const VIEW_LABELS: Record<ViewType, string> = { month: t('views.month'), week: t('views.week'), day: t('views.day') }
@@ -135,6 +137,30 @@ export function ScheduleHeader({ year, month, title, openCount, onPrev, onNext, 
         {/* Right: role toggle + view switcher */}
         <div className="flex items-center gap-2 shrink-0 flex-wrap">
           {roleToggleSlot}
+          {onDisplayModeChange && viewType !== 'day' && (
+            <div className="flex items-center rounded-xl border border-[var(--color-border)] overflow-hidden">
+              <button
+                onClick={() => onDisplayModeChange('time')}
+                className={`px-2.5 h-9 text-xs font-medium transition-colors border-r border-[var(--color-border)] ${
+                  displayMode === 'time'
+                    ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]'
+                    : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
+                }`}
+              >
+                ⏳ 시간별
+              </button>
+              <button
+                onClick={() => onDisplayModeChange('day')}
+                className={`px-2.5 h-9 text-xs font-medium transition-colors ${
+                  displayMode === 'day'
+                    ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]'
+                    : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
+                }`}
+              >
+                📅 일자별
+              </button>
+            </div>
+          )}
           {/* View type switcher */}
           {onViewTypeChange && !hideViewSwitcher && (
             <div className="flex items-center rounded-xl border border-[var(--color-border)] overflow-hidden">

@@ -1,7 +1,0 @@
-{
-  "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"grep -rn \\\"color-brand-primary\\\\].*text-white\\\\|text-white.*color-brand-primary\\\" D:\\\\claudePrj\\\\dtschedule\\\\src --include=\\\"*.tsx\\\" --include=\\\"*.ts\\\" -l\",\"description\":\"Find files with b...",
-  "error": "Exit code 2\ngrep: D:claudePrjdtschedulesrc: No such file or directory",
-  "timestamp": "2026-07-05T11:17:08.373Z",
-  "retry_count": 1
-}
