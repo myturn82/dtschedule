@@ -19,10 +19,11 @@ export function getCellState(
   const override = dateOverrides.find(d => d.date === dateStr)
   const rule = scheduleRules.find(r => r.day_of_week === dayOfWeek && r.time_slot === timeSlot)
 
-  // Holiday: explicit override, Sunday without open rule, or Korean public holiday (when no override exists)
+  // Holiday: explicit override, Sunday/holiday without open rule.
+  // If the tenant has an is_open=true rule for this day/slot, treat it as operating even on holidays.
   const isHoliday = override?.is_holiday === true
     || (dayOfWeek === 0 && rule?.is_open !== true)
-    || (override === undefined && isKoreanHoliday(dateStr))
+    || (rule?.is_open !== true && override === undefined && isKoreanHoliday(dateStr))
 
   // Breaktime: slot is closed by rule on a non-holiday day (e.g. lunch break)
   const isClosedByRule = rule ? !rule.is_open : true

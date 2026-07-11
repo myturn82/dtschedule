@@ -51,6 +51,23 @@ describe('getCellState', () => {
     expect(state.assignments).toHaveLength(2)
   })
 
+  it('연중무휴 조직: is_open=true rule이 있으면 공휴일도 운영으로 처리', () => {
+    // 2026-10-09 한글날 (금요일, dayOfWeek=5)
+    const allOpenRules: ScheduleRule[] = [
+      { id: 'r5', tenant_id: T, day_of_week: 5, time_slot: '10-12', is_open: true },
+    ]
+    const state = getCellState(9, '10-12', 2026, 10, allOpenRules, baseSettings, noOverrides, noAssignments)
+    expect(state.isHoliday).toBe(false)
+    expect(state.isClosed).toBe(false)
+  })
+
+  it('is_open rule 없을 때 공휴일은 휴관 처리', () => {
+    // 2026-10-09 한글날, rule 없음
+    const state = getCellState(9, '10-12', 2026, 10, [], baseSettings, noOverrides, noAssignments)
+    expect(state.isHoliday).toBe(true)
+    expect(state.isClosed).toBe(true)
+  })
+
   it('respects date_override holiday', () => {
     const overrides: DateOverride[] = [
       { id: 'o1', tenant_id: T, date: '2026-04-06', is_open: false, is_holiday: true, label: '휴관일', is_locked: false }
