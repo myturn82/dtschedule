@@ -111,6 +111,7 @@ export function AuthPage() {
   const [orgPhone, setOrgPhone] = useState('')
   const [showJoinPw, setShowJoinPw] = useState(false)
   const [wizChoice, setWizChoice] = useState<'service' | 'join'>('service')
+  const [kakaoWizMode, setKakaoWizMode] = useState(false)
   const [orgSearch, setOrgSearch] = useState('')
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null)
   const [orgOptions, setOrgOptions] = useState<{ name: string; tenantId: string }[]>([])
@@ -151,6 +152,7 @@ export function AuthPage() {
 
   function closeWiz() {
     signupInProgress.current = false
+    setKakaoWizMode(false)
     setWizOpen(false); setError(null)
     setSignupEmailInCard(true)
     setJoinStep('name')
@@ -296,8 +298,30 @@ export function AuthPage() {
   }
 
   async function handleKakao() {
+    setError(null)
+    if (tab === 'login') {
+      setLoading(true)
+      sessionStorage.setItem('vs_just_logged_in', '1')
+      const err = await signInWithKakao()
+      setLoading(false); if (err) setError(err)
+    } else {
+      // 회원가입: 조직 선택 위자드를 먼저 보여주고 선택 후 OAuth 진행
+      setKakaoWizMode(true)
+      setWizChoice('join')
+      setJoinStep('choice')
+      setOrgSearch(''); setSelectedTenantId(null); setOrgOptions([])
+      setWizOpen(true)
+    }
+  }
+
+  async function handleKakaoOAuth() {
+    if (wizChoice === 'join' && !selectedTenantId) { setError('조직을 선택해 주세요.'); return }
     setLoading(true); setError(null)
-    if (tab === 'login') sessionStorage.setItem('vs_just_logged_in', '1')
+    if (wizChoice === 'join' && selectedTenantId) {
+      localStorage.setItem('vs_pending_social', JSON.stringify({ tenantId: selectedTenantId, tenantRoleId: null }))
+    } else {
+      localStorage.setItem('vs_pending_mode', 'start-service')
+    }
     const err = await signInWithKakao()
     setLoading(false); if (err) setError(err)
   }
@@ -638,12 +662,13 @@ export function AuthPage() {
                   <button className="af-btn af-btn-primary" style={{ marginTop: 8, opacity: loading ? 0.6 : 1 }}
                     disabled={loading}
                     onClick={() => {
+                      if (kakaoWizMode && wizChoice === 'service') { handleKakaoOAuth(); return }
                       if (wizChoice === 'service') { setJoinStep('org-name'); setError(null) }
                       else { setJoinStep('org-select'); setError(null); loadOrgList() }
                     }}>
-                    {loading ? '처리 중...' : <>계속하기 <IArrow /></>}
+                    {loading ? '처리 중...' : kakaoWizMode && wizChoice === 'service' ? <>카카오로 계속하기 <IArrow /></> : <>계속하기 <IArrow /></>}
                   </button>
-                  <button className="af-back-link" onClick={() => { setJoinStep('confirm'); setError(null) }}><IBack /> 뒤로</button>
+                  <button className="af-back-link" onClick={() => { if (kakaoWizMode) { closeWiz(); return } setJoinStep('confirm'); setError(null) }}><IBack /> 뒤로</button>
                 </>
               )}
 
@@ -683,9 +708,10 @@ export function AuthPage() {
                     disabled={loading || !selectedTenantId}
                     onClick={() => {
                       if (!selectedTenantId) { setError('조직을 선택해 주세요.'); return }
+                      if (kakaoWizMode) { handleKakaoOAuth(); return }
                       handleSignUpOnly(selectedTenantId)
                     }}>
-                    {loading ? '처리 중...' : <>가입 신청하기 <IArrow /></>}
+                    {loading ? '처리 중...' : kakaoWizMode ? <>카카오로 가입 신청하기 <IArrow /></> : <>가입 신청하기 <IArrow /></>}
                   </button>
                   <button className="af-back-link" onClick={() => { setJoinStep('choice'); setError(null) }}>
                     <IBack /> 뒤로
