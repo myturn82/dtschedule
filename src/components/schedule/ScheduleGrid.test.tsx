@@ -30,10 +30,9 @@ describe('ScheduleGrid', () => {
     expect(screen.getAllByText('20:00~22:00').length).toBeGreaterThan(0)
   })
 
-  it('renders CLOSE cells for 12-13 row', () => {
+  it('renders closed cells without CLOSE text for 12-13 row', () => {
     render(<ScheduleGrid {...mockProps} />)
-    const closeCells = screen.getAllByText('CLOSE')
-    expect(closeCells.length).toBeGreaterThan(0)
+    expect(screen.queryByText('CLOSE')).not.toBeInTheDocument()
   })
 })
 

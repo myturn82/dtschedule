@@ -19,7 +19,7 @@ const baseAssignment: Assignment = {
 }
 
 describe('TimeSlotCell', () => {
-  it('shows Break text when isBreaktime (vol col)', () => {
+  it('renders stripe without text when isBreaktime (vol col)', () => {
     render(
       <TimeSlotCell
         cellState={{ ...baseCellState, isBreaktime: true }}
@@ -29,10 +29,10 @@ describe('TimeSlotCell', () => {
         highlightName={null}
       />
     )
-    expect(screen.getByText('CLOSE')).toBeInTheDocument()
+    expect(screen.queryByText('CLOSE')).not.toBeInTheDocument()
   })
 
-  it('shows CLOSE text when isClosed (vol col)', () => {
+  it('renders stripe without text when isClosed (vol col)', () => {
     render(
       <TimeSlotCell
         cellState={{ ...baseCellState, isClosed: true }}
@@ -42,7 +42,7 @@ describe('TimeSlotCell', () => {
         highlightName={null}
       />
     )
-    expect(screen.getByText('CLOSE')).toBeInTheDocument()
+    expect(screen.queryByText('CLOSE')).not.toBeInTheDocument()
   })
 
   it('shows volunteer names from assignments', () => {

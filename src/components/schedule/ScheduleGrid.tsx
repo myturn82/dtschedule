@@ -356,12 +356,12 @@ export function ScheduleGrid({
                                 >
                                   {!group.note ? (
                                     <>
-                                      <span className="sm:hidden text-[9px] text-[var(--color-text-muted)] font-medium">
-                                        {blockMerge.isHoliday ? '휴관' : '✕'}
-                                      </span>
-                                      <span className="hidden sm:block text-[10px] text-[var(--color-text-muted)] font-medium">
-                                        {blockMerge.isHoliday ? '휴관' : 'CLOSE'}
-                                      </span>
+                                      {blockMerge.isHoliday && (
+                                        <span className="sm:hidden text-[9px] text-[var(--color-text-muted)] font-medium">휴관</span>
+                                      )}
+                                      {blockMerge.isHoliday && (
+                                        <span className="hidden sm:block text-[10px] text-[var(--color-text-muted)] font-medium">휴관</span>
+                                      )}
                                       {gi === 0 && blockMerge.label && (
                                         <span className="text-[8px] sm:text-[10px] text-[var(--color-text-muted)] leading-tight break-words text-center w-full">{blockMerge.label}</span>
                                       )}
@@ -400,12 +400,8 @@ export function ScheduleGrid({
                             <td
                               key={dowIdx}
                               colSpan={splitCount}
-                              className="border border-[var(--color-border-table)] p-0 bg-schedule-breaktime text-center"
-                            >
-                              <div className="flex items-center justify-center min-h-[1.25rem] sm:min-h-[1.75rem]">
-                                <span className="hidden sm:inline text-[9px] text-[var(--color-text-muted)] font-medium">CLOSE</span>
-                              </div>
-                            </td>
+                              className="border border-[var(--color-border-table)] p-0 bg-schedule-breaktime"
+                            />
                           )
                         }
 
@@ -460,12 +456,8 @@ export function ScheduleGrid({
                           <td
                             key={dowIdx}
                             colSpan={showVolPlusSplit && !isSat ? 2 : 1}
-                            className="border border-[var(--color-border-table)] p-0 bg-schedule-close text-center"
-                          >
-                            <div className="flex items-center justify-center min-h-[1.25rem] sm:min-h-[1.75rem]">
-                              <span className="hidden sm:inline text-[9px] text-[var(--color-text-muted)] font-medium">CLOSE</span>
-                            </div>
-                          </td>
+                            className="border border-[var(--color-border-table)] p-0 bg-schedule-close"
+                          />
                         )
                       }
 
