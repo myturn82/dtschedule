@@ -9,9 +9,9 @@ import { TERMS, type DocKey } from '../lib/legalTerms'
 
 type Tab       = 'login' | 'signup'
 type LoginStep = 'buttons' | 'email' | 'password' | 'forgot'
-type JoinStep  = 'name' | 'password' | 'confirm' | 'choice' | 'org-name' | 'org-select'
+type JoinStep  = 'name' | 'password' | 'confirm' | 'phone' | 'choice' | 'org-name' | 'org-select'
 
-const COUNTABLE: JoinStep[] = ['name', 'password', 'confirm', 'org-name']
+const COUNTABLE: JoinStep[] = ['name', 'password', 'confirm', 'phone', 'org-name']
 
 // ── SVG icons ──────────────────────────────────────────────────
 const IKakao = () => (
@@ -112,6 +112,7 @@ export function AuthPage() {
   const [showJoinPw, setShowJoinPw] = useState(false)
   const [wizChoice, setWizChoice] = useState<'service' | 'join'>('service')
   const [kakaoWizMode, setKakaoWizMode] = useState(false)
+  const [joinPhone, setJoinPhone] = useState('')
   const [orgSearch, setOrgSearch] = useState('')
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null)
   const [orgOptions, setOrgOptions] = useState<{ name: string; tenantId: string }[]>([])
@@ -156,7 +157,7 @@ export function AuthPage() {
     setWizOpen(false); setError(null)
     setSignupEmailInCard(true)
     setJoinStep('name')
-    setJoinName(''); setJoinPw(''); setJoinConfirm('')
+    setJoinName(''); setJoinPw(''); setJoinConfirm(''); setJoinPhone('')
     setOrgSearch(''); setSelectedTenantId(null); setOrgOptions([])
   }
 
@@ -200,7 +201,7 @@ export function AuthPage() {
     signupInProgress.current = true
     setSignupEmailInCard(false)
     setJoinStep('name')
-    setJoinName(''); setJoinPw(''); setJoinConfirm('')
+    setJoinName(''); setJoinPw(''); setJoinConfirm(''); setJoinPhone('')
     setOrgSearch(''); setSelectedTenantId(null); setOrgOptions([])
     setWizOpen(true)
   }
@@ -214,7 +215,7 @@ export function AuthPage() {
     setLoginEmail(joinEmail.trim())
     setLoginPw('')
     setJoinStep('name')
-    setJoinName(''); setJoinPw(''); setJoinConfirm('')
+    setJoinName(''); setJoinPw(''); setJoinConfirm(''); setJoinPhone('')
     setOrgSearch(''); setSelectedTenantId(null); setOrgOptions([])
     setError(message)
   }
@@ -231,7 +232,7 @@ export function AuthPage() {
     setLoading(true); setError(null)
     // signUp 도중 App.tsx가 PendingPage로 전환되기 전에 먼저 세팅
     localStorage.setItem('vs_pending_mode', 'join-org')
-    const err = await signUp(joinEmail.trim(), joinPw, joinName.trim(), 'volunteer', tenantId)
+    const err = await signUp(joinEmail.trim(), joinPw, joinName.trim(), 'volunteer', tenantId, undefined, joinPhone || undefined)
     setLoading(false)
     if (err) {
       localStorage.removeItem('vs_pending_mode')
@@ -245,7 +246,7 @@ export function AuthPage() {
     if (!orgName.trim()) { setError('서비스 이름을 입력해 주세요.'); return }
     if (!isValidPhone(orgPhone)) { setError('올바른 전화번호를 입력해 주세요. (예: 010-1234-5678)'); return }
     setLoading(true); setError(null); setJoinProgress('계정을 만드는 중...')
-    const err = await signUp(joinEmail.trim(), joinPw, joinName.trim(), 'volunteer', '')
+    const err = await signUp(joinEmail.trim(), joinPw, joinName.trim(), 'volunteer', '', undefined, joinPhone || undefined)
     if (err) {
       setLoading(false); setJoinProgress('')
       if (err.includes('이미 가입된')) { redirectToLoginTab(err); return }
@@ -622,16 +623,44 @@ export function AuthPage() {
                       onEnter={() => {
                         if (joinPw !== joinConfirm) { setError('비밀번호가 일치하지 않습니다.'); return }
                         if (joinPw.length < 6) { setError('비밀번호는 6자 이상이어야 합니다.'); return }
-                        setError(null); setJoinStep('choice')
+                        setError(null); setJoinStep('phone')
                       }} />
                   </div>
                   {error && <div className="af-err">{error}</div>}
                   <button className="af-btn af-btn-primary" style={{ marginTop: 6 }} onClick={() => {
                     if (joinPw !== joinConfirm) { setError('비밀번호가 일치하지 않습니다.'); return }
                     if (joinPw.length < 6) { setError('비밀번호는 6자 이상이어야 합니다.'); return }
-                    setError(null); setJoinStep('choice')
+                    setError(null); setJoinStep('phone')
                   }}>계속하기 <IArrow /></button>
                   <button className="af-back-link" onClick={() => { setJoinStep('password'); setError(null) }}><IBack /> 뒤로</button>
+                </>
+              )}
+
+              {/* phone */}
+              {joinStep === 'phone' && (
+                <>
+                  <h3 className="af-title sm">연락처를 입력하세요</h3>
+                  <p className="af-sub">관리자가 연락할 때 사용해요. (선택)</p>
+                  <div className="af-field">
+                    <label className="af-label">전화번호</label>
+                    <div className="af-input-wrap">
+                      <input id="signup-phone" name="tel" className="af-input" type="tel" value={joinPhone}
+                        onChange={e => setJoinPhone(formatPhone(e.target.value))}
+                        placeholder="예: 010-1234-5678" autoComplete="tel" autoFocus
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') {
+                            if (joinPhone && !isValidPhone(joinPhone)) { setError('올바른 전화번호를 입력해 주세요. (예: 010-1234-5678)'); return }
+                            setError(null); setJoinStep('choice')
+                          }
+                        }} />
+                    </div>
+                  </div>
+                  {error && <div className="af-err">{error}</div>}
+                  <button className="af-btn af-btn-primary" style={{ marginTop: 6 }} onClick={() => {
+                    if (joinPhone && !isValidPhone(joinPhone)) { setError('올바른 전화번호를 입력해 주세요. (예: 010-1234-5678)'); return }
+                    setError(null); setJoinStep('choice')
+                  }}>계속하기 <IArrow /></button>
+                  <button className="af-back-link" onClick={() => { setJoinStep('confirm'); setError(null) }}><IBack /> 뒤로</button>
                 </>
               )}
 

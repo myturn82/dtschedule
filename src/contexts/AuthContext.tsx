@@ -8,7 +8,7 @@ interface AuthState {
   loading: boolean
   refreshCustomer: () => Promise<Customer | null>
   signIn: (email: string, password: string) => Promise<string | null>
-  signUp: (email: string, password: string, name: string, role: 'volunteer' | '50plus' | 'team_leader' | 'admin', tenantId?: string, tenantRoleId?: string) => Promise<string | null>
+  signUp: (email: string, password: string, name: string, role: 'volunteer' | '50plus' | 'team_leader' | 'admin', tenantId?: string, tenantRoleId?: string, phone?: string) => Promise<string | null>
   signInWithGoogle: () => Promise<string | null>
   signInWithKakao: () => Promise<string | null>
   linkGoogle: () => Promise<string | null>
@@ -66,6 +66,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       sessionStorage.removeItem('vs_consent_ts')
     }
 
+    // 카카오 등 소셜 가입 시 OAuth 전에 sessionStorage에 저장해둔 전화번호를 프로필에 반영
+    const pendingPhone = sessionStorage.getItem('vs_pending_phone')
+    if (profileData && !profileData.phone && pendingPhone) {
+      const { data } = await supabase
+        .from('profiles')
+        .update({ phone: pendingPhone })
+        .eq('id', userId)
+        .select('*')
+        .maybeSingle()
+      if (data) profileData = data
+      sessionStorage.removeItem('vs_pending_phone')
+    }
+
     setProfile(profileData)
     setLoading(false)
   }
@@ -93,7 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return error.message
   }, [])
 
-  const signUp = useCallback(async (email: string, password: string, name: string, role: 'volunteer' | '50plus' | 'team_leader' | 'admin', tenantId?: string, tenantRoleId?: string): Promise<string | null> => {
+  const signUp = useCallback(async (email: string, password: string, name: string, role: 'volunteer' | '50plus' | 'team_leader' | 'admin', tenantId?: string, tenantRoleId?: string, phone?: string): Promise<string | null> => {
     const consentTs = sessionStorage.getItem('vs_consent_ts') ?? new Date().toISOString()
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -105,6 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           privacy_agreed_at: consentTs,
           ...(tenantId ? { tenant_id: tenantId } : {}),
           ...(tenantRoleId ? { tenant_role_id: tenantRoleId } : {}),
+          ...(phone ? { phone } : {}),
         },
       },
     })
