@@ -18,6 +18,7 @@ import { LEGEND_COLOR_STYLES } from '../components/schedule/Legend'
 import { applyThemePreset, THEME_PRESET_LIST, type ThemePresetKey } from '../lib/themePresets'
 import { displayMode } from '../lib/tenantMode'
 import { getFunctionErrorMessage } from '../lib/functionsError'
+import { fmtPhone } from '../lib/format'
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
 const HEX_COLOR_RE = /^#[0-9A-Fa-f]{6}$/
@@ -1110,6 +1111,7 @@ export function AdminPage() {
                       <tr className="bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
                         <th className="text-center px-2 py-2 sm:px-4 sm:py-3 text-xs font-semibold text-[var(--color-text-muted)]">이름</th>
                         <th className="text-center px-2 py-2 sm:px-4 sm:py-3 text-xs font-semibold text-[var(--color-text-muted)] hidden sm:table-cell">이메일</th>
+                        <th className="text-center px-2 py-2 sm:px-4 sm:py-3 text-xs font-semibold text-[var(--color-text-muted)] hidden sm:table-cell">전화번호</th>
                         <th className="text-center px-2 py-2 sm:px-4 sm:py-3 text-xs font-semibold text-[var(--color-text-muted)]">역할</th>
                         <th className="text-center px-2 py-2 sm:px-4 sm:py-3 text-xs font-semibold text-[var(--color-text-muted)]">권한</th>
                         <th className="text-center px-2 py-2 sm:px-4 sm:py-3 text-xs font-semibold text-[var(--color-text-muted)]">관리</th>
@@ -1146,8 +1148,18 @@ export function AdminPage() {
                                 </button>
                               )}
                               {m.user_id === profile.id && <span className="ml-1.5 text-xs text-[var(--color-text-muted)]">(나)</span>}
+                              {m.profile?.phone && (
+                                <a
+                                  href={`tel:${m.profile.phone}`}
+                                  onClick={e => e.stopPropagation()}
+                                  className="sm:hidden block mt-0.5 text-[11px] font-normal text-[var(--color-brand-primary)] underline underline-offset-2"
+                                >
+                                  {fmtPhone(m.profile.phone)}
+                                </a>
+                              )}
                             </td>
                             <td className="px-2 py-2 sm:px-4 sm:py-3 text-[var(--color-text-muted)] hidden sm:table-cell text-xs text-center">{m.profile?.email ?? '-'}</td>
+                            <td className="px-2 py-2 sm:px-4 sm:py-3 text-[var(--color-text-muted)] hidden sm:table-cell text-xs text-center">{fmtPhone(m.profile?.phone) || '-'}</td>
                             <td className="px-2 py-2 sm:px-4 sm:py-3 text-center">
                               <select
                                 value={m.role_id ?? ''}
