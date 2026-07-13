@@ -323,6 +323,10 @@ export function AdminPage() {
     profile: { name: string } | null
   }>>([])
   const [notifHistoryLoading, setNotifHistoryLoading] = useState(false)
+  const [expandedNotifIds, setExpandedNotifIds] = useState<Set<string>>(new Set())
+  const [notifFilterQuery, setNotifFilterQuery] = useState('')
+  const [notifFilterStatus, setNotifFilterStatus] = useState<'all' | 'read' | 'unread'>('all')
+  const [notifFilterDate, setNotifFilterDate] = useState('')
 
   // Sync settings form when adminTenant changes
   useEffect(() => {
@@ -418,6 +422,20 @@ export function AdminPage() {
     if (error) { console.error(error); return }
     setNotifHistory((data ?? []) as unknown as typeof notifHistory)
   }, [adminTenant?.id])
+
+  const filteredNotifHistory = useMemo(() => {
+    const q = notifFilterQuery.trim()
+    return notifHistory.filter(n => {
+      if (q && !(n.profile?.name ?? '').includes(q)) return false
+      if (notifFilterStatus === 'read' && !n.is_read) return false
+      if (notifFilterStatus === 'unread' && n.is_read) return false
+      if (notifFilterDate) {
+        const createdDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul' }).format(new Date(n.created_at))
+        if (createdDate !== notifFilterDate) return false
+      }
+      return true
+    })
+  }, [notifHistory, notifFilterQuery, notifFilterStatus, notifFilterDate])
 
   // 발송내역 로드 (비회원 모드는 배정알림 기능 자체를 지원하지 않음)
   useEffect(() => {
@@ -2754,7 +2772,9 @@ export function AdminPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <h2 className="text-base font-bold text-[var(--color-text-primary)]">발송내역</h2>
-                        <p className="text-sm text-[var(--color-text-muted)] mt-0.5">최근 발송된 알림 100건을 보여줍니다.</p>
+                        <p className="text-sm text-[var(--color-text-muted)] mt-0.5">
+                          최근 발송된 알림 최대 100건 중 {filteredNotifHistory.length}건 표시
+                        </p>
                       </div>
                       <button
                         onClick={loadNotifHistory}
@@ -2765,36 +2785,75 @@ export function AdminPage() {
                       </button>
                     </div>
 
+                    {notifHistory.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        <input
+                          type="text"
+                          value={notifFilterQuery}
+                          onChange={e => setNotifFilterQuery(e.target.value)}
+                          placeholder="수신자 이름 검색"
+                          className="flex-1 min-w-[120px] px-3 py-1.5 text-sm rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30"
+                        />
+                        <select
+                          value={notifFilterStatus}
+                          onChange={e => setNotifFilterStatus(e.target.value as 'all' | 'read' | 'unread')}
+                          className="px-2.5 py-1.5 text-sm rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30"
+                        >
+                          <option value="all">전체</option>
+                          <option value="read">읽음</option>
+                          <option value="unread">안읽음</option>
+                        </select>
+                        <input
+                          type="date"
+                          value={notifFilterDate}
+                          onChange={e => setNotifFilterDate(e.target.value)}
+                          className="px-2.5 py-1.5 text-sm rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30"
+                        />
+                        {(notifFilterQuery || notifFilterStatus !== 'all' || notifFilterDate) && (
+                          <button
+                            onClick={() => { setNotifFilterQuery(''); setNotifFilterStatus('all'); setNotifFilterDate('') }}
+                            className="px-2.5 py-1.5 text-xs font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
+                          >
+                            필터 초기화
+                          </button>
+                        )}
+                      </div>
+                    )}
+
                     {notifHistory.length === 0 ? (
                       <p className="text-sm text-[var(--color-text-muted)] py-4 text-center">발송된 알림이 없습니다.</p>
+                    ) : filteredNotifHistory.length === 0 ? (
+                      <p className="text-sm text-[var(--color-text-muted)] py-4 text-center">조건에 맞는 발송내역이 없습니다.</p>
                     ) : (
-                      <div className="overflow-x-auto -mx-5 px-5">
-                        <table className="w-full text-sm">
-                          <thead>
-                            <tr className="border-b border-[var(--color-border)]">
-                              <th className="text-left py-2 pr-3 text-xs font-semibold text-[var(--color-text-muted)]">수신자</th>
-                              <th className="text-left py-2 pr-3 text-xs font-semibold text-[var(--color-text-muted)]">메시지</th>
-                              <th className="text-left py-2 pr-3 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">발송일시</th>
-                              <th className="text-center py-2 text-xs font-semibold text-[var(--color-text-muted)]">읽음</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-[var(--color-border)]">
-                            {notifHistory.map(n => (
-                              <tr key={n.id}>
-                                <td className="py-2 pr-3 whitespace-nowrap text-[var(--color-text-primary)]">{n.profile?.name ?? '-'}</td>
-                                <td className="py-2 pr-3 text-[var(--color-text-secondary)] max-w-xs truncate" title={n.body}>{n.body}</td>
-                                <td className="py-2 pr-3 whitespace-nowrap text-[var(--color-text-muted)] text-xs">
-                                  {new Date(n.created_at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                </td>
-                                <td className="py-2 text-center">
+                      <div className="divide-y divide-[var(--color-border)]">
+                        {filteredNotifHistory.map(n => {
+                          const expanded = expandedNotifIds.has(n.id)
+                          return (
+                            <div key={n.id} className="py-2.5 first:pt-0 last:pb-0">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-sm font-medium text-[var(--color-text-primary)] truncate">{n.profile?.name ?? '-'}</span>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <span className="text-xs text-[var(--color-text-muted)] whitespace-nowrap">
+                                    {new Date(n.created_at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                  </span>
                                   {n.is_read
                                     ? <span className="text-[10px] font-bold text-[var(--color-brand-primary)]">읽음</span>
                                     : <span className="text-[10px] font-medium text-[var(--color-text-muted)]">안읽음</span>}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => setExpandedNotifIds(prev => {
+                                  const next = new Set(prev)
+                                  if (next.has(n.id)) next.delete(n.id); else next.add(n.id)
+                                  return next
+                                })}
+                                className={`mt-0.5 block w-full text-left text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] ${expanded ? '' : 'truncate'}`}
+                              >
+                                {n.body}
+                              </button>
+                            </div>
+                          )
+                        })}
                       </div>
                     )}
                   </section>
