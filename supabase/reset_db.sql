@@ -1,7 +1,7 @@
 -- ============================================================
 -- 운영 DB 초기화 스크립트 (전체 재생성)
 -- 생성일: 2026-06-10
--- 기준 마이그레이션: 001 ~ 062
+-- 기준 마이그레이션: 001 ~ 063
 --
 -- ⚠️  주의: 이 스크립트는 모든 데이터를 삭제합니다.
 --           Supabase SQL Editor에서 직접 실행하세요.
@@ -727,6 +727,18 @@ CREATE POLICY "ns_super_admin" ON notification_settings FOR ALL
 -- ── notifications ──────────────────────────────────────────────
 CREATE POLICY "notif_select_own" ON notifications FOR SELECT USING (user_id = auth.uid());
 CREATE POLICY "notif_update_own" ON notifications FOR UPDATE USING (user_id = auth.uid());
+CREATE POLICY "notif_select_tenant_admin" ON notifications FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM tenant_members
+      WHERE tenant_id = notifications.tenant_id
+        AND user_id = auth.uid()
+        AND role = 'admin'
+        AND is_approved = true
+    )
+  );
+CREATE POLICY "notif_select_superadmin" ON notifications FOR SELECT
+  USING (is_super_admin_caller());
 
 -- ── push_subscriptions ─────────────────────────────────────────
 CREATE POLICY "push_sub_own" ON push_subscriptions FOR ALL USING (user_id = auth.uid());

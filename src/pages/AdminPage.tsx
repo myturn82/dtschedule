@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo, Fragment } from 'react'
+﻿import { useState, useEffect, useMemo, useCallback, Fragment } from 'react'
 import { AutoResizeTextarea } from '../components/shared/AutoResizeTextarea'
 import { useTranslation } from 'react-i18next'
 import { DevFileLabel } from '../components/DevFileLabel'
@@ -314,6 +314,15 @@ export function AdminPage() {
   const [notifSaving, setNotifSaving] = useState(false)
   const [manualSending, setManualSending] = useState(false)
   const [manualSendResult, setManualSendResult] = useState<{ sent: number; failed: number } | null>(null)
+  const [notifHistory, setNotifHistory] = useState<Array<{
+    id: string
+    body: string
+    created_at: string
+    is_read: boolean
+    metadata: { date?: string; slot?: string }
+    profile: { name: string } | null
+  }>>([])
+  const [notifHistoryLoading, setNotifHistoryLoading] = useState(false)
 
   // Sync settings form when adminTenant changes
   useEffect(() => {
@@ -395,6 +404,26 @@ export function AdminPage() {
         })
       })
   }, [adminTenant?.id])
+
+  const loadNotifHistory = useCallback(async () => {
+    if (!adminTenant?.id) return
+    setNotifHistoryLoading(true)
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('id, body, created_at, is_read, metadata, profile:profiles(name)')
+      .eq('tenant_id', adminTenant.id)
+      .order('created_at', { ascending: false })
+      .limit(100)
+    setNotifHistoryLoading(false)
+    if (error) { console.error(error); return }
+    setNotifHistory((data ?? []) as unknown as typeof notifHistory)
+  }, [adminTenant?.id])
+
+  // 발송내역 로드 (비회원 모드는 배정알림 기능 자체를 지원하지 않음)
+  useEffect(() => {
+    if (!adminTenant?.id || adminIsFreeform) return
+    loadNotifHistory()
+  }, [adminTenant?.id, loadNotifHistory])
 
   // timeSlots derived from adminTenant (not from TenantContext)
   const adminTimeSlots = useMemo<TimeSlot[]>(() => {
@@ -856,6 +885,7 @@ export function AdminPage() {
     if (error) { msg(`발송 오류: ${await getFunctionErrorMessage(error)}`, true); return }
     const result = data as { sent: number; failed: number } | null
     setManualSendResult({ sent: result?.sent ?? 0, failed: result?.failed ?? 0 })
+    loadNotifHistory()
   }
 
   async function saveNotifSettings() {
@@ -2718,6 +2748,55 @@ export function AdminPage() {
                         </span>
                       )}
                     </div>
+                  </section>
+
+                  <section className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h2 className="text-base font-bold text-[var(--color-text-primary)]">발송내역</h2>
+                        <p className="text-sm text-[var(--color-text-muted)] mt-0.5">최근 발송된 알림 100건을 보여줍니다.</p>
+                      </div>
+                      <button
+                        onClick={loadNotifHistory}
+                        disabled={notifHistoryLoading}
+                        className="px-2.5 py-1 text-xs font-medium border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] rounded-lg hover:bg-[var(--color-surface-hover)] disabled:opacity-50"
+                      >
+                        {notifHistoryLoading ? '불러오는 중...' : '새로고침'}
+                      </button>
+                    </div>
+
+                    {notifHistory.length === 0 ? (
+                      <p className="text-sm text-[var(--color-text-muted)] py-4 text-center">발송된 알림이 없습니다.</p>
+                    ) : (
+                      <div className="overflow-x-auto -mx-5 px-5">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b border-[var(--color-border)]">
+                              <th className="text-left py-2 pr-3 text-xs font-semibold text-[var(--color-text-muted)]">수신자</th>
+                              <th className="text-left py-2 pr-3 text-xs font-semibold text-[var(--color-text-muted)]">메시지</th>
+                              <th className="text-left py-2 pr-3 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">발송일시</th>
+                              <th className="text-center py-2 text-xs font-semibold text-[var(--color-text-muted)]">읽음</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-[var(--color-border)]">
+                            {notifHistory.map(n => (
+                              <tr key={n.id}>
+                                <td className="py-2 pr-3 whitespace-nowrap text-[var(--color-text-primary)]">{n.profile?.name ?? '-'}</td>
+                                <td className="py-2 pr-3 text-[var(--color-text-secondary)] max-w-xs truncate" title={n.body}>{n.body}</td>
+                                <td className="py-2 pr-3 whitespace-nowrap text-[var(--color-text-muted)] text-xs">
+                                  {new Date(n.created_at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                </td>
+                                <td className="py-2 text-center">
+                                  {n.is_read
+                                    ? <span className="text-[10px] font-bold text-[var(--color-brand-primary)]">읽음</span>
+                                    : <span className="text-[10px] font-medium text-[var(--color-text-muted)]">안읽음</span>}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
                   </section>
                   </>
                 ) : (
