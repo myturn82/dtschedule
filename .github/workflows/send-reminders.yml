@@ -2,7 +2,7 @@ name: Send D-1 Reminders
 
 on:
   schedule:
-    - cron: '0 * * * *'  # 매시 정각 UTC 실행 (Asia/Seoul = UTC+9, 예: UTC 09:00 = 서울 18:00)
+    - cron: '*/30 * * * *'  # 매 30분(정시·30분) UTC 실행 — 관리자콘솔 발송 시간이 30분 단위라 이에 맞춰 실행
   workflow_dispatch:       # 수동 실행 허용
 
 jobs:
