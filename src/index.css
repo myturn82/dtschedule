@@ -21,6 +21,9 @@
 
 /* ── Design system variables ─────────────────────────────────── */
 :root {
+  /* select 팝업 등 브라우저 네이티브 UI를 라이트 팔레트로 렌더링 */
+  color-scheme: light;
+
   /* Warm cream palette (light mode) */
   --color-bg: #F4F1EA;
   --color-surface: #FFFFFF;
@@ -57,6 +60,9 @@
 }
 
 .dark {
+  /* select 팝업 등 브라우저 네이티브 UI를 다크 팔레트로 렌더링 (배경 흰색으로 렌더되어 텍스트가 안 보이는 문제 방지) */
+  color-scheme: dark;
+
   --color-schedule-night: #2c1a2e;
   --color-schedule-night-hover: #3a2040;
   --color-schedule-saturday: #251f0a;
@@ -99,6 +105,15 @@
   --tint-plus-ink: oklch(0.78 0.12 20);
 }
 /* ─────────────────────────────────────────────────────────────── */
+
+/* 다크모드에서 <select> 팝업(옵션 목록)이 브라우저 기본값(흰 배경)으로 렌더링되어
+   텍스트가 안 보이는 문제 방지 — color-scheme만으로는 일부 브라우저에서 select 팝업에
+   반영되지 않아 option에 배경/글자색을 직접 지정 */
+.dark select,
+.dark select option {
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+}
 
 html {
   font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
