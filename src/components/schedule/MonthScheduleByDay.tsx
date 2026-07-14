@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { getCalendarWeeks } from './ScheduleGrid'
 import { getKoreanHolidayName } from '../../utils/koreanHolidays'
 import { getDayAssignmentEntries } from '../../utils/dayAssignments'
-import { rangeSlotLabel } from '../../utils/timeSlots'
+import { rangeSlotLabel, slotStartHourLabel } from '../../utils/timeSlots'
 import { getCellState } from '../../utils/cellState'
 import { LockIcon } from '../icons/LockIcons'
 import type { Assignment, SlotSetting, ScheduleRule, DateOverride, TimeSlot, ModalTarget, TenantRole } from '../../types'
@@ -120,7 +120,7 @@ export function MonthScheduleByDay({
                               className="text-left text-[10px] leading-tight px-1 py-0.5 rounded truncate bg-[var(--tint-brand)] text-[var(--tint-brand-ink)] hover:brightness-95"
                               title={rangeSlotLabel(timeSlot)}
                             >
-                              <span className="font-mono-num">{timeSlot.split('-')[0]}시</span>{' '}
+                              <span className="font-mono-num">{slotStartHourLabel(timeSlot)}</span>{' '}
                               {rname && <span className="opacity-70">[{rname}]</span>}{' '}
                               <span className={isWithdrawn ? 'line-through opacity-70' : ''}>{assignment.member_name}</span>
                               {assignment.is_locked && <LockIcon size={8} className="inline-block ml-0.5" />}

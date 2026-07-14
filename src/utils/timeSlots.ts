@@ -37,6 +37,14 @@ export function parseSlotLabel(slot: string): string {
   return `${hourToHHMM(s)} ~ ${hourToHHMM(e)}`;
 }
 
+// 슬롯 시작 시각의 한국어 표기: '10-12' → '10시', '10.5-11' → '10시 30분'
+export function slotStartHourLabel(slot: string): string {
+  const start = Number(slot.split('-')[0]);
+  const h = Math.floor(start);
+  const m = Math.round((start - h) * 60);
+  return m === 0 ? `${h}시` : `${h}시 ${m}분`;
+}
+
 // Compact start-time label for narrow columns: '10-12' → '10:00', '10.5-11' → '10:30'
 export function slotStartLabel(slot: string): string {
   return hourToHHMM(Number(slot.split('-')[0]));
