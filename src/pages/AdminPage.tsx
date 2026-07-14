@@ -2652,7 +2652,7 @@ export function AdminPage() {
                   </span>
                   <h2 className="mt-3 mb-1.5 text-[clamp(22px,5vw,27px)] font-extrabold tracking-tight text-[var(--color-text-primary)]">배정알림</h2>
                   <p className="text-[14px] font-medium text-[var(--color-text-muted)] leading-relaxed max-w-[52ch]">
-                    배정된 멤버에게 전날 자동으로 알림을 발송합니다. 발송 시간과 메시지 템플릿을 설정하세요.
+                    배정된 멤버에게 내일 배정 소식을 인앱 알림으로 보냅니다. 아래 "지금 발송" 버튼으로 관리자가 직접 발송합니다.
                   </p>
                 </header>
 
@@ -2675,6 +2675,10 @@ export function AdminPage() {
                         </button>
                       </label>
                     </div>
+
+                    <p className="text-xs text-[var(--color-text-muted)] bg-[var(--color-surface-secondary)] rounded-lg px-3 py-2">
+                      ⚠️ 자동 정시 발송은 현재 잠시 중단된 상태입니다. 아래 설정은 발송 시간·메시지 템플릿을 미리 준비해두는 용도이며, 실제 발송은 "지금 발송" 버튼을 눌러야 이뤄집니다.
+                    </p>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
