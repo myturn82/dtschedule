@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { getKoreanHolidayName } from '../../utils/koreanHolidays'
 import { getDayAssignmentEntries } from '../../utils/dayAssignments'
 import { rangeSlotLabel } from '../../utils/timeSlots'
+import { getCellState } from '../../utils/cellState'
 import { LockIcon } from '../icons/LockIcons'
 import type { Assignment, SlotSetting, ScheduleRule, DateOverride, TimeSlot, ModalTarget, TenantRole } from '../../types'
 
@@ -21,13 +22,14 @@ interface Props {
   hiddenRoleIds?: Set<string>
   displayAssignmentFilter?: (a: Assignment) => boolean
   withdrawnUserIds?: Set<string>
+  canAdd?: boolean
   onCellClick: (target: ModalTarget) => void
 }
 
 export function WeekScheduleByDay({
   weekDays, timeSlots, assignments, slotSettings, scheduleRules, dateOverrides,
   splitRoles = [], isSplitMode = false, hiddenRoleIds = EMPTY_SET,
-  displayAssignmentFilter, withdrawnUserIds, onCellClick,
+  displayAssignmentFilter, withdrawnUserIds, canAdd = true, onCellClick,
 }: Props) {
   const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set())
   const today = new Date()
@@ -94,6 +96,12 @@ export function WeekScheduleByDay({
               const isExpanded = expandedDays.has(key)
               const visibleEntries = isExpanded ? entries : entries.slice(0, MAX_VISIBLE)
               const hiddenCount = entries.length - visibleEntries.length
+              const openSlots = canAdd
+                ? timeSlots.filter(slot => {
+                    const cs = getCellState(day, slot, year, month, scheduleRules, slotSettings, dateOverrides, assignments)
+                    return !cs.isBreaktime && !cs.isClosed && !cs.isHoliday
+                  })
+                : []
 
               return (
                 <td
@@ -104,7 +112,7 @@ export function WeekScheduleByDay({
                     ${isToday ? 'ring-2 ring-inset ring-[var(--color-brand-primary)]' : ''}`}
                   style={{ height: '12rem' }}
                 >
-                  {entries.length === 0 ? (
+                  {entries.length === 0 && openSlots.length === 0 ? (
                     <div className="text-[10px] text-[var(--color-text-muted)]">-</div>
                   ) : (
                     <div className="flex flex-col gap-0.5">
@@ -134,6 +142,22 @@ export function WeekScheduleByDay({
                         <button onClick={() => toggleExpanded(key)} className="text-[10px] text-[var(--color-text-muted)] text-left px-1">
                           접기
                         </button>
+                      )}
+                      {openSlots.length > 0 && (
+                        <select
+                          aria-label="스케줄 등록"
+                          value=""
+                          onChange={e => {
+                            const slot = e.target.value
+                            if (slot) onCellClick({ year, month, day, timeSlot: slot as TimeSlot, memberType: 'member' })
+                          }}
+                          className="text-[10px] leading-tight px-1 py-0.5 rounded border border-dashed border-[var(--color-border-strong)] text-[var(--color-text-muted)] bg-transparent hover:border-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary)] cursor-pointer"
+                        >
+                          <option value="">+ 등록</option>
+                          {openSlots.map(slot => (
+                            <option key={slot} value={slot}>{rangeSlotLabel(slot)}</option>
+                          ))}
+                        </select>
                       )}
                     </div>
                   )}

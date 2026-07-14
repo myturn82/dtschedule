@@ -40,8 +40,23 @@ describe('WeekScheduleByDay', () => {
     expect(onCellClick).toHaveBeenCalledWith({ year: 2026, month: 7, day: 6, timeSlot: '09-11', memberType: 'member', roleId: null })
   })
 
-  it('shows "-" placeholder for a day with no assignments', () => {
+  it('shows a register control for each day with open slots, even with no assignments', () => {
     render(<WeekScheduleByDay {...baseProps} assignments={[]} />)
+    expect(screen.getAllByLabelText('스케줄 등록').length).toBe(7)
+    expect(screen.queryByText('-')).not.toBeInTheDocument()
+  })
+
+  it('calls onCellClick with the chosen time slot when a slot is selected from the register control', () => {
+    const onCellClick = vi.fn()
+    render(<WeekScheduleByDay {...baseProps} assignments={[]} onCellClick={onCellClick} />)
+    const selects = screen.getAllByLabelText('스케줄 등록')
+    fireEvent.change(selects[0], { target: { value: '11-13' } })
+    expect(onCellClick).toHaveBeenCalledWith({ year: 2026, month: 7, day: 6, timeSlot: '11-13', memberType: 'member' })
+  })
+
+  it('shows "-" placeholder when a day has no assignments and no open slots', () => {
+    render(<WeekScheduleByDay {...baseProps} assignments={[]} scheduleRules={[]} />)
     expect(screen.getAllByText('-').length).toBe(7)
+    expect(screen.queryByLabelText('스케줄 등록')).not.toBeInTheDocument()
   })
 })

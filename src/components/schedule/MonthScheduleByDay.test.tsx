@@ -31,9 +31,23 @@ describe('MonthScheduleByDay', () => {
     expect(screen.getByText('일')).toBeInTheDocument()
   })
 
-  it('shows "-" placeholder for a day with no assignments', () => {
+  it('shows a register control for a day with no assignments but open slots', () => {
     render(<MonthScheduleByDay {...baseProps} assignments={[]} />)
+    expect(screen.getAllByLabelText('스케줄 등록').length).toBeGreaterThan(0)
+  })
+
+  it('calls onCellClick with the chosen time slot when a slot is selected from the register control', () => {
+    const onCellClick = vi.fn()
+    render(<MonthScheduleByDay {...baseProps} assignments={[]} onCellClick={onCellClick} />)
+    const selects = screen.getAllByLabelText('스케줄 등록')
+    fireEvent.change(selects[0], { target: { value: '11-13' } })
+    expect(onCellClick).toHaveBeenCalledWith(expect.objectContaining({ year: 2026, month: 7, timeSlot: '11-13', memberType: 'member' }))
+  })
+
+  it('shows "-" placeholder for a day with no assignments and no open slots', () => {
+    render(<MonthScheduleByDay {...baseProps} assignments={[]} scheduleRules={[]} />)
     expect(screen.getAllByText('-').length).toBeGreaterThan(0)
+    expect(screen.queryByLabelText('스케줄 등록')).not.toBeInTheDocument()
   })
 
   it('renders an entry and calls onCellClick with the correct target when clicked', () => {

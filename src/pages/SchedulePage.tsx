@@ -878,6 +878,7 @@ export function SchedulePage() {
                   hiddenRoleIds={hiddenRoleIds}
                   displayAssignmentFilter={displayAssignmentFilter}
                   withdrawnUserIds={withdrawnUserIds}
+                  canAdd={canAdd}
                   onCellClick={handleCellClick}
                 />
               ) : (
@@ -920,6 +921,7 @@ export function SchedulePage() {
                   hiddenRoleIds={hiddenRoleIds}
                   displayAssignmentFilter={displayAssignmentFilter}
                   withdrawnUserIds={withdrawnUserIds}
+                  canAdd={canAdd}
                   onCellClick={handleCellClick}
                 />
               ) : (
