@@ -216,7 +216,9 @@ Deno.serve(async (req) => {
     )
   }
 
-  const webPushEnabled = !!(vapidPublic && vapidPrivate && vapidSubject)
+  // 웹푸시 배치 발송 임시 비활성화 (2026-07-14) — 자동 cron 자체를 껐고 인앱 알림 수동발송만 유지.
+  // 재활성화 시 아래 줄을 원복: const webPushEnabled = !!(vapidPublic && vapidPrivate && vapidSubject)
+  const webPushEnabled = false
 
   const supabase = createClient(supabaseUrl, serviceRoleKey, {
     auth: { autoRefreshToken: false, persistSession: false },

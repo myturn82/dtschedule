@@ -1,8 +1,11 @@
 name: Send D-1 Reminders
 
 on:
-  schedule:
-    - cron: '*/30 * * * *'  # 매 30분(정시·30분) UTC 실행 — 관리자콘솔 발송 시간이 30분 단위라 이에 맞춰 실행
+  # schedule 트리거 비활성화 (2026-07-14) — GitHub Actions cron이 5시간 넘게 자동 실행되지 않는 등
+  # best-effort 스케줄러의 신뢰성 문제로 자동발송을 중단. 당분간 관리자콘솔의 수동 발송으로 대체.
+  # 자동발송을 다시 켤 때는 아래 schedule 블록의 주석을 해제한다.
+  # schedule:
+  #   - cron: '*/30 * * * *'
   workflow_dispatch:       # 수동 실행 허용
 
 jobs:

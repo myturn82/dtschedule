@@ -13,6 +13,10 @@ import { usePushSubscription } from '../hooks/usePushSubscription'
 import { NotificationPanel } from './notifications/NotificationPanel'
 import { useDarkMode } from '../contexts/DarkModeContext'
 
+// 웹푸시 배치 발송(GitHub Actions cron)이 비활성화된 동안 구독 유도 UI도 숨김.
+// 재활성화 시 true로 되돌리면 됨.
+const PUSH_NOTIFICATIONS_ENABLED = false
+
 function IconChip({ children, active, danger }: { children: React.ReactNode; active?: boolean; danger?: boolean }) {
   return (
     <span
@@ -297,7 +301,7 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
                     도움말
                   </span>
                 </button>
-                {pushSupported && !isTenantFreeform && (
+                {PUSH_NOTIFICATIONS_ENABLED && pushSupported && !isTenantFreeform && (
                   <button
                     onClick={async () => { isSubscribed ? await unsubscribe() : await subscribe(); setShowUserMenu(false) }}
                     disabled={pushLoading}
