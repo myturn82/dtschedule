@@ -159,6 +159,7 @@ export function AuthPage() {
     setJoinStep('name')
     setJoinName(''); setJoinPw(''); setJoinConfirm(''); setJoinPhone('')
     setOrgSearch(''); setSelectedTenantId(null); setOrgOptions([])
+    setOrgName(''); setOrgPhone('')
   }
 
   // ── handlers ──────────────────────────────────────────────────
@@ -203,6 +204,7 @@ export function AuthPage() {
     setJoinStep('name')
     setJoinName(''); setJoinPw(''); setJoinConfirm(''); setJoinPhone('')
     setOrgSearch(''); setSelectedTenantId(null); setOrgOptions([])
+    setOrgName(''); setOrgPhone('')
     setWizOpen(true)
   }
 
@@ -217,6 +219,7 @@ export function AuthPage() {
     setJoinStep('name')
     setJoinName(''); setJoinPw(''); setJoinConfirm(''); setJoinPhone('')
     setOrgSearch(''); setSelectedTenantId(null); setOrgOptions([])
+    setOrgName(''); setOrgPhone('')
     setError(message)
   }
 
