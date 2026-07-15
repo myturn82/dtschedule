@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+﻿import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAdmin } from '../hooks/useAdmin'
@@ -12,6 +12,7 @@ import { isIndustryComplete } from '../components/IndustryPicker'
 import { WIZARD_STEPS } from '../components/setup/StepHeader'
 import { Step1OrgName } from '../components/setup/steps/Step1OrgName'
 import { Step2Mode } from '../components/setup/steps/Step2Mode'
+import { getRecommendation } from '../lib/wizardModeRecommendation'
 import { Step3Slots } from '../components/setup/steps/Step3Slots'
 import { Step4Roles } from '../components/setup/steps/Step4Roles'
 import { Step5Rules } from '../components/setup/steps/Step5Rules'
@@ -90,6 +91,13 @@ export function SetupWizardPage() {
   const [slots, setSlots] = useState<string[]>([])
   const [industry, setIndustry] = useState('')
   const [customFields, setCustomFields] = useState<CustomFieldDef[]>([])
+  const [hasDraftRoleName, setHasDraftRoleName] = useState(false)
+  const modeAutoAppliedRef = useRef(false)
+
+  function handleDraftRoleNameChange(hasDraft: boolean) {
+    setHasDraftRoleName(hasDraft)
+    if (!hasDraft) setError('')
+  }
 
   useEffect(() => {
     if (!orgId) return
@@ -179,12 +187,24 @@ export function SetupWizardPage() {
   // ── Navigation ────────────────────────────────────────────────────────────
 
   async function goNext(stepNum: number) {
+    if (stepNum === 4 && hasDraftRoleName) {
+      setError('입력 중인 역할이 있어요. "역할 추가" 버튼을 눌러 등록한 뒤 다음으로 이동해주세요.')
+      return
+    }
     let ok = true
     if (stepNum === 1) ok = await saveStep1()
     else if (stepNum === 2) ok = await saveStep2()
     else if (stepNum === 3) ok = await saveStep3()
     else if (stepNum === 6) ok = await saveStep7()
-    if (ok) setStep(stepNum + 1)
+    if (ok) {
+      // 업종 기반 추천 모드를 2단계 진입 시 한 번만 기본값으로 적용 (이후 수동 선택은 그대로 존중)
+      if (stepNum === 1 && !modeAutoAppliedRef.current) {
+        modeAutoAppliedRef.current = true
+        const rec = getRecommendation(industry)
+        if (rec.precision !== null) setMode(rec.mode)
+      }
+      setStep(stepNum + 1)
+    }
   }
 
   function goBack() {
@@ -304,6 +324,7 @@ export function SetupWizardPage() {
             <Step4Roles
               roles={roles} error={error}
               onAdd={addRole} onDelete={deleteRole} onUpdate={updateRole}
+              onDraftChange={handleDraftRoleNameChange}
             />
           )}
           {step === 5 && (

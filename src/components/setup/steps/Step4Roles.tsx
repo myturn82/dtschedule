@@ -11,6 +11,7 @@ interface Props {
   onAdd: (name: string, splitCell: boolean, requiresCustomerInfo: boolean, indicatorBar: boolean) => Promise<string | null>
   onDelete: (id: string) => Promise<string | null>
   onUpdate: (id: string, fields: Partial<Pick<TenantRole, 'name' | 'split_cell' | 'indicator_bar'>>) => Promise<string | null>
+  onDraftChange: (hasDraft: boolean) => void
 }
 
 type DisplayMode = 'none' | 'split' | 'bar'
@@ -27,11 +28,22 @@ function roleToDisplayMode(role: TenantRole): DisplayMode {
   return 'none'
 }
 
-export function Step4Roles({ roles, error, onAdd, onDelete, onUpdate }: Props) {
+export function Step4Roles({ roles, error, onAdd, onDelete, onUpdate, onDraftChange }: Props) {
   const [name, setName] = useState('')
   const [displayMode, setDisplayMode] = useState<DisplayMode>('none')
   const [adding, setAdding] = useState(false)
   const [addError, setAddError] = useState('')
+
+  function handleNameChange(value: string) {
+    setName(value)
+    onDraftChange(!!value.trim())
+  }
+
+  function clearDraftName() {
+    setName('')
+    setAddError('')
+    onDraftChange(false)
+  }
 
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
@@ -45,7 +57,7 @@ export function Step4Roles({ roles, error, onAdd, onDelete, onUpdate }: Props) {
     setAddError('')
     const err = await onAdd(name.trim(), displayMode === 'split', false, displayMode === 'bar')
     if (err) setAddError(err)
-    else { setName(''); setDisplayMode('none') }
+    else { setName(''); setDisplayMode('none'); onDraftChange(false) }
     setAdding(false)
   }
 
@@ -131,8 +143,15 @@ export function Step4Roles({ roles, error, onAdd, onDelete, onUpdate }: Props) {
 
       <div className="addbox">
         <p className="addbox-title">역할 추가</p>
-        <input className="ipt" value={name} placeholder="예: 팀장, 강사, 봉사자"
-          onChange={e => setName(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAdd()} />
+        <div className="ipt-wrap">
+          <input className="ipt" value={name} placeholder="예: 팀장, 강사, 봉사자"
+            onChange={e => handleNameChange(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAdd()} />
+          {name.trim() && (
+            <button type="button" className="iconbtn ipt-clear" onClick={clearDraftName} aria-label="입력 지우기">
+              <WizardIcon.x size={14} />
+            </button>
+          )}
+        </div>
         <div>
           <p className="mini-label">달력 표시 방식</p>
           <div className="seg3">
@@ -145,7 +164,7 @@ export function Step4Roles({ roles, error, onAdd, onDelete, onUpdate }: Props) {
           <p className="mini-hint">{DISPLAY_OPTIONS.find(o => o.value === displayMode)?.desc}</p>
         </div>
         {addError && <p className="err-line"><WizardIcon.warn size={14} /> {addError}</p>}
-        <button className="btn btn-dashed" disabled={!name.trim() || adding} onClick={handleAdd}>
+        <button className="btn btn-primary" disabled={!name.trim() || adding} onClick={handleAdd}>
           <WizardIcon.plus size={15} sw={2} /> {adding ? '추가 중...' : '역할 추가'}
         </button>
       </div>

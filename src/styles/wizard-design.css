@@ -89,6 +89,9 @@
 .ipt { width: 100%; min-width: 0; height: var(--row-h); padding: 0 12px; background: var(--surface); color: var(--text); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); font-size: 14px; font-weight: 500; outline: none; transition: border-color .12s, box-shadow .12s; }
 .ipt::placeholder { color: var(--text-faint); font-weight: 500; }
 .ipt:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring); }
+.ipt-wrap { position: relative; }
+.ipt-wrap .ipt { padding-right: 38px; }
+.ipt-clear { position: absolute; top: 50%; right: 4px; transform: translateY(-50%); width: 26px; height: 26px; }
 .sel-wrap { position: relative; }
 .sel { width: 100%; min-width: 0; height: var(--row-h); padding: 0 34px 0 12px; background: var(--surface); color: var(--text); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; outline: none; appearance: none; -webkit-appearance: none; cursor: pointer; transition: border-color .12s, box-shadow .12s; }
 .sel.is-placeholder { color: var(--text-faint); font-weight: 500; }
