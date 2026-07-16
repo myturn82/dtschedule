@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+﻿import { useState, useEffect, useLayoutEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useCustomerAdmin } from '../hooks/useCustomerAdmin'
@@ -78,7 +78,7 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!showHamburger) return
     document.body.setAttribute('data-sidebar', showFuncMenu ? 'open' : 'closed')
     return () => document.body.removeAttribute('data-sidebar')
@@ -204,9 +204,9 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
         )}
 
         {/* Hamburger menu — mobile: dropdown, desktop: fixed sidebar */}
-        {showFuncMenu && (
+        {showHamburger && showFuncMenu && (
           <>
-            <div className="fixed inset-0 z-40 lg:hidden" onClick={() => setShowFuncMenu(false)} />
+            <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={() => setShowFuncMenu(false)} />
             <div className="
               w-56 bg-[var(--color-surface)] z-40 overflow-y-auto
               absolute top-full left-3 sm:left-5 mt-1 rounded-2xl shadow-lg border border-[var(--color-border)]

@@ -23,13 +23,14 @@ interface Props {
   displayAssignmentFilter?: (a: Assignment) => boolean
   withdrawnUserIds?: Set<string>
   canAdd?: boolean
+  memberRoleId?: string | null
   onCellClick: (target: ModalTarget) => void
 }
 
 export function WeekScheduleByDay({
   weekDays, timeSlots, assignments, slotSettings, scheduleRules, dateOverrides,
   splitRoles = [], isSplitMode = false, hiddenRoleIds = EMPTY_SET,
-  displayAssignmentFilter, withdrawnUserIds, canAdd = true, onCellClick,
+  displayAssignmentFilter, withdrawnUserIds, canAdd = true, memberRoleId = null, onCellClick,
 }: Props) {
   const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set())
   const today = new Date()
@@ -149,7 +150,7 @@ export function WeekScheduleByDay({
                           value=""
                           onChange={e => {
                             const slot = e.target.value
-                            if (slot) onCellClick({ year, month, day, timeSlot: slot as TimeSlot, memberType: 'member' })
+                            if (slot) onCellClick({ year, month, day, timeSlot: slot as TimeSlot, memberType: 'member', roleId: isSplitMode ? memberRoleId : undefined })
                           }}
                           className="text-[10px] leading-tight px-1 py-0.5 rounded border border-dashed border-[var(--color-border-strong)] text-[var(--color-text-muted)] bg-transparent hover:border-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary)] cursor-pointer"
                         >

@@ -41,6 +41,24 @@ export function ScheduleHeader({ year, month, title, openCount, onPrev, onNext, 
   const VIEW_LABELS: Record<ViewType, string> = { month: t('views.month'), week: t('views.week'), day: t('views.day') }
   const navBtnCls = 'w-6 h-6 flex items-center justify-center rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-all duration-150 hover:scale-[1.04] active:scale-[0.96]'
 
+  const viewSwitcher = onViewTypeChange && !hideViewSwitcher && (
+    <div className="flex items-center rounded-lg border border-[var(--color-border)] overflow-hidden shrink-0">
+      {(['month', 'week', 'day'] as ViewType[]).map(v => (
+        <button
+          key={v}
+          onClick={() => onViewTypeChange(v)}
+          className={`px-2 h-7 text-[11px] font-medium transition-colors border-r border-[var(--color-border)] last:border-r-0 ${
+            viewType === v
+              ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]'
+              : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
+          }`}
+        >
+          {VIEW_LABELS[v]}
+        </button>
+      ))}
+    </div>
+  )
+
   return (
     <>
       <div className="flex items-end justify-between gap-4 flex-wrap">
@@ -51,7 +69,7 @@ export function ScheduleHeader({ year, month, title, openCount, onPrev, onNext, 
           )}
           {/* Title based on viewType */}
           {viewType === 'month' && (
-            <h1 className="flex items-center gap-1.5 m-0 leading-none">
+            <h1 className="flex items-center gap-1.5 m-0 leading-none flex-wrap">
               <button onClick={onPrev} aria-label={t('nav.prev')} className={navBtnCls}>
                 <span className="text-xs leading-none">←</span>
               </button>
@@ -71,6 +89,7 @@ export function ScheduleHeader({ year, month, title, openCount, onPrev, onNext, 
               <button onClick={onNext} aria-label={t('nav.next')} className={navBtnCls}>
                 <span className="text-xs leading-none">→</span>
               </button>
+              {viewSwitcher}
             </h1>
           )}
 
@@ -95,11 +114,12 @@ export function ScheduleHeader({ year, month, title, openCount, onPrev, onNext, 
               <button onClick={onNext} aria-label={t('nav.next')} className={navBtnCls}>
                 <span className="text-xs leading-none">→</span>
               </button>
+              {viewSwitcher}
             </h1>
           )}
 
           {viewType === 'day' && day !== undefined && (
-            <h1 className="flex items-center gap-1.5 m-0 leading-none">
+            <h1 className="flex items-center gap-1.5 m-0 leading-none flex-wrap">
               <button onClick={onPrev} aria-label={t('nav.prev')} className={navBtnCls}>
                 <span className="text-xs leading-none">←</span>
               </button>
@@ -122,6 +142,7 @@ export function ScheduleHeader({ year, month, title, openCount, onPrev, onNext, 
               <button onClick={onNext} aria-label={t('nav.next')} className={navBtnCls}>
                 <span className="text-xs leading-none">→</span>
               </button>
+              {viewSwitcher}
             </h1>
           )}
 
@@ -134,49 +155,33 @@ export function ScheduleHeader({ year, month, title, openCount, onPrev, onNext, 
           )}
         </div>
 
-        {/* Right: role toggle + view switcher */}
-        <div className="flex items-center gap-2 shrink-0 flex-wrap">
-          {roleToggleSlot}
+        {/* Right: role toggle + display mode */}
+        <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto sm:shrink-0">
+          {roleToggleSlot && <div className="min-w-0 flex-1 sm:flex-none">{roleToggleSlot}</div>}
           {onDisplayModeChange && viewType !== 'day' && (
-            <div className="flex items-center rounded-xl border border-[var(--color-border)] overflow-hidden">
+            <div className="flex items-center rounded-lg border border-[var(--color-border)] overflow-hidden shrink-0">
               <button
                 onClick={() => onDisplayModeChange('time')}
-                className={`px-2.5 h-9 text-xs font-medium transition-colors border-r border-[var(--color-border)] ${
+                className={`inline-flex items-center justify-center gap-1 px-1.5 h-7 text-[11px] font-medium transition-colors border-r border-[var(--color-border)] whitespace-nowrap ${
                   displayMode === 'time'
                     ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]'
                     : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
                 }`}
               >
-                ⏳ 시간별
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+                시간별
               </button>
               <button
                 onClick={() => onDisplayModeChange('day')}
-                className={`px-2.5 h-9 text-xs font-medium transition-colors ${
+                className={`inline-flex items-center justify-center gap-1 px-1.5 h-7 text-[11px] font-medium transition-colors whitespace-nowrap ${
                   displayMode === 'day'
                     ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]'
                     : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
                 }`}
               >
-                📅 일자별
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                일자별
               </button>
-            </div>
-          )}
-          {/* View type switcher */}
-          {onViewTypeChange && !hideViewSwitcher && (
-            <div className="flex items-center rounded-xl border border-[var(--color-border)] overflow-hidden">
-              {(['month', 'week', 'day'] as ViewType[]).map(v => (
-                <button
-                  key={v}
-                  onClick={() => onViewTypeChange(v)}
-                  className={`px-3 h-9 text-xs font-medium transition-colors border-r border-[var(--color-border)] last:border-r-0 ${
-                    viewType === v
-                      ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]'
-                      : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
-                  }`}
-                >
-                  {VIEW_LABELS[v]}
-                </button>
-              ))}
             </div>
           )}
         </div>

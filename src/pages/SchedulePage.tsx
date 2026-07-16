@@ -807,29 +807,31 @@ export function SchedulePage() {
               displayMode={displayMode}
               onDisplayModeChange={excelMode ? undefined : setDisplayMode}
               roleToggleSlot={isSplitMode && splitRoles.length > 1 && viewType !== 'day' ? (
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-[11px] text-[var(--color-text-muted)] shrink-0">역할 표시:</span>
-                  {splitRoles.map(role => (
-                    <button
-                      key={role.id}
-                      onClick={() => toggleRole(role.id)}
-                      className={`px-2.5 py-0.5 text-xs rounded-full border transition-colors select-none ${
-                        !hiddenRoleIds.has(role.id)
-                          ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] border-[var(--color-brand-primary)]'
-                          : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]'
-                      }`}
-                    >
-                      {role.name}
-                    </button>
-                  ))}
-                  {hiddenRoleIds.size > 0 && (
-                    <button
-                      onClick={() => setHiddenRoleIds(new Set())}
-                      className="px-2.5 py-0.5 text-xs rounded-full border border-dashed border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)] transition-colors"
-                    >
-                      전체
-                    </button>
-                  )}
+                <div className="flex items-center gap-1 min-w-0 max-w-full overflow-x-auto">
+                  <span className="text-[10.5px] text-[var(--color-text-muted)] shrink-0 whitespace-nowrap">역할:</span>
+                  <div className="flex items-center gap-1 shrink-0">
+                    {splitRoles.map(role => (
+                      <button
+                        key={role.id}
+                        onClick={() => toggleRole(role.id)}
+                        className={`px-2 py-0.5 text-[11px] rounded-full border transition-colors select-none shrink-0 whitespace-nowrap ${
+                          !hiddenRoleIds.has(role.id)
+                            ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] border-[var(--color-brand-primary)]'
+                            : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]'
+                        }`}
+                      >
+                        {role.name}
+                      </button>
+                    ))}
+                    {hiddenRoleIds.size > 0 && (
+                      <button
+                        onClick={() => setHiddenRoleIds(new Set())}
+                        className="px-2 py-0.5 text-[11px] rounded-full border border-dashed border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)] transition-colors shrink-0 whitespace-nowrap"
+                      >
+                        전체
+                      </button>
+                    )}
+                  </div>
                 </div>
               ) : undefined}
               weekDays={weekDays}
@@ -879,6 +881,7 @@ export function SchedulePage() {
                   displayAssignmentFilter={displayAssignmentFilter}
                   withdrawnUserIds={withdrawnUserIds}
                   canAdd={canAdd}
+                  memberRoleId={memberRoleId}
                   onCellClick={handleCellClick}
                 />
               ) : (
@@ -922,6 +925,7 @@ export function SchedulePage() {
                   displayAssignmentFilter={displayAssignmentFilter}
                   withdrawnUserIds={withdrawnUserIds}
                   canAdd={canAdd}
+                  memberRoleId={memberRoleId}
                   onCellClick={handleCellClick}
                 />
               ) : (
