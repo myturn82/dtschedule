@@ -2,11 +2,23 @@
 import type { Assignment, SlotSetting, ScheduleRule, DateOverride, ModalTarget, Profile, TenantRole, TimeSlot, TenantAccessRole } from '../../types'
 import { getCellState } from '../../utils/cellState'
 import { shortSlotLabel, slotStartLabel, formatTimeSub } from '../../utils/timeSlots'
+import { indicatorBarColorFor } from '../../utils/indicatorBarColors'
 import { LockIcon } from '../icons/LockIcons'
 
 const DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일']
-const INDICATOR_BAR_COLOR = 'var(--color-brand-primary)'
 const EMPTY_SET: Set<string> = new Set()
+
+function IndicatorBar({ assigns, roles }: { assigns: Assignment[]; roles: TenantRole[] }) {
+  const present = roles.filter(role => assigns.some(a => a.role_id === role.id))
+  if (!present.length) return null
+  return (
+    <span className="absolute left-0 top-0 bottom-0 w-[3px] z-10 pointer-events-none flex flex-col">
+      {present.map(role => (
+        <span key={role.id} className="flex-1" style={{ background: indicatorBarColorFor(role, roles) }} />
+      ))}
+    </span>
+  )
+}
 
 const STRIPE_STYLE = {
   background: 'repeating-linear-gradient(135deg, transparent 0 6px, rgba(20,23,28,0.03) 6px 12px)',
@@ -220,7 +232,6 @@ export function WeekGrid({
 
                 // ── Split mode: role sub-columns ──
                 if (activeRoles.length > 0) {
-                  const hasBar = displayCs.assignments.some(a => a.role_id && indicatorBarRoleIds.has(a.role_id))
                   const hlKey = `${y}-${pad2(m)}-${pad2(day)}|${slot}`
                   const isSlotHighlighted = !displayCs.assignments.length && (highlightedSlots?.has(hlKey) ?? false)
                   return (
@@ -232,9 +243,7 @@ export function WeekGrid({
                       {isSlotHighlighted && (
                         <span className="absolute inset-[2px] rounded pointer-events-none z-20" style={{ border: '1px dashed oklch(0.72 0.16 80)' }} />
                       )}
-                      {hasBar && (
-                        <span className="absolute left-0 top-0 bottom-0 w-[3px] z-10 pointer-events-none" style={{ background: INDICATOR_BAR_COLOR }} />
-                      )}
+                      <IndicatorBar assigns={displayCs.assignments} roles={indicatorBarRoles} />
                       {visibleActiveRoles.map((role) => {
                         const ri = activeRoles.findIndex(r => r.id === role.id)
                         const roleAssigns = displayCs.assignments.filter(
@@ -304,7 +313,6 @@ export function WeekGrid({
                 }
 
                 // ── Non-split mode: single cell ──
-                const hasBar = displayCs.assignments.some(a => a.role_id && indicatorBarRoleIds.has(a.role_id))
                 const visibleAssigns = displayCs.assignments.filter(
                   a => a.member_type !== 'admin_note' && !(a.user_id && teamLeaderUserIds?.has(a.user_id)) && !indicatorBarRoleIds.has(a.role_id ?? '')
                 )
@@ -328,9 +336,7 @@ export function WeekGrid({
                     {isHighlighted && (
                       <span className="absolute inset-[2px] rounded pointer-events-none" style={{ border: '2px dashed var(--color-brand-primary)' }} />
                     )}
-                    {hasBar && (
-                      <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: INDICATOR_BAR_COLOR }} />
-                    )}
+                    <IndicatorBar assigns={displayCs.assignments} roles={indicatorBarRoles} />
                     {selectionRange && day && inRange(day, slotIdx, 0, selectionRange) && (
                       <div className="absolute inset-0 bg-blue-400/20 pointer-events-none z-10" />
                     )}

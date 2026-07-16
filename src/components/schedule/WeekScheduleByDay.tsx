@@ -4,6 +4,7 @@ import { getDayAssignmentEntries } from '../../utils/dayAssignments'
 import { rangeSlotLabel, slotStartHourLabel } from '../../utils/timeSlots'
 import { getCellState } from '../../utils/cellState'
 import { LockIcon } from '../icons/LockIcons'
+import { indicatorBarColorFor } from '../../utils/indicatorBarColors'
 import type { Assignment, SlotSetting, ScheduleRule, DateOverride, TimeSlot, ModalTarget, TenantRole } from '../../types'
 
 const DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일']
@@ -18,6 +19,7 @@ interface Props {
   scheduleRules: ScheduleRule[]
   dateOverrides: DateOverride[]
   splitRoles?: TenantRole[]
+  indicatorBarRoles?: TenantRole[]
   isSplitMode?: boolean
   hiddenRoleIds?: Set<string>
   displayAssignmentFilter?: (a: Assignment) => boolean
@@ -29,9 +31,12 @@ interface Props {
 
 export function WeekScheduleByDay({
   weekDays, timeSlots, assignments, slotSettings, scheduleRules, dateOverrides,
-  splitRoles = [], isSplitMode = false, hiddenRoleIds = EMPTY_SET,
+  splitRoles = [], indicatorBarRoles = [], isSplitMode = false, hiddenRoleIds = EMPTY_SET,
   displayAssignmentFilter, withdrawnUserIds, canAdd = true, memberRoleId = null, onCellClick,
 }: Props) {
+  function barRoleFor(roleId: string | null): TenantRole | undefined {
+    return roleId ? indicatorBarRoles.find(r => r.id === roleId) : undefined
+  }
   const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set())
   const today = new Date()
   const todayColRef = useRef<HTMLTableCellElement>(null)
@@ -120,11 +125,13 @@ export function WeekScheduleByDay({
                       {visibleEntries.map(({ timeSlot, assignment }) => {
                         const isWithdrawn = !!(assignment.user_id && withdrawnUserIds?.has(assignment.user_id)) || assignment.account_deleted
                         const rname = roleName(assignment.role_id)
+                        const barRole = barRoleFor(assignment.role_id)
                         return (
                           <button
                             key={assignment.id}
                             onClick={() => onCellClick({ year, month, day, timeSlot, memberType: assignment.member_type, roleId: assignment.role_id })}
                             className="text-left text-[10px] leading-tight px-1 py-0.5 rounded truncate bg-[var(--tint-brand)] text-[var(--tint-brand-ink)] hover:brightness-95"
+                            style={barRole ? { borderLeft: `3px solid ${indicatorBarColorFor(barRole, indicatorBarRoles)}` } : undefined}
                             title={rangeSlotLabel(timeSlot)}
                           >
                             <span className="font-mono-num">{slotStartHourLabel(timeSlot)}</span>{' '}

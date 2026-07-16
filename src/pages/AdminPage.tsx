@@ -12,7 +12,7 @@ import { buildSlot, parseSlotLabel, generateTimeSlots, DEFAULT_TIME_SLOTS, SLOT_
 import { SCHEDULE_RULE_TEMPLATES } from '../utils/scheduleRuleTemplates'
 import { getKoreanHolidaysInYear } from '../utils/koreanHolidays'
 import { CUSTOM_FIELD_TEMPLATES } from '../utils/customFieldTemplates'
-import type { TimeSlot, Tenant, TenantAccessRole, LegendItem, LegendColor, CustomFieldDef, CustomFieldOption, OptionValueType, CustomFieldType } from '../types'
+import type { TimeSlot, Tenant, TenantAccessRole, TenantRole, LegendItem, LegendColor, CustomFieldDef, CustomFieldOption, OptionValueType, CustomFieldType } from '../types'
 import { OPTION_VALUE_TYPES, getOptionUnit, FIELD_TYPES_WITH_OPTIONS, FIELD_TYPES_WITH_DASHBOARD } from '../types'
 import { LEGEND_COLOR_STYLES } from '../components/schedule/Legend'
 import { applyThemePreset, THEME_PRESET_LIST, type ThemePresetKey } from '../lib/themePresets'
@@ -167,6 +167,19 @@ function makeTimeOpt(halfHours: number) {
 }
 const START_OPTIONS = Array.from({ length: 48 }, (_, i) => makeTimeOpt(i))
 const END_OPTIONS   = Array.from({ length: 48 }, (_, i) => makeTimeOpt(i + 1))
+
+// 역할의 달력 표시 방식 — '칸분리'와 '바표시'는 상호배타이므로 3택1 세그먼트로 표현한다
+type RoleDisplayMode = 'none' | 'split' | 'bar'
+const ROLE_DISPLAY_MODES: { value: RoleDisplayMode; label: string }[] = [
+  { value: 'none', label: '미분리' },
+  { value: 'split', label: '분리' },
+  { value: 'bar', label: '바표시' },
+]
+function roleDisplayMode(role: TenantRole): RoleDisplayMode {
+  if (role.split_cell) return 'split'
+  if (role.indicator_bar) return 'bar'
+  return 'none'
+}
 
 type Tab = 'members' | 'pending' | 'roles' | 'rules' | 'dates' | 'settings' | 'autoassign' | 'legend' | 'custom_fields' | 'notifications'
 
@@ -1444,33 +1457,32 @@ export function AdminPage() {
                               </button>
                             )}
                           </div>
-                          {/* 셀분리 토글 */}
-                          <button
-                            onClick={async () => {
-                              const err = await updateRole(r.id, { split_cell: !r.split_cell })
-                              if (err) msg(err, true)
-                            }}
-                            className={`inline-flex px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-colors
-                              ${r.split_cell
-                                ? 'bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary)]/20'
-                                : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)]'}`}
-                          >
-                            {r.split_cell ? '분리' : '미분리'}
-                          </button>
-                          {/* 바표시 토글 */}
-                          <button
-                            onClick={async () => {
-                              const err = await updateRole(r.id, { indicator_bar: !r.indicator_bar })
-                              if (err) msg(err, true)
-                            }}
-                            title="셀 분리 대신 좌측 컬러 바로 표시"
-                            className={`inline-flex px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-colors
-                              ${r.indicator_bar
-                                ? 'bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400'
-                                : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)]'}`}
-                          >
-                            {r.indicator_bar ? '바 표시' : '바 없음'}
-                          </button>
+                          {/* 달력 표시 방식 (미분리/분리/바표시 3택1) */}
+                          <div className="inline-flex rounded-lg border border-[var(--color-border)] overflow-hidden shrink-0" title="달력 표시 방식">
+                            {ROLE_DISPLAY_MODES.map(opt => {
+                              const active = roleDisplayMode(r) === opt.value
+                              const activeCls = opt.value === 'bar'
+                                ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                                : opt.value === 'split'
+                                  ? 'bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)]'
+                                  : 'bg-[var(--color-surface-hover)] text-[var(--color-text-primary)]'
+                              return (
+                                <button
+                                  key={opt.value}
+                                  onClick={async () => {
+                                    if (active) return
+                                    const err = await updateRole(r.id, { split_cell: opt.value === 'split', indicator_bar: opt.value === 'bar' })
+                                    if (err) msg(err, true)
+                                  }}
+                                  className={`px-2.5 py-1 text-xs font-semibold transition-colors border-r border-[var(--color-border)] last:border-r-0 ${
+                                    active ? activeCls : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)]'
+                                  }`}
+                                >
+                                  {opt.label}
+                                </button>
+                              )
+                            })}
+                          </div>
                           {/* 순서 */}
                           <div className="flex gap-1 items-center ml-auto shrink-0">
                             <button type="button" onClick={() => moveRole(r.id, -1)} disabled={idx === 0}

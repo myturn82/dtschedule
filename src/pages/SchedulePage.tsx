@@ -876,6 +876,7 @@ export function SchedulePage() {
                   assignments={assignments} slotSettings={slotSettings}
                   scheduleRules={scheduleRules} dateOverrides={dateOverrides}
                   splitRoles={splitRoles}
+                  indicatorBarRoles={indicatorBarRoles}
                   isSplitMode={isSplitMode}
                   hiddenRoleIds={hiddenRoleIds}
                   displayAssignmentFilter={displayAssignmentFilter}
@@ -920,6 +921,7 @@ export function SchedulePage() {
                   assignments={assignments} slotSettings={slotSettings}
                   scheduleRules={scheduleRules} dateOverrides={weekDateOverrides}
                   splitRoles={splitRoles}
+                  indicatorBarRoles={indicatorBarRoles}
                   isSplitMode={isSplitMode}
                   hiddenRoleIds={hiddenRoleIds}
                   displayAssignmentFilter={displayAssignmentFilter}

@@ -2,8 +2,7 @@ import type { Assignment, CellState, TenantRole } from '../../types'
 import { fmtPhone, maskPhone } from '../../lib/format'
 import { formatTimeSub } from '../../utils/timeSlots'
 import { LockIcon } from '../icons/LockIcons'
-
-const INDICATOR_BAR_COLOR = 'var(--color-brand-primary)'
+import { INDICATOR_BAR_COLOR, indicatorBarColorFor } from '../../utils/indicatorBarColors'
 
 interface Props {
   cellState: CellState
@@ -160,6 +159,53 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
   )
   const hasIndicatorBar = indicatorBarUserIds.size > 0
 
+  // user_id -> 이 셀 안에서 보유한 bar 역할 id 집합 (동일 인물의 다른 시간대/컬럼 배정도 신원 기준으로 포함)
+  const userIdToBarRoleIds = new Map<string, Set<string>>()
+  for (const role of indicatorBarRoles ?? []) {
+    for (const a of assignments) {
+      if (a.role_id === role.id && a.user_id) {
+        if (!userIdToBarRoleIds.has(a.user_id)) userIdToBarRoleIds.set(a.user_id, new Set())
+        userIdToBarRoleIds.get(a.user_id)!.add(role.id)
+      }
+    }
+  }
+  function barRolesForSubset(subset: Assignment[]): TenantRole[] {
+    const roleIds = new Set<string>()
+    for (const a of subset) {
+      // user_id 없는 자유입력/비회원 배정도 놓치지 않도록 해당 배정 자체의 role_id도 직접 포함
+      if (a.role_id) roleIds.add(a.role_id)
+      if (a.user_id && userIdToBarRoleIds.has(a.user_id)) {
+        for (const rid of userIdToBarRoleIds.get(a.user_id)!) roleIds.add(rid)
+      }
+    }
+    return (indicatorBarRoles ?? []).filter(r => roleIds.has(r.id))
+  }
+  // 바표시 역할이 하나면 단색 바, 여러 개면 셀 안에서 색상별로 균등 분할해 표시
+  function renderBarOverlay(subset: Assignment[]) {
+    const barRoles = barRolesForSubset(subset)
+    const hasBar = barRoles.length > 0
+    if (onIndicatorBarClick) {
+      return (
+        <div role="button" tabIndex={0}
+          onClick={e => { e.stopPropagation(); onIndicatorBarClick() }}
+          onKeyDown={e => e.key === 'Enter' && (e.stopPropagation(), onIndicatorBarClick())}
+          className={`absolute left-0 top-0 bottom-0 z-10 flex flex-col cursor-pointer transition-all duration-150
+            ${hasBar ? 'w-[3px] hover:w-2 hover:brightness-90 active:brightness-75' : 'w-[3px] opacity-0 group-hover:opacity-30 group-hover:w-3'}`}
+        >
+          {hasBar
+            ? barRoles.map(r => <span key={r.id} className="flex-1" style={{ background: indicatorBarColorFor(r, indicatorBarRoles ?? []) }} />)
+            : <span className="flex-1" style={{ background: INDICATOR_BAR_COLOR }} />}
+        </div>
+      )
+    }
+    if (!hasBar) return null
+    return (
+      <span className="absolute left-0 top-0 bottom-0 w-[3px] flex flex-col">
+        {barRoles.map(r => <span key={r.id} className="flex-1" style={{ background: indicatorBarColorFor(r, indicatorBarRoles ?? []) }} />)}
+      </span>
+    )
+  }
+
   // ── role column (split mode) ─────────────────────────────────────────────────
   if (colType === 'role') {
     const roleAssignments = assignments.filter(a => a.role_id === roleId)
@@ -168,7 +214,6 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
 
     if (shouldSplitRole) {
       const fullSlotRole = roleAssignments.filter(a => !a.time_sub || a.time_sub.includes('~'))
-      const fullSlotHasBar = fullSlotRole.some(a => indicatorBarUserIds.has(a.user_id ?? ''))
       return (
         <div className="flex flex-col h-full">
           {fullSlotRole.length > 0 && (
@@ -176,34 +221,20 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
               className="relative flex flex-col items-center justify-center px-0.5 py-0.5 border-b border-[var(--color-border-table)] group"
               style={{ background: tint.bg }}
             >
-              {onIndicatorBarClick ? (
-                <div role="button" tabIndex={0} onClick={e => { e.stopPropagation(); onIndicatorBarClick() }} onKeyDown={e => e.key === 'Enter' && (e.stopPropagation(), onIndicatorBarClick())}
-                  className={`absolute left-0 top-0 bottom-0 z-10 flex items-center justify-center cursor-pointer transition-all duration-150
-                    ${fullSlotHasBar ? 'w-5 hover:brightness-90 active:brightness-75' : 'w-[3px] opacity-0 group-hover:opacity-30 group-hover:w-3'}`}
-                  style={{ background: INDICATOR_BAR_COLOR }} />
-              ) : fullSlotHasBar ? (
-                <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: INDICATOR_BAR_COLOR }} />
-              ) : null}
+              {renderBarOverlay(fullSlotRole)}
               <NameChips assignments={fullSlotRole} highlightName={highlightName} tintBg={tint.bg} tintInk={tint.ink} teamLeaderUserIds={teamLeaderUserIds} showTimeSub withdrawnUserIds={withdrawnUserIds} isAdmin={isAdmin} />
             </button>
           )}
           <div className="flex flex-col divide-y divide-[var(--color-border-table)] flex-1">
             {slotHours.map(hour => {
               const hourA = roleAssignments.filter(a => a.time_sub && !a.time_sub.includes('~') && assignmentCoversHour(a.time_sub, hour))
-              const hourHasBar = assignments.filter(a => assignmentCoversHour(a.time_sub, hour)).some(a => indicatorBarUserIds.has(a.user_id ?? ''))
+              const hourAllAssignments = assignments.filter(a => assignmentCoversHour(a.time_sub, hour))
               return (
                 <button key={hour} onClick={onClick}
                   className={`relative flex-1 min-h-[1rem] flex flex-col items-center justify-center transition-all duration-150 active:scale-[0.98] group`}
                   style={{ background: hourA.length ? tint.bg : 'var(--color-surface)' }}
                 >
-                  {onIndicatorBarClick ? (
-                    <div role="button" tabIndex={0} onClick={e => { e.stopPropagation(); onIndicatorBarClick() }} onKeyDown={e => e.key === 'Enter' && (e.stopPropagation(), onIndicatorBarClick())}
-                      className={`absolute left-0 top-0 bottom-0 z-10 flex items-center justify-center cursor-pointer transition-all duration-150
-                        ${hourHasBar ? 'w-5 hover:brightness-90 active:brightness-75' : 'w-[3px] opacity-0 group-hover:opacity-30 group-hover:w-3'}`}
-                      style={{ background: INDICATOR_BAR_COLOR }} />
-                  ) : hourHasBar ? (
-                    <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: INDICATOR_BAR_COLOR }} />
-                  ) : null}
+                  {renderBarOverlay(hourAllAssignments)}
                   {hourA.length
                     ? <NameChips assignments={hourA} highlightName={highlightName} tintBg={tint.bg} tintInk={tint.ink} teamLeaderUserIds={teamLeaderUserIds} showTimeSub withdrawnUserIds={withdrawnUserIds} isAdmin={isAdmin} />
                     : canInteract && <EmptyOrLockHint isLocked={isLocked} />
@@ -224,14 +255,7 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
         {highlighted && !hasAssignments && (
           <span className="absolute inset-[2px] rounded pointer-events-none" style={{ border: '2px dashed var(--color-brand-primary)' }} />
         )}
-        {onIndicatorBarClick ? (
-          <div role="button" tabIndex={0} onClick={e => { e.stopPropagation(); onIndicatorBarClick() }} onKeyDown={e => e.key === 'Enter' && (e.stopPropagation(), onIndicatorBarClick())}
-            className={`absolute left-0 top-0 bottom-0 z-10 flex items-center justify-center cursor-pointer transition-all duration-150
-              ${hasIndicatorBar ? 'w-5 hover:brightness-90 active:brightness-75' : 'w-[3px] opacity-0 group-hover:opacity-30 group-hover:w-3'}`}
-            style={{ background: INDICATOR_BAR_COLOR }} />
-        ) : hasIndicatorBar ? (
-          <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: INDICATOR_BAR_COLOR }} />
-        ) : null}
+        {renderBarOverlay(assignments)}
         {hasAssignments
           ? <>
               <NameChips assignments={roleAssignments} highlightName={highlightName} tintBg={tint.bg} tintInk={tint.ink} teamLeaderUserIds={teamLeaderUserIds} withdrawnUserIds={withdrawnUserIds} isAdmin={isAdmin} />
@@ -264,7 +288,6 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
     if (shouldSplit) {
       const fullSlotVol = saturdayAssignments.filter(a => !a.time_sub || a.time_sub.includes('~'))
       const fullSlotHasLeader = !!(teamLeaderUserIds && fullSlotVol.some(a => teamLeaderUserIds.has(a.user_id ?? '')))
-      const fullSlotHasBar = fullSlotVol.some(a => indicatorBarUserIds.has(a.user_id ?? ''))
       const fullSlotVisible = fullSlotVol.filter(a => !teamLeaderUserIds?.has(a.user_id ?? '') && !indicatorBarUserIds.has(a.user_id ?? ''))
       const fullSlotTint = fullSlotHasLeader ? teamLeaderTint : effectiveTint
       return (
@@ -274,14 +297,7 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
               className="relative flex flex-col items-center justify-center px-0.5 py-0.5 border-b border-[var(--color-border-table)] group"
               style={{ background: fullSlotTint.bg }}
             >
-              {onIndicatorBarClick ? (
-                <div role="button" tabIndex={0} onClick={e => { e.stopPropagation(); onIndicatorBarClick() }} onKeyDown={e => e.key === 'Enter' && (e.stopPropagation(), onIndicatorBarClick())}
-                  className={`absolute left-0 top-0 bottom-0 z-10 flex items-center justify-center cursor-pointer transition-all duration-150
-                    ${fullSlotHasBar ? 'w-5 hover:brightness-90 active:brightness-75' : 'w-[3px] opacity-0 group-hover:opacity-30 group-hover:w-3'}`}
-                  style={{ background: INDICATOR_BAR_COLOR }} />
-              ) : fullSlotHasBar ? (
-                <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: INDICATOR_BAR_COLOR }} />
-              ) : null}
+              {renderBarOverlay(fullSlotVol)}
               <NameChips assignments={fullSlotVisible} highlightName={highlightName} tintBg={fullSlotTint.bg} tintInk={fullSlotTint.ink} showTimeSub withdrawnUserIds={withdrawnUserIds} isAdmin={isAdmin} />
             </button>
           )}
@@ -297,14 +313,7 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
                   className={`relative flex-1 min-h-[1rem] flex flex-col items-center justify-center transition-all duration-150 active:scale-[0.98] group`}
                   style={{ background: (hourVisible.length || hourHasBar) ? hourTint.bg : 'var(--color-surface)' }}
                 >
-                  {onIndicatorBarClick ? (
-                    <div role="button" tabIndex={0} onClick={e => { e.stopPropagation(); onIndicatorBarClick() }} onKeyDown={e => e.key === 'Enter' && (e.stopPropagation(), onIndicatorBarClick())}
-                      className={`absolute left-0 top-0 bottom-0 z-10 flex items-center justify-center cursor-pointer transition-all duration-150
-                        ${hourHasBar ? 'w-5 hover:brightness-90 active:brightness-75' : 'w-[3px] opacity-0 group-hover:opacity-30 group-hover:w-3'}`}
-                      style={{ background: INDICATOR_BAR_COLOR }} />
-                  ) : hourHasBar ? (
-                    <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: INDICATOR_BAR_COLOR }} />
-                  ) : null}
+                  {renderBarOverlay(hourVol)}
                   {hourVisible.length
                     ? <NameChips assignments={hourVisible} highlightName={highlightName} tintBg={hourTint.bg} tintInk={hourTint.ink} teamLeaderUserIds={teamLeaderUserIds} showTimeSub withdrawnUserIds={withdrawnUserIds} isAdmin={isAdmin} />
                     : canInteract && <EmptyOrLockHint isLocked={isLocked} />
@@ -328,14 +337,7 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
         {highlighted && !hasAssign && (
           <span className="absolute inset-[2px] rounded pointer-events-none" style={{ border: '1px dashed oklch(0.72 0.16 80)' }} />
         )}
-        {onIndicatorBarClick ? (
-          <div role="button" tabIndex={0} onClick={e => { e.stopPropagation(); onIndicatorBarClick() }} onKeyDown={e => e.key === 'Enter' && (e.stopPropagation(), onIndicatorBarClick())}
-            className={`absolute left-0 top-0 bottom-0 z-10 flex items-center justify-center cursor-pointer transition-all duration-150
-              ${hasIndicatorBar ? 'w-5 hover:brightness-90 active:brightness-75' : 'w-[3px] opacity-0 group-hover:opacity-30 group-hover:w-3'}`}
-            style={{ background: INDICATOR_BAR_COLOR }} />
-        ) : hasIndicatorBar ? (
-          <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: INDICATOR_BAR_COLOR }} />
-        ) : null}
+        {renderBarOverlay(assignments)}
         {hasAssign
           ? <>
               <NameChips assignments={visibleAssignments} highlightName={highlightName} tintBg={cellTint.bg} tintInk={cellTint.ink} teamLeaderUserIds={teamLeaderUserIds} withdrawnUserIds={withdrawnUserIds} isAdmin={isAdmin} />

@@ -47,8 +47,8 @@
     "runtime": null
   },
   "build": {
-    "buildCommand": "npx tsc -b 2>&1 | tail -60",
-    "testCommand": "npx vitest run src/components/schedule/DatePickerModal.test.tsx 2>&1 | tail -80",
+    "buildCommand": "npx tsc -b 2>&1 | tail -100",
+    "testCommand": "npx vitest run 2>&1 | tail -60",
     "lintCommand": "npm run lint",
     "devCommand": "npm run dev",
     "scripts": {
@@ -223,20 +223,20 @@
   "hotPaths": [
     {
       "path": "src\\pages\\SchedulePage.tsx",
-      "accessCount": 650,
-      "lastAccessed": 1784186876906,
+      "accessCount": 661,
+      "lastAccessed": 1784191525970,
       "type": "file"
     },
     {
       "path": "src\\pages\\AdminPage.tsx",
-      "accessCount": 449,
-      "lastAccessed": 1784184468423,
+      "accessCount": 463,
+      "lastAccessed": 1784188085843,
       "type": "file"
     },
     {
       "path": "src",
-      "accessCount": 298,
-      "lastAccessed": 1784187450993,
+      "accessCount": 300,
+      "lastAccessed": 1784187796289,
       "type": "directory"
     },
     {
@@ -253,8 +253,8 @@
     },
     {
       "path": "src\\types\\index.ts",
-      "accessCount": 154,
-      "lastAccessed": 1784093175186,
+      "accessCount": 155,
+      "lastAccessed": 1784187694586,
       "type": "file"
     },
     {
@@ -264,21 +264,21 @@
       "type": "file"
     },
     {
-      "path": "src\\components\\schedule\\ScheduleGrid.tsx",
-      "accessCount": 127,
-      "lastAccessed": 1784185638169,
+      "path": "src\\components\\schedule\\WeekGrid.tsx",
+      "accessCount": 132,
+      "lastAccessed": 1784188686984,
       "type": "file"
     },
     {
-      "path": "src\\components\\schedule\\WeekGrid.tsx",
-      "accessCount": 125,
-      "lastAccessed": 1784162378529,
+      "path": "src\\components\\schedule\\ScheduleGrid.tsx",
+      "accessCount": 129,
+      "lastAccessed": 1784190977318,
       "type": "file"
     },
     {
       "path": "src\\components\\schedule\\TimeSlotCell.tsx",
-      "accessCount": 104,
-      "lastAccessed": 1784184330561,
+      "accessCount": 128,
+      "lastAccessed": 1784191382792,
       "type": "file"
     },
     {
@@ -324,15 +324,15 @@
       "type": "file"
     },
     {
-      "path": "supabase\\functions\\admin-create-user\\index.ts",
-      "accessCount": 30,
-      "lastAccessed": 1784092757333,
+      "path": "src\\utils\\cellState.ts",
+      "accessCount": 31,
+      "lastAccessed": 1784191350158,
       "type": "file"
     },
     {
-      "path": "src\\utils\\cellState.ts",
+      "path": "supabase\\functions\\admin-create-user\\index.ts",
       "accessCount": 30,
-      "lastAccessed": 1784162335933,
+      "lastAccessed": 1784092757333,
       "type": "file"
     },
     {
@@ -367,8 +367,8 @@
     },
     {
       "path": "src\\hooks\\useTenantRoles.ts",
-      "accessCount": 16,
-      "lastAccessed": 1784092770475,
+      "accessCount": 17,
+      "lastAccessed": 1784187843195,
       "type": "file"
     },
     {
