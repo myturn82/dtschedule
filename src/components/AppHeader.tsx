@@ -8,6 +8,7 @@ import { DashboardNav } from './DashboardNav'
 import { ProfileModal } from './auth/ProfileModal'
 import { JoinOrgModal } from './modals/JoinOrgModal'
 import { StartServiceModal } from './modals/StartServiceModal'
+import { QuickBookingModal } from './modals/QuickBookingModal'
 import { useNotifications } from '../hooks/useNotifications'
 import { usePushSubscription } from '../hooks/usePushSubscription'
 import { NotificationPanel } from './notifications/NotificationPanel'
@@ -57,6 +58,7 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
   const [showJoinOrg, setShowJoinOrg] = useState(false)
   const [showStartService, setShowStartService] = useState(false)
   const [showWithdrawModal, setShowWithdrawModal] = useState(false)
+  const [showQuickBooking, setShowQuickBooking] = useState(false)
   const [joinSuccessMsg, setJoinSuccessMsg] = useState<string | null>(null)
   const [showNotifications, setShowNotifications] = useState(false)
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications()
@@ -115,6 +117,16 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
           {/* Right: rightSlot + bell + feedback + name/badge + avatar */}
           <div className="flex items-center gap-1 shrink-0">
             {rightSlot}
+            {isPrivileged && tenant && (
+              <button
+                onClick={() => setShowQuickBooking(true)}
+                aria-label="자연어로 예약 등록"
+                title="자연어로 예약 등록"
+                className="w-8 h-8 flex items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-all shrink-0"
+              >
+                <span className="text-sm leading-none select-none">✨</span>
+              </button>
+            )}
             {profile && (
               <div>
                 <button
@@ -379,6 +391,10 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
           userId={profile.id}
           onClose={() => setShowStartService(false)}
         />
+      )}
+
+      {showQuickBooking && (
+        <QuickBookingModal onClose={() => setShowQuickBooking(false)} />
       )}
 
       {showWithdrawModal && (

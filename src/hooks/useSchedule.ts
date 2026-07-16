@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import { upsertSlotCapacity } from '../lib/slotSettings'
+import { insertAssignment, type AddAssignmentParams } from '../lib/assignments'
 import type { Assignment, SlotSetting, ScheduleRule, DateOverride, TimeSlot, MemberType } from '../types'
 
 interface ScheduleData {
@@ -17,23 +19,7 @@ interface ScheduleData {
   updateSlotCapacity: (timeSlot: TimeSlot, maxCapacity: number) => Promise<string | null>
 }
 
-interface AddParams {
-  tenant_id: string
-  year: number
-  month: number
-  day: number
-  time_slot: TimeSlot
-  member_name: string
-  note?: string
-  member_type: string
-  time_sub?: string
-  color?: string
-  user_id: string | null
-  role_id?: string | null
-  customer_name?: string | null
-  customer_phone?: string | null
-  extra_data?: Record<string, string>
-}
+type AddParams = AddAssignmentParams
 
 interface UpdateParams {
   member_name?: string
@@ -139,19 +125,9 @@ export function useSchedule(tenantId: string, year: number, month: number): Sche
   }, [tenantId, year, month])
 
   const addAssignmentWithId = useCallback(async (params: AddParams): Promise<{ error: string | null; id: string | null }> => {
-    if (params.member_type !== 'admin_note') {
-      const isDuplicate = assignments.some(
-        a => a.year === params.year && a.month === params.month &&
-             a.day === params.day && a.time_slot === params.time_slot &&
-             a.member_name === params.member_name
-      )
-      if (isDuplicate) return { error: '이미 같은 회원이 배정되어 있습니다', id: null }
-    }
-    const { data, error } = await supabase.from('assignments').insert(params).select().single()
-    if (!error && data) setAssignments(prev =>
-      prev.some(a => a.id === (data as Assignment).id) ? prev : [...prev, data as Assignment]
-    )
-    return { error: error?.message ?? null, id: (data as Assignment | null)?.id ?? null }
+    const { data, error } = await insertAssignment(params, assignments)
+    if (!error && data) setAssignments(prev => prev.some(a => a.id === data.id) ? prev : [...prev, data])
+    return { error, id: data?.id ?? null }
   }, [assignments])
 
   const addAssignment = useCallback(async (params: AddParams): Promise<string | null> => {
@@ -243,13 +219,8 @@ export function useSchedule(tenantId: string, year: number, month: number): Sche
   }, [tenantId, year, month])
 
   const updateSlotCapacity = useCallback(async (timeSlot: TimeSlot, maxCapacity: number): Promise<string | null> => {
-    const { error } = await supabase
-      .from('slot_settings')
-      .upsert(
-        { tenant_id: tenantId, time_slot: timeSlot, max_capacity: maxCapacity },
-        { onConflict: 'tenant_id,time_slot' }
-      )
-    if (error) return error.message
+    const err = await upsertSlotCapacity(tenantId, timeSlot, maxCapacity)
+    if (err) return err
     const { data } = await supabase.from('slot_settings').select('*').eq('tenant_id', tenantId)
     if (data) setSlotSettings(data)
     return null

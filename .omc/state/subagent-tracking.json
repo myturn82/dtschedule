@@ -1,0 +1,35 @@
+{
+  "agents": [
+    {
+      "agent_id": "aexplore-schedule-rules-6df9e654adaaee19",
+      "agent_type": "explore-schedule-rules",
+      "started_at": "2026-07-15T04:44:51.221Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-07-15T04:47:02.142Z",
+      "duration_ms": 130921
+    },
+    {
+      "agent_id": "aexplore-custom-fields-0b7bf0fa111ab708",
+      "agent_type": "explore-custom-fields",
+      "started_at": "2026-07-15T04:45:01.948Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-07-15T04:47:31.851Z",
+      "duration_ms": 149903
+    },
+    {
+      "agent_id": "aplan-ai-nl-workflows-65b72dceb0ec6dd9",
+      "agent_type": "plan-ai-nl-workflows",
+      "started_at": "2026-07-15T05:05:01.106Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-07-15T05:09:43.927Z",
+      "duration_ms": 282821
+    }
+  ],
+  "total_spawned": 3,
+  "total_completed": 29,
+  "total_failed": 0,
+  "last_updated": "2026-07-15T08:06:21.595Z"
+}

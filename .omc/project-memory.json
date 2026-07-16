@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1783641603768,
+  "lastScanned": 1784078386304,
   "projectRoot": "C:\\claudePrj\\dtschedule",
   "techStack": {
     "languages": [
@@ -47,8 +47,8 @@
     "runtime": null
   },
   "build": {
-    "buildCommand": "cd C:/claudePrj/dtschedule && npx tsc -b 2>&1 | tail -40",
-    "testCommand": "npm test -- --run src/components/schedule/ScheduleHeader.test.tsx 2>&1 | grep -E \"✓|✗|×|PASS|FAIL|passed|failed\" ",
+    "buildCommand": "cd C:/claudePrj/dtschedule && npx tsc -b 2>&1 | tail -100",
+    "testCommand": "cd C:/claudePrj/dtschedule && npx vitest run 2>&1 | tail -40",
     "lintCommand": "npm run lint",
     "devCommand": "npm run dev",
     "scripts": {
@@ -87,7 +87,7 @@
       "path": "dist",
       "purpose": "Distribution/build output",
       "fileCount": 10,
-      "lastAccessed": 1783641603734,
+      "lastAccessed": 1784078386268,
       "keyFiles": [
         "favicon.svg",
         "icons.svg",
@@ -99,21 +99,21 @@
     "docs": {
       "path": "docs",
       "purpose": "Documentation",
-      "fileCount": 26,
-      "lastAccessed": 1783641603746,
+      "fileCount": 40,
+      "lastAccessed": 1784078386269,
       "keyFiles": [
         "blog_series_1.md",
-        "CHANGE_TEST_CHECKLIST_TEMPLATE.md",
-        "checklist_2026-06-11.md",
-        "checklist_2026-06-12.md",
-        "checklist_2026-06-13.md"
+        "blog_series_10.md",
+        "blog_series_11.md",
+        "blog_series_2.md",
+        "blog_series_3.md"
       ]
     },
     "public": {
       "path": "public",
       "purpose": "Public files",
       "fileCount": 6,
-      "lastAccessed": 1783641603746,
+      "lastAccessed": 1784078386280,
       "keyFiles": [
         "favicon.svg",
         "icons.svg",
@@ -126,14 +126,14 @@
       "path": "publicicons",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1783641603747,
+      "lastAccessed": 1784078386280,
       "keyFiles": []
     },
     "src": {
       "path": "src",
       "purpose": "Source code",
       "fileCount": 5,
-      "lastAccessed": 1783641603747,
+      "lastAccessed": 1784078386281,
       "keyFiles": [
         "App.css",
         "App.tsx",
@@ -146,7 +146,7 @@
       "path": "supabase",
       "purpose": null,
       "fileCount": 6,
-      "lastAccessed": 1783641603747,
+      "lastAccessed": 1784078386281,
       "keyFiles": [
         "CLAUDE.md",
         "config.toml",
@@ -159,7 +159,7 @@
       "path": "dist\\assets",
       "purpose": "Static assets",
       "fileCount": 8,
-      "lastAccessed": 1783641603748,
+      "lastAccessed": 1784078386282,
       "keyFiles": [
         "html2canvas-DAUDsNMm.js",
         "index-BEkYfel2.js",
@@ -170,7 +170,7 @@
       "path": "src\\assets",
       "purpose": "Static assets",
       "fileCount": 3,
-      "lastAccessed": 1783641603748,
+      "lastAccessed": 1784078386283,
       "keyFiles": [
         "hero.png",
         "react.svg",
@@ -181,7 +181,7 @@
       "path": "src\\components",
       "purpose": "UI components",
       "fileCount": 6,
-      "lastAccessed": 1783641603749,
+      "lastAccessed": 1784078386283,
       "keyFiles": [
         "AppHeader.tsx",
         "DashboardNav.tsx",
@@ -192,7 +192,7 @@
       "path": "src\\data",
       "purpose": "Data files",
       "fileCount": 1,
-      "lastAccessed": 1783641603749,
+      "lastAccessed": 1784078386284,
       "keyFiles": [
         "industryCategories.ts"
       ]
@@ -201,7 +201,7 @@
       "path": "src\\lib",
       "purpose": "Library code",
       "fileCount": 14,
-      "lastAccessed": 1783641603750,
+      "lastAccessed": 1784078386285,
       "keyFiles": [
         "avatarColor.ts",
         "datePicker.test.ts",
@@ -211,8 +211,8 @@
     "supabase\\migrations": {
       "path": "supabase\\migrations",
       "purpose": "Database migrations",
-      "fileCount": 60,
-      "lastAccessed": 1783641603751,
+      "fileCount": 63,
+      "lastAccessed": 1784078386285,
       "keyFiles": [
         "001_schema.sql",
         "002_rls.sql",
@@ -223,26 +223,26 @@
   "hotPaths": [
     {
       "path": "src\\pages\\SchedulePage.tsx",
-      "accessCount": 616,
-      "lastAccessed": 1783659034789,
+      "accessCount": 633,
+      "lastAccessed": 1784101546469,
       "type": "file"
     },
     {
       "path": "src\\pages\\AdminPage.tsx",
-      "accessCount": 387,
-      "lastAccessed": 1783407851347,
+      "accessCount": 442,
+      "lastAccessed": 1784100318639,
       "type": "file"
     },
     {
       "path": "src\\components\\modals\\SlotEditModal.tsx",
-      "accessCount": 281,
-      "lastAccessed": 1783562933093,
+      "accessCount": 286,
+      "lastAccessed": 1784091836342,
       "type": "file"
     },
     {
       "path": "src",
-      "accessCount": 242,
-      "lastAccessed": 1783658477701,
+      "accessCount": 281,
+      "lastAccessed": 1784161543252,
       "type": "directory"
     },
     {
@@ -252,15 +252,15 @@
       "type": "file"
     },
     {
-      "path": "src\\pages\\TenantSelectPage.tsx",
-      "accessCount": 153,
-      "lastAccessed": 1783064184415,
+      "path": "src\\types\\index.ts",
+      "accessCount": 154,
+      "lastAccessed": 1784093175186,
       "type": "file"
     },
     {
-      "path": "src\\types\\index.ts",
-      "accessCount": 144,
-      "lastAccessed": 1783659802042,
+      "path": "src\\pages\\TenantSelectPage.tsx",
+      "accessCount": 153,
+      "lastAccessed": 1783064184415,
       "type": "file"
     },
     {
@@ -277,8 +277,8 @@
     },
     {
       "path": "src\\pages\\PendingPage.tsx",
-      "accessCount": 102,
-      "lastAccessed": 1783064499225,
+      "accessCount": 103,
+      "lastAccessed": 1784002742450,
       "type": "file"
     },
     {
@@ -289,14 +289,14 @@
     },
     {
       "path": "src\\components\\schedule\\TimeSlotCell.tsx",
-      "accessCount": 91,
-      "lastAccessed": 1783657911359,
+      "accessCount": 92,
+      "lastAccessed": 1784002818923,
       "type": "file"
     },
     {
       "path": "",
-      "accessCount": 83,
-      "lastAccessed": 1783660447188,
+      "accessCount": 84,
+      "lastAccessed": 1783925688737,
       "type": "directory"
     },
     {
@@ -313,26 +313,32 @@
     },
     {
       "path": "src\\hooks\\useAdmin.ts",
-      "accessCount": 49,
-      "lastAccessed": 1783064504942,
+      "accessCount": 53,
+      "lastAccessed": 1784092161411,
       "type": "file"
     },
     {
       "path": "src\\hooks\\useSchedule.ts",
-      "accessCount": 42,
-      "lastAccessed": 1783571939865,
+      "accessCount": 53,
+      "lastAccessed": 1784095247755,
       "type": "file"
     },
     {
       "path": "supabase\\functions\\admin-create-user\\index.ts",
-      "accessCount": 28,
-      "lastAccessed": 1783066135058,
+      "accessCount": 30,
+      "lastAccessed": 1784092757333,
       "type": "file"
     },
     {
       "path": "src\\pages\\SharePage.tsx",
+      "accessCount": 29,
+      "lastAccessed": 1784090734032,
+      "type": "file"
+    },
+    {
+      "path": "src\\utils\\cellState.ts",
       "accessCount": 28,
-      "lastAccessed": 1783571857631,
+      "lastAccessed": 1784093139238,
       "type": "file"
     },
     {
@@ -343,20 +349,14 @@
     },
     {
       "path": "supabase\\migrations",
-      "accessCount": 22,
-      "lastAccessed": 1781582560179,
+      "accessCount": 24,
+      "lastAccessed": 1783901033543,
       "type": "directory"
     },
     {
-      "path": "src\\utils\\cellState.ts",
-      "accessCount": 21,
-      "lastAccessed": 1783659624270,
-      "type": "file"
-    },
-    {
       "path": "supabase\\migrations\\001_schema.sql",
-      "accessCount": 17,
-      "lastAccessed": 1781582563863,
+      "accessCount": 19,
+      "lastAccessed": 1784090718363,
       "type": "file"
     },
     {
@@ -366,39 +366,39 @@
       "type": "file"
     },
     {
+      "path": "src\\hooks\\useTenantRoles.ts",
+      "accessCount": 16,
+      "lastAccessed": 1784092770475,
+      "type": "file"
+    },
+    {
       "path": "supabase\\functions\\delete-account\\index.ts",
       "accessCount": 14,
       "lastAccessed": 1783066141135,
       "type": "file"
     },
     {
-      "path": "src\\components\\modals\\CapacityModal.tsx",
-      "accessCount": 12,
-      "lastAccessed": 1780378665538,
+      "path": "src\\hooks\\useProfiles.ts",
+      "accessCount": 14,
+      "lastAccessed": 1784092770298,
       "type": "file"
     },
     {
       "path": "index.html",
-      "accessCount": 12,
-      "lastAccessed": 1781741336981,
+      "accessCount": 13,
+      "lastAccessed": 1783916027162,
       "type": "directory"
     },
     {
-      "path": "src\\hooks\\useProfiles.ts",
-      "accessCount": 12,
-      "lastAccessed": 1781747817704,
-      "type": "file"
-    },
-    {
-      "path": "src\\hooks\\useTenantRoles.ts",
-      "accessCount": 12,
-      "lastAccessed": 1783571939855,
+      "path": "src\\components\\modals\\CapacityModal.tsx",
+      "accessCount": 13,
+      "lastAccessed": 1784092183193,
       "type": "file"
     },
     {
       "path": "package.json",
-      "accessCount": 10,
-      "lastAccessed": 1782113804259,
+      "accessCount": 12,
+      "lastAccessed": 1784092769633,
       "type": "file"
     },
     {
@@ -445,8 +445,8 @@
     },
     {
       "path": "supabase\\migrations\\010_assignment_extra_data.sql",
-      "accessCount": 5,
-      "lastAccessed": 1781582563175,
+      "accessCount": 6,
+      "lastAccessed": 1784090750116,
       "type": "file"
     },
     {
@@ -474,6 +474,12 @@
       "type": "file"
     },
     {
+      "path": "supabase\\migrations\\007_schedule_rules.sql",
+      "accessCount": 4,
+      "lastAccessed": 1784090703109,
+      "type": "file"
+    },
+    {
       "path": "supabase\\migrations\\003_seed.sql",
       "accessCount": 3,
       "lastAccessed": 1780639409710,
@@ -483,12 +489,6 @@
       "path": "supabase\\migrations\\008_team_leader.sql",
       "accessCount": 3,
       "lastAccessed": 1780639429998,
-      "type": "file"
-    },
-    {
-      "path": "supabase\\migrations\\007_schedule_rules.sql",
-      "accessCount": 3,
-      "lastAccessed": 1781072800427,
       "type": "file"
     },
     {

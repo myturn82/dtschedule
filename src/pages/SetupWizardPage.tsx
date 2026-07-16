@@ -10,6 +10,8 @@ import { DevFileLabel } from '../components/DevFileLabel'
 import { WizardIcon } from '../components/setup/WizardIcons'
 import { isIndustryComplete } from '../components/IndustryPicker'
 import { WIZARD_STEPS } from '../components/setup/StepHeader'
+import { SetupAssistant } from '../components/setup/SetupAssistant'
+import { upsertSlotCapacity } from '../lib/slotSettings'
 import { Step1OrgName } from '../components/setup/steps/Step1OrgName'
 import { Step2Mode } from '../components/setup/steps/Step2Mode'
 import { getRecommendation } from '../lib/wizardModeRecommendation'
@@ -93,10 +95,29 @@ export function SetupWizardPage() {
   const [customFields, setCustomFields] = useState<CustomFieldDef[]>([])
   const [hasDraftRoleName, setHasDraftRoleName] = useState(false)
   const modeAutoAppliedRef = useRef(false)
+  const [pendingSchedule, setPendingSchedule] = useState<{ closedWeekdays: number[]; capacityHint?: number } | null>(null)
 
   function handleDraftRoleNameChange(hasDraft: boolean) {
     setHasDraftRoleName(hasDraft)
     if (!hasDraft) setError('')
+  }
+
+  // ── AI 설정 어시스턴트 적용 핸들러 ────────────────────────────────────────
+
+  async function handleAiRoles(proposed: { name: string; splitCell: boolean; indicatorBar: boolean }[]) {
+    for (const r of proposed) {
+      if (roles.some(existing => existing.name === r.name)) continue
+      await addRole(r.name, r.splitCell, false, r.indicatorBar)
+    }
+  }
+
+  function handleAiCustomFields(fields: CustomFieldDef[]) {
+    setCustomFields(prev => [...prev, ...fields.filter(f => !prev.some(p => p.label === f.label))])
+  }
+
+  function handleAiSchedule(closedWeekdays: number[], capacityHint?: number) {
+    if (closedWeekdays.length === 0 && capacityHint == null) return
+    setPendingSchedule({ closedWeekdays, capacityHint })
   }
 
   useEffect(() => {
@@ -203,6 +224,15 @@ export function SetupWizardPage() {
         const rec = getRecommendation(industry)
         if (rec.precision !== null) setMode(rec.mode)
       }
+      // AI 어시스턴트가 제안한 휴무 요일·정원은 슬롯이 확정된 3단계 저장 직후에만 적용 가능
+      if (stepNum === 3 && pendingSchedule) {
+        const openDays = [0, 1, 2, 3, 4, 5, 6].filter(d => !pendingSchedule.closedWeekdays.includes(d))
+        await applyRuleTemplate(openDays)
+        if (pendingSchedule.capacityHint != null) {
+          await Promise.all(slots.map(s => upsertSlotCapacity(orgId, s, pendingSchedule.capacityHint!)))
+        }
+        setPendingSchedule(null)
+      }
       setStep(stepNum + 1)
     }
   }
@@ -303,10 +333,18 @@ export function SetupWizardPage() {
 
         <div className="wiz-scroll">
           {step === 1 && (
-            <Step1OrgName
-              name={name} title={title} industry={industry} error={error}
-              onChange={(n, t, ind) => { setName(n); setTitle(t); setIndustry(ind) }}
-            />
+            <>
+              <SetupAssistant
+                industry={industry}
+                onApplyRoles={handleAiRoles}
+                onApplyCustomFields={handleAiCustomFields}
+                onApplySchedule={handleAiSchedule}
+              />
+              <Step1OrgName
+                name={name} title={title} industry={industry} error={error}
+                onChange={(n, t, ind) => { setName(n); setTitle(t); setIndustry(ind) }}
+              />
+            </>
           )}
           {step === 2 && (
             <Step2Mode

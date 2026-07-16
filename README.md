@@ -45,6 +45,7 @@
 
 - 📋 **커스텀 필드 빌더** — 텍스트·숫자·드롭다운·라디오·체크박스·전화번호·이미지첨부 등 8가지 타입, 드롭다운 옵션 유형에 금액(원)·수량(개)·인원(명)·회차(회) 단위 지원
 - 🧩 **조직 셋업 위자드** — 단계별 가이드로 역할·슬롯·커스텀 필드·테마 등 초기 설정 완료
+- ✨ **AI 설정 어시스턴트** — 위자드 1단계에서 운영 방식을 자연어로 설명하면 역할·커스텀 필드·휴무 요일·정원을 AI(Claude)가 제안, 확인 후 적용
 - 👥 **역할(Role) 기반 배정** — 조직별 역할 정의와 자동 배정 비율을 동적으로 구성
 - 📅 **날짜 오버라이드 & 잠금** — 특정 날짜 휴관·특별 운영 규칙 설정
 - ☎️ **회원 전화번호 확인** — 회원관리 탭에서 가입 시 등록한 전화번호 조회, 모바일에서는 탭 시 바로 전화 연결(`tel:` 링크)
@@ -57,6 +58,7 @@
 ### 📆 스케줄 & 멤버
 
 - 🗓 **월·주·일 뷰** — 동일 비즈니스 로직을 모든 뷰에 일관 적용 (ScheduleGrid · WeekGrid · DayView)
+- ✨ **자연어 예약 등록** — 헤더의 AI 버튼에서 "OO님 이번주 일요일 13시 예약" 같은 자연어를 입력하면 대상자·날짜·시간을 AI가 파싱해 확인 후 등록 (관리자 전용)
 - ⏳ **시간별/일자별 보기 모드** — 월간·주간 뷰에서 시간축 표 대신 날짜별 배정 요약 목록으로 전환하는 토글 제공, 일자별 모드에서도 각 날짜 셀의 "+ 등록" 드롭다운으로 원하는 시간대를 선택해 바로 스케줄 등록 가능
 - 📆 **날짜 선택 모달** — 헤더 타이틀 클릭 시 연/월/일을 스크롤 휠로 골라 바로 이동
 - 📸 **이미지 첨부** — Canvas API 기반 WebP 자동 압축(최대 3장, 500KB 이하), Supabase Storage 저장
@@ -76,6 +78,7 @@
 | **상태 관리** | React Context (TenantContext, AuthContext, PlanLimitsContext) |
 | **이미지 처리** | HTML5 Canvas API — WebP 압축, Supabase Storage 업로드 |
 | **다국어 (i18n)** | react-i18next, i18next-browser-languagedetector — 한국어/영어, 브라우저 자동 감지 |
+| **AI** | Anthropic Claude (Messages API, tool use) — Edge Function(`ai-parse`)에서 서버사이드 호출, 자연어 → 구조화 데이터 파싱 |
 | **보안** | Row Level Security (RLS), SECURITY DEFINER Functions |
 
 ---
@@ -155,6 +158,7 @@ dtschedule/
 │   │   ├── supabase.ts
 │   │   ├── themePresets.ts      # 포인트 컬러 프리셋 14종
 │   │   ├── imageCompress.ts     # Canvas API WebP 압축
+│   │   ├── aiParse.ts           # AI 자연어 파싱 Edge Function 호출 래퍼
 │   │   ├── datePicker.ts        # 날짜 선택 모달용 연도/일수/스크롤 인덱스 계산
 │   │   └── uploadScheduleImage.ts
 │   ├── pages/
@@ -171,6 +175,7 @@ dtschedule/
 │       └── timeSlots.ts
 ├── supabase/
 │   ├── migrations/              # 001 ~ 060+ 순차 마이그레이션 SQL
+│   ├── functions/               # Edge Functions (Deno) — ai-parse, send-reminders, admin-create-user 등
 │   ├── reset_db.sql             # 전체 스키마 초기화용 통합 SQL
 │   └── reset_data.sql
 ├── docs/                        # 체크리스트, 설계 문서
