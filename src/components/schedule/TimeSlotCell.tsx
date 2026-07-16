@@ -126,9 +126,9 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
     ? 'min-h-[1.25rem] sm:min-h-[1.75rem]'
     : 'min-h-[2rem] sm:min-h-[2.5rem]'
 
-  const tint = resolveTint(isSaturdayShift ? 'vol' : colType, slotStart)
-  const satTint = { bg: 'var(--tint-sat)', ink: 'var(--tint-sat-ink)' }
-  const effectiveTint = isSaturdayShift ? satTint : tint
+  // 토요일도 평일과 동일한 배경색을 사용한다 (isSaturdayShift는 plus 회원 병합 표시에만 사용)
+  const tint = resolveTint(colType, slotStart)
+  const effectiveTint = tint
 
   // ── CLOSE states ─────────────────────────────────────────────────────────────
   if (isBreaktime) {

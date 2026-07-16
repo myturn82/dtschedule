@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1784078386304,
+  "lastScanned": 1784176510064,
   "projectRoot": "C:\\claudePrj\\dtschedule",
   "techStack": {
     "languages": [
@@ -47,8 +47,8 @@
     "runtime": null
   },
   "build": {
-    "buildCommand": "cd C:/claudePrj/dtschedule && npx tsc -b 2>&1 | tail -100",
-    "testCommand": "cd C:/claudePrj/dtschedule && npx vitest run 2>&1 | tail -40",
+    "buildCommand": "npm run build",
+    "testCommand": "npm test",
     "lintCommand": "npm run lint",
     "devCommand": "npm run dev",
     "scripts": {
@@ -87,7 +87,7 @@
       "path": "dist",
       "purpose": "Distribution/build output",
       "fileCount": 10,
-      "lastAccessed": 1784078386268,
+      "lastAccessed": 1784176510023,
       "keyFiles": [
         "favicon.svg",
         "icons.svg",
@@ -99,8 +99,8 @@
     "docs": {
       "path": "docs",
       "purpose": "Documentation",
-      "fileCount": 40,
-      "lastAccessed": 1784078386269,
+      "fileCount": 41,
+      "lastAccessed": 1784176510023,
       "keyFiles": [
         "blog_series_1.md",
         "blog_series_10.md",
@@ -113,7 +113,7 @@
       "path": "public",
       "purpose": "Public files",
       "fileCount": 6,
-      "lastAccessed": 1784078386280,
+      "lastAccessed": 1784176510033,
       "keyFiles": [
         "favicon.svg",
         "icons.svg",
@@ -126,14 +126,14 @@
       "path": "publicicons",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1784078386280,
+      "lastAccessed": 1784176510034,
       "keyFiles": []
     },
     "src": {
       "path": "src",
       "purpose": "Source code",
       "fileCount": 5,
-      "lastAccessed": 1784078386281,
+      "lastAccessed": 1784176510034,
       "keyFiles": [
         "App.css",
         "App.tsx",
@@ -146,7 +146,7 @@
       "path": "supabase",
       "purpose": null,
       "fileCount": 6,
-      "lastAccessed": 1784078386281,
+      "lastAccessed": 1784176510035,
       "keyFiles": [
         "CLAUDE.md",
         "config.toml",
@@ -159,7 +159,7 @@
       "path": "dist\\assets",
       "purpose": "Static assets",
       "fileCount": 8,
-      "lastAccessed": 1784078386282,
+      "lastAccessed": 1784176510036,
       "keyFiles": [
         "html2canvas-DAUDsNMm.js",
         "index-BEkYfel2.js",
@@ -170,7 +170,7 @@
       "path": "src\\assets",
       "purpose": "Static assets",
       "fileCount": 3,
-      "lastAccessed": 1784078386283,
+      "lastAccessed": 1784176510038,
       "keyFiles": [
         "hero.png",
         "react.svg",
@@ -181,7 +181,7 @@
       "path": "src\\components",
       "purpose": "UI components",
       "fileCount": 6,
-      "lastAccessed": 1784078386283,
+      "lastAccessed": 1784176510038,
       "keyFiles": [
         "AppHeader.tsx",
         "DashboardNav.tsx",
@@ -192,7 +192,7 @@
       "path": "src\\data",
       "purpose": "Data files",
       "fileCount": 1,
-      "lastAccessed": 1784078386284,
+      "lastAccessed": 1784176510039,
       "keyFiles": [
         "industryCategories.ts"
       ]
@@ -200,19 +200,19 @@
     "src\\lib": {
       "path": "src\\lib",
       "purpose": "Library code",
-      "fileCount": 14,
-      "lastAccessed": 1784078386285,
+      "fileCount": 20,
+      "lastAccessed": 1784176510039,
       "keyFiles": [
-        "avatarColor.ts",
-        "datePicker.test.ts",
-        "datePicker.ts"
+        "aiParse.ts",
+        "assignments.ts",
+        "avatarColor.ts"
       ]
     },
     "supabase\\migrations": {
       "path": "supabase\\migrations",
       "purpose": "Database migrations",
       "fileCount": 63,
-      "lastAccessed": 1784078386285,
+      "lastAccessed": 1784176510043,
       "keyFiles": [
         "001_schema.sql",
         "002_rls.sql",
@@ -229,21 +229,21 @@
     },
     {
       "path": "src\\pages\\AdminPage.tsx",
-      "accessCount": 442,
-      "lastAccessed": 1784100318639,
+      "accessCount": 449,
+      "lastAccessed": 1784184468423,
       "type": "file"
+    },
+    {
+      "path": "src",
+      "accessCount": 292,
+      "lastAccessed": 1784184747264,
+      "type": "directory"
     },
     {
       "path": "src\\components\\modals\\SlotEditModal.tsx",
       "accessCount": 286,
       "lastAccessed": 1784091836342,
       "type": "file"
-    },
-    {
-      "path": "src",
-      "accessCount": 281,
-      "lastAccessed": 1784161543252,
-      "type": "directory"
     },
     {
       "path": "src\\pages\\SuperAdminPage.tsx",
@@ -265,14 +265,20 @@
     },
     {
       "path": "src\\components\\schedule\\ScheduleGrid.tsx",
-      "accessCount": 124,
-      "lastAccessed": 1783659957654,
+      "accessCount": 126,
+      "lastAccessed": 1784162343538,
       "type": "file"
     },
     {
       "path": "src\\components\\schedule\\WeekGrid.tsx",
-      "accessCount": 122,
-      "lastAccessed": 1783660302261,
+      "accessCount": 125,
+      "lastAccessed": 1784162378529,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\schedule\\TimeSlotCell.tsx",
+      "accessCount": 104,
+      "lastAccessed": 1784184330561,
       "type": "file"
     },
     {
@@ -283,14 +289,8 @@
     },
     {
       "path": "src\\contexts\\TenantContext.tsx",
-      "accessCount": 99,
-      "lastAccessed": 1782783489505,
-      "type": "file"
-    },
-    {
-      "path": "src\\components\\schedule\\TimeSlotCell.tsx",
-      "accessCount": 92,
-      "lastAccessed": 1784002818923,
+      "accessCount": 100,
+      "lastAccessed": 1784164318542,
       "type": "file"
     },
     {
@@ -330,15 +330,15 @@
       "type": "file"
     },
     {
-      "path": "src\\pages\\SharePage.tsx",
-      "accessCount": 29,
-      "lastAccessed": 1784090734032,
+      "path": "src\\utils\\cellState.ts",
+      "accessCount": 30,
+      "lastAccessed": 1784162335933,
       "type": "file"
     },
     {
-      "path": "src\\utils\\cellState.ts",
-      "accessCount": 28,
-      "lastAccessed": 1784093139238,
+      "path": "src\\pages\\SharePage.tsx",
+      "accessCount": 29,
+      "lastAccessed": 1784090734032,
       "type": "file"
     },
     {

@@ -1810,7 +1810,7 @@ export function AdminPage() {
                   </span>
                   <h2 className="mt-3 mb-1.5 text-[clamp(22px,5vw,27px)] font-extrabold tracking-tight text-[var(--color-text-primary)]">조직 설정</h2>
                   <p className="text-[14px] font-medium text-[var(--color-text-muted)] leading-relaxed max-w-[52ch]">
-                    조직 이름·타이틀·테마 색상·타임슬롯·역할 비율을 설정합니다.
+                    조직 이름·타이틀·포인트 컬러·타임슬롯·역할 비율을 설정합니다.
                   </p>
                   <button type="submit" disabled={saving}
                     className="mt-4 px-5 py-2 bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-sm font-semibold rounded-xl hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50">
@@ -1837,7 +1837,7 @@ export function AdminPage() {
                       <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: colorOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }}>
                         <path d="M4 2l4 4-4 4" />
                       </svg>
-                      <span>테마 색상 (선택)</span>
+                      <span>포인트 컬러 (선택)</span>
                       {settingsPreset
                         ? <span className="text-xs font-medium" style={{ color: THEME_PRESET_LIST.find(p => p.key === settingsPreset)?.preset.light.accent }}>{THEME_PRESET_LIST.find(p => p.key === settingsPreset)?.label}</span>
                         : settingsTheme && <span className="w-4 h-4 rounded-sm border border-[var(--color-border-strong)] inline-block" style={{ background: settingsTheme }} />

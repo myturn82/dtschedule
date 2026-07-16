@@ -193,7 +193,7 @@ export function QuickBookingModal({ onClose }: Props) {
   async function handleParse() {
     if (!text.trim() || !tenant) return
     setProposal(null); setSubmitError(null); setDoneMessage(null)
-    setCandidates([]); setSelectedCandidateIds([]); setNewTimeSlot(''); setNewNoteValue('')
+    setCandidates([]); setSelectedCandidateIds([]); setNewTimeSlot(''); setNewNoteValue(''); setNote('')
     const result = await run(text, {
       today: today.date,
       todayWeekday: today.weekday,
@@ -205,14 +205,12 @@ export function QuickBookingModal({ onClose }: Props) {
 
     setIsRecurring(result.action === 'create' && !!result.is_recurring)
     setSelectedSlots(result.time_slots_guess.filter(s => timeSlots.includes(s)))
-    setNote(result.note ?? '')
     setCustomerName(isFreeform ? (result.person_name_guess ?? '') : '')
     setExtraData(result.custom_field_guesses ?? {})
     setTargetScope(result.target_scope === 'range' ? 'range' : 'single')
 
     if (result.action === 'update') {
       setNewTimeSlot(result.new_time_slot_guess && timeSlots.includes(result.new_time_slot_guess) ? result.new_time_slot_guess : '')
-      setNewNoteValue(result.new_note ?? '')
     }
 
     if (result.action === 'create' && result.is_recurring) {
