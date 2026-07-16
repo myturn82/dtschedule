@@ -29,14 +29,18 @@ interface ColumnProps {
 function PickerColumn({ values, selected, onSelect, suffix, ariaLabel }: ColumnProps) {
   const ref = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
+  function scrollToValue(v: number, behavior: ScrollBehavior = 'smooth') {
     const el = ref.current
     if (!el) return
-    const idx = values.indexOf(selected)
+    const idx = values.indexOf(v)
     if (idx < 0) return
     const top = idx * ITEM_HEIGHT
-    if (typeof el.scrollTo === 'function') el.scrollTo({ top, behavior: 'auto' })
+    if (typeof el.scrollTo === 'function') el.scrollTo({ top, behavior })
     else el.scrollTop = top
+  }
+
+  useEffect(() => {
+    scrollToValue(selected, 'auto')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [values.length])
 
@@ -47,6 +51,11 @@ function PickerColumn({ values, selected, onSelect, suffix, ariaLabel }: ColumnP
     const clamped = Math.min(Math.max(idx, 0), values.length - 1)
     const value = values[clamped]
     if (value !== undefined && value !== selected) onSelect(value)
+  }
+
+  function handleItemClick(v: number) {
+    if (v !== selected) onSelect(v)
+    scrollToValue(v)
   }
 
   function step(delta: number) {
@@ -81,7 +90,11 @@ function PickerColumn({ values, selected, onSelect, suffix, ariaLabel }: ColumnP
           {values.map(v => (
             <div
               key={v}
-              className={`flex items-center justify-center text-sm font-semibold [scroll-snap-align:center] select-none ${
+              role="button"
+              tabIndex={0}
+              onClick={() => handleItemClick(v)}
+              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleItemClick(v) } }}
+              className={`flex items-center justify-center text-sm font-semibold [scroll-snap-align:center] select-none cursor-pointer hover:text-[var(--color-text-primary)] ${
                 v === selected ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)]'
               }`}
               style={{ height: ITEM_HEIGHT }}

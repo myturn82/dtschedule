@@ -157,7 +157,14 @@ export function ScheduleHeader({ year, month, title, openCount, onPrev, onNext, 
 
         {/* Right: role toggle + display mode */}
         <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto sm:shrink-0">
-          {roleToggleSlot && <div className="min-w-0 flex-1 sm:flex-none">{roleToggleSlot}</div>}
+          {roleToggleSlot && (
+            <div className="min-w-0 flex-1 sm:flex-none rounded-lg bg-[var(--color-surface-secondary)] px-1.5 py-1">
+              {roleToggleSlot}
+            </div>
+          )}
+          {roleToggleSlot && onDisplayModeChange && viewType !== 'day' && (
+            <div className="w-px h-5 bg-[var(--color-border)] shrink-0" />
+          )}
           {onDisplayModeChange && viewType !== 'day' && (
             <div className="flex items-center rounded-lg border border-[var(--color-border)] overflow-hidden shrink-0">
               <button

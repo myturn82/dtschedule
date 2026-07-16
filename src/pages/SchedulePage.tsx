@@ -817,7 +817,7 @@ export function SchedulePage() {
                         className={`px-2 py-0.5 text-[11px] rounded-full border transition-colors select-none shrink-0 whitespace-nowrap ${
                           !hiddenRoleIds.has(role.id)
                             ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] border-[var(--color-brand-primary)]'
-                            : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]'
+                            : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]'
                         }`}
                       >
                         {role.name}

@@ -47,8 +47,8 @@
     "runtime": null
   },
   "build": {
-    "buildCommand": "npx tsc -b 2>&1 | tail -80",
-    "testCommand": "npx vitest run src/components/schedule/MonthScheduleByDay.test.tsx src/components/schedule/WeekScheduleByDay.test.tsx 2>&1 | tail -80",
+    "buildCommand": "npx tsc -b 2>&1 | tail -60",
+    "testCommand": "npx vitest run src/components/schedule/DatePickerModal.test.tsx 2>&1 | tail -80",
     "lintCommand": "npm run lint",
     "devCommand": "npm run dev",
     "scripts": {
@@ -223,8 +223,8 @@
   "hotPaths": [
     {
       "path": "src\\pages\\SchedulePage.tsx",
-      "accessCount": 648,
-      "lastAccessed": 1784186430761,
+      "accessCount": 650,
+      "lastAccessed": 1784186876906,
       "type": "file"
     },
     {
@@ -235,8 +235,8 @@
     },
     {
       "path": "src",
-      "accessCount": 295,
-      "lastAccessed": 1784185790488,
+      "accessCount": 298,
+      "lastAccessed": 1784187450993,
       "type": "directory"
     },
     {

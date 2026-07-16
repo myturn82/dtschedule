@@ -338,7 +338,8 @@ export function QuickBookingModal({ onClose }: Props) {
       >
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold text-[var(--color-text)] flex items-center gap-1.5">
-            <span className="text-base leading-none select-none">✨</span> 자연어로 예약 관리
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l1.8 6.2L20 11l-6.2 1.8L12 19l-1.8-6.2L4 11l6.2-1.8Z"/></svg>
+            자연어로 예약 관리
           </h2>
           <button
             onClick={onClose}
@@ -352,7 +353,9 @@ export function QuickBookingModal({ onClose }: Props) {
 
         {doneMessage ? (
           <div className="text-center py-4 space-y-2">
-            <div className="text-3xl">✅</div>
+            <div className="flex justify-center text-[var(--color-brand-primary)]">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9"/></svg>
+            </div>
             <p className="text-sm text-[var(--color-text-secondary)]">{doneMessage}</p>
             <button
               onClick={onClose}
@@ -396,7 +399,10 @@ export function QuickBookingModal({ onClose }: Props) {
                   </label>
                   <p className="text-sm font-semibold text-[var(--color-text-primary)]">{dateSummary}</p>
                   {weekdayMismatch && !isRecurring && targetScope === 'single' && (
-                    <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-1">⚠ AI가 계산한 요일과 실제 날짜의 요일이 달라요. 날짜를 다시 확인해주세요.</p>
+                    <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M12 3l9 16H3z"/><path d="M12 9v4"/><path d="M12 16h.01"/></svg>
+                      AI가 계산한 요일과 실제 날짜의 요일이 달라요. 날짜를 다시 확인해주세요.
+                    </p>
                   )}
 
                   {isRecurring && action === 'create' && (

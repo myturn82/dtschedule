@@ -99,12 +99,13 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
               <button
                 onClick={() => setShowFuncMenu(v => !v)}
                 aria-label="기능 메뉴"
-                className="w-8 h-8 flex items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-all shrink-0"
+                className="flex items-center justify-center gap-1.5 w-8 h-8 sm:w-auto sm:h-auto px-0 py-0 sm:px-3 sm:py-1.5 text-xs font-medium rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-all shrink-0"
               >
                 {showFuncMenu
                   ? <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 5l10 10M15 5L5 15"/></svg>
                   : <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 5h14M3 10h14M3 15h14"/></svg>
                 }
+                <span className="hidden sm:inline">메뉴</span>
               </button>
             )}
             {leftSlot && memberSelectSlot ? (
@@ -122,9 +123,10 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
                 onClick={() => setShowQuickBooking(true)}
                 aria-label="자연어로 예약 등록"
                 title="자연어로 예약 등록"
-                className="w-8 h-8 flex items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-all shrink-0"
+                className="flex items-center justify-center gap-1.5 w-8 h-8 sm:w-auto sm:h-auto px-0 py-0 sm:px-3 sm:py-1.5 text-xs font-medium rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-all shrink-0"
               >
-                <span className="text-sm leading-none select-none">✨</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l1.8 6.2L20 11l-6.2 1.8L12 19l-1.8-6.2L4 11l6.2-1.8Z"/></svg>
+                <span className="hidden sm:inline">AI 등록</span>
               </button>
             )}
             {profile && (
@@ -132,12 +134,13 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
                 <button
                   onClick={() => setShowNotifications(v => !v)}
                   aria-label="알림"
-                  className="relative w-8 h-8 flex items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-all shrink-0"
+                  className="relative flex items-center justify-center gap-1.5 w-8 h-8 sm:w-auto sm:h-auto px-0 py-0 sm:px-3 sm:py-1.5 text-xs font-medium rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-all shrink-0"
                 >
                   <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M10 2a6 6 0 0 1 6 6v3l1.5 2.5H2.5L4 11V8a6 6 0 0 1 6-6z"/>
                     <path d="M8 16a2 2 0 0 0 4 0"/>
                   </svg>
+                  <span className="hidden sm:inline">알림</span>
                   {unreadCount > 0 && (
                     <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold leading-none select-none">
                       {unreadCount > 9 ? '9+' : unreadCount}
