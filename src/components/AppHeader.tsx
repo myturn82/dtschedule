@@ -64,6 +64,7 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications()
   const { isSubscribed, isLoading: pushLoading, isSupported: pushSupported, subscribe, unsubscribe } = usePushSubscription()
 
+  const [showMobileSearch, setShowMobileSearch] = useState(false)
   const { isDark, toggle: toggleDark } = useDarkMode()
   const feedbackUrl = import.meta.env.VITE_FEEDBACK_URL as string | undefined
   const isTenantFreeform = displayMode(tenant?.settings?.tenant_mode) === '비회원'
@@ -108,10 +109,25 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
                 <span className="hidden sm:inline">메뉴</span>
               </button>
             )}
-            {leftSlot && memberSelectSlot ? (
-              <div className="hidden sm:flex">{leftSlot}</div>
-            ) : leftSlot}
-            {memberSelectSlot}
+            {leftSlot && (
+              <>
+                {/* 모바일: 조직명 + 검색 토글 버튼 */}
+                <span className="sm:hidden text-sm font-semibold text-[var(--color-text-primary)] truncate flex-1 min-w-0">
+                  {tenant?.settings?.title || tenant?.name}
+                </span>
+                <button
+                  onClick={() => setShowMobileSearch(v => !v)}
+                  aria-label="검색"
+                  className="sm:hidden select-none flex items-center justify-center w-8 h-8 shrink-0"
+                >
+                  <span className="text-base leading-none">🔍</span>
+                </button>
+                {/* 데스크탑: 기존 검색바 */}
+                <div className="hidden sm:flex">{leftSlot}</div>
+              </>
+            )}
+            {!leftSlot && memberSelectSlot}
+            {leftSlot && memberSelectSlot && <div className="hidden sm:block">{memberSelectSlot}</div>}
           </div>
 
 
@@ -195,6 +211,14 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
             )}
           </div>
         </div>
+
+        {/* 모바일 검색바 확장 영역 */}
+        {leftSlot && showMobileSearch && (
+          <div className="sm:hidden px-3 pb-2 pt-1 border-t border-[var(--color-border)]">
+            {leftSlot}
+            {memberSelectSlot && <div className="mt-1.5">{memberSelectSlot}</div>}
+          </div>
+        )}
 
         {/* Notification panel — 헤더 전체 기준으로 우측 정렬 (벨 버튼 기준 시 모바일 좌측 잘림 발생) */}
         {showNotifications && (

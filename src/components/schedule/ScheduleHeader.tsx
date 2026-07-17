@@ -8,7 +8,6 @@ const DAY_KR = ['일', '월', '화', '수', '목', '금', '토']
 interface Props {
   year: number
   month: number
-  title?: string
   openCount?: number
   onPrev: () => void
   onNext: () => void
@@ -35,7 +34,7 @@ function weekRangeLabel(weekDays: Date[]): string {
   return `${sm}월 ${start.getDate()}일 ~ ${em}월 ${end.getDate()}일`
 }
 
-export function ScheduleHeader({ year, month, title, openCount, onPrev, onNext, viewType = 'month', onViewTypeChange, day, weekDays, onDateSelect, hideViewSwitcher, roleToggleSlot, displayMode = 'time', onDisplayModeChange }: Props) {
+export function ScheduleHeader({ year, month, openCount, onPrev, onNext, viewType = 'month', onViewTypeChange, day, weekDays, onDateSelect, hideViewSwitcher, roleToggleSlot, displayMode = 'time', onDisplayModeChange }: Props) {
   const { t } = useTranslation('schedule')
   const [showDatePicker, setShowDatePicker] = useState(false)
   const VIEW_LABELS: Record<ViewType, string> = { month: t('views.month'), week: t('views.week'), day: t('views.day') }
@@ -61,15 +60,12 @@ export function ScheduleHeader({ year, month, title, openCount, onPrev, onNext, 
 
   return (
     <>
-      <div className="flex items-end justify-between gap-4 flex-wrap">
-        {/* Left: title + stats */}
-        <div className="min-w-0">
-          {title && (
-            <p className="text-[11px] font-semibold text-[var(--color-text-muted)] tracking-wide uppercase mb-1.5">{title}</p>
-          )}
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        {/* Left: nav + stats */}
+        <div className="min-w-0 w-full sm:w-auto">
           {/* Title based on viewType */}
           {viewType === 'month' && (
-            <h1 className="flex items-center gap-1.5 m-0 leading-none flex-wrap">
+            <h1 className="flex items-center gap-1.5 m-0 leading-none flex-wrap justify-center sm:justify-start">
               <button onClick={onPrev} aria-label={t('nav.prev')} className={navBtnCls}>
                 <span className="text-xs leading-none">←</span>
               </button>
@@ -94,7 +90,7 @@ export function ScheduleHeader({ year, month, title, openCount, onPrev, onNext, 
           )}
 
           {viewType === 'week' && weekDays && weekDays.length > 0 && (
-            <h1 className="flex items-center gap-1.5 m-0 leading-none flex-wrap">
+            <h1 className="flex items-center gap-1.5 m-0 leading-none flex-wrap justify-center sm:justify-start">
               <button onClick={onPrev} aria-label={t('nav.prev')} className={navBtnCls}>
                 <span className="text-xs leading-none">←</span>
               </button>
@@ -119,7 +115,7 @@ export function ScheduleHeader({ year, month, title, openCount, onPrev, onNext, 
           )}
 
           {viewType === 'day' && day !== undefined && (
-            <h1 className="flex items-center gap-1.5 m-0 leading-none flex-wrap">
+            <h1 className="flex items-center gap-1.5 m-0 leading-none flex-wrap justify-center sm:justify-start">
               <button onClick={onPrev} aria-label={t('nav.prev')} className={navBtnCls}>
                 <span className="text-xs leading-none">←</span>
               </button>

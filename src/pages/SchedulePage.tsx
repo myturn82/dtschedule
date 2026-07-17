@@ -800,7 +800,6 @@ export function SchedulePage() {
           <div className="px-2 py-2 framed:px-5 framed:py-4 framed:border-b framed:border-[var(--color-border)]">
             <ScheduleHeader
               year={year} month={month} day={day}
-              title={tenant?.settings?.title || tenant?.name}
               viewType={viewType}
               onViewTypeChange={handleViewTypeChange}
               hideViewSwitcher={isPrivileged}
