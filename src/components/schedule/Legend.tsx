@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { LegendItem, LegendColor } from '../../types'
+import { BrandLegendIcon, isBrandLegendIcon } from '../../lib/legendIcons'
 
 export const DEFAULT_LEGEND_ITEMS: LegendItem[] = []
 
@@ -59,22 +60,37 @@ export function Legend({ legendItems }: Props) {
       </div>
       {/* 항목: 모바일 토글, 데스크탑 항상 표시 */}
       <div className={`flex-wrap items-center gap-2 mt-1.5 ${expanded ? 'flex' : 'hidden'} sm:flex`}>
-        {items.map(({ id, icon, label, color }) => {
+        {items.map(({ id, icon, label, color, url }) => {
           const s = LEGEND_COLOR_STYLES[color]
           const dot = DOT_COLORS[color]
-          return (
-            <span
-              key={id}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-[6px] rounded-full text-[12px] font-medium whitespace-nowrap ${s.bg} border ${s.border} ${s.icon}`}
-            >
-              {icon ? (
+          const cls = `inline-flex items-center gap-1.5 px-2.5 py-[6px] rounded-full text-[12px] font-medium whitespace-nowrap ${s.bg} border ${s.border} ${s.icon}${url ? ' cursor-pointer hover:opacity-75 transition-opacity' : ''}`
+          const inner = (
+            <>
+              {isBrandLegendIcon(icon) ? (
+                <BrandLegendIcon value={icon} size={14} />
+              ) : icon ? (
                 <span className="text-sm leading-none select-none">{icon}</span>
               ) : (
                 <span className="w-2 h-2 rounded-full shrink-0 flex-none" style={{ background: dot }} />
               )}
               <span>{label}</span>
-            </span>
+              {url && (
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="opacity-60 shrink-0">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                  <polyline points="15 3 21 3 21 9"/>
+                  <line x1="10" y1="14" x2="21" y2="3"/>
+                </svg>
+              )}
+            </>
           )
+          if (url) {
+            return (
+              <a key={id} href={url} target="_blank" rel="noopener noreferrer" className={cls}>
+                {inner}
+              </a>
+            )
+          }
+          return <span key={id} className={cls}>{inner}</span>
         })}
       </div>
     </div>

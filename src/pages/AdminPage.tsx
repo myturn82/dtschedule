@@ -20,12 +20,15 @@ import { displayMode } from '../lib/tenantMode'
 import { getFunctionErrorMessage } from '../lib/functionsError'
 import { fmtPhone } from '../lib/format'
 import { formatPhone } from '../lib/phone'
+import { BrandLegendIcon, isBrandLegendIcon } from '../lib/legendIcons'
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
 const HEX_COLOR_RE = /^#[0-9A-Fa-f]{6}$/
 
 const LEGEND_ICON_OPTIONS: { value: string; label: string }[] = [
   { value: '', label: '없음' },
+  { value: '[ig]', label: '인스타그램' },
+  { value: '[naver]', label: '네이버블로그' },
   { value: '★', label: '별표' },
   { value: '☆', label: '별표(연하게)' },
   { value: '●', label: '채움 원' },
@@ -54,7 +57,9 @@ function LegendIconPicker({ value, onChange }: { value: string; onChange: (v: st
   return (
     <div className="relative">
       <button type="button" onClick={() => setOpen(o => !o)} className={triggerCls}>
-        {value || <span className="text-[11px] text-[var(--color-text-muted)]">없음</span>}
+        {isBrandLegendIcon(value)
+          ? <BrandLegendIcon value={value} size={20} />
+          : (value || <span className="text-[11px] text-[var(--color-text-muted)]">없음</span>)}
       </button>
       {open && (
         <>
@@ -68,7 +73,9 @@ function LegendIconPicker({ value, onChange }: { value: string; onChange: (v: st
                 onClick={() => { onChange(opt.value); setOpen(false) }}
                 className={`h-8 rounded-lg flex items-center justify-center text-base select-none hover:bg-[var(--color-surface-hover)] ${value === opt.value ? 'bg-[color-mix(in_srgb,var(--color-brand-primary)_12%,transparent)] ring-1 ring-[var(--color-brand-primary)]' : ''}`}
               >
-                {opt.value || <span className="text-[10px] text-[var(--color-text-muted)]">{opt.label}</span>}
+                {isBrandLegendIcon(opt.value)
+                  ? <BrandLegendIcon value={opt.value} size={18} />
+                  : (opt.value || <span className="text-[10px] text-[var(--color-text-muted)]">{opt.label}</span>)}
               </button>
             ))}
           </div>
@@ -310,10 +317,12 @@ export function AdminPage() {
   const [newLegendIcon, setNewLegendIcon] = useState('')
   const [newLegendLabel, setNewLegendLabel] = useState('')
   const [newLegendColor, setNewLegendColor] = useState<LegendColor>('blue')
+  const [newLegendUrl, setNewLegendUrl] = useState('')
   const [editingLegendId, setEditingLegendId] = useState<string | null>(null)
   const [editLegendIcon, setEditLegendIcon] = useState('')
   const [editLegendLabel, setEditLegendLabel] = useState('')
   const [editLegendColor, setEditLegendColor] = useState<LegendColor>('blue')
+  const [editLegendUrl, setEditLegendUrl] = useState('')
 
   // Custom fields tab
   const [customFields, setCustomFields] = useState<CustomFieldDef[]>([])
@@ -570,6 +579,7 @@ export function AdminPage() {
       icon: newLegendIcon.trim(),
       label: newLegendLabel.trim(),
       color: newLegendColor,
+      url: newLegendUrl.trim() || undefined,
     }
     const next = [...legendItems, newItem]
     const err = await updateTenantSettings(adminTenantId, { legend_items: next })
@@ -582,6 +592,7 @@ export function AdminPage() {
     }
     setNewLegendIcon('')
     setNewLegendLabel('')
+    setNewLegendUrl('')
     msg('항목이 추가됐습니다.')
   }
 
@@ -603,13 +614,14 @@ export function AdminPage() {
     setEditLegendIcon(item.icon)
     setEditLegendLabel(item.label)
     setEditLegendColor(item.color)
+    setEditLegendUrl(item.url ?? '')
   }
 
   async function saveLegendEdit() {
     if (!editingLegendId || !editLegendLabel.trim() || !adminTenantId) return
     const next = legendItems.map(i =>
       i.id === editingLegendId
-        ? { ...i, icon: editLegendIcon.trim(), label: editLegendLabel.trim(), color: editLegendColor }
+        ? { ...i, icon: editLegendIcon.trim(), label: editLegendLabel.trim(), color: editLegendColor, url: editLegendUrl.trim() || undefined }
         : i
     )
     const err = await updateTenantSettings(adminTenantId, { legend_items: next })
@@ -2343,6 +2355,13 @@ export function AdminPage() {
                               <option value="indigo">남색</option>
                               <option value="black">검정</option>
                             </select>
+                            <input
+                              type="url"
+                              value={editLegendUrl}
+                              onChange={e => setEditLegendUrl(e.target.value)}
+                              placeholder="https://blog.naver.com/..."
+                              className={inputCls + ' flex-1 min-w-48'}
+                            />
                             <button type="button" onClick={saveLegendEdit}
                               disabled={!editLegendLabel.trim()}
                               className="px-3 py-1.5 text-xs font-semibold bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40 shrink-0">
@@ -2355,8 +2374,17 @@ export function AdminPage() {
                           </div>
                         ) : (
                           <div className="flex items-center gap-2.5">
-                            <span className={`text-sm font-bold select-none ${s.icon}`}>{item.icon}</span>
-                            <span className="text-[13.5px] font-semibold text-[var(--color-text-secondary)] flex-1">{item.label}</span>
+                            <span className={`text-sm font-bold select-none ${s.icon}`}>
+                              {isBrandLegendIcon(item.icon) ? <BrandLegendIcon value={item.icon} size={18} /> : item.icon}
+                            </span>
+                            <span className="text-[13.5px] font-semibold text-[var(--color-text-secondary)] flex-1 flex items-center gap-1">
+                              {item.label}
+                              {item.url && (
+                                <a href={item.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="text-[var(--color-brand-primary)] opacity-50 hover:opacity-100 transition-opacity" title={item.url}>
+                                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                                </a>
+                              )}
+                            </span>
                             <div className="flex gap-1 shrink-0">
                               <button type="button" onClick={() => moveLegendItem(item.id, -1)} disabled={idx === 0}
                                 className="w-7 h-7 flex items-center justify-center border border-[var(--color-border-strong)] rounded-lg hover:bg-[var(--color-surface-hover)] disabled:opacity-30 text-[var(--color-text-muted)]">
@@ -2436,6 +2464,16 @@ export function AdminPage() {
                         <option value="indigo">남색</option>
                         <option value="black">검정</option>
                       </select>
+                    </div>
+                    <div className="flex-1 min-w-48">
+                      <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">링크 URL <span className="font-normal text-[var(--color-text-muted)]">(선택)</span></label>
+                      <input
+                        type="url"
+                        value={newLegendUrl}
+                        onChange={e => setNewLegendUrl(e.target.value)}
+                        placeholder="https://blog.naver.com/..."
+                        className={inputCls + ' block mt-1 w-full'}
+                      />
                     </div>
                     <button
                       type="button"

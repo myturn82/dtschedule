@@ -95,6 +95,7 @@ export interface LegendItem {
   icon: string
   label: string
   color: LegendColor
+  url?: string
 }
 
 // ─── Customer / Plan types ────────────────────────────────────────────────────

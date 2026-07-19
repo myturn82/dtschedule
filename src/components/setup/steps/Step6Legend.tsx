@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { LegendItem, LegendColor } from '../../../types'
+import { BrandLegendIcon, isBrandLegendIcon } from '../../../lib/legendIcons'
 import { StepHeader, WIZARD_STEPS } from '../StepHeader'
 import { Field, ErrLine } from '../WizardField'
 import { WizardIcon } from '../WizardIcons'
@@ -33,11 +34,13 @@ export function Step6Legend({ legendItems, error, onChange }: Props) {
   const [label, setLabel] = useState('')
   const [icon, setIcon] = useState('★')
   const [color, setColor] = useState<LegendColor>('amber')
+  const [url, setUrl] = useState('')
 
   function addItem() {
     if (!label.trim()) return
-    onChange([...legendItems, { id: crypto.randomUUID(), icon, label: label.trim(), color }])
+    onChange([...legendItems, { id: crypto.randomUUID(), icon, label: label.trim(), color, url: url.trim() || undefined }])
     setLabel('')
+    setUrl('')
   }
 
   function addSuggested(s: Omit<LegendItem, 'id'>) {
@@ -70,7 +73,9 @@ export function Step6Legend({ legendItems, error, onChange }: Props) {
         <div className="row-list">
           {legendItems.map(item => (
             <div key={item.id} className="role-row">
-              <span className="legend-icon">{item.icon}</span>
+              <span className="legend-icon">
+                {isBrandLegendIcon(item.icon) ? <BrandLegendIcon value={item.icon} size={16} /> : item.icon}
+              </span>
               <span className="role-name">{item.label}</span>
               <span className="legend-dot" style={{ background: hexOf(item.color) }} />
               <button className="iconbtn danger" onClick={() => onChange(legendItems.filter(i => i.id !== item.id))} aria-label="삭제">
@@ -87,6 +92,7 @@ export function Step6Legend({ legendItems, error, onChange }: Props) {
           <input className="ipt legend-iconinput" value={icon} maxLength={2} placeholder="★" onChange={e => setIcon(e.target.value)} />
           <input className="ipt" value={label} placeholder="범례 이름" onChange={e => setLabel(e.target.value)} onKeyDown={e => e.key === 'Enter' && addItem()} />
         </div>
+        <input className="ipt" type="url" value={url} placeholder="링크 URL (선택) — https://blog.naver.com/..." onChange={e => setUrl(e.target.value)} style={{ marginTop: '6px', width: '100%' }} />
         <div className="swatch-row">
           {COLORS.map(c => (
             <button key={c.key} className={`swatch${color === c.key ? ' on' : ''}`} style={{ background: c.hex }} title={c.label}
