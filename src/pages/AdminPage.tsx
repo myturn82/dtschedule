@@ -1249,15 +1249,17 @@ export function AdminPage() {
                               <div className="sm:hidden flex flex-col items-center gap-0.5 mt-1">
                                 <button
                                   onClick={() => { setEditingEmailUserId(m.user_id); setEditEmail(m.profile?.email ?? '') }}
-                                  className="text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-brand-primary)] truncate max-w-full"
+                                  className="text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-brand-primary)] truncate max-w-full inline-flex items-center gap-0.5"
                                 >
                                   {m.profile?.email ?? '이메일 없음'}
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                                 </button>
                                 <button
                                   onClick={() => { setEditingPhoneUserId(m.user_id); setEditPhone(fmtPhone(m.profile?.phone)) }}
-                                  className="text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-brand-primary)]"
+                                  className="text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-brand-primary)] inline-flex items-center gap-0.5"
                                 >
                                   {fmtPhone(m.profile?.phone) || '전화번호 없음'}
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                                 </button>
                               </div>
                             </td>
@@ -1283,10 +1285,11 @@ export function AdminPage() {
                               ) : (
                                 <button
                                   onClick={() => { setEditingEmailUserId(m.user_id); setEditEmail(m.profile?.email ?? '') }}
-                                  className="hover:text-[var(--color-brand-primary)] transition-colors text-[var(--color-text-muted)]"
+                                  className="hover:text-[var(--color-brand-primary)] transition-colors text-[var(--color-text-muted)] inline-flex items-center gap-1"
                                   title="이메일 수정"
                                 >
                                   {m.profile?.email ?? '-'}
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                                 </button>
                               )}
                             </td>
@@ -1311,10 +1314,11 @@ export function AdminPage() {
                               ) : (
                                 <button
                                   onClick={() => { setEditingPhoneUserId(m.user_id); setEditPhone(fmtPhone(m.profile?.phone)) }}
-                                  className="hover:text-[var(--color-brand-primary)] transition-colors text-[var(--color-text-muted)]"
+                                  className="hover:text-[var(--color-brand-primary)] transition-colors text-[var(--color-text-muted)] inline-flex items-center gap-1"
                                   title="전화번호 수정"
                                 >
                                   {fmtPhone(m.profile?.phone) || '-'}
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                                 </button>
                               )}
                             </td>
