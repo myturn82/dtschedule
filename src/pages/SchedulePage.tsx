@@ -192,6 +192,7 @@ export function SchedulePage() {
   const assignments = needsAdj ? [...primaryAssignments, ...adjAssignments] : primaryAssignments
   const weekDateOverrides = needsAdj ? [...dateOverrides, ...adjDateOverrides] : dateOverrides
   const { profiles, memberPreferences } = useProfiles()
+  const adminUserIds = useMemo(() => new Set(profiles.filter(p => p.memberRole === 'admin').map(p => p.id)), [profiles])
   const teamLeaderUserIds = new Set<string>()
   const { roles: tenantRoles } = useTenantRoles(tenant?.id ?? '')
   const splitRoles = tenantRoles.filter(r => r.split_cell && !r.indicator_bar)
@@ -1072,6 +1073,7 @@ export function SchedulePage() {
           assignments={assignments}
           customFields={effectiveCustomFields}
           profiles={profiles}
+          adminUserIds={adminUserIds}
           onClose={() => setShowSms(false)}
         />
       )}

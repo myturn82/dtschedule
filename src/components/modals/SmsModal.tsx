@@ -7,6 +7,7 @@ interface SmsModalProps {
   assignments: Assignment[]
   customFields?: CustomFieldDef[]
   profiles?: Profile[]
+  adminUserIds?: Set<string>
   onClose: () => void
 }
 
@@ -17,7 +18,7 @@ interface Recipient {
   selected: boolean
 }
 
-export function SmsModal({ assignments, customFields, profiles, onClose }: SmsModalProps) {
+export function SmsModal({ assignments, customFields, profiles, adminUserIds, onClose }: SmsModalProps) {
   const phoneFieldIds = useMemo(
     () => (customFields ?? []).filter(f => f.type === 'phone').map(f => f.id),
     [customFields]
@@ -35,11 +36,13 @@ export function SmsModal({ assignments, customFields, profiles, onClose }: SmsMo
     const seen = new Map<string, Recipient>()
     for (const a of assignments) {
       if (a.account_deleted) continue
+      if (a.user_id && adminUserIds?.has(a.user_id)) continue
       const key = a.user_id ?? a.member_name
-      // phone 우선순위: customer_phone → phone 타입 커스텀 필드 → profile.phone → 빈 문자열
+      // phone 우선순위: customer_phone → phone 타입 커스텀 필드 → profile.phone → 빈 문자열 (하이픈 포맷 적용)
       const cfPhone = phoneFieldIds.map(id => a.extra_data?.[id]).find(v => v?.trim()) ?? ''
       const profilePhone = a.user_id ? (profilePhoneMap.get(a.user_id) ?? '') : ''
-      const phone = a.customer_phone ?? (cfPhone || profilePhone)
+      const rawPhone = a.customer_phone ?? (cfPhone || profilePhone)
+      const phone = rawPhone ? formatPhone(rawPhone) : ''
       if (!seen.has(key)) {
         seen.set(key, { key, name: a.member_name, phone, selected: true })
       } else if (!seen.get(key)!.phone && phone) {
