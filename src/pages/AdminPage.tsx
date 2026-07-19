@@ -1202,8 +1202,8 @@ export function AdminPage() {
                   </div>
                 )}
 
-                <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow-sm">
-                  <table className="w-full text-sm">
+                <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow-sm overflow-x-auto">
+                  <table className="w-full text-sm min-w-[360px]">
                     <thead>
                       <tr className="bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
                         <th className="text-center px-2 py-2 sm:px-4 sm:py-3 text-xs font-semibold text-[var(--color-text-muted)]">이름</th>
