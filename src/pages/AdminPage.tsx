@@ -227,7 +227,7 @@ export function AdminPage() {
   const {
     members, scheduleRules, dateOverrides, loading,
     reloadMembers,
-    addMember, removeMember, updateMemberName, updateMemberTenantRole, updateMemberAccess,
+    addMember, removeMember, updateMemberName, updateMemberPhone, updateMemberEmail, updateMemberTenantRole, updateMemberAccess,
     toggleScheduleRule, upsertScheduleRulesForSlots,
     addDateOverride, deleteDateOverride,
     updateTenantSettings, updateTenantName, approveUser,
@@ -260,6 +260,16 @@ export function AdminPage() {
   const [editingNameUserId, setEditingNameUserId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
   const [nameSaving, setNameSaving] = useState(false)
+
+  // 회원 전화번호 수정
+  const [editingPhoneUserId, setEditingPhoneUserId] = useState<string | null>(null)
+  const [editPhone, setEditPhone] = useState('')
+  const [phoneSaving, setPhoneSaving] = useState(false)
+
+  // 회원 이메일 수정
+  const [editingEmailUserId, setEditingEmailUserId] = useState<string | null>(null)
+  const [editEmail, setEditEmail] = useState('')
+  const [emailSaving, setEmailSaving] = useState(false)
 
   // 직접 등록 (이메일 인증 없이 테스트 계정 생성)
   const [showDirectCreate, setShowDirectCreate] = useState(false)
@@ -533,6 +543,24 @@ export function AdminPage() {
     setNameSaving(false)
     if (err) { msg(err, true); return }
     setEditingNameUserId(null)
+  }
+
+  async function handleSaveMemberPhone(userId: string) {
+    setPhoneSaving(true)
+    const raw = editPhone.replace(/\D/g, '')
+    const err = await updateMemberPhone(userId, raw)
+    setPhoneSaving(false)
+    if (err) { msg(err, true); return }
+    setEditingPhoneUserId(null)
+  }
+
+  async function handleSaveMemberEmail(userId: string) {
+    if (!editEmail.trim()) { msg('이메일을 입력해 주세요.', true); return }
+    setEmailSaving(true)
+    const err = await updateMemberEmail(userId, editEmail.trim())
+    setEmailSaving(false)
+    if (err) { msg(err, true); return }
+    setEditingEmailUserId(null)
   }
 
   async function addLegendItem() {
@@ -1217,18 +1245,64 @@ export function AdminPage() {
                                 </button>
                               )}
                               {m.user_id === profile.id && <span className="ml-1.5 text-xs text-[var(--color-text-muted)]">(나)</span>}
-                              {m.profile?.phone && (
-                                <a
-                                  href={`tel:${m.profile.phone}`}
-                                  onClick={e => e.stopPropagation()}
-                                  className="sm:hidden block mt-0.5 text-[11px] font-normal text-[var(--color-brand-primary)] underline underline-offset-2"
+                            </td>
+                            <td className="px-2 py-2 sm:px-4 sm:py-3 hidden sm:table-cell text-xs text-center">
+                              {editingEmailUserId === m.user_id ? (
+                                <span className="flex items-center justify-center gap-1">
+                                  <input
+                                    type="email"
+                                    value={editEmail}
+                                    onChange={e => setEditEmail(e.target.value)}
+                                    onKeyDown={e => { if (e.key === 'Enter') handleSaveMemberEmail(m.user_id); if (e.key === 'Escape') setEditingEmailUserId(null) }}
+                                    placeholder="user@example.com"
+                                    className="text-xs px-1.5 py-1 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] w-36 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]"
+                                    autoFocus
+                                  />
+                                  <button onClick={() => handleSaveMemberEmail(m.user_id)} disabled={emailSaving}
+                                    className="px-1.5 py-1 text-[10px] bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] rounded-lg disabled:opacity-40">
+                                    {emailSaving ? '...' : '저장'}
+                                  </button>
+                                  <button onClick={() => setEditingEmailUserId(null)}
+                                    className="px-1.5 py-1 text-[10px] border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] rounded-lg">취소</button>
+                                </span>
+                              ) : (
+                                <button
+                                  onClick={() => { setEditingEmailUserId(m.user_id); setEditEmail(m.profile?.email ?? '') }}
+                                  className="hover:text-[var(--color-brand-primary)] transition-colors text-[var(--color-text-muted)]"
+                                  title="이메일 수정"
                                 >
-                                  {fmtPhone(m.profile.phone)}
-                                </a>
+                                  {m.profile?.email ?? '-'}
+                                </button>
                               )}
                             </td>
-                            <td className="px-2 py-2 sm:px-4 sm:py-3 text-[var(--color-text-muted)] hidden sm:table-cell text-xs text-center">{m.profile?.email ?? '-'}</td>
-                            <td className="px-2 py-2 sm:px-4 sm:py-3 text-[var(--color-text-muted)] hidden sm:table-cell text-xs text-center">{fmtPhone(m.profile?.phone) || '-'}</td>
+                            <td className="px-2 py-2 sm:px-4 sm:py-3 hidden sm:table-cell text-xs text-center">
+                              {editingPhoneUserId === m.user_id ? (
+                                <span className="flex items-center justify-center gap-1">
+                                  <input
+                                    value={editPhone}
+                                    onChange={e => setEditPhone(formatPhone(e.target.value))}
+                                    onKeyDown={e => { if (e.key === 'Enter') handleSaveMemberPhone(m.user_id); if (e.key === 'Escape') setEditingPhoneUserId(null) }}
+                                    placeholder="010-0000-0000"
+                                    className="text-xs px-1.5 py-1 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] w-28 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]"
+                                    autoFocus
+                                  />
+                                  <button onClick={() => handleSaveMemberPhone(m.user_id)} disabled={phoneSaving}
+                                    className="px-1.5 py-1 text-[10px] bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] rounded-lg disabled:opacity-40">
+                                    {phoneSaving ? '...' : '저장'}
+                                  </button>
+                                  <button onClick={() => setEditingPhoneUserId(null)}
+                                    className="px-1.5 py-1 text-[10px] border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] rounded-lg">취소</button>
+                                </span>
+                              ) : (
+                                <button
+                                  onClick={() => { setEditingPhoneUserId(m.user_id); setEditPhone(fmtPhone(m.profile?.phone)) }}
+                                  className="hover:text-[var(--color-brand-primary)] transition-colors text-[var(--color-text-muted)]"
+                                  title="전화번호 수정"
+                                >
+                                  {fmtPhone(m.profile?.phone) || '-'}
+                                </button>
+                              )}
+                            </td>
                             <td className="px-2 py-2 sm:px-4 sm:py-3 text-center">
                               <select
                                 value={m.role_id ?? ''}
@@ -1273,6 +1347,74 @@ export function AdminPage() {
                                     삭제
                                   </button>
                                 )}
+                              </div>
+                            </td>
+                          </tr>
+                          {/* 모바일 전용: 이메일·전화번호 편집 행 */}
+                          <tr className="sm:hidden border-t-0">
+                            <td colSpan={4} className="px-3 pb-2 pt-0">
+                              <div className="flex flex-col gap-1.5 bg-[var(--color-surface-secondary)] rounded-xl px-3 py-2">
+                                {/* 이메일 */}
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[10px] font-semibold text-[var(--color-text-muted)] w-12 shrink-0">이메일</span>
+                                  {editingEmailUserId === m.user_id ? (
+                                    <span className="flex items-center gap-1 flex-1">
+                                      <input
+                                        type="email"
+                                        value={editEmail}
+                                        onChange={e => setEditEmail(e.target.value)}
+                                        onKeyDown={e => { if (e.key === 'Enter') handleSaveMemberEmail(m.user_id); if (e.key === 'Escape') setEditingEmailUserId(null) }}
+                                        placeholder="user@example.com"
+                                        className="text-xs px-1.5 py-1 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] flex-1 min-w-0 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]"
+                                        autoFocus
+                                      />
+                                      <button onClick={() => handleSaveMemberEmail(m.user_id)} disabled={emailSaving}
+                                        className="px-1.5 py-1 text-[10px] bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] rounded-lg disabled:opacity-40 shrink-0">
+                                        {emailSaving ? '...' : '저장'}
+                                      </button>
+                                      <button onClick={() => setEditingEmailUserId(null)}
+                                        className="px-1.5 py-1 text-[10px] border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] rounded-lg shrink-0">취소</button>
+                                    </span>
+                                  ) : (
+                                    <button
+                                      onClick={() => { setEditingEmailUserId(m.user_id); setEditEmail(m.profile?.email ?? '') }}
+                                      className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-brand-primary)] transition-colors text-left flex-1 truncate"
+                                      title="이메일 수정"
+                                    >
+                                      {m.profile?.email ?? '-'}
+                                    </button>
+                                  )}
+                                </div>
+                                {/* 전화번호 */}
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[10px] font-semibold text-[var(--color-text-muted)] w-12 shrink-0">전화번호</span>
+                                  {editingPhoneUserId === m.user_id ? (
+                                    <span className="flex items-center gap-1 flex-1">
+                                      <input
+                                        value={editPhone}
+                                        onChange={e => setEditPhone(formatPhone(e.target.value))}
+                                        onKeyDown={e => { if (e.key === 'Enter') handleSaveMemberPhone(m.user_id); if (e.key === 'Escape') setEditingPhoneUserId(null) }}
+                                        placeholder="010-0000-0000"
+                                        className="text-xs px-1.5 py-1 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] flex-1 min-w-0 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]"
+                                        autoFocus
+                                      />
+                                      <button onClick={() => handleSaveMemberPhone(m.user_id)} disabled={phoneSaving}
+                                        className="px-1.5 py-1 text-[10px] bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] rounded-lg disabled:opacity-40 shrink-0">
+                                        {phoneSaving ? '...' : '저장'}
+                                      </button>
+                                      <button onClick={() => setEditingPhoneUserId(null)}
+                                        className="px-1.5 py-1 text-[10px] border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] rounded-lg shrink-0">취소</button>
+                                    </span>
+                                  ) : (
+                                    <button
+                                      onClick={() => { setEditingPhoneUserId(m.user_id); setEditPhone(fmtPhone(m.profile?.phone)) }}
+                                      className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-brand-primary)] transition-colors text-left flex-1"
+                                      title="전화번호 수정"
+                                    >
+                                      {fmtPhone(m.profile?.phone) || '-'}
+                                    </button>
+                                  )}
+                                </div>
                               </div>
                             </td>
                           </tr>

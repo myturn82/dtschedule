@@ -14,6 +14,8 @@ interface AdminState {
   addMember: (email: string, roleId?: string) => Promise<string | null>
   removeMember: (userId: string) => Promise<string | null>
   updateMemberName: (userId: string, name: string) => Promise<string | null>
+  updateMemberPhone: (userId: string, phone: string) => Promise<string | null>
+  updateMemberEmail: (userId: string, email: string) => Promise<string | null>
   updateMemberTenantRole: (userId: string, roleId: string | null) => Promise<string | null>
   updateMemberAccess: (userId: string, role: TenantAccessRole) => Promise<string | null>
   toggleScheduleRule: (ruleId: string, currentIsOpen: boolean) => Promise<string | null>
@@ -135,6 +137,29 @@ export function useAdmin(tenantId: string): AdminState {
     }
     return error?.message ?? null
   }, [])
+
+  const updateMemberPhone = useCallback(async (userId: string, phone: string): Promise<string | null> => {
+    const { error } = await supabase.rpc('admin_update_member_phone', { p_user_id: userId, p_phone: phone })
+    if (!error) {
+      setMembers(prev => prev.map(m =>
+        m.user_id === userId && m.profile ? { ...m, profile: { ...m.profile, phone: phone.trim() || null } } : m
+      ))
+    }
+    return error?.message ?? null
+  }, [])
+
+  const updateMemberEmail = useCallback(async (userId: string, email: string): Promise<string | null> => {
+    const trimmed = email.trim()
+    if (!trimmed) return '이메일을 입력해 주세요.'
+    const { data, error } = await supabase.functions.invoke('admin-update-member-email', {
+      body: { user_id: userId, email: trimmed, tenant_id: tenantId },
+    })
+    if (error || data?.error) return data?.error ?? error?.message ?? '이메일 변경에 실패했습니다.'
+    setMembers(prev => prev.map(m =>
+      m.user_id === userId && m.profile ? { ...m, profile: { ...m.profile, email: trimmed } } : m
+    ))
+    return null
+  }, [tenantId])
 
   const updateMemberTenantRole = useCallback(async (userId: string, roleId: string | null): Promise<string | null> => {
     const { error } = await supabase
@@ -273,7 +298,7 @@ export function useAdmin(tenantId: string): AdminState {
   return {
     members, profiles, scheduleRules, dateOverrides, loading,
     reloadMembers,
-    addMember, removeMember, updateMemberName, updateMemberTenantRole, updateMemberAccess,
+    addMember, removeMember, updateMemberName, updateMemberPhone, updateMemberEmail, updateMemberTenantRole, updateMemberAccess,
     toggleScheduleRule, upsertScheduleRulesForSlots,
     addDateOverride, deleteDateOverride,
     updateTenantSettings, updateTenantName, approveUser,
