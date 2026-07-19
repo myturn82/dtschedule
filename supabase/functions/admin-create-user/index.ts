@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
     const { data: { user: caller }, error: userErr } = await supabaseAdmin.auth.getUser(token)
     if (userErr || !caller) return json({ error: '인증 실패' }, 401, corsHeaders)
 
-    const { email, password, name, role_id, tenant_id } = await req.json()
+    const { email, password, name, phone, role_id, tenant_id } = await req.json()
 
     if (!email || !password || !name || !tenant_id) {
       return json({ error: '필수 항목 누락' }, 400, corsHeaders)
@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
 
       const { error: profileUpdateErr } = await supabaseAdmin
         .from('profiles')
-        .update({ name })
+        .update({ name, ...(phone ? { phone } : {}) })
         .eq('id', userId)
       if (profileUpdateErr) {
         console.error(`[admin-create-user] profile update failed: ${profileUpdateErr.message}`)
@@ -94,6 +94,7 @@ Deno.serve(async (req) => {
         id: userId,
         name,
         email,
+        ...(phone ? { phone } : {}),
         is_approved: false,
         is_super_admin: false,
       })

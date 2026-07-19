@@ -19,6 +19,7 @@ import { applyThemePreset, THEME_PRESET_LIST, type ThemePresetKey } from '../lib
 import { displayMode } from '../lib/tenantMode'
 import { getFunctionErrorMessage } from '../lib/functionsError'
 import { fmtPhone } from '../lib/format'
+import { formatPhone } from '../lib/phone'
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
 const HEX_COLOR_RE = /^#[0-9A-Fa-f]{6}$/
@@ -262,7 +263,7 @@ export function AdminPage() {
 
   // 직접 등록 (이메일 인증 없이 테스트 계정 생성)
   const [showDirectCreate, setShowDirectCreate] = useState(false)
-  const [directForm, setDirectForm] = useState({ email: '', name: '', password: '', roleId: '' })
+  const [directForm, setDirectForm] = useState({ email: '', name: '', password: '', phone: '', roleId: '' })
   const [directSaving, setDirectSaving] = useState(false)
 
   // Roles tab
@@ -736,6 +737,7 @@ export function AdminPage() {
         email: directForm.email,
         password: directForm.password,
         name: directForm.name,
+        phone: directForm.phone.replace(/\D/g, '') || null,
         role_id: directForm.roleId || null,
         tenant_id: adminTenantId,
       },
@@ -747,7 +749,7 @@ export function AdminPage() {
     }
     await reloadMembers()
     msg(`${directForm.name} (${directForm.email}) 계정이 생성되고 조직에 추가됐습니다.`)
-    setDirectForm({ email: '', name: '', password: '', roleId: '' })
+    setDirectForm({ email: '', name: '', password: '', phone: '', roleId: '' })
     setShowDirectCreate(false)
   }
 
@@ -1112,6 +1114,12 @@ export function AdminPage() {
                           <input type="password" required minLength={6} value={directForm.password}
                             onChange={e => setDirectForm(p => ({ ...p, password: e.target.value }))}
                             placeholder="••••••" className={inputCls + ' w-full mt-1'} />
+                        </div>
+                        <div>
+                          <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">전화번호</label>
+                          <input type="tel" value={directForm.phone}
+                            onChange={e => setDirectForm(p => ({ ...p, phone: formatPhone(e.target.value) }))}
+                            placeholder="010-0000-0000" className={inputCls + ' w-full mt-1'} />
                         </div>
                         <div>
                           <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">역할</label>
