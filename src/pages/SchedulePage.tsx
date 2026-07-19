@@ -1071,6 +1071,7 @@ export function SchedulePage() {
         <SmsModal
           assignments={assignments}
           customFields={effectiveCustomFields}
+          profiles={profiles}
           onClose={() => setShowSms(false)}
         />
       )}

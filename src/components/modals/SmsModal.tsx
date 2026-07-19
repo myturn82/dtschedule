@@ -1,11 +1,12 @@
 ﻿import { useState, useMemo } from 'react'
-import type { Assignment, CustomFieldDef } from '../../types'
+import type { Assignment, CustomFieldDef, Profile } from '../../types'
 import { formatPhone } from '../../lib/phone'
 import { DevFileLabel } from '../DevFileLabel'
 
 interface SmsModalProps {
   assignments: Assignment[]
   customFields?: CustomFieldDef[]
+  profiles?: Profile[]
   onClose: () => void
 }
 
@@ -16,20 +17,29 @@ interface Recipient {
   selected: boolean
 }
 
-export function SmsModal({ assignments, customFields, onClose }: SmsModalProps) {
+export function SmsModal({ assignments, customFields, profiles, onClose }: SmsModalProps) {
   const phoneFieldIds = useMemo(
     () => (customFields ?? []).filter(f => f.type === 'phone').map(f => f.id),
     [customFields]
   )
+
+  const profilePhoneMap = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const p of profiles ?? []) {
+      if (p.phone) map.set(p.id, p.phone)
+    }
+    return map
+  }, [profiles])
 
   const initialRecipients = useMemo<Recipient[]>(() => {
     const seen = new Map<string, Recipient>()
     for (const a of assignments) {
       if (a.account_deleted) continue
       const key = a.user_id ?? a.member_name
-      // phone 우선순위: customer_phone → phone 타입 커스텀 필드 → 빈 문자열
+      // phone 우선순위: customer_phone → phone 타입 커스텀 필드 → profile.phone → 빈 문자열
       const cfPhone = phoneFieldIds.map(id => a.extra_data?.[id]).find(v => v?.trim()) ?? ''
-      const phone = a.customer_phone ?? cfPhone
+      const profilePhone = a.user_id ? (profilePhoneMap.get(a.user_id) ?? '') : ''
+      const phone = a.customer_phone ?? (cfPhone || profilePhone)
       if (!seen.has(key)) {
         seen.set(key, { key, name: a.member_name, phone, selected: true })
       } else if (!seen.get(key)!.phone && phone) {
@@ -37,7 +47,7 @@ export function SmsModal({ assignments, customFields, onClose }: SmsModalProps) 
       }
     }
     return [...seen.values()].sort((a, b) => a.name.localeCompare(b.name, 'ko'))
-  }, [assignments, phoneFieldIds])
+  }, [assignments, phoneFieldIds, profilePhoneMap])
 
   const [recipients, setRecipients] = useState<Recipient[]>(initialRecipients)
   const [message, setMessage] = useState('')
