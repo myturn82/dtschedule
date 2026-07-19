@@ -1245,6 +1245,21 @@ export function AdminPage() {
                                 </button>
                               )}
                               {m.user_id === profile.id && <span className="ml-1.5 text-xs text-[var(--color-text-muted)]">(나)</span>}
+                              {/* 모바일: 이메일·전화번호 요약 표시 (탭 → 편집) */}
+                              <div className="sm:hidden flex flex-col items-center gap-0.5 mt-1">
+                                <button
+                                  onClick={() => { setEditingEmailUserId(m.user_id); setEditEmail(m.profile?.email ?? '') }}
+                                  className="text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-brand-primary)] truncate max-w-full"
+                                >
+                                  {m.profile?.email ?? '이메일 없음'}
+                                </button>
+                                <button
+                                  onClick={() => { setEditingPhoneUserId(m.user_id); setEditPhone(fmtPhone(m.profile?.phone)) }}
+                                  className="text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-brand-primary)]"
+                                >
+                                  {fmtPhone(m.profile?.phone) || '전화번호 없음'}
+                                </button>
+                              </div>
                             </td>
                             <td className="px-2 py-2 sm:px-4 sm:py-3 hidden sm:table-cell text-xs text-center">
                               {editingEmailUserId === m.user_id ? (
@@ -1350,7 +1365,8 @@ export function AdminPage() {
                               </div>
                             </td>
                           </tr>
-                          {/* 모바일 전용: 이메일·전화번호 편집 행 */}
+                          {/* 모바일 전용: 편집 중일 때만 표시 */}
+                          {(editingEmailUserId === m.user_id || editingPhoneUserId === m.user_id) && (
                           <tr className="sm:hidden border-t-0">
                             <td colSpan={4} className="px-3 pb-2 pt-0">
                               <div className="flex flex-col gap-1.5 bg-[var(--color-surface-secondary)] rounded-xl px-3 py-2">
@@ -1420,6 +1436,7 @@ export function AdminPage() {
                               </div>
                             </td>
                           </tr>
+                          )}
                         </Fragment>
                       ))}
                     </tbody>
