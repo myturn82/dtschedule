@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   server: {
     watch: {
       // OMC(.omc) 세션 상태 파일이 계속 갱신되며 dev 서버 워처를 자극하는 것을 방지
@@ -14,7 +14,8 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
-    VitePWA({
+    // 개발 서버에서는 SW를 완전히 비활성화 (HMR 오프라인 방지)
+    command === 'build' && VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'icons/*.png'],
       manifest: {
@@ -84,4 +85,4 @@ export default defineConfig({
       },
     },
   },
-})
+}))
