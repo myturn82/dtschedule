@@ -99,10 +99,10 @@ export function PendingApprovalsBanner({
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
-                  <th className="px-4 py-3">
+                  <th className="px-4 py-3 text-center">
                     <input
                       type="checkbox"
-                      className="accent-[var(--color-brand-primary)] w-4 h-4"
+                      className="accent-[var(--color-brand-primary)] w-4 h-4 block mx-auto"
                       checked={selectedMemberIds.size === pendingMembers.length && pendingMembers.length > 0}
                       onChange={e => onToggleAll(e.target.checked)}
                     />
@@ -121,10 +121,10 @@ export function PendingApprovalsBanner({
                     className={`hover:bg-[var(--color-surface-hover)] cursor-pointer ${selectedMemberIds.has(m.id) ? 'bg-[var(--color-brand-primary)]/5' : ''}`}
                     onClick={() => onToggleMember(m.id)}
                   >
-                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                    <td className="px-4 py-3 text-center" onClick={e => e.stopPropagation()}>
                       <input
                         type="checkbox"
-                        className="accent-[var(--color-brand-primary)] w-4 h-4"
+                        className="accent-[var(--color-brand-primary)] w-4 h-4 block mx-auto"
                         checked={selectedMemberIds.has(m.id)}
                         onChange={() => onToggleMember(m.id)}
                       />

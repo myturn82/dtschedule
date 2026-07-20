@@ -21,12 +21,16 @@
   </head>
   <body>
     <div id="root"></div>
-    <!-- 개발 환경: React 로드 전에 서비스워커·캐시 즉시 해제 (HMR 오프라인 방지) -->
+    <!-- 개발 환경: SW 해제 후 즉시 재로드 (HMR 오프라인 방지) -->
     <script>
       if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
         if ('serviceWorker' in navigator) {
           navigator.serviceWorker.getRegistrations().then(function(regs) {
-            regs.forEach(function(reg) { reg.unregister(); });
+            if (regs.length === 0) return;
+            // SW가 남아있으면 모두 해제하고 재로드 — 현재 페이지 로드에서도 SW 없이 시작하도록
+            Promise.all(regs.map(function(reg) { return reg.unregister(); })).then(function() {
+              window.location.reload();
+            });
           });
         }
         if ('caches' in window) {
