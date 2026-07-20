@@ -86,6 +86,7 @@ export interface TenantSettings {
   plus_label?: string;
   role_ratios?: Record<string, number>; // roleId → 퍼센트, 합계 100
   setup_completed_at?: string;
+  hidden_days?: number[];              // 숨길 요일 (0=일, 1=월, ..., 6=토)
 }
 
 export type LegendColor = 'amber' | 'pink' | 'slate' | 'yellow' | 'blue' | 'green' | 'purple' | 'red' | 'indigo' | 'black'

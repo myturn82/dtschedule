@@ -308,6 +308,7 @@ export function AdminPage() {
   const [settingsTitle, setSettingsTitle] = useState('')
   const [settingsTheme, setSettingsTheme] = useState('')
   const [settingsPreset, setSettingsPreset] = useState<ThemePresetKey | ''>('')
+  const [settingsHiddenDays, setSettingsHiddenDays] = useState<number[]>([])
   const [colorOpen, setColorOpen] = useState(false)
 
   const [slotLabels, setSlotLabels] = useState<Record<string, string>>({})
@@ -370,6 +371,7 @@ export function AdminPage() {
     setSettingsTitle(s.title ?? '')
     setSettingsTheme(s.theme_color ?? '')
     setSettingsPreset((s.theme_preset as ThemePresetKey) ?? '')
+    setSettingsHiddenDays(s.hidden_days ?? [])
 
     setSlotLabels(s.slot_labels ?? {})
     setRoleRatios(s.role_ratios ?? {})
@@ -921,6 +923,7 @@ export function AdminPage() {
         time_slots: slotList,
         slot_interval_minutes: hasHalf ? 30 : 60,
         slot_labels: slotLabels,
+        hidden_days: settingsHiddenDays.length > 0 ? settingsHiddenDays : undefined,
       }),
       upsertScheduleRulesForSlots(slotList),
     ])
@@ -940,6 +943,7 @@ export function AdminPage() {
           slot_interval_minutes: hasHalf ? 30 : 60,
           slot_labels: slotLabels,
           legend_items: legendItems,
+          hidden_days: settingsHiddenDays.length > 0 ? settingsHiddenDays : undefined,
         },
       }
       setAdminTenant(updated)
@@ -2150,6 +2154,33 @@ export function AdminPage() {
                       ))}
                     </ul>
                   )}
+                </div>
+
+                <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow-sm p-5">
+                  <p className="text-[12px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">요일 숨김</p>
+                  <p className="text-[12px] text-[var(--color-text-muted)] mb-3">선택한 요일은 월간·주간 뷰에서 숨겨집니다.</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {['일', '월', '화', '수', '목', '금', '토'].map((label, dow) => (
+                      <button
+                        key={dow}
+                        type="button"
+                        onClick={() => setSettingsHiddenDays(prev =>
+                          prev.includes(dow) ? prev.filter(d => d !== dow) : [...prev, dow]
+                        )}
+                        className={`w-10 h-10 rounded-xl text-sm font-semibold border transition-colors ${
+                          settingsHiddenDays.includes(dow)
+                            ? 'bg-[var(--color-text-muted)] text-white border-[var(--color-text-muted)]'
+                            : dow === 0
+                            ? 'border-red-200 text-red-400 hover:bg-red-50'
+                            : dow === 6
+                            ? 'border-blue-200 text-blue-400 hover:bg-blue-50'
+                            : 'border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <button type="submit" disabled={saving}

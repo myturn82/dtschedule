@@ -21,6 +21,7 @@ interface TenantContextValue {
   slotLabels: Record<string, string>
   legendItems: LegendItem[]
   customFields: CustomFieldDef[]
+  hiddenDays: number[]
   typeLabels: { member: string; '50plus': string }
   alreadyMemberNotice: string | null
   setTenant: (tenant: Tenant, role: TenantAccessRole) => void
@@ -190,6 +191,11 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     [tenant]
   )
 
+  const hiddenDays = useMemo<number[]>(
+    () => tenant?.settings?.hidden_days ?? [],
+    [tenant]
+  )
+
   const customFields = useMemo<CustomFieldDef[]>(
     () => (tenant?.settings?.custom_fields ?? []).map(f => ({
       ...f,
@@ -217,6 +223,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       slotLabels,
       legendItems,
       customFields,
+      hiddenDays,
       typeLabels,
       alreadyMemberNotice,
       clearAlreadyMemberNotice,

@@ -104,7 +104,7 @@ export function SchedulePage() {
   const pad2 = (n: number) => String(n).padStart(2, '0')
 
   const { profile } = useAuth()
-  const { tenant, tenantRole, memberships, timeSlots, slotLabels, legendItems, customFields, typeLabels } = useTenant()
+  const { tenant, tenantRole, memberships, timeSlots, slotLabels, legendItems, customFields, typeLabels, hiddenDays } = useTenant()
 
   // 최신 커스텀 필드를 DB에서 직접 조회 (TenantContext stale 방지)
   const [freshCustomFields, setFreshCustomFields] = useState<CustomFieldDef[] | null>(null)
@@ -459,6 +459,9 @@ export function SchedulePage() {
   }
 
   const weekDays = getWeekDays(year, month, day)
+  const filteredWeekDays = hiddenDays.length > 0
+    ? weekDays.filter(d => !hiddenDays.includes(d.getDay()))
+    : weekDays
 
   function getTargetDays(): Date[] {
     if (viewType === 'month') {
@@ -884,6 +887,7 @@ export function SchedulePage() {
                   canAdd={canAdd}
                   memberRoleId={memberRoleId}
                   onCellClick={handleCellClick}
+                  hiddenDays={hiddenDays}
                 />
               ) : (
                 <ScheduleGrid
@@ -902,6 +906,7 @@ export function SchedulePage() {
                   hiddenRoleIds={hiddenRoleIds}
                   slotLabels={slotLabels}
                   canAdd={canAdd}
+                  hiddenDays={hiddenDays}
                   onCellClick={handleCellClick}
                   onHolidayCellClick={profile && isPrivileged
                     ? (d, startHour, endHour) => setHolidayTarget({ day: d, startHour, endHour })
@@ -916,7 +921,7 @@ export function SchedulePage() {
             ) : viewType === 'week' ? (
               displayMode === 'day' ? (
                 <WeekScheduleByDay
-                  weekDays={weekDays}
+                  weekDays={filteredWeekDays}
                   timeSlots={timeSlots}
                   assignments={assignments} slotSettings={slotSettings}
                   scheduleRules={scheduleRules} dateOverrides={weekDateOverrides}
@@ -932,7 +937,7 @@ export function SchedulePage() {
                 />
               ) : (
                 <WeekGrid
-                  weekDays={weekDays}
+                  weekDays={filteredWeekDays}
                   timeSlots={timeSlots}
                   assignments={assignments} slotSettings={slotSettings}
                   scheduleRules={scheduleRules} dateOverrides={weekDateOverrides}

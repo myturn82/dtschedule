@@ -33,6 +33,7 @@ interface Props {
   selectionRange?: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number; minColIdx: number; maxColIdx: number } | null
   copyRange?: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number; minColIdx: number; maxColIdx: number } | null
   canAdd?: boolean
+  hiddenDays?: number[]
 }
 
 const DOW_ORDER = [1, 2, 3, 4, 5, 6, 0]
@@ -175,10 +176,13 @@ function buildColMap(
 export function ScheduleGrid({
   year, month, timeSlots, assignments, slotSettings, scheduleRules, dateOverrides,
   highlightName, profile, tenantRole, memberRoleId, teamLeaderUserIds, splitRoles = [], indicatorBarRoles = [], isSplitMode = false, hiddenRoleIds = EMPTY_SET, slotLabels = {}, onCellClick, onHolidayCellClick, displayAssignmentFilter, withdrawnUserIds, highlightedSlots,
-  selectionRange, copyRange, canAdd = true,
+  selectionRange, copyRange, canAdd = true, hiddenDays = [],
 }: Props) {
   const pad2 = (n: number) => String(n).padStart(2, '0')
   const isAdmin = profile?.is_super_admin || tenantRole === 'admin'
+  const effectiveDowIndices = DOW_ORDER
+    .map((dow, i) => ({ dow, i }))
+    .filter(({ dow }) => !hiddenDays.includes(dow))
 
   function inRange(day: number, si: number, ci: number, r: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number; minColIdx: number; maxColIdx: number }) {
     return day >= r.minDay && day <= r.maxDay && si >= r.minSlotIdx && si <= r.maxSlotIdx && ci >= r.minColIdx && ci <= r.maxColIdx
@@ -211,7 +215,7 @@ export function ScheduleGrid({
               <span className="hidden sm:inline">시간/일자</span>
               <span className="sm:hidden">시간</span>
             </th>
-            {DOW_ORDER.map((dow, i) => (
+            {effectiveDowIndices.map(({ dow, i }) => (
               <th
                 key={dow}
                 colSpan={getDayColSpan(dow)}
@@ -239,8 +243,8 @@ export function ScheduleGrid({
                   <td className="border-t-2 border-[var(--color-border-strong)] border-x border-b border-[var(--color-border-table)] bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] px-0.5 sm:px-2 py-1 text-[9px] sm:text-xs font-bold text-center sticky left-0 z-10 w-9 sm:w-auto">
                     {weekIdx + 1}주
                   </td>
-                  {week.map((day, dowIdx) => {
-                    const dow = DOW_ORDER[dowIdx]
+                  {effectiveDowIndices.map(({ dow, i: dowIdx }) => {
+                    const day = week[dowIdx]
                     const dateStr = day
                       ? `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
                       : null
@@ -274,15 +278,18 @@ export function ScheduleGrid({
                 {isSplitMode && (
                   <tr>
                     <td className="border border-[var(--color-border-table)] bg-[var(--color-surface-secondary)] sticky left-0 z-10" />
-                    {week.map((day, dowIdx) =>
-                      visibleSplitRoles.map(role => (
-                        <td
-                          key={`${dowIdx}-${role.id}`}
-                          className="border border-[var(--color-border-table)] text-center text-[7px] sm:text-[9px] font-semibold bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] px-0.5 py-0.5 overflow-hidden"
-                        >
-                          <span className="block truncate" title={day ? role.name : ''}>{day ? role.name : ''}</span>
-                        </td>
-                      ))
+                    {effectiveDowIndices.map(({ i: dowIdx }) =>
+                      visibleSplitRoles.map(role => {
+                        const day = week[dowIdx]
+                        return (
+                          <td
+                            key={`${dowIdx}-${role.id}`}
+                            className="border border-[var(--color-border-table)] text-center text-[7px] sm:text-[9px] font-semibold bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] px-0.5 py-0.5 overflow-hidden"
+                          >
+                            <span className="block truncate" title={day ? role.name : ''}>{day ? role.name : ''}</span>
+                          </td>
+                        )
+                      })
                     )}
                   </tr>
                 )}
@@ -300,8 +307,8 @@ export function ScheduleGrid({
                         )}
                       </span>
                     </td>
-                    {week.map((day, dowIdx) => {
-                      const dow = DOW_ORDER[dowIdx]
+                    {effectiveDowIndices.map(({ dow, i: dowIdx }) => {
+                      const day = week[dowIdx]
 
                       if (!day) {
                         if (isSplitMode) {

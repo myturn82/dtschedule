@@ -30,17 +30,20 @@ interface Props {
   canAdd?: boolean
   memberRoleId?: string | null
   onCellClick: (target: ModalTarget) => void
+  hiddenDays?: number[]
 }
 
 export function MonthScheduleByDay({
   year, month, timeSlots, assignments, slotSettings, scheduleRules, dateOverrides,
   splitRoles = [], indicatorBarRoles = [], isSplitMode = false, hiddenRoleIds = EMPTY_SET,
   displayAssignmentFilter, withdrawnUserIds, canAdd = true, memberRoleId = null, onCellClick,
+  hiddenDays = [],
 }: Props) {
   function barRoleFor(roleId: string | null): TenantRole | undefined {
     return roleId ? indicatorBarRoles.find(r => r.id === roleId) : undefined
   }
   const weeks = getCalendarWeeks(year, month)
+  const effectiveDowIndices = DOW_ORDER.map((dow, i) => ({ dow, i })).filter(({ dow }) => !hiddenDays.includes(dow))
   const [expandedDays, setExpandedDays] = useState<Set<number>>(new Set())
 
   function roleName(roleId: string | null): string | null {
@@ -62,7 +65,7 @@ export function MonthScheduleByDay({
       <table className="border-collapse text-sm w-full table-fixed">
         <thead>
           <tr>
-            {DOW_ORDER.map((dow, i) => (
+            {effectiveDowIndices.map(({ dow, i }) => (
               <th
                 key={dow}
                 className={`border border-[var(--color-border-table)] px-2 py-1 text-xs font-semibold text-center
@@ -78,8 +81,8 @@ export function MonthScheduleByDay({
         <tbody>
           {weeks.map((week, weekIdx) => (
             <tr key={weekIdx}>
-              {week.map((day, dowIdx) => {
-                const dow = DOW_ORDER[dowIdx]
+              {effectiveDowIndices.map(({ dow, i: dowIdx }) => {
+                const day = week[dowIdx]
                 if (!day) {
                   return (
                     <td key={dowIdx} className="border border-[var(--color-border-table)] bg-[var(--color-surface-secondary)] align-top" style={{ height: '5rem' }} />
