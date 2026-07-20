@@ -81,6 +81,9 @@ export function SmsModal({ assignments, customFields, profiles, adminUserIds, on
 
           {/* Recipient list */}
           <div className="flex-1 overflow-y-auto px-4 py-3">
+            <p className="text-[11px] text-[var(--color-text-muted)] bg-[var(--color-surface-secondary)] rounded-lg px-2.5 py-1.5 mb-2.5">
+              📋 당월 스케줄 등록자(관리자 제외)를 대상으로 발송합니다.
+            </p>
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-semibold text-[var(--color-text-secondary)]">
                 수신자 <span className="text-[var(--color-brand-primary)]">{selected.length}</span>/{recipients.length}명
