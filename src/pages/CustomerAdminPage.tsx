@@ -314,12 +314,13 @@ export function CustomerAdminPage() {
 
         {/* Topbar */}
         <div className="flex items-center gap-[14px] mb-[clamp(18px,3vw,26px)]">
-          <h1 className="m-0 text-[clamp(20px,5vw,26px)] font-extrabold tracking-[-0.8px] flex items-center gap-[10px] whitespace-nowrap min-w-0">
+          <h1 className="m-0 text-[clamp(20px,5vw,26px)] font-extrabold tracking-[-0.8px] flex items-center gap-[10px] min-w-0">
             <span className="hub-avatar is-lg flex-shrink-0" style={{ background: customerColor.bg, color: customerColor.fg }}>{initialsOf(myCustomer.name)}</span>
-            <span className="truncate">{myCustomer.name}</span>
+            <span className="truncate min-w-0">{myCustomer.name}</span>
           </h1>
-          <span className="text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap" style={{ background: 'oklch(0.95 0.045 28)', color: 'oklch(0.45 0.14 28)' }}>
-            {PLAN_LABELS[plan]}
+          <span className="text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap flex-shrink-0" style={{ background: 'oklch(0.95 0.045 28)', color: 'oklch(0.45 0.14 28)' }}>
+            <span className="hidden sm:inline">{PLAN_LABELS[plan]}</span>
+            <span className="sm:hidden">{plan.charAt(0).toUpperCase() + plan.slice(1)}</span>
           </span>
           {!isDeletionPending && (
             <button
