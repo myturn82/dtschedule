@@ -3,6 +3,7 @@ import { fmtPhone, maskPhone } from '../../lib/format'
 import { formatTimeSub } from '../../utils/timeSlots'
 import { LockIcon } from '../icons/LockIcons'
 import { INDICATOR_BAR_COLOR, indicatorBarColorFor } from '../../utils/indicatorBarColors'
+import { isAssignmentHighlighted } from '../../utils/highlightMatch'
 
 interface Props {
   cellState: CellState
@@ -67,14 +68,7 @@ function NameChips({ assignments, highlightName, tintBg, tintInk, teamLeaderUser
   return (
     <div className="flex flex-col gap-0.5 w-full px-0.5">
       {visible.map(a => {
-        const _hq = highlightName?.toLowerCase() ?? ''
-        const isHighlighted = !!(highlightName && (
-          a.member_name.toLowerCase().includes(_hq) ||
-          (a.note && a.note.toLowerCase().includes(_hq)) ||
-          (a.customer_name && a.customer_name.toLowerCase().includes(_hq)) ||
-          (a.customer_phone && a.customer_phone.includes(_hq)) ||
-          (a.extra_data && Object.values(a.extra_data).some(v => String(v ?? '').toLowerCase().includes(_hq)))
-        ))
+        const isHighlighted = isAssignmentHighlighted(a, highlightName)
         const isWithdrawn = !!(a.user_id && withdrawnUserIds?.has(a.user_id)) || a.account_deleted
         const nameLabel = a.extra_data?._nf ? (a.extra_data._cl ?? '') : a.member_name
         const displayText = a.note ? `${nameLabel}(${a.note})` : nameLabel

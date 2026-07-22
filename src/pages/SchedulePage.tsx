@@ -888,6 +888,7 @@ export function SchedulePage() {
                   memberRoleId={memberRoleId}
                   onCellClick={handleCellClick}
                   hiddenDays={hiddenDays}
+                  highlightName={highlightName || null}
                 />
               ) : (
                 <ScheduleGrid
@@ -934,6 +935,7 @@ export function SchedulePage() {
                   canAdd={canAdd}
                   memberRoleId={memberRoleId}
                   onCellClick={handleCellClick}
+                  highlightName={highlightName || null}
                 />
               ) : (
                 <WeekGrid

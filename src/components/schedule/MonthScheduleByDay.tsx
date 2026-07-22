@@ -6,6 +6,7 @@ import { rangeSlotLabel, slotStartHourLabel } from '../../utils/timeSlots'
 import { getCellState } from '../../utils/cellState'
 import { LockIcon } from '../icons/LockIcons'
 import { indicatorBarColorFor } from '../../utils/indicatorBarColors'
+import { isAssignmentHighlighted } from '../../utils/highlightMatch'
 import type { Assignment, SlotSetting, ScheduleRule, DateOverride, TimeSlot, ModalTarget, TenantRole } from '../../types'
 
 const DOW_ORDER = [1, 2, 3, 4, 5, 6, 0]
@@ -31,13 +32,14 @@ interface Props {
   memberRoleId?: string | null
   onCellClick: (target: ModalTarget) => void
   hiddenDays?: number[]
+  highlightName?: string | null
 }
 
 export function MonthScheduleByDay({
   year, month, timeSlots, assignments, slotSettings, scheduleRules, dateOverrides,
   splitRoles = [], indicatorBarRoles = [], isSplitMode = false, hiddenRoleIds = EMPTY_SET,
   displayAssignmentFilter, withdrawnUserIds, canAdd = true, memberRoleId = null, onCellClick,
-  hiddenDays = [],
+  hiddenDays = [], highlightName = null,
 }: Props) {
   function barRoleFor(roleId: string | null): TenantRole | undefined {
     return roleId ? indicatorBarRoles.find(r => r.id === roleId) : undefined
@@ -123,12 +125,16 @@ export function MonthScheduleByDay({
                           const isWithdrawn = !!(assignment.user_id && withdrawnUserIds?.has(assignment.user_id)) || assignment.account_deleted
                           const rname = roleName(assignment.role_id)
                           const barRole = barRoleFor(assignment.role_id)
+                          const isHighlighted = isAssignmentHighlighted(assignment, highlightName)
                           return (
                             <button
                               key={assignment.id}
                               onClick={() => onCellClick({ year, month, day, timeSlot, memberType: assignment.member_type, roleId: assignment.role_id })}
-                              className="text-left text-[10px] leading-tight px-1 py-0.5 rounded truncate bg-[var(--tint-brand)] text-[var(--tint-brand-ink)] hover:brightness-95"
-                              style={barRole ? { borderLeft: `3px solid ${indicatorBarColorFor(barRole, indicatorBarRoles)}` } : undefined}
+                              className={`text-left text-[10px] leading-tight px-1 py-0.5 rounded truncate hover:brightness-95 ${isHighlighted ? '' : 'bg-[var(--tint-brand)] text-[var(--tint-brand-ink)]'}`}
+                              style={{
+                                ...(isHighlighted ? { background: '#fef08a', color: '#92400e' } : undefined),
+                                ...(barRole ? { borderLeft: `3px solid ${indicatorBarColorFor(barRole, indicatorBarRoles)}` } : undefined),
+                              }}
                               title={rangeSlotLabel(timeSlot)}
                             >
                               <span className="font-mono-num">{slotStartHourLabel(timeSlot)}</span>{' '}

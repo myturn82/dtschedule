@@ -8,17 +8,18 @@ describe('ScheduleHeader', () => {
     expect(screen.getAllByText(/4월/)[0]).toBeInTheDocument()
   })
 
+  // 모바일용 타이틀 행과 데스크탑용 중앙 오버레이 타이틀이 함께 렌더링되므로 버튼이 2개씩 나온다.
   it('calls onPrev when < button clicked', () => {
     const onPrev = vi.fn()
     render(<ScheduleHeader year={2026} month={4} onPrev={onPrev} onNext={vi.fn()} />)
-    fireEvent.click(screen.getByRole('button', { name: /nav\.prev/ }))
+    fireEvent.click(screen.getAllByRole('button', { name: /nav\.prev/ })[0])
     expect(onPrev).toHaveBeenCalledOnce()
   })
 
   it('calls onNext when > button clicked', () => {
     const onNext = vi.fn()
     render(<ScheduleHeader year={2026} month={4} onPrev={vi.fn()} onNext={onNext} />)
-    fireEvent.click(screen.getByRole('button', { name: /nav\.next/ }))
+    fireEvent.click(screen.getAllByRole('button', { name: /nav\.next/ })[0])
     expect(onNext).toHaveBeenCalledOnce()
   })
 })
