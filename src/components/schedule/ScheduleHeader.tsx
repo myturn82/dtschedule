@@ -24,14 +24,26 @@ interface Props {
 
 function weekRangeLabel(weekDays: Date[]): string {
   if (!weekDays.length) return ''
-  const start = weekDays[0]
-  const end = weekDays[weekDays.length - 1]
-  const sm = start.getMonth() + 1
-  const em = end.getMonth() + 1
-  if (sm === em) {
-    return `${sm}월 ${start.getDate()}일 ~ ${end.getDate()}일`
-  }
-  return `${sm}월 ${start.getDate()}일 ~ ${em}월 ${end.getDate()}일`
+  const start = weekDays[0] // 월요일
+  const end = weekDays[weekDays.length - 1] // 일요일
+
+  // ISO 8601 방식: 그 달의 날짜가 4일 이상(과반수) 포함된 달을 이 주의 소속 월로 본다
+  const startMonthDays = weekDays.filter(d => d.getFullYear() === start.getFullYear() && d.getMonth() === start.getMonth()).length
+  const owner = startMonthDays >= 4 ? start : end
+  const oy = owner.getFullYear()
+  const om = owner.getMonth()
+
+  // 그 달 1일이 속한 주가 그 달 날짜를 4일 이상 포함하면 그 주가 1주차, 아니면 다음 주가 1주차
+  const firstOfMonth = new Date(oy, om, 1)
+  const firstDow = (firstOfMonth.getDay() + 6) % 7 // 0=월 ~ 6=일
+  const week1Monday = (7 - firstDow) >= 4
+    ? new Date(oy, om, 1 - firstDow)
+    : new Date(oy, om, 1 - firstDow + 7)
+
+  const diffDays = Math.round((start.getTime() - week1Monday.getTime()) / 86400000)
+  const weekNo = Math.floor(diffDays / 7) + 1
+
+  return `${om + 1}월 ${weekNo}주차`
 }
 
 export function ScheduleHeader({ year, month, openCount, onPrev, onNext, viewType = 'month', onViewTypeChange, day, weekDays, onDateSelect, hideViewSwitcher, roleToggleSlot, displayMode = 'time', onDisplayModeChange }: Props) {
@@ -95,9 +107,9 @@ export function ScheduleHeader({ year, month, openCount, onPrev, onNext, viewTyp
         <div className="min-w-0 w-full sm:flex-1">
           {/* Title based on viewType */}
           {viewType === 'month' && (
-            <h1 className="flex items-center gap-1.5 m-0 leading-none">
-              {isMemberHeader && displayModeSwitcher}
-              <div className="flex-1 flex items-center gap-1.5 flex-wrap justify-center">
+            <h1 className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5 m-0 leading-none">
+              <div className="min-w-0 flex">{isMemberHeader && displayModeSwitcher}</div>
+              <div className="flex items-center gap-1.5 flex-wrap justify-center">
                 <button onClick={onPrev} aria-label={t('nav.prev')} className={navBtnCls}>
                   <span className="text-xs leading-none">←</span>
                 </button>
@@ -118,14 +130,14 @@ export function ScheduleHeader({ year, month, openCount, onPrev, onNext, viewTyp
                   <span className="text-xs leading-none">→</span>
                 </button>
               </div>
-              {viewSwitcher}
+              <div className="min-w-0 flex justify-end">{viewSwitcher}</div>
             </h1>
           )}
 
           {viewType === 'week' && weekDays && weekDays.length > 0 && (
-            <h1 className="flex items-center gap-1.5 m-0 leading-none">
-              {isMemberHeader && displayModeSwitcher}
-              <div className="flex-1 flex items-center gap-1.5 flex-wrap justify-center">
+            <h1 className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5 m-0 leading-none">
+              <div className="min-w-0 flex">{isMemberHeader && displayModeSwitcher}</div>
+              <div className="flex items-center gap-1.5 flex-wrap justify-center">
                 <button onClick={onPrev} aria-label={t('nav.prev')} className={navBtnCls}>
                   <span className="text-xs leading-none">←</span>
                 </button>
@@ -146,13 +158,14 @@ export function ScheduleHeader({ year, month, openCount, onPrev, onNext, viewTyp
                   <span className="text-xs leading-none">→</span>
                 </button>
               </div>
-              {viewSwitcher}
+              <div className="min-w-0 flex justify-end">{viewSwitcher}</div>
             </h1>
           )}
 
           {viewType === 'day' && day !== undefined && (
-            <h1 className="flex items-center gap-1.5 m-0 leading-none">
-              <div className="flex-1 flex items-center gap-1.5 flex-wrap justify-center">
+            <h1 className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5 m-0 leading-none">
+              <div className="min-w-0" />
+              <div className="flex items-center gap-1.5 flex-wrap justify-center">
                 <button onClick={onPrev} aria-label={t('nav.prev')} className={navBtnCls}>
                   <span className="text-xs leading-none">←</span>
                 </button>
@@ -176,7 +189,7 @@ export function ScheduleHeader({ year, month, openCount, onPrev, onNext, viewTyp
                   <span className="text-xs leading-none">→</span>
                 </button>
               </div>
-              {viewSwitcher}
+              <div className="min-w-0 flex justify-end">{viewSwitcher}</div>
             </h1>
           )}
 

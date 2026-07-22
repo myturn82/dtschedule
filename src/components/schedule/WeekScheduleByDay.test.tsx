@@ -26,23 +26,25 @@ const baseProps = {
   onCellClick: vi.fn(),
 }
 
+// 데스크탑(테이블)과 모바일(세로 카드) 두 레이아웃이 함께 렌더링되고 CSS로만 전환되므로,
+// 텍스트/라벨 기반 쿼리는 항상 2배로 나타난다.
 describe('WeekScheduleByDay', () => {
   it('renders one header per weekday', () => {
     render(<WeekScheduleByDay {...baseProps} assignments={[]} />)
-    expect(screen.getByText(/6일/)).toBeInTheDocument()
-    expect(screen.getByText(/12일/)).toBeInTheDocument()
+    expect(screen.getAllByText(/6일/).length).toBe(2)
+    expect(screen.getAllByText(/12일/).length).toBe(2)
   })
 
   it('renders an entry and calls onCellClick with the correct target when clicked', () => {
     const onCellClick = vi.fn()
     render(<WeekScheduleByDay {...baseProps} assignments={[assignment({ id: 'a1', day: 6, time_slot: '09-11' })]} onCellClick={onCellClick} />)
-    fireEvent.click(screen.getByText(/김간호/))
+    fireEvent.click(screen.getAllByText(/김간호/)[0])
     expect(onCellClick).toHaveBeenCalledWith({ year: 2026, month: 7, day: 6, timeSlot: '09-11', memberType: 'member', roleId: null })
   })
 
   it('shows a register control for each day with open slots, even with no assignments', () => {
     render(<WeekScheduleByDay {...baseProps} assignments={[]} />)
-    expect(screen.getAllByLabelText('스케줄 등록').length).toBe(7)
+    expect(screen.getAllByLabelText('스케줄 등록').length).toBe(14)
     expect(screen.queryByText('-')).not.toBeInTheDocument()
   })
 
@@ -56,7 +58,7 @@ describe('WeekScheduleByDay', () => {
 
   it('shows "-" placeholder when a day has no assignments and no open slots', () => {
     render(<WeekScheduleByDay {...baseProps} assignments={[]} scheduleRules={[]} />)
-    expect(screen.getAllByText('-').length).toBe(7)
+    expect(screen.getAllByText('-').length).toBe(14)
     expect(screen.queryByLabelText('스케줄 등록')).not.toBeInTheDocument()
   })
 })
