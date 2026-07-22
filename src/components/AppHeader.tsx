@@ -118,9 +118,9 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
                 <button
                   onClick={() => setShowMobileSearch(v => !v)}
                   aria-label="검색"
-                  className="sm:hidden select-none flex items-center justify-center w-8 h-8 shrink-0"
+                  className="sm:hidden flex items-center justify-center w-8 h-8 shrink-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-all"
                 >
-                  <span className="text-base leading-none">🔍</span>
+                  <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="9" r="6"/><path d="M17 17l-3.5-3.5"/></svg>
                 </button>
                 {/* 데스크탑: 기존 검색바 */}
                 <div className="hidden sm:flex">{leftSlot}</div>
@@ -132,7 +132,7 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
 
 
           {/* Right: rightSlot + bell + feedback + name/badge + avatar */}
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0">
             {rightSlot}
             {isPrivileged && tenant && (
               <button

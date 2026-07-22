@@ -58,86 +58,124 @@ export function ScheduleHeader({ year, month, openCount, onPrev, onNext, viewTyp
     </div>
   )
 
+  // 뷰 전환 버튼이 보이는 경우(=멤버 권한)에는 시간별/일자별 버튼을 타이틀과 같은 행 좌측에 배치한다
+  const isMemberHeader = Boolean(viewSwitcher)
+
+  const displayModeSwitcher = onDisplayModeChange && viewType !== 'day' && (
+    <div className="flex items-center rounded-lg border border-[var(--color-border)] overflow-hidden shrink-0">
+      <button
+        onClick={() => onDisplayModeChange('time')}
+        className={`inline-flex items-center justify-center gap-1 px-1.5 h-7 text-[11px] font-medium transition-colors border-r border-[var(--color-border)] whitespace-nowrap ${
+          displayMode === 'time'
+            ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]'
+            : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
+        }`}
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        시간별
+      </button>
+      <button
+        onClick={() => onDisplayModeChange('day')}
+        className={`inline-flex items-center justify-center gap-1 px-1.5 h-7 text-[11px] font-medium transition-colors whitespace-nowrap ${
+          displayMode === 'day'
+            ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]'
+            : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
+        }`}
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        일자별
+      </button>
+    </div>
+  )
+
   return (
     <>
       <div className="flex items-center justify-between gap-2 flex-wrap">
         {/* Left: nav + stats */}
-        <div className="min-w-0 w-full sm:w-auto">
+        <div className="min-w-0 w-full sm:flex-1">
           {/* Title based on viewType */}
           {viewType === 'month' && (
-            <h1 className="flex items-center gap-1.5 m-0 leading-none flex-wrap justify-center sm:justify-start">
-              <button onClick={onPrev} aria-label={t('nav.prev')} className={navBtnCls}>
-                <span className="text-xs leading-none">←</span>
-              </button>
-              {onDateSelect ? (
-                <button
-                  type="button"
-                  onClick={() => setShowDatePicker(true)}
-                  className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--color-text-primary)] px-0.5 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors"
-                >
-                  {month}월
+            <h1 className="flex items-center gap-1.5 m-0 leading-none">
+              {isMemberHeader && displayModeSwitcher}
+              <div className="flex-1 flex items-center gap-1.5 flex-wrap justify-center">
+                <button onClick={onPrev} aria-label={t('nav.prev')} className={navBtnCls}>
+                  <span className="text-xs leading-none">←</span>
                 </button>
-              ) : (
-                <span className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--color-text-primary)] px-0.5">
-                  {month}월
-                </span>
-              )}
-              <button onClick={onNext} aria-label={t('nav.next')} className={navBtnCls}>
-                <span className="text-xs leading-none">→</span>
-              </button>
+                {onDateSelect ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowDatePicker(true)}
+                    className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--color-text-primary)] px-0.5 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors"
+                  >
+                    {month}월
+                  </button>
+                ) : (
+                  <span className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--color-text-primary)] px-0.5">
+                    {month}월
+                  </span>
+                )}
+                <button onClick={onNext} aria-label={t('nav.next')} className={navBtnCls}>
+                  <span className="text-xs leading-none">→</span>
+                </button>
+              </div>
               {viewSwitcher}
             </h1>
           )}
 
           {viewType === 'week' && weekDays && weekDays.length > 0 && (
-            <h1 className="flex items-center gap-1.5 m-0 leading-none flex-wrap justify-center sm:justify-start">
-              <button onClick={onPrev} aria-label={t('nav.prev')} className={navBtnCls}>
-                <span className="text-xs leading-none">←</span>
-              </button>
-              {onDateSelect ? (
-                <button
-                  type="button"
-                  onClick={() => setShowDatePicker(true)}
-                  className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--color-text-primary)] px-0.5 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors"
-                >
-                  {weekRangeLabel(weekDays)}
+            <h1 className="flex items-center gap-1.5 m-0 leading-none">
+              {isMemberHeader && displayModeSwitcher}
+              <div className="flex-1 flex items-center gap-1.5 flex-wrap justify-center">
+                <button onClick={onPrev} aria-label={t('nav.prev')} className={navBtnCls}>
+                  <span className="text-xs leading-none">←</span>
                 </button>
-              ) : (
-                <span className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--color-text-primary)] px-0.5">
-                  {weekRangeLabel(weekDays)}
-                </span>
-              )}
-              <button onClick={onNext} aria-label={t('nav.next')} className={navBtnCls}>
-                <span className="text-xs leading-none">→</span>
-              </button>
+                {onDateSelect ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowDatePicker(true)}
+                    className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--color-text-primary)] px-0.5 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors"
+                  >
+                    {weekRangeLabel(weekDays)}
+                  </button>
+                ) : (
+                  <span className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--color-text-primary)] px-0.5">
+                    {weekRangeLabel(weekDays)}
+                  </span>
+                )}
+                <button onClick={onNext} aria-label={t('nav.next')} className={navBtnCls}>
+                  <span className="text-xs leading-none">→</span>
+                </button>
+              </div>
               {viewSwitcher}
             </h1>
           )}
 
           {viewType === 'day' && day !== undefined && (
-            <h1 className="flex items-center gap-1.5 m-0 leading-none flex-wrap justify-center sm:justify-start">
-              <button onClick={onPrev} aria-label={t('nav.prev')} className={navBtnCls}>
-                <span className="text-xs leading-none">←</span>
-              </button>
-              {onDateSelect ? (
-                <button
-                  type="button"
-                  onClick={() => setShowDatePicker(true)}
-                  className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--color-text-primary)] px-0.5 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors"
-                >
-                  {month}월 {day}일
+            <h1 className="flex items-center gap-1.5 m-0 leading-none">
+              <div className="flex-1 flex items-center gap-1.5 flex-wrap justify-center">
+                <button onClick={onPrev} aria-label={t('nav.prev')} className={navBtnCls}>
+                  <span className="text-xs leading-none">←</span>
                 </button>
-              ) : (
-                <span className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--color-text-primary)] px-0.5">
-                  {month}월 {day}일
+                {onDateSelect ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowDatePicker(true)}
+                    className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--color-text-primary)] px-0.5 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors"
+                  >
+                    {month}월 {day}일
+                  </button>
+                ) : (
+                  <span className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--color-text-primary)] px-0.5">
+                    {month}월 {day}일
+                  </span>
+                )}
+                <span className="text-sm font-medium text-[var(--color-text-muted)]">
+                  ({DAY_KR[new Date(year, month - 1, day).getDay()]}요일)
                 </span>
-              )}
-              <span className="text-sm font-medium text-[var(--color-text-muted)]">
-                ({DAY_KR[new Date(year, month - 1, day).getDay()]}요일)
-              </span>
-              <button onClick={onNext} aria-label={t('nav.next')} className={navBtnCls}>
-                <span className="text-xs leading-none">→</span>
-              </button>
+                <button onClick={onNext} aria-label={t('nav.next')} className={navBtnCls}>
+                  <span className="text-xs leading-none">→</span>
+                </button>
+              </div>
               {viewSwitcher}
             </h1>
           )}
@@ -151,40 +189,15 @@ export function ScheduleHeader({ year, month, openCount, onPrev, onNext, viewTyp
           )}
         </div>
 
-        {/* Right: role toggle + display mode */}
+        {/* Right: (admin일 때만) display mode + role toggle */}
         <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto sm:shrink-0">
+          {!isMemberHeader && displayModeSwitcher}
+          {!isMemberHeader && roleToggleSlot && onDisplayModeChange && viewType !== 'day' && (
+            <div className="w-px h-5 bg-[var(--color-border)] shrink-0" />
+          )}
           {roleToggleSlot && (
             <div className="min-w-0 flex-1 sm:flex-none rounded-lg bg-[var(--color-surface-secondary)] px-1.5 py-1">
               {roleToggleSlot}
-            </div>
-          )}
-          {roleToggleSlot && onDisplayModeChange && viewType !== 'day' && (
-            <div className="w-px h-5 bg-[var(--color-border)] shrink-0" />
-          )}
-          {onDisplayModeChange && viewType !== 'day' && (
-            <div className="flex items-center rounded-lg border border-[var(--color-border)] overflow-hidden shrink-0">
-              <button
-                onClick={() => onDisplayModeChange('time')}
-                className={`inline-flex items-center justify-center gap-1 px-1.5 h-7 text-[11px] font-medium transition-colors border-r border-[var(--color-border)] whitespace-nowrap ${
-                  displayMode === 'time'
-                    ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]'
-                    : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
-                }`}
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
-                시간별
-              </button>
-              <button
-                onClick={() => onDisplayModeChange('day')}
-                className={`inline-flex items-center justify-center gap-1 px-1.5 h-7 text-[11px] font-medium transition-colors whitespace-nowrap ${
-                  displayMode === 'day'
-                    ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]'
-                    : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
-                }`}
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-                일자별
-              </button>
             </div>
           )}
         </div>
