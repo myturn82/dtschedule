@@ -119,6 +119,8 @@ html {
   font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   font-feature-settings: "ss06", "ss07", "tnum";
   overflow-x: hidden;
+  /* 시간별/일자별 등 콘텐츠 높이가 달라 스크롤바 유무가 바뀌어도 가로 폭이 흔들리지 않도록 항상 여백 확보 */
+  scrollbar-gutter: stable;
 }
 
 .font-mono-num {
