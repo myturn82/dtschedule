@@ -32,3 +32,4 @@ dist-ssr
 
 # Generated design tokens (built from tokens.json)
 src/styles/tokens.css
+.env*
