@@ -1,0 +1,151 @@
+/* 릴스 프레임 전용 마케팅 크롬. 스케줄 UI 자체는 전혀 정의하지 않음 —
+   실제 스케줄 컴포넌트(ScheduleHeader/WeekScheduleByDay)는 src/index.css의
+   실제 디자인 토큰(var(--color-*))을 그대로 사용해 렌더링된다. */
+
+html, body, #root { height: 100%; margin: 0; }
+
+body {
+  background: #0a0b10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(16px, 4vh, 48px) 16px;
+  font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", system-ui, sans-serif;
+}
+
+.stage { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+
+.reel {
+  position: relative;
+  width: min(92vw, calc((100vh - 140px) * 9 / 16));
+  aspect-ratio: 9 / 16;
+  background: #0d0e12;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px #ffffff14, 0 30px 60px -20px #000000b0, 0 0 90px -30px #ff7a66;
+  color: #eef0f8;
+  /* SlotEditModal은 position:fixed로 뜨는 실제 앱 모달이다.
+     transform이 있는 조상은 fixed 자식의 containing block이 되므로,
+     뷰포트 전체가 아니라 이 9:16 프레임 안에서만 모달이 뜨도록 가둔다. */
+  transform: translateZ(0);
+}
+
+.cursor {
+  position: absolute;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #eef0f8;
+  box-shadow: 0 0 0 4px #ffffff22, 0 4px 10px #00000060;
+  z-index: 60;
+  pointer-events: none;
+}
+
+/* 실제 달력이 항상 깔리는 뒷배경 레이어 */
+.boardbg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  transform-origin: 50% 30%;
+}
+.boardwindow {
+  position: absolute;
+  inset: 0;
+  background: var(--color-surface, #fff);
+  padding: 8px 8px 0;
+  overflow: hidden;
+}
+
+/* 캡션이 걸리는 하단/상단을 어둡게 눌러 가독성 확보 — 그 사이(중간)는 달력이 그대로 비친다 */
+.scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(8, 9, 14, 0) 0%,
+    rgba(8, 9, 14, 0) 44%,
+    rgba(8, 9, 14, 0.58) 66%,
+    rgba(8, 9, 14, 0.92) 100%
+  );
+}
+.scrimtop {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(6, 7, 10, 0.55) 0%, rgba(6, 7, 10, 0) 22%);
+}
+
+.progress { position: absolute; top: 14px; left: 14px; right: 14px; display: flex; gap: 5px; z-index: 30; }
+.progress .seg { flex: 1; height: 3px; border-radius: 2px; background: #ffffff26; overflow: hidden; }
+.progress .seg > div { height: 100%; background: #eef0f8; border-radius: 2px; }
+
+.brandmark { position: absolute; top: 28px; left: 14px; z-index: 30; line-height: 1.15; }
+.brandmark b { display: block; font-size: 12px; font-weight: 800; letter-spacing: 0.06em; }
+.brandmark small { display: block; font-size: 8px; color: #b8bccb; }
+
+.content {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  padding: 66px 20px 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.captionblock { display: flex; flex-direction: column; }
+
+.orglabel {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.orglabel b { font-size: 12.5px; font-weight: 800; color: #eef0f8; }
+.orglabel span { font-size: 10.5px; color: #a8adbe; }
+
+.kicker {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #ff7a66;
+  margin: 0 0 6px;
+}
+.headline {
+  margin: 0;
+  font-size: clamp(19px, 5.8vw, 25px);
+  font-weight: 800;
+  line-height: 1.26;
+  letter-spacing: -0.01em;
+  color: #eef0f8;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.35);
+}
+.sub {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #c3c6d4;
+  max-width: 34ch;
+}
+
+.outrowrap {
+  display: flex;
+  flex-direction: column;
+}
+.wordmark { font-size: clamp(24px, 7vw, 30px); font-weight: 800; letter-spacing: -0.01em; color: #eef0f8; }
+.wordmark em { font-style: normal; color: #ff7a66; }
+.tagline { margin: 10px 0 20px; color: #c3c6d4; font-size: 13px; }
+.cta {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: #ff7a66; color: #1a0d08;
+  font-weight: 800; font-size: 13.5px;
+  padding: 11px 17px; border-radius: 999px;
+  width: fit-content;
+}
+
+.hint { color: #7a8098; font-size: 12.5px; text-align: center; max-width: 340px; line-height: 1.6; }
+.hint b { color: #eef0f8; }

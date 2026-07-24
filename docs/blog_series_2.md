@@ -106,7 +106,87 @@ const isSundayOrHoliday = dayOfWeek === 0 || isKoreanHoliday(dateStr)
 
 ---
 
-## 5. 2편을 마치며
+## 5. 후속 이야기: "몇 주차인지", "검색이 안 잡히네" — 두 번째 라운드
+
+2편을 처음 쓴 뒤로도 뷰 표시 로직은 계속 다듬어졌습니다. 이번 절에서는 그중 세 가지 — 역시 위에서 세운 "월/주/일 뷰를 다 같이 점검하라"는 원칙이 다시 한번 시험대에 오른 사례들 — 를 짧게 기록해둡니다.
+
+### 검색이 딱 한 곳에서만 안 됐다
+
+관리자가 상단 검색창에 이름을 넣으면 시간별 뷰의 셀은 노란색으로 강조되는데, 일자별(day-by-day) 요약 뷰에서는 아무 반응이 없다는 리포트가 들어왔습니다. 원인은 뻔했습니다. 검색 하이라이트 매칭 로직이 `TimeSlotCell.tsx` 안에서만 구현되어 있었고, 일자별 뷰 컴포넌트(`MonthScheduleByDay.tsx`, `WeekScheduleByDay.tsx`)는 애초에 `highlightName` prop 자체를 받지 않았던 겁니다. 위에서 세운 원칙을 이번엔 새 기능이 아니라 기존 기능을 확장할 때 놓친 셈입니다.
+
+```typescript
+// src/utils/highlightMatch.ts — TimeSlotCell에 있던 매칭 로직을 공용 함수로 추출
+export function isAssignmentHighlighted(a: Assignment, highlightName: string | null): boolean {
+  if (!highlightName) return false
+  const q = highlightName.toLowerCase()
+  return (
+    a.member_name.toLowerCase().includes(q) ||
+    (!!a.note && a.note.toLowerCase().includes(q)) ||
+    (!!a.customer_name && a.customer_name.toLowerCase().includes(q)) ||
+    (!!a.customer_phone && a.customer_phone.includes(q)) ||
+    (!!a.extra_data && Object.values(a.extra_data).some(v => String(v ?? '').toLowerCase().includes(q)))
+  )
+}
+```
+
+두 일자별 컴포넌트에 `highlightName` prop을 추가하고, 매칭되면 `TimeSlotCell`과 동일한 노란색(`#fef08a`) 스타일을 입히는 것으로 마무리했습니다. 함수를 공용으로 뽑아두니 세 번째 뷰가 추가되더라도 이제는 함수 하나만 새로 연결하면 됩니다.
+
+### 날짜 범위 대신 "몇 주차"
+
+주간 뷰 헤더가 원래 "7월 6일 ~ 12일"처럼 날짜 범위를 그대로 보여줬는데, 실사용 흐름에서는 "이번이 몇 번째 주인지"가 더 자주 필요한 정보였습니다. 문제는 "몇 주차"의 기준이었습니다. 달의 1일이 낀 주를 무조건 1주차로 볼지, 그 주가 실제로 그 달에 며칠이나 걸쳐 있는지로 판단할지에 따라 결과가 달라집니다.
+
+ISO 8601 방식 — **그 주에 해당 월의 날짜가 4일 이상(과반수) 포함되어야 그 달의 1주차** — 을 채택했습니다.
+
+```typescript
+// src/components/schedule/ScheduleHeader.tsx
+const startMonthDays = weekDays.filter(d =>
+  d.getFullYear() === start.getFullYear() && d.getMonth() === start.getMonth()
+).length
+const owner = startMonthDays >= 4 ? start : end // 이 주가 "속한" 달을 과반수로 판정
+
+const firstDow = (firstOfMonth.getDay() + 6) % 7 // 0=월 ~ 6=일
+const week1Monday = (7 - firstDow) >= 4
+  ? new Date(oy, om, 1 - firstDow)      // 1일이 낀 주 자체가 1주차
+  : new Date(oy, om, 1 - firstDow + 7)  // 아니면 다음 주가 1주차
+```
+
+예를 들어 6월 29일(월)부터 시작하는 주는 7월 날짜를 5일(7/1~7/5) 포함하므로 "7월 1주차"로, 12월 28일부터 시작하는 주는 1월 날짜를 4일 포함하므로 "1월 1주차"로 계산됩니다. 연말연시처럼 두 달에 걸쳐 있는 주도 이 규칙 하나로 자연스럽게 정리됐습니다.
+
+> **📸 [이미지 삽입 구간: 주간 뷰 헤더 — 수정 전/후 비교]**
+> *설명: 왼쪽은 수정 전("7월 6일 ~ 12일"), 오른쪽은 수정 후("7월 2주차")를 나란히 배치한 헤더 스크린샷.*
+
+### 화면 폭이 스스로 흔들리는 문제 두 가지
+
+같은 헤더에서 성격이 다른 레이아웃 버그 두 개가 거의 동시에 나왔습니다.
+
+첫 번째는 시간별 ↔ 일자별을 전환할 때마다 타이틀이 몇 픽셀씩 밀리는 증상이었습니다. 원인은 헤더 코드가 아니라 **콘텐츠 높이**에 있었습니다. 시간별 뷰(시간대별 표)와 일자별 뷰(날짜 요약 목록)는 세로 길이가 다르고, 그 차이로 페이지 세로 스크롤바가 생겼다 안 생겼다 했습니다. Windows 크롬 계열 브라우저는 스크롤바가 생기면 그만큼(보통 15~17px) 본문 가로 폭을 줄이기 때문에, 헤더 타이틀도 같이 밀려 보였던 겁니다.
+
+```css
+/* src/index.css */
+html {
+  overflow-x: hidden;
+  scrollbar-gutter: stable; /* 스크롤바 유무와 무관하게 항상 그 공간을 확보 */
+}
+```
+
+두 번째는 관리자 화면에서만 나타났습니다. 관리자 헤더는 좌측(타이틀)과 우측(시간별/일자별 토글 + 역할 필터)의 폭이 서로 달라서, 타이틀을 "좌측 영역 안에서만" 가운데 정렬하다 보니 화면 전체 기준으로는 살짝 왼쪽으로 치우쳐 보였습니다. PC에서 좌측 사이드바가 열려 있을 때 이 어긋남이 더 눈에 띄었습니다.
+
+해결책은 타이틀을 좌·우 버튼과 같은 flex 흐름 안에 두는 대신, 헤더 전체 영역 위에 **절대 위치로 올려 중앙 정렬**하는 것이었습니다.
+
+```tsx
+{/* 데스크탑 전용: 좌·우 버튼 폭과 무관하게 헤더 영역 정중앙에 고정되는 타이틀 오버레이 */}
+<h1 className="hidden sm:flex absolute inset-0 items-center justify-center gap-1.5 pointer-events-none">
+  <div className="pointer-events-auto flex items-center gap-1.5">{titleCluster}</div>
+</h1>
+```
+
+`inset-0`으로 헤더 영역 전체를 덮어 타이틀을 진짜 정중앙에 고정하고, `pointer-events-none`으로 그 위에 뚫려 있는 빈 공간은 클릭이 그대로 아래(좌·우 버튼)로 통과하도록 했습니다. 좌·우 콘텐츠 폭이 얼마가 되든 타이틀 위치는 더 이상 흔들리지 않습니다.
+
+세 가지 모두 새 기능이라기보단, 이미 있는 화면을 더 정확하게 만드는 다듬기였습니다.
+
+---
+
+## 6. 2편을 마치며
 
 반복 규칙과 날짜 예외, 그리고 그 둘의 우선순위를 하나의 순수 함수로 응집시킨 이야기였습니다. 이 구조 덕분에 "이번 주만 쉬어요" 같은 요청이 들어와도 전체 스케줄 로직을 건드릴 필요 없이 날짜 하나만 예외 처리하면 끝납니다.
 
