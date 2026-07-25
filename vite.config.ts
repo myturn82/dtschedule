@@ -8,7 +8,7 @@ export default defineConfig(({ command }) => ({
   server: {
     watch: {
       // OMC(.omc) 세션 상태 파일이 계속 갱신되며 dev 서버 워처를 자극하는 것을 방지
-      ignored: ['**/.omc/**', '**/dist/**'],
+      ignored: ['**/.omc/**', '**/dist/**', '**/dist-promo/**'],
     },
   },
   plugins: [

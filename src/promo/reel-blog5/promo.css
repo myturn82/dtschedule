@@ -1,0 +1,139 @@
+/* 릴스 프레임 전용 마케팅 크롬 — blog5 (포인트 컬러: #38bdf8 sky) */
+
+html, body, #root { height: 100%; margin: 0; }
+
+body {
+  background: #0a0b10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(4px, 1vh, 16px) 8px;
+  font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", system-ui, sans-serif;
+}
+
+.stage { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+
+.reel {
+  position: relative;
+  width: min(96vw, calc((100vh - 32px) * 9 / 16));
+  aspect-ratio: 9 / 16;
+  background: #0d0e12;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px #ffffff14, 0 30px 60px -20px #000000b0, 0 0 90px -30px #38bdf8;
+  color: #eef0f8;
+  transform: translateZ(0);
+  container-type: inline-size;
+  container-name: reel;
+}
+
+.boardbg { position: absolute; inset: 0; z-index: 0; transform-origin: 50% 30%; }
+.boardwindow {
+  position: absolute;
+  top: 7.81%; left: 0; right: 0; bottom: 0;
+  background: var(--color-surface, #fff);
+  padding: 0; overflow: hidden;
+  display: flex; flex-direction: column;
+  -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 90%);
+  mask-image: linear-gradient(to bottom, black 50%, transparent 90%);
+}
+
+/* WeekGrid 시간 행을 가용 높이 전체로 확장 */
+.calslide > div,
+.calslide .overflow-x-auto,
+.calslide .overflow-x-auto > div { height: 100%; }
+.calslide .overflow-x-auto > div {
+  display: flex !important;
+  flex-direction: column !important;
+}
+.calslide .overflow-x-auto > div > .sticky { flex-shrink: 0; }
+.calslide .overflow-x-auto > div > .grid:not(.sticky) {
+  flex: 1 !important;
+  min-height: 0 !important;
+}
+.calslide .overflow-x-auto {
+  margin-left: 0 !important; margin-right: 0 !important;
+  border: none !important; border-radius: 0 !important;
+}
+
+.calslide-wrap { display: grid; overflow: hidden; flex: 1; min-height: 0; }
+.calslide-wrap > * { grid-area: 1 / 1; }
+.calslide { width: 100%; }
+
+/* 배정 채움 카운터 뱃지 */
+.fill-counter {
+  position: absolute; z-index: 25; pointer-events: none;
+  top: 11%; right: 4cqw;
+  background: #38bdf8ee; color: #082f49;
+  border-radius: 999px; padding: 1cqw 2.8cqw;
+  font-size: 2.6cqw; font-weight: 800; white-space: nowrap;
+  box-shadow: 0 2px 14px #38bdf860;
+}
+.fill-counter.done {
+  background: #0ea5e9; color: #fff;
+}
+
+.scrim {
+  position: absolute; inset: 0; z-index: 5; pointer-events: none;
+  background: linear-gradient(to bottom,
+    rgba(8,9,14,0) 0%, rgba(8,9,14,0) 44%,
+    rgba(8,9,14,0.58) 66%, rgba(8,9,14,0.92) 100%);
+}
+.scrimtop {
+  position: absolute; inset: 0; z-index: 5; pointer-events: none;
+  background: linear-gradient(to bottom, rgba(6,7,10,0.55) 0%, rgba(6,7,10,0) 22%);
+}
+
+.brandmark {
+  position: absolute; top: 7.81%; left: 3.5cqw; z-index: 30;
+  font-size: 3cqw; font-weight: 300; letter-spacing: -0.2px; white-space: nowrap;
+  color: #eef0f8;
+  font-family: "Pretendard Variable", Pretendard, system-ui, sans-serif;
+}
+.brandmark-team { color: oklch(0.66 0.16 28); }
+
+.content {
+  position: absolute; left: 0; right: 0;
+  top: 7.81%; bottom: 23.44%;
+  z-index: 20; padding: 0 4.5cqw;
+  display: flex; flex-direction: column; justify-content: flex-end;
+}
+.captionblock { display: flex; flex-direction: column; }
+
+.override-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18);
+  backdrop-filter: blur(8px); padding: 1cqw 2.4cqw; border-radius: 999px;
+  font-size: 2.6cqw; font-weight: 700; color: #eef0f8;
+  margin-bottom: 2.4cqw; width: fit-content;
+}
+
+.kicker {
+  font-size: 2.8cqw; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: #38bdf8; margin: 0 0 1.4cqw;
+}
+.headline {
+  margin: 0; font-size: 6cqw;
+  font-weight: 800; line-height: 1.26; letter-spacing: -0.01em;
+  color: #eef0f8; text-shadow: 0 2px 16px rgba(0,0,0,0.35);
+}
+.sub { margin: 1.4cqw 0 0; font-size: 3.2cqw; line-height: 1.5; color: #c3c6d4; max-width: 34ch; }
+
+.outrowrap { display: flex; flex-direction: column; }
+.wordmark { font-size: 7cqw; font-weight: 800; letter-spacing: -0.01em; color: #eef0f8; }
+.wordmark em { font-style: normal; color: #38bdf8; }
+.tagline { margin: 2.5cqw 0 4.5cqw; color: #c3c6d4; font-size: 3.1cqw; }
+.cta {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: #38bdf8; color: #082030;
+  font-weight: 800; font-size: 3.2cqw;
+  padding: 2.6cqw 4cqw; border-radius: 999px; width: fit-content;
+}
+
+body:has(.record) { padding: 0; }
+.record { gap: 0; }
+.record .reel { width: 100vw; height: 100vh; border-radius: 0; box-shadow: none; }
+
+.hint { color: #7a8098; font-size: 12px; text-align: center; max-width: 340px; line-height: 1.6; }
+.hint b { color: #eef0f8; }
+.hint code { background: #1e2030; color: #38bdf8; padding: 1px 5px; border-radius: 4px; font-size: 11px; }

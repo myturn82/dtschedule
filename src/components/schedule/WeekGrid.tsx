@@ -99,7 +99,7 @@ export function WeekGrid({
 
   const timeColW = 72
   const dayColMinW = visibleActiveRoles.length > 1 ? visibleActiveRoles.length * 52 : 64
-  const minTotalW = timeColW + 7 * dayColMinW
+  const minTotalW = timeColW + weekDays.length * dayColMinW
 
   return (
     <div>
@@ -109,7 +109,7 @@ export function WeekGrid({
         {/* ── Day header row ── */}
         <div
           className="grid sticky top-0 z-10 bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]"
-          style={{ gridTemplateColumns: `${timeColW}px repeat(7, 1fr)` }}
+          style={{ gridTemplateColumns: `${timeColW}px repeat(${weekDays.length}, 1fr)` }}
         >
           {/* Corner */}
           <div className="px-2 py-2 text-[9px] font-medium text-[var(--color-text-muted)] uppercase tracking-wide border-r border-[var(--color-border)] flex items-center justify-center sticky left-0 z-20 bg-[var(--color-surface-secondary)]">
@@ -177,7 +177,7 @@ export function WeekGrid({
             <div
               key={slot}
               className={`grid border-t border-[var(--color-border)] ${isMoon ? 'bg-[color-mix(in_srgb,var(--color-text-muted)_6%,var(--color-surface))]' : ''}`}
-              style={{ gridTemplateColumns: `${timeColW}px repeat(7, 1fr)`, minHeight: isRowClosed ? 28 : 52 }}
+              style={{ gridTemplateColumns: `${timeColW}px repeat(${weekDays.length}, 1fr)`, minHeight: isRowClosed ? 28 : 52 }}
             >
               {/* Time label */}
               <div className={`px-1 py-1 sm:px-1.5 sm:py-1.5 flex flex-col justify-center items-center text-center border-r border-[var(--color-border)] sticky left-0 z-[1] ${isMoon ? 'bg-[color-mix(in_srgb,var(--color-text-muted)_6%,var(--color-surface-secondary))]' : 'bg-[var(--color-surface-secondary)]'}`}>

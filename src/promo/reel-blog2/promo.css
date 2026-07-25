@@ -1,6 +1,4 @@
-/* 릴스 프레임 전용 마케팅 크롬. 스케줄 UI 자체는 전혀 정의하지 않음 —
-   실제 스케줄 컴포넌트(ScheduleHeader/WeekScheduleByDay)는 src/index.css의
-   실제 디자인 토큰(var(--color-*))을 그대로 사용해 렌더링된다. */
+/* 릴스 프레임 전용 마케팅 크롬 — blog2 */
 
 html, body, #root { height: 100%; margin: 0; }
 
@@ -22,27 +20,13 @@ body {
   background: #0d0e12;
   border-radius: 22px;
   overflow: hidden;
-  box-shadow: 0 0 0 1px #ffffff14, 0 30px 60px -20px #000000b0, 0 0 90px -30px #ff7a66;
+  box-shadow: 0 0 0 1px #ffffff14, 0 30px 60px -20px #000000b0, 0 0 90px -30px #5b8aff;
   color: #eef0f8;
-  /* SlotEditModal은 position:fixed로 뜨는 실제 앱 모달이다.
-     transform이 있는 조상은 fixed 자식의 containing block이 되므로,
-     뷰포트 전체가 아니라 이 9:16 프레임 안에서만 모달이 뜨도록 가둔다. */
   transform: translateZ(0);
   container-type: inline-size;
   container-name: reel;
 }
 
-.cursor {
-  position: absolute;
-  width: 16px; height: 16px;
-  border-radius: 50%;
-  background: #eef0f8;
-  box-shadow: 0 0 0 4px #ffffff22, 0 4px 10px #00000060;
-  z-index: 60;
-  pointer-events: none;
-}
-
-/* 실제 달력이 항상 깔리는 뒷배경 레이어 */
 .boardbg {
   position: absolute;
   inset: 0;
@@ -62,7 +46,16 @@ body {
   mask-image: linear-gradient(to bottom, black 50%, transparent 90%);
 }
 
-/* 캡션이 걸리는 하단/상단을 어둡게 눌러 가독성 확보 — 그 사이(중간)는 달력이 그대로 비친다 */
+/* 달력 그리드 슬라이드 컨테이너 — grid로 겹쳐서 두 프레임이 동시에 존재 가능 */
+.calslide-wrap {
+  display: grid;
+  overflow: hidden;
+  flex: 1;
+  min-height: 0;
+}
+.calslide-wrap > * { grid-area: 1 / 1; }
+.calslide { width: 100%; }
+
 .scrim {
   position: absolute;
   inset: 0;
@@ -84,6 +77,32 @@ body {
   background: linear-gradient(to bottom, rgba(6, 7, 10, 0.55) 0%, rgba(6, 7, 10, 0) 22%);
 }
 
+/* 날짜 하이라이트 링 — reel 기준 absolute, overflow:hidden으로 자동 클리핑 */
+@keyframes hlPulseRed {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(239,68,68,0.8), 0 0 14px 4px rgba(239,68,68,0.35); }
+  50%       { box-shadow: 0 0 0 4px rgba(239,68,68,0.3), 0 0 22px 8px rgba(239,68,68,0.15); }
+}
+@keyframes hlPulseGreen {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(34,197,94,0.8), 0 0 14px 4px rgba(34,197,94,0.35); }
+  50%       { box-shadow: 0 0 0 4px rgba(34,197,94,0.3), 0 0 22px 8px rgba(34,197,94,0.15); }
+}
+.day-highlight {
+  position: absolute;
+  z-index: 8;
+  pointer-events: none;
+  border-radius: 3px;
+  border: 2px solid;
+}
+.day-highlight.holiday {
+  border-color: #ef4444;
+  animation: hlPulseRed 1.3s ease-in-out infinite;
+}
+.day-highlight.special {
+  border-color: #22c55e;
+  animation: hlPulseGreen 1.3s ease-in-out infinite;
+}
+
+
 .brandmark {
   position: absolute;
   top: 7.81%;
@@ -98,13 +117,12 @@ body {
 }
 .brandmark-team { color: oklch(0.66 0.16 28); }
 
-/* content 영역을 안전영역(위 7.81% / 아래 23.44%) 안으로 제한 */
 .content {
   position: absolute;
   left: 0;
   right: 0;
-  top: 7.81%;     /* 150/1920 */
-  bottom: 23.44%; /* 450/1920 */
+  top: 7.81%;
+  bottom: 23.44%;
   z-index: 20;
   padding: 0 20px;
   display: flex;
@@ -114,22 +132,29 @@ body {
 
 .captionblock { display: flex; flex-direction: column; }
 
-.orglabel {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  margin-bottom: 8px;
-  flex-wrap: wrap;
+.override-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(8px);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 2.8cqw;
+  font-weight: 700;
+  color: #eef0f8;
+  margin-bottom: 10px;
+  width: fit-content;
+  user-select: none;
 }
-.orglabel b { font-size: 3cqw; font-weight: 800; color: #eef0f8; }
-.orglabel span { font-size: 2.6cqw; color: #a8adbe; }
 
 .kicker {
   font-size: 2.8cqw;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #ff7a66;
+  color: #5b8aff;
   margin: 0 0 6px;
 }
 .headline {
@@ -149,35 +174,23 @@ body {
   max-width: 34ch;
 }
 
-.outrowrap {
-  display: flex;
-  flex-direction: column;
-}
+.outrowrap { display: flex; flex-direction: column; }
 .wordmark { font-size: 8cqw; font-weight: 800; letter-spacing: -0.01em; color: #eef0f8; }
-.wordmark em { font-style: normal; color: #ff7a66; }
+.wordmark em { font-style: normal; color: #5b8aff; }
 .tagline { margin: 10px 0 20px; color: #c3c6d4; font-size: 3.2cqw; }
 .cta {
   display: inline-flex; align-items: center; gap: 8px;
-  background: #ff7a66; color: #1a0d08;
+  background: #5b8aff; color: #060a1a;
   font-weight: 800; font-size: 3.5cqw;
   padding: 11px 17px; border-radius: 999px;
   width: fit-content;
 }
 
-/* ?record 모드: reel이 뷰포트를 정확히 꽉 채워 1080×1920 에뮬레이션과 1:1 매핑 */
-body:has(.record) {
-  padding: 0;
-}
-.record {
-  gap: 0;
-}
-.record .reel {
-  width: 100vw;
-  height: 100vh;
-  border-radius: 0;
-  box-shadow: none;
-}
+/* ?record 모드 */
+body:has(.record) { padding: 0; }
+.record { gap: 0; }
+.record .reel { width: 100vw; height: 100vh; border-radius: 0; box-shadow: none; }
 
 .hint { color: #7a8098; font-size: 12px; text-align: center; max-width: 340px; line-height: 1.6; }
 .hint b { color: #eef0f8; }
-.hint code { background: #1e2030; color: #ff7a66; padding: 1px 5px; border-radius: 4px; font-size: 11px; }
+.hint code { background: #1e2030; color: #5b8aff; padding: 1px 5px; border-radius: 4px; font-size: 11px; }

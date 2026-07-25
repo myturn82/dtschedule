@@ -51,8 +51,10 @@ function usePhaseLoop() {
   return { phase: PHASES[idx].key, idx }
 }
 
+const IS_RECORD = new URLSearchParams(location.search).has('record')
+
 export default function App() {
-  const { phase, idx } = usePhaseLoop()
+  const { phase } = usePhaseLoop()
   const scenario = SCENARIO_BY_PHASE[phase]
   const isHero = phase === 'a' || phase === 'register' || phase === 'b' || phase === 'c'
   const bgScenario = scenario ?? (phase === 'intro' ? SCENARIOS[0] : SCENARIOS[SCENARIOS.length - 1])
@@ -89,7 +91,7 @@ export default function App() {
   const caption = CAPTION[phase] ?? scenario
 
   return (
-    <div className="stage">
+    <div className={`stage${IS_RECORD ? ' record' : ''}`}>
       <div className="reel">
         {/* 실제 스케줄 보드 — 항상 뒷배경으로 깔리고, 카메라 포커싱(scale/blur)만 Framer Motion으로 제어 */}
         <motion.div
@@ -143,18 +145,7 @@ export default function App() {
         <div className="scrim" />
         <div className="scrimtop" />
 
-        <div className="progress">
-          {PHASES.map((p, i) => (
-            <div className="seg" key={p.key}>
-              <motion.div
-                initial={{ width: '0%' }}
-                animate={{ width: i <= idx ? '100%' : '0%' }}
-                transition={i === idx ? { duration: p.ms / 1000, ease: 'linear' } : { duration: 0 }}
-              />
-            </div>
-          ))}
-        </div>
-        <div className="brandmark"><b>DTS</b><small>Dynamic Team Schedule</small></div>
+        <div className="brandmark">Dynamic <span className="brandmark-team">Team</span> Schedule</div>
 
         <div className="content">
           <AnimatePresence mode="wait">
@@ -243,7 +234,12 @@ export default function App() {
           />
         )}
       </div>
-      <p className="hint"><b>이 프레임(9:16)만 화면 녹화</b>하면 됩니다. 전체 루프는 약 {(TOTAL / 1000).toFixed(0)}초이며 자연스럽게 반복됩니다. 달력과 등록 팝업 모두 실제 앱 컴포넌트(ScheduleHeader / MonthScheduleByDay / SlotEditModal)를 그대로 사용했습니다.</p>
+      {!IS_RECORD && (
+        <p className="hint">
+          <b>이 프레임(9:16)만 화면 녹화</b>하면 됩니다. 루프 {(TOTAL / 1000).toFixed(0)}초.{' '}
+          <b>고화질 녹화:</b> URL 끝에 <code>?record</code> 추가 후 Chrome DevTools → 기기 에뮬레이션 → 1080×1920 설정.
+        </p>
+      )}
     </div>
   )
 }
