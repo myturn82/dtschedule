@@ -21,6 +21,8 @@ DELETE FROM auth.users;
 -- ────────────────────────────────────────────────────────────
 
 TRUNCATE TABLE
+  consent_logs,
+  policy_versions,
   push_subscriptions,
   notifications,
   notification_settings,

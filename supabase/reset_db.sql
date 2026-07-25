@@ -1,7 +1,7 @@
 -- ============================================================
 -- 운영 DB 초기화 스크립트 (전체 재생성)
 -- 생성일: 2026-06-10
--- 기준 마이그레이션: 001 ~ 063
+-- 기준 마이그레이션: 001 ~ 069
 --
 -- ⚠️  주의: 이 스크립트는 모든 데이터를 삭제합니다.
 --           Supabase SQL Editor에서 직접 실행하세요.
@@ -14,30 +14,46 @@
 -- ────────────────────────────────────────────────────────────
 
 -- 트리거 삭제
-DROP TRIGGER IF EXISTS on_auth_user_created            ON auth.users;
-DROP TRIGGER IF EXISTS trg_cascade_customer_soft_delete ON customers;
-DROP TRIGGER IF EXISTS trg_assignments_lock_update      ON assignments;
-DROP TRIGGER IF EXISTS trg_assignments_lock_delete      ON assignments;
-DROP TRIGGER IF EXISTS trg_assignments_date_lock_insert ON assignments;
+DROP TRIGGER IF EXISTS on_auth_user_created                      ON auth.users;
+DROP TRIGGER IF EXISTS trg_cascade_customer_soft_delete          ON customers;
+DROP TRIGGER IF EXISTS trg_assignments_lock_update               ON assignments;
+DROP TRIGGER IF EXISTS trg_assignments_lock_delete               ON assignments;
+DROP TRIGGER IF EXISTS trg_assignments_date_lock_insert          ON assignments;
+DROP TRIGGER IF EXISTS trg_anonymize_on_user_delete              ON profiles;
+DROP TRIGGER IF EXISTS trg_encrypt_profile_phone                 ON profiles;
+DROP TRIGGER IF EXISTS trg_encrypt_assignment_customer_phone     ON assignments;
+DROP TRIGGER IF EXISTS trg_encrypt_customer_phone                ON customers;
 
 -- 함수 삭제
-DROP FUNCTION IF EXISTS public.handle_new_user()                CASCADE;
-DROP FUNCTION IF EXISTS public.is_tenant_member(uuid)           CASCADE;
-DROP FUNCTION IF EXISTS public.is_tenant_admin(uuid)            CASCADE;
-DROP FUNCTION IF EXISTS public.is_super_admin()                 CASCADE;
-DROP FUNCTION IF EXISTS public.is_super_admin_caller()          CASCADE;
-DROP FUNCTION IF EXISTS public.admin_delete_users(uuid[])       CASCADE;
-DROP FUNCTION IF EXISTS public.shares_tenant_with(uuid)         CASCADE;
-DROP FUNCTION IF EXISTS public.customer_has_active_tenant(uuid) CASCADE;
-DROP FUNCTION IF EXISTS public.list_active_org_customers()      CASCADE;
-DROP FUNCTION IF EXISTS public.get_customer_plan_for_tenant(uuid) CASCADE;
-DROP FUNCTION IF EXISTS public.cascade_customer_soft_delete()   CASCADE;
-DROP FUNCTION IF EXISTS public.admin_update_member_name(uuid, text) CASCADE;
-DROP FUNCTION IF EXISTS public.check_assignment_lock_update()   CASCADE;
-DROP FUNCTION IF EXISTS public.check_assignment_lock_delete()   CASCADE;
-DROP FUNCTION IF EXISTS public.check_assignment_date_lock_insert() CASCADE;
+DROP FUNCTION IF EXISTS public.handle_new_user()                          CASCADE;
+DROP FUNCTION IF EXISTS public.is_tenant_member(uuid)                     CASCADE;
+DROP FUNCTION IF EXISTS public.is_tenant_admin(uuid)                      CASCADE;
+DROP FUNCTION IF EXISTS public.is_super_admin()                           CASCADE;
+DROP FUNCTION IF EXISTS public.is_super_admin_caller()                    CASCADE;
+DROP FUNCTION IF EXISTS public.admin_delete_users(uuid[])                 CASCADE;
+DROP FUNCTION IF EXISTS public.shares_tenant_with(uuid)                   CASCADE;
+DROP FUNCTION IF EXISTS public.customer_has_active_tenant(uuid)           CASCADE;
+DROP FUNCTION IF EXISTS public.list_active_org_customers()                CASCADE;
+DROP FUNCTION IF EXISTS public.get_customer_plan_for_tenant(uuid)         CASCADE;
+DROP FUNCTION IF EXISTS public.cascade_customer_soft_delete()             CASCADE;
+DROP FUNCTION IF EXISTS public.admin_update_member_name(uuid, text)       CASCADE;
+DROP FUNCTION IF EXISTS public.admin_update_member_phone(uuid, text)      CASCADE;
+DROP FUNCTION IF EXISTS public.check_assignment_lock_update()             CASCADE;
+DROP FUNCTION IF EXISTS public.check_assignment_lock_delete()             CASCADE;
+DROP FUNCTION IF EXISTS public.check_assignment_date_lock_insert()        CASCADE;
+DROP FUNCTION IF EXISTS public.anonymize_user_data_on_delete()            CASCADE;
+DROP FUNCTION IF EXISTS public.encrypt_phone(text)                        CASCADE;
+DROP FUNCTION IF EXISTS public.decrypt_phone(text)                        CASCADE;
+DROP FUNCTION IF EXISTS public.backfill_phone_encryption()                CASCADE;
+DROP FUNCTION IF EXISTS public.sync_profile_phone_enc()                   CASCADE;
+DROP FUNCTION IF EXISTS public.sync_assignment_customer_phone_enc()       CASCADE;
+DROP FUNCTION IF EXISTS public.sync_customer_phone_enc()                  CASCADE;
+DROP FUNCTION IF EXISTS public.cleanup_old_notifications()                CASCADE;
+DROP FUNCTION IF EXISTS public.get_dormant_accounts(int)                  CASCADE;
 
 -- 테이블 삭제 (CASCADE로 FK·인덱스·정책 자동 제거)
+DROP TABLE IF EXISTS consent_logs    CASCADE;
+DROP TABLE IF EXISTS policy_versions CASCADE;
 DROP TABLE IF EXISTS push_subscriptions CASCADE;
 DROP TABLE IF EXISTS notifications CASCADE;
 DROP TABLE IF EXISTS notification_settings CASCADE;
@@ -70,6 +86,11 @@ CREATE TABLE profiles (
   terms_agreed_at   timestamptz,
   privacy_agreed_at timestamptz,
   phone          text,
+  phone_enc      text,
+  marketing_agreed_at timestamptz,
+  push_agreed_at      timestamptz,
+  phone_agreed_at     timestamptz,
+  last_login_at       timestamptz,
   created_at     timestamptz NOT NULL DEFAULT now()
 );
 
@@ -84,6 +105,7 @@ CREATE TABLE customers (
   plan_expires_at       timestamptz,
   is_active             boolean     NOT NULL DEFAULT true,
   deletion_requested_at timestamptz,
+  phone_enc             text,
   created_at            timestamptz NOT NULL DEFAULT now(),
   updated_at            timestamptz NOT NULL DEFAULT now()
 );
@@ -153,9 +175,10 @@ CREATE TABLE assignments (
   user_id        uuid        REFERENCES profiles(id)     ON DELETE SET NULL,
   tenant_id      uuid        NOT NULL REFERENCES tenants(id)      ON DELETE CASCADE,
   role_id        uuid        REFERENCES tenant_roles(id) ON DELETE SET NULL,
-  customer_name  text,
-  customer_phone text,
-  is_locked      boolean     NOT NULL DEFAULT false,
+  customer_name      text,
+  customer_phone     text,
+  customer_phone_enc text,
+  is_locked          boolean     NOT NULL DEFAULT false,
   account_deleted boolean    NOT NULL DEFAULT false,
   created_at     timestamptz          DEFAULT now()
 );
@@ -250,7 +273,8 @@ CREATE TABLE notifications (
   type       text DEFAULT 'd1_reminder' NOT NULL,
   is_read    boolean DEFAULT false NOT NULL,
   metadata   jsonb DEFAULT '{}'::jsonb,
-  created_at timestamptz DEFAULT now() NOT NULL
+  created_at timestamptz DEFAULT now() NOT NULL,
+  archived_at timestamptz
 );
 
 -- push_subscriptions
@@ -262,6 +286,29 @@ CREATE TABLE push_subscriptions (
   p256dh     text NOT NULL,
   auth       text NOT NULL,
   created_at timestamptz DEFAULT now() NOT NULL
+);
+
+-- policy_versions (약관 버전 관리)
+CREATE TABLE policy_versions (
+  id           uuid        DEFAULT gen_random_uuid() PRIMARY KEY,
+  type         text        NOT NULL CHECK (type IN ('terms', 'privacy', 'marketing', 'push')),
+  version      text        NOT NULL,
+  content_url  text,
+  effective_at timestamptz NOT NULL,
+  created_at   timestamptz DEFAULT now() NOT NULL,
+  UNIQUE (type, version)
+);
+
+-- consent_logs (동의 이력)
+CREATE TABLE consent_logs (
+  id          uuid        DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id     uuid        REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  type        text        NOT NULL CHECK (type IN ('terms', 'privacy', 'marketing', 'push')),
+  version_id  uuid        REFERENCES policy_versions(id),
+  agreed      boolean     NOT NULL,
+  agreed_at   timestamptz DEFAULT now() NOT NULL,
+  ip_address  text,
+  user_agent  text
 );
 
 -- ────────────────────────────────────────────────────────────
@@ -291,8 +338,10 @@ CREATE UNIQUE INDEX unique_member_assignment
   WHERE member_type != 'admin_note';
 CREATE INDEX idx_notifications_user_unread ON notifications(user_id, is_read);
 CREATE INDEX idx_notifications_tenant ON notifications(tenant_id);
+CREATE INDEX idx_notifications_active ON notifications(user_id, created_at DESC) WHERE archived_at IS NULL;
 CREATE INDEX idx_push_subs_user ON push_subscriptions(user_id);
 CREATE UNIQUE INDEX idx_push_subs_endpoint ON push_subscriptions(endpoint);
+CREATE INDEX idx_consent_logs_user_type ON consent_logs(user_id, type, agreed_at DESC);
 
 
 -- ────────────────────────────────────────────────────────────
@@ -314,6 +363,8 @@ ALTER TABLE slot_highlights         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notification_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE push_subscriptions    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE policy_versions       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE consent_logs          ENABLE ROW LEVEL SECURITY;
 
 
 -- ────────────────────────────────────────────────────────────
@@ -492,6 +543,141 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION public.admin_update_member_name(uuid, text) TO authenticated;
+
+-- 조직 관리자(이상)가 멤버의 전화번호를 직접 수정할 수 있는 RPC
+CREATE OR REPLACE FUNCTION public.admin_update_member_phone(p_user_id uuid, p_phone text)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_phone text := trim(p_phone);
+BEGIN
+  IF NOT (
+    is_super_admin_caller()
+    OR EXISTS (
+      SELECT 1 FROM tenant_members tm_target
+      JOIN tenant_members tm_admin
+        ON tm_admin.tenant_id = tm_target.tenant_id
+       AND tm_admin.user_id = auth.uid()
+       AND tm_admin.role = 'admin'
+      WHERE tm_target.user_id = p_user_id
+    )
+  ) THEN
+    RAISE EXCEPTION '권한이 없습니다.';
+  END IF;
+
+  UPDATE profiles SET phone = NULLIF(v_phone, '') WHERE id = p_user_id;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.admin_update_member_phone(uuid, text) TO authenticated;
+
+-- 전화번호 암호화 / 복호화 (Supabase Vault에서 키 조회)
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+CREATE OR REPLACE FUNCTION public.encrypt_phone(plain_text text)
+RETURNS text LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, vault, extensions AS $$
+DECLARE enc_key text;
+BEGIN
+  IF plain_text IS NULL OR plain_text = '' THEN RETURN NULL; END IF;
+  SELECT decrypted_secret INTO enc_key FROM vault.decrypted_secrets WHERE name = 'phone_encryption_key' LIMIT 1;
+  IF enc_key IS NULL OR enc_key = '' THEN RAISE EXCEPTION 'phone_encryption_key not found in Vault'; END IF;
+  RETURN encode(pgp_sym_encrypt(plain_text, enc_key), 'base64');
+END; $$;
+
+CREATE OR REPLACE FUNCTION public.decrypt_phone(encrypted_text text)
+RETURNS text LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, vault, extensions AS $$
+DECLARE enc_key text;
+BEGIN
+  IF encrypted_text IS NULL OR encrypted_text = '' THEN RETURN NULL; END IF;
+  SELECT decrypted_secret INTO enc_key FROM vault.decrypted_secrets WHERE name = 'phone_encryption_key' LIMIT 1;
+  IF enc_key IS NULL OR enc_key = '' THEN RAISE EXCEPTION 'phone_encryption_key not found in Vault'; END IF;
+  BEGIN RETURN pgp_sym_decrypt(decode(encrypted_text, 'base64'), enc_key);
+  EXCEPTION WHEN OTHERS THEN RETURN NULL; END;
+END; $$;
+
+CREATE OR REPLACE FUNCTION public.backfill_phone_encryption()
+RETURNS TABLE(profiles_updated int, assignments_updated int, customers_updated int)
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, vault, extensions AS $$
+DECLARE p_cnt int := 0; a_cnt int := 0; c_cnt int := 0;
+BEGIN
+  UPDATE public.profiles SET phone_enc = public.encrypt_phone(phone)
+    WHERE phone IS NOT NULL AND phone != '' AND phone_enc IS NULL;
+  GET DIAGNOSTICS p_cnt = ROW_COUNT;
+  UPDATE public.assignments SET customer_phone_enc = public.encrypt_phone(customer_phone)
+    WHERE customer_phone IS NOT NULL AND customer_phone != '' AND customer_phone_enc IS NULL;
+  GET DIAGNOSTICS a_cnt = ROW_COUNT;
+  UPDATE public.customers SET phone_enc = public.encrypt_phone(phone)
+    WHERE phone IS NOT NULL AND phone != '' AND phone_enc IS NULL;
+  GET DIAGNOSTICS c_cnt = ROW_COUNT;
+  RETURN QUERY SELECT p_cnt, a_cnt, c_cnt;
+END; $$;
+
+COMMENT ON FUNCTION public.backfill_phone_encryption() IS
+  '암호화 키 설정 후 기존 데이터 일괄 암호화: SELECT * FROM backfill_phone_encryption();';
+
+-- 오래된 알림 소프트 삭제 (읽은 알림 30일, 미읽은 알림 90일)
+CREATE OR REPLACE FUNCTION public.cleanup_old_notifications()
+RETURNS int
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  affected int;
+BEGIN
+  UPDATE public.notifications
+  SET archived_at = now()
+  WHERE archived_at IS NULL
+    AND (
+      (is_read = true  AND created_at < now() - interval '30 days')
+      OR
+      (is_read = false AND created_at < now() - interval '90 days')
+    );
+  GET DIAGNOSTICS affected = ROW_COUNT;
+  RETURN affected;
+END;
+$$;
+
+COMMENT ON FUNCTION public.cleanup_old_notifications() IS
+  '오래된 알림 소프트 삭제. Supabase Edge Function Cron (매일 새벽 3시)으로 호출 권장.';
+
+-- 휴면 계정 조회 (슈퍼어드민 전용)
+CREATE OR REPLACE FUNCTION public.get_dormant_accounts(retention_years int DEFAULT 3)
+RETURNS TABLE (
+  user_id      uuid,
+  name         text,
+  email        text,
+  last_login   timestamptz,
+  account_age  interval
+)
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT
+    p.id,
+    p.name,
+    p.email,
+    p.last_login_at,
+    now() - COALESCE(p.last_login_at, p.created_at)
+  FROM public.profiles p
+  WHERE
+    NOT p.is_super_admin
+    AND COALESCE(p.last_login_at, p.created_at) < now() - make_interval(years => retention_years)
+  ORDER BY COALESCE(p.last_login_at, p.created_at) ASC
+$$;
+
+REVOKE ALL ON FUNCTION public.get_dormant_accounts(int) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.get_dormant_accounts(int) TO authenticated;
+
+COMMENT ON FUNCTION public.get_dormant_accounts(int) IS
+  '장기 미이용 계정 목록 조회. 슈퍼어드민 전용. 예: SELECT * FROM get_dormant_accounts(3);';
 
 
 -- ────────────────────────────────────────────────────────────
@@ -743,6 +929,23 @@ CREATE POLICY "notif_select_superadmin" ON notifications FOR SELECT
 -- ── push_subscriptions ─────────────────────────────────────────
 CREATE POLICY "push_sub_own" ON push_subscriptions FOR ALL USING (user_id = auth.uid());
 
+-- ── policy_versions ────────────────────────────────────────────
+CREATE POLICY "policy_versions_select_all" ON policy_versions
+  FOR SELECT USING (true);
+
+CREATE POLICY "policy_versions_superadmin" ON policy_versions
+  FOR ALL USING (public.is_super_admin_caller());
+
+-- ── consent_logs ───────────────────────────────────────────────
+CREATE POLICY "consent_own_select" ON consent_logs
+  FOR SELECT USING (user_id = auth.uid());
+
+CREATE POLICY "consent_own_insert" ON consent_logs
+  FOR INSERT WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "consent_superadmin" ON consent_logs
+  FOR ALL USING (public.is_super_admin_caller());
+
 
 -- ────────────────────────────────────────────────────────────
 -- STEP 7. 트리거
@@ -918,6 +1121,98 @@ DROP TRIGGER IF EXISTS trg_assignments_date_lock_insert ON assignments;
 CREATE TRIGGER trg_assignments_date_lock_insert
   BEFORE INSERT ON assignments
   FOR EACH ROW EXECUTE FUNCTION check_assignment_date_lock_insert();
+
+-- 회원 탈퇴 시 개인정보 익명화
+CREATE OR REPLACE FUNCTION public.anonymize_user_data_on_delete()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  UPDATE public.assignments
+  SET
+    member_name     = '탈퇴회원',
+    note            = NULL,
+    user_id         = NULL,
+    account_deleted = true
+  WHERE user_id = OLD.id;
+
+  UPDATE public.customers
+  SET owner_user_id = NULL
+  WHERE owner_user_id = OLD.id;
+
+  RETURN OLD;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_anonymize_on_user_delete ON public.profiles;
+CREATE TRIGGER trg_anonymize_on_user_delete
+  BEFORE DELETE ON public.profiles
+  FOR EACH ROW
+  EXECUTE FUNCTION public.anonymize_user_data_on_delete();
+
+COMMENT ON FUNCTION public.anonymize_user_data_on_delete() IS
+  '개인정보 보호법 제21조 – 회원 탈퇴 시 개인정보 즉시 익명화';
+
+-- 전화번호 암호화 자동 동기화 트리거 (Vault 기반)
+CREATE OR REPLACE FUNCTION public.sync_profile_phone_enc()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, vault, extensions AS $$
+DECLARE enc_key text;
+BEGIN
+  SELECT decrypted_secret INTO enc_key FROM vault.decrypted_secrets WHERE name = 'phone_encryption_key' LIMIT 1;
+  IF enc_key IS NULL OR enc_key = '' THEN RETURN NEW; END IF;
+  NEW.phone_enc := CASE WHEN NEW.phone IS NOT NULL AND NEW.phone != '' THEN public.encrypt_phone(NEW.phone) ELSE NULL END;
+  RETURN NEW;
+END; $$;
+
+DROP TRIGGER IF EXISTS trg_encrypt_profile_phone ON public.profiles;
+CREATE TRIGGER trg_encrypt_profile_phone
+  BEFORE INSERT OR UPDATE OF phone ON public.profiles
+  FOR EACH ROW EXECUTE FUNCTION public.sync_profile_phone_enc();
+
+CREATE OR REPLACE FUNCTION public.sync_assignment_customer_phone_enc()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, vault, extensions AS $$
+DECLARE enc_key text;
+BEGIN
+  SELECT decrypted_secret INTO enc_key FROM vault.decrypted_secrets WHERE name = 'phone_encryption_key' LIMIT 1;
+  IF enc_key IS NULL OR enc_key = '' THEN RETURN NEW; END IF;
+  NEW.customer_phone_enc := CASE WHEN NEW.customer_phone IS NOT NULL AND NEW.customer_phone != '' THEN public.encrypt_phone(NEW.customer_phone) ELSE NULL END;
+  RETURN NEW;
+END; $$;
+
+DROP TRIGGER IF EXISTS trg_encrypt_assignment_customer_phone ON public.assignments;
+CREATE TRIGGER trg_encrypt_assignment_customer_phone
+  BEFORE INSERT OR UPDATE OF customer_phone ON public.assignments
+  FOR EACH ROW EXECUTE FUNCTION public.sync_assignment_customer_phone_enc();
+
+CREATE OR REPLACE FUNCTION public.sync_customer_phone_enc()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, vault, extensions AS $$
+DECLARE enc_key text;
+BEGIN
+  SELECT decrypted_secret INTO enc_key FROM vault.decrypted_secrets WHERE name = 'phone_encryption_key' LIMIT 1;
+  IF enc_key IS NULL OR enc_key = '' THEN RETURN NEW; END IF;
+  NEW.phone_enc := CASE WHEN NEW.phone IS NOT NULL AND NEW.phone != '' THEN public.encrypt_phone(NEW.phone) ELSE NULL END;
+  RETURN NEW;
+END; $$;
+
+DROP TRIGGER IF EXISTS trg_encrypt_customer_phone ON public.customers;
+CREATE TRIGGER trg_encrypt_customer_phone
+  BEFORE INSERT OR UPDATE OF phone ON public.customers
+  FOR EACH ROW EXECUTE FUNCTION public.sync_customer_phone_enc();
+
+-- 암호화 컬럼 직접 접근 차단 (SECURITY DEFINER 함수만 접근 가능)
+DO $$
+BEGIN
+  EXECUTE 'REVOKE SELECT, INSERT, UPDATE (phone_enc) ON public.profiles FROM authenticated, anon';
+  EXECUTE 'REVOKE SELECT, INSERT, UPDATE (customer_phone_enc) ON public.assignments FROM authenticated, anon';
+  EXECUTE 'REVOKE SELECT, INSERT, UPDATE (phone_enc) ON public.customers FROM authenticated, anon';
+EXCEPTION WHEN OTHERS THEN NULL;
+END;
+$$;
 
 
 -- ────────────────────────────────────────────────────────────
