@@ -38,20 +38,32 @@ export function useAdmin(tenantId: string): AdminState {
 
   const reloadMembers = useCallback(async () => {
     if (!tenantId) return
-    const m = await supabase
-      .from('tenant_members')
-      .select('*, profile:profiles(*), tenant_role:tenant_roles(*)')
-      .eq('tenant_id', tenantId)
+    const [m, phoneRows] = await Promise.all([
+      supabase
+        .from('tenant_members')
+        .select('*, profile:profiles(*), tenant_role:tenant_roles(*)')
+        .eq('tenant_id', tenantId),
+      supabase.rpc('get_tenant_member_phones', { p_tenant_id: tenantId }),
+    ])
+    const phoneMap = new Map<string, string>(
+      ((phoneRows.data ?? []) as { user_id: string; phone: string }[]).map(r => [r.user_id, r.phone])
+    )
     setMembers(
       ((m.data ?? []) as unknown as TenantMemberWithRole[])
         .filter(member => member.profile?.is_super_admin !== true)
+        .map(member => ({
+          ...member,
+          profile: member.profile
+            ? { ...member.profile, phone: phoneMap.get(member.user_id) ?? null }
+            : null,
+        })) as unknown as TenantMemberWithRole[]
     )
   }, [tenantId])
 
   useEffect(() => {
     if (!tenantId) return
     async function loadAll() {
-      const [m, r, d] = await Promise.all([
+      const [m, r, d, phoneRows] = await Promise.all([
         supabase
           .from('tenant_members')
           .select('*, profile:profiles(*), tenant_role:tenant_roles(*)')
@@ -59,10 +71,20 @@ export function useAdmin(tenantId: string): AdminState {
         supabase.from('schedule_rules').select('*').eq('tenant_id', tenantId)
           .order('day_of_week').order('time_slot'),
         supabase.from('date_overrides').select('*').eq('tenant_id', tenantId).order('date'),
+        supabase.rpc('get_tenant_member_phones', { p_tenant_id: tenantId }),
       ])
+      const phoneMap = new Map<string, string>(
+        ((phoneRows.data ?? []) as { user_id: string; phone: string }[]).map(r => [r.user_id, r.phone])
+      )
       setMembers(
         ((m.data ?? []) as unknown as TenantMemberWithRole[])
           .filter(member => member.profile?.is_super_admin !== true)
+          .map(member => ({
+            ...member,
+            profile: member.profile
+              ? { ...member.profile, phone: phoneMap.get(member.user_id) ?? null }
+              : null,
+          })) as unknown as TenantMemberWithRole[]
       )
       setScheduleRules(r.data ?? [])
       setDateOverrides(d.data ?? [])

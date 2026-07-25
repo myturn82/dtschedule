@@ -132,7 +132,7 @@ export const PLAN_FEATURES: Record<PlanType, { autoNotify: boolean; excelExport:
 export interface Customer {
   id: string
   name: string
-  phone: string | null
+  phone?: string | null
   owner_user_id: string | null
   plan: PlanType
   plan_expires_at: string | null
@@ -203,7 +203,8 @@ export interface Profile {
   id: string;
   name: string;
   email: string | null;
-  phone: string | null;
+  phone?: string | null;
+  phone_enc?: string | null;
   avatar_url: string | null;
   is_super_admin: boolean;
   is_approved: boolean;

@@ -68,14 +68,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // 카카오 등 소셜 가입 시 OAuth 전에 sessionStorage에 저장해둔 전화번호를 프로필에 반영
     const pendingPhone = sessionStorage.getItem('vs_pending_phone')
-    if (profileData && !profileData.phone && pendingPhone) {
-      const { data } = await supabase
-        .from('profiles')
-        .update({ phone: pendingPhone })
-        .eq('id', userId)
-        .select('*')
-        .maybeSingle()
-      if (data) profileData = data
+    if (profileData && !profileData.phone_enc && pendingPhone) {
+      await supabase.rpc('update_profile_phone_enc', { p_user_id: userId, p_phone: pendingPhone })
+      profileData = { ...profileData, phone_enc: '(encrypted)' }
       sessionStorage.removeItem('vs_pending_phone')
     }
 

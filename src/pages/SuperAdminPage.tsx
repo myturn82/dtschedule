@@ -339,12 +339,15 @@ export function SuperAdminPage() {
     }
     const { data, error } = await supabase
       .from('customers')
-      .insert({ name: customerForm.name.trim(), phone: customerForm.phone.trim(), owner_user_id: ownerUserId, plan: customerForm.plan })
+      .insert({ name: customerForm.name.trim(), owner_user_id: ownerUserId, plan: customerForm.plan })
       .select()
       .single()
     if (error) {
       setMessage(`오류: ${error.message}`)
     } else if (data) {
+      if (customerForm.phone.trim()) {
+        await supabase.rpc('update_customer_phone_enc', { p_customer_id: data.id, p_phone: customerForm.phone.trim() })
+      }
       setCustomers(prev => [...prev, data as Customer])
       setShowCreateCustomer(false)
       setCustomerForm({ name: '', phone: '', ownerEmail: '', plan: 'basic' })

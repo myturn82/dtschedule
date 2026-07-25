@@ -69,11 +69,15 @@ Deno.serve(async (req) => {
 
       const { error: profileUpdateErr } = await supabaseAdmin
         .from('profiles')
-        .update({ name, ...(phone ? { phone } : {}) })
+        .update({ name })
         .eq('id', userId)
       if (profileUpdateErr) {
         console.error(`[admin-create-user] profile update failed: ${profileUpdateErr.message}`)
         return json({ error: '프로필 갱신에 실패했습니다.' }, 500, corsHeaders)
+      }
+      if (phone) {
+        const { error: phoneErr } = await supabaseAdmin.rpc('service_set_profile_phone_enc', { p_user_id: userId, p_phone: phone })
+        if (phoneErr) console.error(`[admin-create-user] phone enc failed: ${phoneErr.message}`)
       }
     } else {
       // 신규 유저 생성
@@ -94,13 +98,16 @@ Deno.serve(async (req) => {
         id: userId,
         name,
         email,
-        ...(phone ? { phone } : {}),
         is_approved: false,
         is_super_admin: false,
       })
       if (profileErr) {
         console.error(`[admin-create-user] profile create failed: ${profileErr.message}`)
         return json({ error: '프로필 생성에 실패했습니다.' }, 500, corsHeaders)
+      }
+      if (phone) {
+        const { error: phoneErr } = await supabaseAdmin.rpc('service_set_profile_phone_enc', { p_user_id: userId, p_phone: phone })
+        if (phoneErr) console.error(`[admin-create-user] phone enc failed: ${phoneErr.message}`)
       }
     }
 
