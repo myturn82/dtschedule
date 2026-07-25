@@ -81,6 +81,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     setProfile(profileData)
     setLoading(false)
+
+    // 마지막 로그인 시점 갱신 (fire-and-forget, 실패해도 UX에 영향 없음)
+    if (profileData) {
+      void supabase.from('profiles')
+        .update({ last_login_at: new Date().toISOString() })
+        .eq('id', userId)
+    }
   }
 
   const refreshCustomer = useCallback(async (): Promise<Customer | null> => {

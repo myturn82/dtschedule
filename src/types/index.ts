@@ -209,6 +209,10 @@ export interface Profile {
   is_approved: boolean;
   terms_agreed_at: string | null;
   privacy_agreed_at: string | null;
+  marketing_agreed_at: string | null;
+  push_agreed_at: string | null;
+  phone_agreed_at: string | null;
+  last_login_at: string | null;
   created_at: string;
 }
 

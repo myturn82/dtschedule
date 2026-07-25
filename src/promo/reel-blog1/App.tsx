@@ -15,7 +15,10 @@ const asyncNull = async () => null
 
 const FAKE_PROFILE: Profile = {
   id: 'me', name: REGISTER_MEMBER_NAME, email: null, phone: null, avatar_url: null,
-  is_super_admin: false, is_approved: true, terms_agreed_at: null, privacy_agreed_at: null, created_at: '',
+  is_super_admin: false, is_approved: true,
+  terms_agreed_at: null, privacy_agreed_at: null,
+  marketing_agreed_at: null, push_agreed_at: null, phone_agreed_at: null,
+  last_login_at: null, created_at: '',
 }
 
 type Phase = 'intro' | 'a' | 'register' | 'b' | 'c' | 'outro'

@@ -12,6 +12,7 @@ export interface AppNotification {
   is_read: boolean
   metadata: { date?: string; slot?: string }
   created_at: string
+  archived_at: string | null
 }
 
 export function useNotifications() {
@@ -29,6 +30,7 @@ export function useNotifications() {
       .from('notifications')
       .select('*')
       .eq('user_id', profile.id)
+      .is('archived_at', null)
       .order('created_at', { ascending: false })
       .limit(20)
       .then(({ data }) => {
