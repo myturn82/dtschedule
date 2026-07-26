@@ -1,7 +1,8 @@
-﻿import { useState, useMemo } from 'react'
+﻿import { useState, useMemo, useEffect } from 'react'
 import type { Assignment, CustomFieldDef, Profile } from '../../types'
 import { formatPhone } from '../../lib/phone'
 import { DevFileLabel } from '../DevFileLabel'
+import { supabase } from '../../lib/supabase'
 
 interface SmsModalProps {
   assignments: Assignment[]
@@ -38,8 +39,9 @@ export function SmsModal({ assignments, customFields, profiles, adminUserIds, on
       if (a.account_deleted) continue
       if (a.user_id && adminUserIds?.has(a.user_id)) continue
       const key = a.user_id ?? a.member_name
-      // phone 우선순위: customer_phone → phone 타입 커스텀 필드 → profile.phone → 빈 문자열 (하이픈 포맷 적용)
-      const cfPhone = phoneFieldIds.map(id => a.extra_data?.[id]).find(v => v?.trim()) ?? ''
+      // phone 우선순위: customer_phone → phone 타입 커스텀 필드 → profile.phone → 빈 문자열
+      // enc: 접두사 암호화 값은 건너뜀 (useEffect에서 비동기 복호화 후 채움)
+      const cfPhone = phoneFieldIds.map(id => a.extra_data?.[id]).find(v => v?.trim() && !v.startsWith('enc:')) ?? ''
       const profilePhone = a.user_id ? (profilePhoneMap.get(a.user_id) ?? '') : ''
       const rawPhone = a.customer_phone ?? (cfPhone || profilePhone)
       const phone = rawPhone ? formatPhone(rawPhone) : ''
@@ -54,6 +56,39 @@ export function SmsModal({ assignments, customFields, profiles, adminUserIds, on
 
   const [recipients, setRecipients] = useState<Recipient[]>(initialRecipients)
   const [message, setMessage] = useState('')
+
+  // enc: 접두사로 암호화된 extra_data phone 필드 복호화 (모달 오픈 시 1회)
+  useEffect(() => {
+    if (phoneFieldIds.length === 0) return
+    const keysWithoutPhone = new Set(initialRecipients.filter(r => !r.phone).map(r => r.key))
+    if (keysWithoutPhone.size === 0) return
+
+    const toDecrypt: { key: string; encVal: string }[] = []
+    for (const a of assignments) {
+      if (a.account_deleted) continue
+      if (a.user_id && adminUserIds?.has(a.user_id)) continue
+      const key = a.user_id ?? a.member_name
+      if (!keysWithoutPhone.has(key)) continue
+      for (const id of phoneFieldIds) {
+        const v = a.extra_data?.[id]
+        if (v?.startsWith('enc:')) { toDecrypt.push({ key, encVal: v.slice(4) }); break }
+      }
+    }
+    if (toDecrypt.length === 0) return
+
+    Promise.all(
+      toDecrypt.map(async ({ key, encVal }) => {
+        const { data } = await supabase.rpc('decrypt_phone', { encrypted_text: encVal })
+        return { key, phone: data ? formatPhone(data as string) : '' }
+      })
+    ).then(decrypted => {
+      setRecipients(prev => prev.map(r => {
+        const found = decrypted.find(d => d.key === r.key && d.phone && !r.phone)
+        return found ? { ...r, phone: found.phone } : r
+      }))
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const selected = recipients.filter(r => r.selected)
   const validPhones = selected.filter(r => r.phone.trim())

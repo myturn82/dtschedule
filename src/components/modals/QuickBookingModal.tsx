@@ -262,6 +262,23 @@ export function QuickBookingModal({ onClose }: Props) {
       .lte('year', Math.max(...years))
 
     const existingSet = new Set((existing ?? []).map(e => `${e.year}-${e.month}-${e.day}-${e.time_slot}`))
+
+    // phone 타입 커스텀 필드 암호화
+    let encryptedExtraData = extraData
+    if (Object.keys(extraData).length > 0) {
+      const phoneFieldIds = customFields.filter(f => f.type === 'phone').map(f => f.id)
+      if (phoneFieldIds.length > 0) {
+        encryptedExtraData = { ...extraData }
+        for (const fid of phoneFieldIds) {
+          const val = encryptedExtraData[fid]
+          if (val?.trim() && !val.startsWith('enc:')) {
+            const { data } = await supabase.rpc('encrypt_phone', { plain_text: val })
+            if (data) encryptedExtraData[fid] = `enc:${data as string}`
+          }
+        }
+      }
+    }
+
     const toInsert = targetPairs
       .filter(p => !existingSet.has(`${p.year}-${p.month}-${p.day}-${p.time_slot}`))
       .map(p => ({
@@ -276,7 +293,7 @@ export function QuickBookingModal({ onClose }: Props) {
         role_id: member?.tenantRoleId ?? null,
         customer_name: isFreeform ? memberName : null,
         note: note.trim() || null,
-        extra_data: Object.keys(extraData).length > 0 ? extraData : undefined,
+        extra_data: Object.keys(encryptedExtraData).length > 0 ? encryptedExtraData : undefined,
       }))
 
     const skipped = targetPairs.length - toInsert.length

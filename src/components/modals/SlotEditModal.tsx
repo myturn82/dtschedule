@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+﻿import { useState, useEffect, useMemo } from 'react'
 import { AutoResizeTextarea } from '../shared/AutoResizeTextarea'
 import { DevFileLabel } from '../DevFileLabel'
 import type { Assignment, CellState, ModalTarget, Profile, TenantRole, MemberType, CustomFieldDef, TenantMode } from '../../types'
@@ -8,6 +8,7 @@ import { useProfiles } from '../../hooks/useProfiles'
 import type { ProfileWithRole } from '../../hooks/useProfiles'
 import { LockIcon, UnlockIcon } from '../icons/LockIcons'
 import { fmtPhone, fmtNumber, maskPhone } from '../../lib/format'
+import { supabase } from '../../lib/supabase'
 import { formatPhone, isValidPhone } from '../../lib/phone'
 import { ImageUploadField } from '../schedule/ImageUploadField'
 import type { PendingImage } from '../schedule/ImageUploadField'
@@ -86,6 +87,11 @@ export function SlotEditModal({
   const selectedRole = splitRoles.find(r => r.id === selectedRoleId) ?? null
 
   const { profiles } = useProfiles()
+
+  const phoneFieldIds = useMemo(
+    () => new Set(customFields.filter(f => f.type === 'phone').map(f => f.id)),
+    [customFields]
+  )
 
   const lockedProfile = lockedUserId ? profiles.find(p => p.id === lockedUserId) ?? null : null
   const selectedProfile = isAdmin
@@ -191,6 +197,15 @@ export function SlotEditModal({
       Object.assign(restored, a.extra_data ?? {})
       delete restored._nf
       delete restored._cl
+      // enc: 접두사 phone 값 → 즉시 비워두고 비동기 복호화 후 채움
+      for (const fid of Array.from(phoneFieldIds)) {
+        if (restored[fid]?.startsWith('enc:')) {
+          const encVal = restored[fid].slice(4)
+          restored[fid] = ''
+          supabase.rpc('decrypt_phone', { encrypted_text: encVal })
+            .then(({ data }) => { if (data) setFieldValues(prev => ({ ...prev, [fid]: data as string })) })
+        }
+      }
       setFieldValues(restored)
       if (isAdmin && isSplitMode) setSelectedUserId(a.user_id ?? '')
     } else {
@@ -198,7 +213,16 @@ export function SlotEditModal({
       setMemberType(a.member_type ?? 'member')
     }
     if (showExtraCustomFields) {
-      setFieldValues({ ...(a.extra_data ?? {}) })
+      const extra = { ...(a.extra_data ?? {}) }
+      for (const fid of Array.from(phoneFieldIds)) {
+        if (extra[fid]?.startsWith('enc:')) {
+          const encVal = extra[fid].slice(4)
+          extra[fid] = ''
+          supabase.rpc('decrypt_phone', { encrypted_text: encVal })
+            .then(({ data }) => { if (data) setFieldValues(prev => ({ ...prev, [fid]: data as string })) })
+        }
+      }
+      setFieldValues(extra)
     }
   }
 
@@ -302,6 +326,17 @@ export function SlotEditModal({
       if (Object.keys(rest).length > 0) extraData = rest
     }
 
+    // phone 타입 커스텀 필드 암호화
+    if (extraData) {
+      for (const f of customFields.filter(f => f.type === 'phone')) {
+        const val = extraData[f.id]
+        if (val?.trim() && !val.startsWith('enc:')) {
+          const { data } = await supabase.rpc('encrypt_phone', { plain_text: val })
+          if (data) extraData[f.id] = `enc:${data as string}`
+        }
+      }
+    }
+
     const err = await onAdd(
       name,
       note.trim(),
@@ -403,6 +438,17 @@ export function SlotEditModal({
         if (v !== undefined && v !== '') rest[f.id] = v.trim ? v.trim() : v
       })
       if (Object.keys(rest).length > 0) extraData = rest
+    }
+
+    // phone 타입 커스텀 필드 암호화
+    if (extraData) {
+      for (const f of customFields.filter(f => f.type === 'phone')) {
+        const val = extraData[f.id]
+        if (val?.trim() && !val.startsWith('enc:')) {
+          const { data } = await supabase.rpc('encrypt_phone', { plain_text: val })
+          if (data) extraData[f.id] = `enc:${data as string}`
+        }
+      }
     }
 
     const err = await onUpdate(
@@ -795,11 +841,19 @@ export function SlotEditModal({
                     {isFreeform ? (
                       <div className="flex items-start gap-2">
                         <div className="flex flex-wrap gap-1.5 flex-1 min-w-0">
-                          {detailChips.map(c => (
-                            <span key={c.key} className="text-[11.5px] font-semibold text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] px-2 py-1 rounded-lg inline-flex gap-1 flex-wrap min-w-0">
-                              <b className="font-extrabold text-[var(--color-text-muted)] whitespace-nowrap">{c.label}</b><span className="break-words min-w-0">{c.value}</span>
-                            </span>
-                          ))}
+                          {detailChips.map(c => {
+                            const isPhone = c.key === 'phone' || phoneFieldIds.has(c.key)
+                            const rawPhone = isPhone && !c.value.startsWith('enc:') ? c.value.replace(/[^0-9]/g, '') : ''
+                            return (
+                              <span key={c.key} className="text-[11.5px] font-semibold text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] px-2 py-1 rounded-lg inline-flex gap-1 flex-wrap min-w-0">
+                                <b className="font-extrabold text-[var(--color-text-muted)] whitespace-nowrap">{c.label}</b>
+                                <span className="break-words min-w-0">{c.value.startsWith('enc:') ? '•••' : c.value}</span>
+                                {isPhone && rawPhone && (
+                                  <a href={`sms:${rawPhone}`} className="select-none hover:opacity-70" onClick={e => e.stopPropagation()} title="문자 보내기">📱</a>
+                                )}
+                              </span>
+                            )
+                          })}
                           {imageChips.map(ic => (
                             <button key={ic.fieldId} type="button" onClick={() => setGalleryUrls(ic.urls)}
                               className="text-[11.5px] font-semibold text-[var(--color-brand-primary)] bg-[color-mix(in_srgb,var(--color-brand-primary)_8%,transparent)] border border-[var(--color-brand-primary)]/20 px-2 py-1 rounded-lg inline-flex items-center gap-1 whitespace-nowrap hover:bg-[color-mix(in_srgb,var(--color-brand-primary)_15%,transparent)] transition-colors select-none">

@@ -1277,6 +1277,9 @@ export function AdminPage() {
                                   {fmtPhone(m.profile?.phone) || '전화번호 없음'}
                                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                                 </button>
+                                {m.profile?.phone && (
+                                  <a href={`sms:${m.profile.phone.replace(/[^0-9]/g, '')}`} className="text-[10px] select-none text-[var(--color-text-muted)] hover:text-[var(--color-brand-primary)]" onClick={e => e.stopPropagation()}>📱</a>
+                                )}
                               </div>
                             </td>
                             <td className="px-2 py-2 sm:px-4 sm:py-3 hidden sm:table-cell text-xs text-center">
@@ -1328,14 +1331,19 @@ export function AdminPage() {
                                     className="px-1.5 py-1 text-[10px] border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] rounded-lg">취소</button>
                                 </span>
                               ) : (
-                                <button
-                                  onClick={() => { setEditingPhoneUserId(m.user_id); setEditPhone(fmtPhone(m.profile?.phone)) }}
-                                  className="hover:text-[var(--color-brand-primary)] transition-colors text-[var(--color-text-muted)] inline-flex items-center gap-1"
-                                  title="전화번호 수정"
-                                >
-                                  {fmtPhone(m.profile?.phone) || '-'}
-                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-                                </button>
+                                <span className="inline-flex items-center gap-1.5">
+                                  <button
+                                    onClick={() => { setEditingPhoneUserId(m.user_id); setEditPhone(fmtPhone(m.profile?.phone)) }}
+                                    className="hover:text-[var(--color-brand-primary)] transition-colors text-[var(--color-text-muted)] inline-flex items-center gap-1"
+                                    title="전화번호 수정"
+                                  >
+                                    {fmtPhone(m.profile?.phone) || '-'}
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                                  </button>
+                                  {m.profile?.phone && (
+                                    <a href={`sms:${m.profile.phone.replace(/[^0-9]/g, '')}`} className="select-none text-[var(--color-text-muted)] hover:text-[var(--color-brand-primary)] transition-colors" title="문자 보내기" onClick={e => e.stopPropagation()}>📱</a>
+                                  )}
+                                </span>
                               )}
                             </td>
                             <td className="px-2 py-2 sm:px-4 sm:py-3 text-center">
@@ -1451,6 +1459,9 @@ export function AdminPage() {
                                     >
                                       {fmtPhone(m.profile?.phone) || '-'}
                                     </button>
+                                    {m.profile?.phone && (
+                                      <a href={`sms:${m.profile.phone.replace(/[^0-9]/g, '')}`} className="select-none text-[var(--color-text-muted)] hover:text-[var(--color-brand-primary)] transition-colors shrink-0" title="문자 보내기" onClick={e => e.stopPropagation()}>📱</a>
+                                    )}
                                   </div>
                                 )}
                               </div>
