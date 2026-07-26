@@ -22,7 +22,11 @@
 
 - [ ] 신규 회원가입 후 **[DB 확인]** `profiles.phone_enc`에 암호화된 값이 자동 입력됨
 - [ ] 관리자가 회원 전화번호 수정 후 **[DB 확인]** `phone_enc`가 자동 갱신됨
-- [ ] 배정 시 고객 전화번호 입력 후 **[DB 확인]** `assignments.customer_phone_enc` 암호화 저장
+- [N/A] `assignments.customer_phone_enc` 암호화 트리거 — **현재 앱에서 해당 없음**
+  - `assignments.customer_phone` 컬럼은 UI 어떤 경로로도 저장되지 않음 (항상 null)
+  - 동적 필드 ON: 전화번호 → `extra_data[필드ID]`, 동적 필드 OFF: 전화번호 입력 UI 없음
+  - 트리거 자체는 정상이나 원본 데이터가 없어 실질적으로 동작하지 않음
+  - `extra_data` 내 phone 필드 암호화는 **Phase 3** 별도 마이그레이션 예정
 - [ ] 기존 사용자 화면에서 전화번호 표시 정상 (plain 컬럼 유지이므로 변화 없어야 함)
 - [ ] **[DB 확인]** authenticated/anon 롤이 `phone_enc` 컬럼 직접 SELECT 불가 (REVOKE 확인)
 

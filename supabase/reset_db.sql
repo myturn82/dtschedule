@@ -1,7 +1,7 @@
 -- ============================================================
 -- 운영 DB 초기화 스크립트 (전체 재생성)
 -- 생성일: 2026-06-10
--- 기준 마이그레이션: 001 ~ 069
+-- 기준 마이그레이션: 001 ~ 072
 --
 -- ⚠️  주의: 이 스크립트는 모든 데이터를 삭제합니다.
 --           Supabase SQL Editor에서 직접 실행하세요.
@@ -50,6 +50,13 @@ DROP FUNCTION IF EXISTS public.sync_assignment_customer_phone_enc()       CASCAD
 DROP FUNCTION IF EXISTS public.sync_customer_phone_enc()                  CASCADE;
 DROP FUNCTION IF EXISTS public.cleanup_old_notifications()                CASCADE;
 DROP FUNCTION IF EXISTS public.get_dormant_accounts(int)                  CASCADE;
+DROP FUNCTION IF EXISTS public.get_tenant_member_phones(uuid)             CASCADE;
+DROP FUNCTION IF EXISTS public.get_member_phone(uuid)                     CASCADE;
+DROP FUNCTION IF EXISTS public.update_profile_phone_enc(uuid, text)       CASCADE;
+DROP FUNCTION IF EXISTS public.service_set_profile_phone_enc(uuid, text)  CASCADE;
+DROP FUNCTION IF EXISTS public.get_customer_phone(uuid)                   CASCADE;
+DROP FUNCTION IF EXISTS public.update_customer_phone_enc(uuid, text)      CASCADE;
+DROP FUNCTION IF EXISTS public.service_set_customer_phone_enc(uuid, text) CASCADE;
 
 -- 테이블 삭제 (CASCADE로 FK·인덱스·정책 자동 제거)
 DROP TABLE IF EXISTS consent_logs    CASCADE;
@@ -85,7 +92,6 @@ CREATE TABLE profiles (
   is_super_admin boolean     NOT NULL DEFAULT false,
   terms_agreed_at   timestamptz,
   privacy_agreed_at timestamptz,
-  phone          text,
   phone_enc      text,
   marketing_agreed_at timestamptz,
   push_agreed_at      timestamptz,
@@ -98,7 +104,6 @@ CREATE TABLE profiles (
 CREATE TABLE customers (
   id                    uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   name                  text        NOT NULL,
-  phone                 text,
   owner_user_id         uuid        REFERENCES profiles(id) ON DELETE SET NULL,
   plan                  text        NOT NULL DEFAULT 'basic'
                                     CHECK (plan IN ('basic', 'pro', 'business')),
@@ -568,7 +573,9 @@ BEGIN
     RAISE EXCEPTION '권한이 없습니다.';
   END IF;
 
-  UPDATE profiles SET phone = NULLIF(v_phone, '') WHERE id = p_user_id;
+  UPDATE profiles
+  SET phone_enc = CASE WHEN v_phone IS NOT NULL THEN public.encrypt_phone(v_phone) ELSE NULL END
+  WHERE id = p_user_id;
 END;
 $$;
 
@@ -591,35 +598,162 @@ END; $$;
 CREATE OR REPLACE FUNCTION public.decrypt_phone(encrypted_text text)
 RETURNS text LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = public, vault, extensions AS $$
-DECLARE enc_key text;
+DECLARE
+  enc_key text;
+  result  text;
 BEGIN
   IF encrypted_text IS NULL OR encrypted_text = '' THEN RETURN NULL; END IF;
   SELECT decrypted_secret INTO enc_key FROM vault.decrypted_secrets WHERE name = 'phone_encryption_key' LIMIT 1;
-  IF enc_key IS NULL OR enc_key = '' THEN RAISE EXCEPTION 'phone_encryption_key not found in Vault'; END IF;
-  BEGIN RETURN pgp_sym_decrypt(decode(encrypted_text, 'base64'), enc_key);
-  EXCEPTION WHEN OTHERS THEN RETURN NULL; END;
+  IF enc_key IS NULL OR enc_key = '' THEN RETURN NULL; END IF;
+  BEGIN
+    result := pgp_sym_decrypt(decode(encrypted_text, 'base64'), enc_key);
+    RETURN result;
+  EXCEPTION WHEN OTHERS THEN RETURN NULL;
+  END;
 END; $$;
 
-CREATE OR REPLACE FUNCTION public.backfill_phone_encryption()
-RETURNS TABLE(profiles_updated int, assignments_updated int, customers_updated int)
+-- ── Phase 2: 전화번호 복호화 / 암호화 RPC ──────────────────────────────────
+
+CREATE OR REPLACE FUNCTION public.get_tenant_member_phones(p_tenant_id uuid)
+RETURNS TABLE(user_id uuid, phone text)
 LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = public, vault, extensions AS $$
-DECLARE p_cnt int := 0; a_cnt int := 0; c_cnt int := 0;
 BEGIN
-  UPDATE public.profiles SET phone_enc = public.encrypt_phone(phone)
-    WHERE phone IS NOT NULL AND phone != '' AND phone_enc IS NULL;
-  GET DIAGNOSTICS p_cnt = ROW_COUNT;
-  UPDATE public.assignments SET customer_phone_enc = public.encrypt_phone(customer_phone)
-    WHERE customer_phone IS NOT NULL AND customer_phone != '' AND customer_phone_enc IS NULL;
-  GET DIAGNOSTICS a_cnt = ROW_COUNT;
-  UPDATE public.customers SET phone_enc = public.encrypt_phone(phone)
-    WHERE phone IS NOT NULL AND phone != '' AND phone_enc IS NULL;
-  GET DIAGNOSTICS c_cnt = ROW_COUNT;
-  RETURN QUERY SELECT p_cnt, a_cnt, c_cnt;
+  IF NOT (
+    is_super_admin_caller()
+    OR EXISTS (
+      SELECT 1 FROM tenant_members tm2
+      WHERE tm2.tenant_id   = p_tenant_id
+        AND tm2.user_id     = auth.uid()
+        AND tm2.role        = 'admin'
+        AND tm2.is_approved = true
+    )
+  ) THEN
+    RAISE EXCEPTION '권한이 없습니다.';
+  END IF;
+  RETURN QUERY
+  SELECT tm.user_id, public.decrypt_phone(p.phone_enc)
+  FROM tenant_members tm
+  JOIN profiles p ON p.id = tm.user_id
+  WHERE tm.tenant_id   = p_tenant_id
+    AND tm.is_approved = true
+    AND p.phone_enc    IS NOT NULL;
 END; $$;
 
-COMMENT ON FUNCTION public.backfill_phone_encryption() IS
-  '암호화 키 설정 후 기존 데이터 일괄 암호화: SELECT * FROM backfill_phone_encryption();';
+GRANT EXECUTE ON FUNCTION public.get_tenant_member_phones(uuid) TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.get_member_phone(p_user_id uuid)
+RETURNS text
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, vault, extensions AS $$
+BEGIN
+  IF NOT (
+    auth.uid() = p_user_id
+    OR is_super_admin_caller()
+    OR EXISTS (
+      SELECT 1 FROM tenant_members tm_target
+      JOIN tenant_members tm_admin
+        ON tm_admin.tenant_id   = tm_target.tenant_id
+       AND tm_admin.user_id     = auth.uid()
+       AND tm_admin.role        = 'admin'
+       AND tm_admin.is_approved = true
+      WHERE tm_target.user_id = p_user_id
+    )
+  ) THEN
+    RAISE EXCEPTION '권한이 없습니다.';
+  END IF;
+  RETURN (SELECT public.decrypt_phone(phone_enc) FROM profiles WHERE id = p_user_id);
+END; $$;
+
+GRANT EXECUTE ON FUNCTION public.get_member_phone(uuid) TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.update_profile_phone_enc(p_user_id uuid, p_phone text)
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, vault, extensions AS $$
+DECLARE v_phone text := NULLIF(trim(p_phone), '');
+BEGIN
+  IF NOT (
+    auth.uid() = p_user_id
+    OR is_super_admin_caller()
+    OR EXISTS (
+      SELECT 1 FROM tenant_members tm_target
+      JOIN tenant_members tm_admin
+        ON tm_admin.tenant_id   = tm_target.tenant_id
+       AND tm_admin.user_id     = auth.uid()
+       AND tm_admin.role        = 'admin'
+       AND tm_admin.is_approved = true
+      WHERE tm_target.user_id = p_user_id
+    )
+  ) THEN
+    RAISE EXCEPTION '권한이 없습니다.';
+  END IF;
+  UPDATE profiles
+  SET phone_enc = CASE WHEN v_phone IS NOT NULL THEN public.encrypt_phone(v_phone) ELSE NULL END
+  WHERE id = p_user_id;
+END; $$;
+
+GRANT EXECUTE ON FUNCTION public.update_profile_phone_enc(uuid, text) TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.service_set_profile_phone_enc(p_user_id uuid, p_phone text)
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, vault, extensions AS $$
+DECLARE v_phone text := NULLIF(trim(p_phone), '');
+BEGIN
+  IF auth.role() != 'service_role' THEN RAISE EXCEPTION 'Unauthorized: service_role only'; END IF;
+  UPDATE profiles
+  SET phone_enc = CASE WHEN v_phone IS NOT NULL THEN public.encrypt_phone(v_phone) ELSE NULL END
+  WHERE id = p_user_id;
+END; $$;
+
+REVOKE ALL ON FUNCTION public.service_set_profile_phone_enc(uuid, text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.service_set_profile_phone_enc(uuid, text) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.get_customer_phone(p_customer_id uuid)
+RETURNS text LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, vault, extensions AS $$
+BEGIN
+  IF NOT (
+    is_super_admin_caller()
+    OR EXISTS (SELECT 1 FROM customers WHERE id = p_customer_id AND owner_user_id = auth.uid())
+  ) THEN
+    RAISE EXCEPTION '권한이 없습니다.';
+  END IF;
+  RETURN (SELECT public.decrypt_phone(phone_enc) FROM customers WHERE id = p_customer_id);
+END; $$;
+
+GRANT EXECUTE ON FUNCTION public.get_customer_phone(uuid) TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.update_customer_phone_enc(p_customer_id uuid, p_phone text)
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, vault, extensions AS $$
+DECLARE v_phone text := NULLIF(trim(p_phone), '');
+BEGIN
+  IF NOT (
+    is_super_admin_caller()
+    OR EXISTS (SELECT 1 FROM customers WHERE id = p_customer_id AND owner_user_id = auth.uid())
+  ) THEN
+    RAISE EXCEPTION '권한이 없습니다.';
+  END IF;
+  UPDATE customers
+  SET phone_enc = CASE WHEN v_phone IS NOT NULL THEN public.encrypt_phone(v_phone) ELSE NULL END
+  WHERE id = p_customer_id;
+END; $$;
+
+GRANT EXECUTE ON FUNCTION public.update_customer_phone_enc(uuid, text) TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.service_set_customer_phone_enc(p_customer_id uuid, p_phone text)
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, vault, extensions AS $$
+DECLARE v_phone text := NULLIF(trim(p_phone), '');
+BEGIN
+  IF auth.role() != 'service_role' THEN RAISE EXCEPTION 'Unauthorized: service_role only'; END IF;
+  UPDATE customers
+  SET phone_enc = CASE WHEN v_phone IS NOT NULL THEN public.encrypt_phone(v_phone) ELSE NULL END
+  WHERE id = p_customer_id;
+END; $$;
+
+REVOKE ALL ON FUNCTION public.service_set_customer_phone_enc(uuid, text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.service_set_customer_phone_enc(uuid, text) TO service_role;
 
 -- 오래된 알림 소프트 삭제 (읽은 알림 30일, 미읽은 알림 90일)
 CREATE OR REPLACE FUNCTION public.cleanup_old_notifications()
@@ -951,12 +1085,30 @@ CREATE POLICY "consent_superadmin" ON consent_logs
 -- STEP 7. 트리거
 -- ────────────────────────────────────────────────────────────
 
--- 신규 사용자 등록 시 profiles 자동 생성
+-- 신규 사용자 등록 시 profiles 자동 생성 (phone_enc에 암호화 저장)
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger
 LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE
+  raw_phone     text;
+  encrypted_enc text;
 BEGIN
-  INSERT INTO public.profiles (id, name, email, avatar_url, is_approved, is_super_admin, terms_agreed_at, privacy_agreed_at, phone)
+  raw_phone := NULLIF(trim(new.raw_user_meta_data->>'phone'), '');
+
+  IF raw_phone IS NOT NULL THEN
+    BEGIN
+      encrypted_enc := public.encrypt_phone(raw_phone);
+    EXCEPTION WHEN OTHERS THEN
+      encrypted_enc := NULL;
+    END;
+  END IF;
+
+  INSERT INTO public.profiles (
+    id, name, email, avatar_url,
+    is_approved, is_super_admin,
+    terms_agreed_at, privacy_agreed_at,
+    phone_enc
+  )
   VALUES (
     new.id,
     COALESCE(
@@ -969,15 +1121,14 @@ BEGIN
       new.raw_user_meta_data->>'avatar_url',
       new.raw_user_meta_data->>'picture'
     ),
-    false,        -- 관리자 승인 필요
-    false,        -- DB에서만 super_admin 부여
+    false,
+    false,
     (new.raw_user_meta_data->>'terms_agreed_at')::timestamptz,
     (new.raw_user_meta_data->>'privacy_agreed_at')::timestamptz,
-    new.raw_user_meta_data->>'phone'
+    encrypted_enc
   )
   ON CONFLICT (id) DO NOTHING;
 
-  -- 가입 시 조직 선택했으면 tenant_members에 자동 추가
   IF new.raw_user_meta_data->>'tenant_id' IS NOT NULL THEN
     INSERT INTO public.tenant_members (tenant_id, user_id, role, role_id, is_approved)
     VALUES (
@@ -1155,22 +1306,6 @@ CREATE TRIGGER trg_anonymize_on_user_delete
 COMMENT ON FUNCTION public.anonymize_user_data_on_delete() IS
   '개인정보 보호법 제21조 – 회원 탈퇴 시 개인정보 즉시 익명화';
 
--- 전화번호 암호화 자동 동기화 트리거 (Vault 기반)
-CREATE OR REPLACE FUNCTION public.sync_profile_phone_enc()
-RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
-SET search_path = public, vault, extensions AS $$
-DECLARE enc_key text;
-BEGIN
-  SELECT decrypted_secret INTO enc_key FROM vault.decrypted_secrets WHERE name = 'phone_encryption_key' LIMIT 1;
-  IF enc_key IS NULL OR enc_key = '' THEN RETURN NEW; END IF;
-  NEW.phone_enc := CASE WHEN NEW.phone IS NOT NULL AND NEW.phone != '' THEN public.encrypt_phone(NEW.phone) ELSE NULL END;
-  RETURN NEW;
-END; $$;
-
-DROP TRIGGER IF EXISTS trg_encrypt_profile_phone ON public.profiles;
-CREATE TRIGGER trg_encrypt_profile_phone
-  BEFORE INSERT OR UPDATE OF phone ON public.profiles
-  FOR EACH ROW EXECUTE FUNCTION public.sync_profile_phone_enc();
 
 CREATE OR REPLACE FUNCTION public.sync_assignment_customer_phone_enc()
 RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
@@ -1187,22 +1322,6 @@ DROP TRIGGER IF EXISTS trg_encrypt_assignment_customer_phone ON public.assignmen
 CREATE TRIGGER trg_encrypt_assignment_customer_phone
   BEFORE INSERT OR UPDATE OF customer_phone ON public.assignments
   FOR EACH ROW EXECUTE FUNCTION public.sync_assignment_customer_phone_enc();
-
-CREATE OR REPLACE FUNCTION public.sync_customer_phone_enc()
-RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
-SET search_path = public, vault, extensions AS $$
-DECLARE enc_key text;
-BEGIN
-  SELECT decrypted_secret INTO enc_key FROM vault.decrypted_secrets WHERE name = 'phone_encryption_key' LIMIT 1;
-  IF enc_key IS NULL OR enc_key = '' THEN RETURN NEW; END IF;
-  NEW.phone_enc := CASE WHEN NEW.phone IS NOT NULL AND NEW.phone != '' THEN public.encrypt_phone(NEW.phone) ELSE NULL END;
-  RETURN NEW;
-END; $$;
-
-DROP TRIGGER IF EXISTS trg_encrypt_customer_phone ON public.customers;
-CREATE TRIGGER trg_encrypt_customer_phone
-  BEFORE INSERT OR UPDATE OF phone ON public.customers
-  FOR EACH ROW EXECUTE FUNCTION public.sync_customer_phone_enc();
 
 -- 암호화 컬럼 직접 접근 차단 (SECURITY DEFINER 함수만 접근 가능)
 DO $$

@@ -161,13 +161,20 @@ export function useAdmin(tenantId: string): AdminState {
   }, [])
 
   const updateMemberPhone = useCallback(async (userId: string, phone: string): Promise<string | null> => {
-    const { error } = await supabase.rpc('admin_update_member_phone', { p_user_id: userId, p_phone: phone })
-    if (!error) {
+    try {
+      const { error } = await supabase.rpc('update_profile_phone_enc', { p_user_id: userId, p_phone: phone })
+      if (error) return error.message
+      // 저장 성공 후 최신 복호화 phone 반영
+      const { data: phoneData } = await supabase.rpc('get_member_phone', { p_user_id: userId })
       setMembers(prev => prev.map(m =>
-        m.user_id === userId && m.profile ? { ...m, profile: { ...m.profile, phone: phone.trim() || null } } : m
+        m.user_id === userId && m.profile
+          ? { ...m, profile: { ...m.profile, phone: ((phoneData as string | null) ?? phone.trim()) || null } } as unknown as TenantMemberWithRole
+          : m
       ))
+      return null
+    } catch (e) {
+      return e instanceof Error ? e.message : '전화번호 저장 중 오류가 발생했습니다.'
     }
-    return error?.message ?? null
   }, [])
 
   const updateMemberEmail = useCallback(async (userId: string, email: string): Promise<string | null> => {
