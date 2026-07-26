@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect, useMemo } from 'react'
 import { AutoResizeTextarea } from '../shared/AutoResizeTextarea'
 import { DevFileLabel } from '../DevFileLabel'
-import type { Assignment, CellState, ModalTarget, Profile, TenantRole, MemberType, CustomFieldDef, TenantMode } from '../../types'
+import type { Assignment, CellState, ModalTarget, Profile, TenantRole, MemberType, CustomFieldDef, TenantMode, LessonPackageWithUsage } from '../../types'
 import { getOptionUnit } from '../../types'
 import { parseSlotLabel, getTimeSubOptions, formatTimeSub } from '../../utils/timeSlots'
 import { useProfiles } from '../../hooks/useProfiles'
@@ -31,8 +31,8 @@ interface Props {
   tenantId?: string
   lockedUserId?: string
   onClose: () => void
-  onAdd: (name: string, note: string, memberType: MemberType, timeSub: string | null, color?: string, userId?: string, roleId?: string | null, customerName?: string | null, customerPhone?: string | null, extraData?: Record<string, string>) => Promise<string | null>
-  onUpdate: (id: string, name: string, note: string, memberType: MemberType, timeSub: string | null, color?: string, roleId?: string | null, customerName?: string | null, customerPhone?: string | null, extraData?: Record<string, string>) => Promise<string | null>
+  onAdd: (name: string, note: string, memberType: MemberType, timeSub: string | null, color?: string, userId?: string, roleId?: string | null, customerName?: string | null, customerPhone?: string | null, extraData?: Record<string, string>, lessonPackageId?: string | null) => Promise<string | null>
+  onUpdate: (id: string, name: string, note: string, memberType: MemberType, timeSub: string | null, color?: string, roleId?: string | null, customerName?: string | null, customerPhone?: string | null, extraData?: Record<string, string>, lessonPackageId?: string | null) => Promise<string | null>
   onDelete: (id: string) => Promise<string | null>
   onToggleLock?: (id: string, locked: boolean) => Promise<string | null>
   isHighlighted?: boolean
@@ -78,6 +78,8 @@ export function SlotEditModal({
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(
     initialRoleId ?? (!isAdmin && memberRoleId ? memberRoleId : (splitRoles[0]?.id ?? null))
   )
+  const [userPackages, setUserPackages] = useState<LessonPackageWithUsage[]>([])
+  const [selectedPackageId, setSelectedPackageId] = useState<string | null>(null)
 
   // 동적 필드 값 (useDynamicFields 모드)
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({})
@@ -137,6 +139,30 @@ export function SlotEditModal({
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [displayedAssignments, phoneFieldIds])
+
+  // 선택된 회원의 레슨 패키지 조회 (비회원 모드 제외, 관리자만)
+  useEffect(() => {
+    if (isFreeform || !isAdmin || !selectedUserId || !tenantId) { setUserPackages([]); return }
+    const today = new Date().toISOString().slice(0, 10)
+    Promise.all([
+      supabase.from('lesson_packages').select('*')
+        .eq('tenant_id', tenantId).eq('user_id', selectedUserId)
+        .order('payment_date', { ascending: false }),
+      supabase.from('assignments').select('lesson_package_id')
+        .eq('tenant_id', tenantId).not('lesson_package_id', 'is', null),
+    ]).then(([pkgsRes, assRes]) => {
+      if (!pkgsRes.data) return
+      const countMap = new Map<string, number>()
+      for (const a of assRes.data ?? []) {
+        if (a.lesson_package_id) countMap.set(a.lesson_package_id, (countMap.get(a.lesson_package_id) ?? 0) + 1)
+      }
+      const withUsage = pkgsRes.data.map(p => ({ ...p, used_sessions: countMap.get(p.id) ?? 0 })) as LessonPackageWithUsage[]
+      const active = withUsage.filter(p =>
+        p.used_sessions < p.total_sessions && (!p.expires_at || p.expires_at >= today)
+      )
+      setUserPackages(active)
+    })
+  }, [isFreeform, isAdmin, selectedUserId, tenantId])
 
   // DB 제약: (year, month, day, time_slot, member_name) 고유 → 역할 무관하게 같은 슬롯 중복 배정 불가
   const nonEditingAssignments = cellState.assignments.filter(a => a.id !== editingId)
@@ -210,6 +236,7 @@ export function SlotEditModal({
     setEditingId(a.id)
     setNote(a.note ?? '')
     setTimeSub(a.time_sub ?? null)
+    setSelectedPackageId(a.lesson_package_id ?? null)
     if (isSplitMode) setSelectedRoleId(a.role_id ?? null)
     if (useDynamicFields) {
       const nameFieldId = customFields[0]?.id
@@ -261,6 +288,7 @@ export function SlotEditModal({
     setNote('')
     setTimeSub(defaultTimeSub)
     setFieldValues({})
+    setSelectedPackageId(null)
     Object.values(pendingImages).flat().forEach(img => URL.revokeObjectURL(img.previewUrl))
     setPendingImages({})
     setSelectedUserId(isAdmin ? '' : (profile?.id ?? ''))
@@ -378,6 +406,7 @@ export function SlotEditModal({
       null,
       customerPhone,
       extraData,
+      selectedPackageId,
     )
     setLoading(false)
     if (err) { setError(err); return }
@@ -492,6 +521,7 @@ export function SlotEditModal({
       null,
       customerPhone,
       extraData,
+      selectedPackageId,
     )
     setLoading(false)
     if (err) { setError(err); return }
@@ -1138,6 +1168,24 @@ export function SlotEditModal({
                     </div>
                   )}
                   {showExtraCustomFields && !!selectedUserId && customFields.map(field => renderFieldInput(field))}
+                  {/* 레슨 패키지 연결 */}
+                  {isAdmin && !isFreeform && !!selectedUserId && userPackages.length > 0 && (
+                    <div>
+                      <p className="text-xs font-bold text-[var(--color-text-muted)] mb-2">레슨 패키지 연결 <span className="font-normal">선택</span></p>
+                      <select
+                        value={selectedPackageId ?? ''}
+                        onChange={e => setSelectedPackageId(e.target.value || null)}
+                        className={inputClass}
+                      >
+                        <option value="">연결 안 함</option>
+                        {userPackages.map(p => (
+                          <option key={p.id} value={p.id}>
+                            {p.package_name} ({p.used_sessions}/{p.total_sessions}회 사용{p.expires_at ? ` · ~${p.expires_at}` : ''})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                   {(!isSplitMode || !!selectedUserId) && (
                     <AutoResizeTextarea
                       minH={44}

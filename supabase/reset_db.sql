@@ -1,7 +1,7 @@
 -- ============================================================
 -- 운영 DB 초기화 스크립트 (전체 재생성)
 -- 생성일: 2026-06-10
--- 기준 마이그레이션: 001 ~ 073
+-- 기준 마이그레이션: 001 ~ 075
 --
 -- ⚠️  주의: 이 스크립트는 모든 데이터를 삭제합니다.
 --           Supabase SQL Editor에서 직접 실행하세요.
@@ -72,6 +72,8 @@ DROP TABLE IF EXISTS plan_limits    CASCADE;
 DROP TABLE IF EXISTS date_overrides CASCADE;
 DROP TABLE IF EXISTS schedule_rules CASCADE;
 DROP TABLE IF EXISTS slot_settings  CASCADE;
+DROP TABLE IF EXISTS lesson_packages      CASCADE;
+DROP TABLE IF EXISTS lesson_package_types CASCADE;
 DROP TABLE IF EXISTS assignments    CASCADE;
 DROP TABLE IF EXISTS tenant_members CASCADE;
 DROP TABLE IF EXISTS tenant_roles   CASCADE;
@@ -164,6 +166,33 @@ CREATE TABLE tenant_members (
   UNIQUE (tenant_id, user_id)
 );
 
+-- lesson_package_types (레슨 종류 템플릿)
+CREATE TABLE lesson_package_types (
+  id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id     uuid NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  name          text NOT NULL,
+  session_count int  NOT NULL CHECK (session_count > 0),
+  validity_days int  CHECK (validity_days IS NULL OR validity_days > 0),
+  is_active     boolean NOT NULL DEFAULT true,
+  display_order int NOT NULL DEFAULT 0,
+  created_at    timestamptz NOT NULL DEFAULT now()
+);
+
+-- lesson_packages (결제 기록)
+CREATE TABLE lesson_packages (
+  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id       uuid NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  user_id         uuid REFERENCES profiles(id) ON DELETE SET NULL,
+  package_type_id uuid REFERENCES lesson_package_types(id) ON DELETE SET NULL,
+  package_name    text NOT NULL,
+  total_sessions  int  NOT NULL CHECK (total_sessions > 0),
+  payment_date    date NOT NULL,
+  expires_at      date,
+  notes           text,
+  created_by      uuid REFERENCES profiles(id) ON DELETE SET NULL,
+  created_at      timestamptz NOT NULL DEFAULT now()
+);
+
 -- assignments
 -- time_slot: 정규식으로 체크 (30분 단위 포함, 예: '10.5-11')
 CREATE TABLE assignments (
@@ -185,6 +214,7 @@ CREATE TABLE assignments (
   customer_name      text,
   customer_phone     text,
   customer_phone_enc text,
+  lesson_package_id  uuid        REFERENCES lesson_packages(id) ON DELETE SET NULL,
   is_locked          boolean     NOT NULL DEFAULT false,
   account_deleted boolean    NOT NULL DEFAULT false,
   created_at     timestamptz          DEFAULT now()
@@ -349,6 +379,11 @@ CREATE INDEX idx_notifications_active ON notifications(user_id, created_at DESC)
 CREATE INDEX idx_push_subs_user ON push_subscriptions(user_id);
 CREATE UNIQUE INDEX idx_push_subs_endpoint ON push_subscriptions(endpoint);
 CREATE INDEX idx_consent_logs_user_type ON consent_logs(user_id, type, agreed_at DESC);
+CREATE INDEX idx_lesson_package_types_tenant ON lesson_package_types(tenant_id);
+CREATE INDEX idx_lesson_packages_tenant      ON lesson_packages(tenant_id);
+CREATE INDEX idx_lesson_packages_user        ON lesson_packages(user_id);
+CREATE INDEX idx_assignments_lesson_pkg      ON assignments(lesson_package_id)
+  WHERE lesson_package_id IS NOT NULL;
 
 
 -- ────────────────────────────────────────────────────────────
@@ -372,6 +407,8 @@ ALTER TABLE notifications         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE push_subscriptions    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE policy_versions       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE consent_logs          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE lesson_package_types  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE lesson_packages       ENABLE ROW LEVEL SECURITY;
 
 
 -- ────────────────────────────────────────────────────────────
@@ -1177,6 +1214,37 @@ CREATE POLICY "consent_own_insert" ON consent_logs
 CREATE POLICY "consent_superadmin" ON consent_logs
   FOR ALL USING (public.is_super_admin_caller());
 
+-- ── lesson_package_types ────────────────────────────────────
+CREATE POLICY "lesson_package_types_select" ON lesson_package_types
+  FOR SELECT USING (is_tenant_member(tenant_id));
+
+CREATE POLICY "lesson_package_types_insert" ON lesson_package_types
+  FOR INSERT WITH CHECK (is_tenant_admin(tenant_id));
+
+CREATE POLICY "lesson_package_types_update" ON lesson_package_types
+  FOR UPDATE USING (is_tenant_admin(tenant_id))
+  WITH CHECK (is_tenant_admin(tenant_id));
+
+CREATE POLICY "lesson_package_types_delete" ON lesson_package_types
+  FOR DELETE USING (is_tenant_admin(tenant_id));
+
+-- ── lesson_packages ─────────────────────────────────────────
+CREATE POLICY "lesson_packages_select" ON lesson_packages
+  FOR SELECT USING (
+    is_tenant_admin(tenant_id) OR
+    (is_tenant_member(tenant_id) AND user_id = auth.uid())
+  );
+
+CREATE POLICY "lesson_packages_insert" ON lesson_packages
+  FOR INSERT WITH CHECK (is_tenant_admin(tenant_id));
+
+CREATE POLICY "lesson_packages_update" ON lesson_packages
+  FOR UPDATE USING (is_tenant_admin(tenant_id))
+  WITH CHECK (is_tenant_admin(tenant_id));
+
+CREATE POLICY "lesson_packages_delete" ON lesson_packages
+  FOR DELETE USING (is_tenant_admin(tenant_id));
+
 
 -- ────────────────────────────────────────────────────────────
 -- STEP 7. 트리거
@@ -1442,6 +1510,10 @@ ALTER PUBLICATION supabase_realtime ADD TABLE date_overrides;
 ALTER TABLE date_overrides REPLICA IDENTITY FULL;
 ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
 ALTER TABLE notifications REPLICA IDENTITY FULL;
+ALTER PUBLICATION supabase_realtime ADD TABLE lesson_package_types;
+ALTER TABLE lesson_package_types REPLICA IDENTITY FULL;
+ALTER PUBLICATION supabase_realtime ADD TABLE lesson_packages;
+ALTER TABLE lesson_packages REPLICA IDENTITY FULL;
 
 
 -- ────────────────────────────────────────────────────────────

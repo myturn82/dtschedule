@@ -1012,7 +1012,7 @@ export function SchedulePage() {
           lockedUserId={tenantMode === '회원개별' && isPrivileged ? (filterMemberId ?? undefined) : undefined}
           isHighlighted={highlightedSlots.has(`${modalTarget.year}-${pad2(modalTarget.month)}-${pad2(modalTarget.day)}|${modalTarget.timeSlot}`)}
           onToggleHighlight={isPrivileged ? () => toggleHighlight(`${modalTarget.year}-${pad2(modalTarget.month)}-${pad2(modalTarget.day)}`, modalTarget.timeSlot) : undefined}
-          onAdd={(name, note, memberType, timeSub, color, userId, roleId, customerName, customerPhone, extraData) => addAssignment({
+          onAdd={(name, note, memberType, timeSub, color, userId, roleId, customerName, customerPhone, extraData, lessonPackageId) => addAssignment({
             tenant_id: tenant!.id,
             year, month, day: modalTarget.day,
             time_slot: modalTarget.timeSlot,
@@ -1026,8 +1026,9 @@ export function SchedulePage() {
             customer_name: customerName ?? null,
             customer_phone: customerPhone ?? null,
             extra_data: extraData,
+            lesson_package_id: lessonPackageId ?? null,
           })}
-          onUpdate={(id, name, note, memberType, timeSub, color, roleId, customerName, customerPhone, extraData) => updateAssignment(id, {
+          onUpdate={(id, name, note, memberType, timeSub, color, roleId, customerName, customerPhone, extraData, lessonPackageId) => updateAssignment(id, {
             member_name: name,
             note,
             member_type: memberType,
@@ -1037,6 +1038,7 @@ export function SchedulePage() {
             customer_name: customerName ?? null,
             customer_phone: customerPhone ?? null,
             extra_data: extraData,
+            lesson_package_id: lessonPackageId ?? null,
           })}
           onDelete={deleteAssignment}
           onToggleLock={(id, locked) => updateAssignment(id, { is_locked: locked })}

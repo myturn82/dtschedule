@@ -21,6 +21,7 @@ import { getFunctionErrorMessage } from '../lib/functionsError'
 import { fmtPhone } from '../lib/format'
 import { formatPhone } from '../lib/phone'
 import { BrandLegendIcon, isBrandLegendIcon } from '../lib/legendIcons'
+import { LessonManagementPanel } from '../components/admin/LessonManagementPanel'
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
 const HEX_COLOR_RE = /^#[0-9A-Fa-f]{6}$/
@@ -189,7 +190,7 @@ function roleDisplayMode(role: TenantRole): RoleDisplayMode {
   return 'none'
 }
 
-type Tab = 'members' | 'pending' | 'roles' | 'rules' | 'dates' | 'settings' | 'autoassign' | 'legend' | 'custom_fields' | 'notifications'
+type Tab = 'members' | 'pending' | 'roles' | 'rules' | 'dates' | 'settings' | 'autoassign' | 'legend' | 'custom_fields' | 'notifications' | 'lessons'
 
 const TAB_LABELS: Record<Tab, string> = {
   members: '회원 관리',
@@ -202,6 +203,7 @@ const TAB_LABELS: Record<Tab, string> = {
   legend: '범례 관리',
   custom_fields: '입력항목',
   notifications: '배정알림',
+  lessons: '레슨권',
 }
 
 export function AdminPage() {
@@ -3131,6 +3133,14 @@ export function AdminPage() {
                   <div className="text-center py-8 text-[var(--color-text-muted)] text-sm">로딩 중...</div>
                 )}
               </div>
+            )}
+            {/* ── 레슨권 관리 ── */}
+            {tab === 'lessons' && (
+              <LessonManagementPanel
+                tenantId={adminTenantId}
+                members={members}
+                profileId={profile?.id ?? ''}
+              />
             )}
           </>
         )}

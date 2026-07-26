@@ -234,9 +234,39 @@ export interface Assignment {
   customer_name: string | null;
   customer_phone: string | null;
   extra_data?: Record<string, string>;
+  lesson_package_id?: string | null;
   is_locked: boolean;
   account_deleted: boolean;
   created_at: string;
+}
+
+export interface LessonPackageType {
+  id: string;
+  tenant_id: string;
+  name: string;
+  session_count: number;
+  validity_days: number | null;
+  is_active: boolean;
+  display_order: number;
+  created_at: string;
+}
+
+export interface LessonPackage {
+  id: string;
+  tenant_id: string;
+  user_id: string | null;
+  package_type_id: string | null;
+  package_name: string;
+  total_sessions: number;
+  payment_date: string;
+  expires_at: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface LessonPackageWithUsage extends LessonPackage {
+  used_sessions: number;
 }
 
 export interface SlotSetting {

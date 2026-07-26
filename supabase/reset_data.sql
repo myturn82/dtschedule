@@ -32,6 +32,8 @@ TRUNCATE TABLE
   schedule_rules,
   slot_settings,
   assignments,
+  lesson_packages,
+  lesson_package_types,
   tenant_members,
   tenant_roles,
   tenants,

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
-import type { TenantMemberWithRole, SlotSetting, TenantRole } from '../types'
+import type { TenantMemberWithRole, SlotSetting, TenantRole, LessonPackageWithUsage } from '../types'
 
 export interface AssignmentSummary {
   user_id: string | null
@@ -18,6 +18,7 @@ interface DashboardState {
   assignments: AssignmentSummary[]
   slotSettings: SlotSetting[]
   tenantRoles: TenantRole[]
+  lessonPackagesByUser: Map<string, LessonPackageWithUsage[]>
   loading: boolean
   approveUser: (userId: string) => Promise<string | null>
   rejectUser: (userId: string) => Promise<string | null>
@@ -29,6 +30,7 @@ export function useDashboard(tenantId: string, year: number, month: number): Das
   const [assignments, setAssignments] = useState<AssignmentSummary[]>([])
   const [slotSettings, setSlotSettings] = useState<SlotSetting[]>([])
   const [tenantRoles, setTenantRoles] = useState<TenantRole[]>([])
+  const [lessonPackagesByUser, setLessonPackagesByUser] = useState<Map<string, LessonPackageWithUsage[]>>(new Map())
   const [loading, setLoading] = useState(true)
 
   // 멤버/설정: tenantId 변경 시만 재조회
@@ -57,6 +59,29 @@ export function useDashboard(tenantId: string, year: number, month: number): Das
       setTenantRoles((rolesRes.data ?? []) as TenantRole[])
     }
     loadMeta()
+  }, [tenantId])
+
+  // 레슨 패키지: tenantId 변경 시 재조회 (월 필터 없음)
+  useEffect(() => {
+    if (!tenantId) return
+    Promise.all([
+      supabase.from('lesson_packages').select('*').eq('tenant_id', tenantId).order('payment_date', { ascending: false }),
+      supabase.from('assignments').select('lesson_package_id').eq('tenant_id', tenantId).not('lesson_package_id', 'is', null),
+    ]).then(([pkgsRes, assRes]) => {
+      const countMap = new Map<string, number>()
+      for (const a of assRes.data ?? []) {
+        if (a.lesson_package_id) countMap.set(a.lesson_package_id, (countMap.get(a.lesson_package_id) ?? 0) + 1)
+      }
+      const byUser = new Map<string, LessonPackageWithUsage[]>()
+      for (const p of pkgsRes.data ?? []) {
+        if (!p.user_id) continue
+        const withUsage = { ...p, used_sessions: countMap.get(p.id) ?? 0 } as LessonPackageWithUsage
+        const arr = byUser.get(p.user_id) ?? []
+        arr.push(withUsage)
+        byUser.set(p.user_id, arr)
+      }
+      setLessonPackagesByUser(byUser)
+    })
   }, [tenantId])
 
   // 배정: tenantId + year + month 변경 시 재조회
@@ -102,5 +127,5 @@ export function useDashboard(tenantId: string, year: number, month: number): Das
     return error?.message ?? null
   }, [tenantId])
 
-  return { pendingMembers, members, assignments, slotSettings, tenantRoles, loading, approveUser, rejectUser }
+  return { pendingMembers, members, assignments, slotSettings, tenantRoles, lessonPackagesByUser, loading, approveUser, rejectUser }
 }

@@ -305,7 +305,7 @@ export function DashboardPage() {
   const [viewYear, setViewYear] = useState(thisYear)
   const [viewMonth, setViewMonth] = useState(thisMonth)
 
-  const { pendingMembers, members, assignments, slotSettings, tenantRoles, loading, approveUser, rejectUser } =
+  const { pendingMembers, members, assignments, slotSettings, tenantRoles, lessonPackagesByUser, loading, approveUser, rejectUser } =
     useDashboard(tenant?.id ?? '', viewYear, viewMonth)
   const [confirmReject, setConfirmReject] = useState<string | null>(null)
   const [participationTab, setParticipationTab] = useState<'역할별' | '사용자별'>('역할별')
@@ -1121,9 +1121,52 @@ export function DashboardPage() {
                                 >
                                   <div className="overflow-hidden">
                                     <div className="px-4 pb-4 pt-1">
-                                      {userFieldStats.length === 0 ? (
+                                      {/* 레슨권 현황 */}
+                                      {(() => {
+                                        const memberPkgs = lessonPackagesByUser.get(m.user_id) ?? []
+                                        if (memberPkgs.length === 0) return null
+                                        const today = new Date().toISOString().slice(0, 10)
+                                        return (
+                                          <div className="mb-3">
+                                            <p className="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-[0.6px] mb-1.5">레슨권 현황</p>
+                                            <div className="space-y-2">
+                                              {memberPkgs.map(pkg => {
+                                                const pct = Math.min(100, Math.round(pkg.used_sessions / pkg.total_sessions * 100))
+                                                const isExpired = !!pkg.expires_at && pkg.expires_at < today
+                                                const isDone = pkg.used_sessions >= pkg.total_sessions
+                                                const isWarn = !isExpired && !isDone && !!pkg.expires_at && Math.ceil((new Date(pkg.expires_at).getTime() - Date.now()) / 86400000) <= 7
+                                                const barCls = isDone || isExpired ? 'bg-[var(--color-text-muted)]' : isWarn ? 'bg-amber-500' : 'bg-[var(--color-brand-primary)]'
+                                                const statusLabel = isDone ? '소진완료' : isExpired ? '만료' : isWarn ? '만료임박' : null
+                                                return (
+                                                  <div key={pkg.id} className="rounded-[10px] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2.5">
+                                                    <div className="flex items-center justify-between mb-1.5">
+                                                      <span className="text-[12px] font-semibold text-[var(--color-text-primary)] truncate">{pkg.package_name}</span>
+                                                      <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                                                        {statusLabel && (
+                                                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${isDone || isExpired ? 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)]' : 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400'}`}>
+                                                            {statusLabel}
+                                                          </span>
+                                                        )}
+                                                        <span className="text-[12px] font-bold tabular-nums text-[var(--color-text-primary)]">{pkg.used_sessions}/{pkg.total_sessions}</span>
+                                                      </div>
+                                                    </div>
+                                                    <div className="w-full h-1.5 rounded-full bg-[var(--color-surface-secondary)] overflow-hidden mb-1.5">
+                                                      <div className={`h-full rounded-full transition-all ${barCls}`} style={{ width: `${pct}%` }} />
+                                                    </div>
+                                                    <div className="flex gap-3">
+                                                      <span className="text-[10px] text-[var(--color-text-muted)]">결제 {pkg.payment_date}</span>
+                                                      {pkg.expires_at && <span className="text-[10px] text-[var(--color-text-muted)]">만료 {pkg.expires_at}</span>}
+                                                    </div>
+                                                  </div>
+                                                )
+                                              })}
+                                            </div>
+                                          </div>
+                                        )
+                                      })()}
+                                      {userFieldStats.length === 0 && !(lessonPackagesByUser.get(m.user_id)?.length) ? (
                                         <p className="text-[12px] text-[var(--color-text-muted)] py-2">통계 항목이 없습니다.</p>
-                                      ) : (
+                                      ) : userFieldStats.length > 0 ? (
                                         <div className="space-y-3">
                                           {userFieldStats.map(stat => (
                                             <div key={stat.fieldId}>
@@ -1161,7 +1204,7 @@ export function DashboardPage() {
                                             </div>
                                           ))}
                                         </div>
-                                      )}
+                                      ) : null}
                                     </div>
                                   </div>
                                 </div>

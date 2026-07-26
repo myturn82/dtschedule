@@ -17,6 +17,7 @@ export interface AddAssignmentParams {
   customer_name?: string | null
   customer_phone?: string | null
   extra_data?: Record<string, string>
+  lesson_package_id?: string | null
 }
 
 /**
