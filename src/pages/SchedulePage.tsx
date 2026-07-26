@@ -1081,6 +1081,7 @@ export function SchedulePage() {
           customFields={effectiveCustomFields}
           profiles={profiles}
           adminUserIds={adminUserIds}
+          tenantId={tenant?.id}
           onClose={() => setShowSms(false)}
         />
       )}

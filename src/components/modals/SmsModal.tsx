@@ -9,6 +9,7 @@ interface SmsModalProps {
   customFields?: CustomFieldDef[]
   profiles?: Profile[]
   adminUserIds?: Set<string>
+  tenantId?: string
   onClose: () => void
 }
 
@@ -19,7 +20,7 @@ interface Recipient {
   selected: boolean
 }
 
-export function SmsModal({ assignments, customFields, profiles, adminUserIds, onClose }: SmsModalProps) {
+export function SmsModal({ assignments, customFields, profiles, adminUserIds, tenantId, onClose }: SmsModalProps) {
   const phoneFieldIds = useMemo(
     () => (customFields ?? []).filter(f => f.type === 'phone').map(f => f.id),
     [customFields]
@@ -56,6 +57,24 @@ export function SmsModal({ assignments, customFields, profiles, adminUserIds, on
 
   const [recipients, setRecipients] = useState<Recipient[]>(initialRecipients)
   const [message, setMessage] = useState('')
+
+  // tenantId가 있으면 get_tenant_member_phones로 복호화된 phone 보충 (모달 오픈 시 1회)
+  useEffect(() => {
+    if (!tenantId) return
+    supabase.rpc('get_tenant_member_phones', { p_tenant_id: tenantId })
+      .then(({ data }) => {
+        if (!data) return
+        const phoneMap = new Map<string, string>(
+          (data as { user_id: string; phone: string }[]).map(r => [r.user_id, r.phone])
+        )
+        setRecipients(prev => prev.map(r => {
+          if (r.phone || !r.key) return r
+          const decrypted = phoneMap.get(r.key)
+          return decrypted ? { ...r, phone: formatPhone(decrypted) } : r
+        }))
+      })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // enc: 접두사로 암호화된 extra_data phone 필드 복호화 (모달 오픈 시 1회)
   useEffect(() => {
