@@ -1,7 +1,7 @@
 -- ============================================================
 -- 운영 DB 초기화 스크립트 (전체 재생성)
 -- 생성일: 2026-06-10
--- 기준 마이그레이션: 001 ~ 072
+-- 기준 마이그레이션: 001 ~ 073
 --
 -- ⚠️  주의: 이 스크립트는 모든 데이터를 삭제합니다.
 --           Supabase SQL Editor에서 직접 실행하세요.
@@ -57,6 +57,8 @@ DROP FUNCTION IF EXISTS public.service_set_profile_phone_enc(uuid, text)  CASCAD
 DROP FUNCTION IF EXISTS public.get_customer_phone(uuid)                   CASCADE;
 DROP FUNCTION IF EXISTS public.update_customer_phone_enc(uuid, text)      CASCADE;
 DROP FUNCTION IF EXISTS public.service_set_customer_phone_enc(uuid, text) CASCADE;
+DROP FUNCTION IF EXISTS public.batch_decrypt_phones(text[])              CASCADE;
+DROP FUNCTION IF EXISTS public.encrypt_extra_data_phone_fields()         CASCADE;
 
 -- 테이블 삭제 (CASCADE로 FK·인덱스·정책 자동 제거)
 DROP TABLE IF EXISTS consent_logs    CASCADE;
@@ -754,6 +756,101 @@ END; $$;
 
 REVOKE ALL ON FUNCTION public.service_set_customer_phone_enc(uuid, text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.service_set_customer_phone_enc(uuid, text) TO service_role;
+
+-- ── Phase 3: 배치 복호화 + extra_data phone 필드 일괄 암호화 ──────────────
+
+CREATE OR REPLACE FUNCTION public.batch_decrypt_phones(p_values text[])
+RETURNS text[]
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, vault, extensions AS $$
+DECLARE
+  enc_key text;
+  result  text[];
+  i       int;
+BEGIN
+  SELECT decrypted_secret INTO enc_key
+  FROM vault.decrypted_secrets WHERE name = 'phone_encryption_key' LIMIT 1;
+  IF enc_key IS NULL OR enc_key = '' THEN
+    RETURN array_fill(NULL::text, ARRAY[coalesce(array_length(p_values, 1), 0)]);
+  END IF;
+  result := ARRAY[]::text[];
+  FOR i IN 1..coalesce(array_length(p_values, 1), 0) LOOP
+    BEGIN
+      result := result || pgp_sym_decrypt(decode(p_values[i], 'base64'), enc_key);
+    EXCEPTION WHEN OTHERS THEN
+      result := result || NULL::text;
+    END;
+  END LOOP;
+  RETURN result;
+END; $$;
+
+REVOKE ALL ON FUNCTION public.batch_decrypt_phones(text[]) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.batch_decrypt_phones(text[]) TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.encrypt_extra_data_phone_fields()
+RETURNS TABLE(tenant_id uuid, updated_count int)
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, vault, extensions AS $$
+DECLARE
+  enc_key   text;
+  t_rec     record;
+  cf_def    jsonb;
+  field_id  text;
+  field_ids text[];
+  a_rec     record;
+  new_extra jsonb;
+  old_val   text;
+  enc_val   text;
+  cnt       int;
+BEGIN
+  SELECT decrypted_secret INTO enc_key
+  FROM vault.decrypted_secrets WHERE name = 'phone_encryption_key' LIMIT 1;
+  IF enc_key IS NULL OR enc_key = '' THEN
+    RAISE EXCEPTION 'phone_encryption_key not found in Vault';
+  END IF;
+
+  FOR t_rec IN SELECT id, settings FROM public.tenants LOOP
+    field_ids := ARRAY[]::text[];
+    FOR cf_def IN SELECT jsonb_array_elements(
+      COALESCE(t_rec.settings->'custom_fields', '[]'::jsonb))
+    LOOP
+      IF cf_def->>'type' = 'phone' THEN
+        field_ids := field_ids || (cf_def->>'id');
+      END IF;
+    END LOOP;
+    IF array_length(field_ids, 1) IS NULL THEN CONTINUE; END IF;
+
+    cnt := 0;
+    FOR a_rec IN
+      SELECT a2.id, a2.extra_data FROM public.assignments a2
+      WHERE a2.tenant_id = t_rec.id AND a2.extra_data IS NOT NULL
+    LOOP
+      new_extra := a_rec.extra_data;
+      FOR field_id IN SELECT unnest(field_ids) LOOP
+        old_val := new_extra->>field_id;
+        IF old_val IS NULL OR old_val = '' OR old_val LIKE 'enc:%' THEN CONTINUE; END IF;
+        BEGIN
+          enc_val := encode(pgp_sym_encrypt(old_val, enc_key), 'base64');
+          new_extra := jsonb_set(new_extra, ARRAY[field_id], to_jsonb('enc:' || enc_val));
+        EXCEPTION WHEN OTHERS THEN NULL;
+        END;
+      END LOOP;
+      IF new_extra IS DISTINCT FROM a_rec.extra_data THEN
+        UPDATE public.assignments SET extra_data = new_extra WHERE id = a_rec.id;
+        cnt := cnt + 1;
+      END IF;
+    END LOOP;
+
+    IF cnt > 0 THEN
+      tenant_id     := t_rec.id;
+      updated_count := cnt;
+      RETURN NEXT;
+    END IF;
+  END LOOP;
+END; $$;
+
+REVOKE ALL ON FUNCTION public.encrypt_extra_data_phone_fields() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.encrypt_extra_data_phone_fields() TO authenticated;
 
 -- 오래된 알림 소프트 삭제 (읽은 알림 30일, 미읽은 알림 90일)
 CREATE OR REPLACE FUNCTION public.cleanup_old_notifications()

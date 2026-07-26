@@ -73,8 +73,8 @@ BEGIN
 
     cnt := 0;
     FOR a_rec IN
-      SELECT id, extra_data FROM public.assignments
-      WHERE tenant_id = t_rec.id AND extra_data IS NOT NULL
+      SELECT a2.id, a2.extra_data FROM public.assignments a2
+      WHERE a2.tenant_id = t_rec.id AND a2.extra_data IS NOT NULL
     LOOP
       new_extra := a_rec.extra_data;
       FOR field_id IN SELECT unnest(field_ids) LOOP
