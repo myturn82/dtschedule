@@ -113,6 +113,9 @@ export function SuperAdminPage() {
   } | null>(null)
   const [bulkCustomerSaving, setBulkCustomerSaving] = useState(false)
 
+  // 전체 사용자 복호화 전화번호 맵
+  const [userPhoneMap, setUserPhoneMap] = useState<Record<string, string>>({})
+
   // Owner / phone save state
   const [ownerSaving, setOwnerSaving] = useState(false)
   const [ownerEmails, setOwnerEmails] = useState<Record<string, string>>({})
@@ -120,6 +123,17 @@ export function SuperAdminPage() {
 
   // Reminder sending state
   const [reminderSending, setReminderSending] = useState(false)
+
+  async function fetchUserPhones() {
+    const { data } = await supabase.rpc('get_all_user_phones')
+    if (!data) return
+    const map: Record<string, string> = {}
+    for (const r of data as { p_user_id: string; p_phone: string }[]) {
+      if (r.p_phone) map[r.p_user_id] = r.p_phone
+    }
+    setUserPhoneMap(map)
+    return map
+  }
 
   async function loadOwnerEmails(customerList: Customer[]) {
     const ownerIds = customerList.map(c => c.owner_user_id).filter(Boolean) as string[]
@@ -216,21 +230,27 @@ export function SuperAdminPage() {
 
   async function fetchAllUsers() {
     setUsersLoading(true)
-    const [profilesRes, membersRes] = await Promise.all([
+    const [profilesRes, membersRes, phonesRes] = await Promise.all([
       supabase.from('profiles').select('id, name, email, is_super_admin, created_at').order('created_at', { ascending: false }),
       supabase.from('tenant_members').select('user_id').eq('is_approved', true),
+      supabase.rpc('get_all_user_phones'),
     ])
     if (profilesRes.error) {
       setMessage(`오류: ${profilesRes.error.message}`)
       setUsersLoading(false)
       return  // usersLoaded를 true로 세팅하지 않아 재진입 시 재시도 가능
     }
+    const phoneMap: Record<string, string> = {}
+    for (const r of (phonesRes.data ?? []) as { p_user_id: string; p_phone: string }[]) {
+      if (r.p_phone) phoneMap[r.p_user_id] = r.p_phone
+    }
+    setUserPhoneMap(phoneMap)
     const orgCounts: Record<string, number> = {}
     for (const m of membersRes.data ?? []) {
       orgCounts[m.user_id] = (orgCounts[m.user_id] ?? 0) + 1
     }
     setAllUsers(
-      (profilesRes.data ?? []).map(p => ({ ...p, org_count: orgCounts[p.id] ?? 0 }))
+      (profilesRes.data ?? []).map(p => ({ ...p, org_count: orgCounts[p.id] ?? 0, phone: phoneMap[p.id] }))
     )
     setUsersLoading(false)
     setUsersLoaded(true)
@@ -509,6 +529,7 @@ export function SuperAdminPage() {
     fetchPendingMembers()
     fetchCustomers()
     fetchMemberCounts()
+    fetchUserPhones()
   }, [profile])
 
   // 드로어가 열릴 때 멤버 목록 로드
@@ -830,6 +851,7 @@ export function SuperAdminPage() {
           pendingMembers={pendingMembers}
           selectedMemberIds={selectedMemberIds}
           approving={approving}
+          phoneMap={userPhoneMap}
           onApproveAdmin={async id => {
             const { error } = await supabase
               .from('tenant_members')

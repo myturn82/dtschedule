@@ -1,4 +1,5 @@
 import type { Profile } from '../../types'
+import { fmtPhone } from '../../lib/format'
 
 export interface PendingMember {
   id: string
@@ -17,6 +18,7 @@ interface Props {
   pendingMembers: PendingMember[]
   selectedMemberIds: Set<string>
   approving: boolean
+  phoneMap?: Record<string, string>
   onApproveAdmin: (id: string) => void
   onRejectAdmin: (p: Profile) => void
   onToggleMember: (id: string) => void
@@ -25,7 +27,7 @@ interface Props {
 }
 
 export function PendingApprovalsBanner({
-  pendingAdmins, pendingMembers, selectedMemberIds, approving,
+  pendingAdmins, pendingMembers, selectedMemberIds, approving, phoneMap = {},
   onApproveAdmin, onRejectAdmin, onToggleMember, onToggleAll, onApproveSelected,
 }: Props) {
   if (pendingAdmins.length === 0 && pendingMembers.length === 0) return null
@@ -45,15 +47,26 @@ export function PendingApprovalsBanner({
                 <tr className="bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
                   <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">이름</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">이메일</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)] hidden sm:table-cell">전화번호</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">가입일</th>
                   <th className="px-4 py-3"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--color-border)]">
-                {pendingAdmins.map(p => (
+                {pendingAdmins.map(p => {
+                  const phone = phoneMap[p.id]
+                  return (
                   <tr key={p.id} className="hover:bg-[var(--color-surface-hover)]">
                     <td className="px-4 py-3 font-medium text-[var(--color-text-primary)]">{p.name}</td>
                     <td className="px-4 py-3 text-[var(--color-text-muted)] text-xs">{p.email ?? '-'}</td>
+                    <td className="px-4 py-3 text-[var(--color-text-muted)] text-xs hidden sm:table-cell">
+                      {phone ? (
+                        <span className="flex items-center gap-1">
+                          {fmtPhone(phone)}
+                          <a href={`sms:${phone.replace(/[^0-9]/g, '')}`} className="select-none text-sm leading-none" title="문자 보내기">📱</a>
+                        </span>
+                      ) : '-'}
+                    </td>
                     <td className="px-4 py-3 text-[var(--color-text-muted)] text-xs">{p.created_at.slice(0, 10)}</td>
                     <td className="px-4 py-3">
                       <div className="flex gap-2">
@@ -72,7 +85,8 @@ export function PendingApprovalsBanner({
                       </div>
                     </td>
                   </tr>
-                ))}
+                  )
+                })}
               </tbody>
             </table>
           </div>
@@ -109,6 +123,7 @@ export function PendingApprovalsBanner({
                   </th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">이름</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)] hidden sm:table-cell">이메일</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)] hidden md:table-cell">전화번호</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">조직</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)] hidden md:table-cell">역할</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)] hidden md:table-cell">신청일시</th>
@@ -131,6 +146,14 @@ export function PendingApprovalsBanner({
                     </td>
                     <td className="px-4 py-3 font-medium text-[var(--color-text-primary)]">{m.profile?.name ?? '-'}</td>
                     <td className="px-4 py-3 text-[var(--color-text-muted)] text-xs hidden sm:table-cell">{m.profile?.email ?? '-'}</td>
+                    <td className="px-4 py-3 text-[var(--color-text-muted)] text-xs hidden md:table-cell">
+                      {(() => { const ph = phoneMap[m.user_id]; return ph ? (
+                        <span className="flex items-center gap-1">
+                          {fmtPhone(ph)}
+                          <a href={`sms:${ph.replace(/[^0-9]/g, '')}`} className="select-none text-sm leading-none" title="문자 보내기">📱</a>
+                        </span>
+                      ) : '-' })()}
+                    </td>
                     <td className="px-4 py-3 text-[var(--color-text-secondary)] text-xs">{m.tenant?.name ?? '-'}</td>
                     <td className="px-4 py-3 text-[var(--color-text-muted)] text-xs hidden md:table-cell">{m.tenant_role?.name ?? m.role ?? '-'}</td>
                     <td className="px-4 py-3 text-[var(--color-text-muted)] text-xs hidden md:table-cell">{m.created_at.slice(0, 16).replace('T', ' ')}</td>

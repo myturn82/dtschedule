@@ -1,10 +1,12 @@
 import { useState, useMemo } from 'react'
 import { colorOf, initialsOf } from '../../lib/avatarColor'
+import { fmtPhone } from '../../lib/format'
 
 export interface ProfileWithOrgCount {
   id: string
   name: string
   email: string | null
+  phone?: string
   is_super_admin: boolean
   created_at: string
   org_count: number
@@ -27,7 +29,7 @@ export function UserManagementPanel({ users, loading, onDeleteUsers }: Props) {
     const q = search.trim().toLowerCase()
     return users.filter(u => {
       if (filterInactive && u.org_count > 0) return false
-      if (q && !u.name.toLowerCase().includes(q) && !(u.email ?? '').toLowerCase().includes(q)) return false
+      if (q && !u.name.toLowerCase().includes(q) && !(u.email ?? '').toLowerCase().includes(q) && !(u.phone ?? '').replace(/-/g, '').includes(q.replace(/-/g, ''))) return false
       return true
     })
   }, [users, search, filterInactive])
@@ -120,7 +122,7 @@ export function UserManagementPanel({ users, loading, onDeleteUsers }: Props) {
           onChange={toggleAll}
           className="w-4 h-4 rounded accent-[var(--color-brand-primary)]"
         />
-        <span className="flex-1">이름 / 이메일</span>
+        <span className="flex-1">이름 / 이메일 / 전화번호</span>
         <span className="w-16 text-right">조직</span>
         <span className="w-20 text-right">가입일</span>
       </div>
@@ -160,6 +162,17 @@ export function UserManagementPanel({ users, loading, onDeleteUsers }: Props) {
                 )}
               </span>
               <span className="block text-[11px] text-[var(--color-text-muted)] truncate">{user.email ?? '-'}</span>
+              {user.phone && (
+                <span className="flex items-center gap-1 mt-0.5">
+                  <span className="text-[11px] text-[var(--color-text-muted)]">{fmtPhone(user.phone)}</span>
+                  <a
+                    href={`sms:${user.phone.replace(/[^0-9]/g, '')}`}
+                    className="select-none text-sm leading-none"
+                    onClick={e => e.stopPropagation()}
+                    title="문자 보내기"
+                  >📱</a>
+                </span>
+              )}
             </span>
             <span className="w-16 flex justify-end flex-shrink-0">
               {user.org_count === 0 ? (
