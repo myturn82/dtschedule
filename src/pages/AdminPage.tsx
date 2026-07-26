@@ -200,7 +200,7 @@ const TAB_LABELS: Record<Tab, string> = {
   settings: '조직 설정',
   autoassign: '자동배정',
   legend: '범례 관리',
-  custom_fields: '커스텀 필드',
+  custom_fields: '입력항목',
   notifications: '배정알림',
 }
 

@@ -23,7 +23,7 @@ export function StepDone({ orgName, slotCount, roleCount, fieldCount, modeName, 
     { label: '시간 슬롯', value: `${slotCount}개` },
     { label: '역할', value: roleCount > 0 ? `${roleCount}개` : '없음' },
     { label: '운영 요일', value: openDays || '미설정' },
-    { label: '커스텀 필드', value: `${fieldCount}개` },
+    { label: '입력항목', value: `${fieldCount}개` },
   ]
 
   return (

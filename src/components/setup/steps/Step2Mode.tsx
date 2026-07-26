@@ -234,7 +234,7 @@ export function Step2Mode({ mode, error, industry, onChange }: Props) {
       </div>
 
       {mode === '비회원' && (
-        <div className="info-note"><WizardIcon.warn size={15} /> 7단계(커스텀필드)에서 방문자 수집 정보를 설정해야 합니다.</div>
+        <div className="info-note"><WizardIcon.warn size={15} /> 7단계(입력항목)에서 방문자 수집 정보를 설정해야 합니다.</div>
       )}
 
       <ErrLine error={error} />

@@ -9,7 +9,7 @@
     "settings": "조직 설정",
     "autoassign": "자동배정",
     "legend": "범례",
-    "customFields": "커스텀 필드",
+    "customFields": "입력항목",
     "notifications": "배정알림"
   },
   "org": {
@@ -39,7 +39,7 @@
     "noPending": "승인 대기 중인 회원이 없습니다"
   },
   "customField": {
-    "title": "커스텀 필드 설정",
+    "title": "입력항목 설정",
     "addField": "새 필드 추가",
     "fieldName": "필드명",
     "fieldType": "타입",

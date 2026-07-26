@@ -56,7 +56,7 @@ export function SetupAssistant({ industry, onApplyRoles, onApplyCustomFields, on
         <span className="rec-spark"><WizardIcon.sparkles size={16} /></span>
         <span className="ai-entry-text">
           <span className="addbox-title">AI로 빠르게 시작하기</span>
-          <span className="ai-entry-desc">운영 방식을 설명하면 역할·커스텀필드·휴무일을 자동으로 채워드려요</span>
+          <span className="ai-entry-desc">운영 방식을 설명하면 역할·입력항목·휴무일을 자동으로 채워드려요</span>
         </span>
       </button>
     )
@@ -74,7 +74,7 @@ export function SetupAssistant({ industry, onApplyRoles, onApplyCustomFields, on
           className="wtextarea"
           value={text}
           onChange={e => setText(e.target.value)}
-          placeholder="예: 역할은 팀장, 강사, 봉사자가 있고 평일 9시~18시 운영, 일요일은 휴무예요. 커스텀필드로 연락처와 특이사항이 필요해요."
+          placeholder="예: 역할은 팀장, 강사, 봉사자가 있고 평일 9시~18시 운영, 일요일은 휴무예요. 입력항목으로 연락처와 특이사항이 필요해요."
           rows={4}
         />
       </div>
@@ -93,7 +93,7 @@ export function SetupAssistant({ industry, onApplyRoles, onApplyCustomFields, on
               <li>역할 {proposal.roles.length}개: {proposal.roles.map(r => r.name).join(', ')}</li>
             )}
             {proposal.custom_fields.length > 0 && (
-              <li>커스텀필드 {proposal.custom_fields.length}개: {proposal.custom_fields.map(f => f.label).join(', ')}</li>
+              <li>입력항목 {proposal.custom_fields.length}개: {proposal.custom_fields.map(f => f.label).join(', ')}</li>
             )}
             {(proposal.closed_weekdays?.length ?? 0) > 0 && (
               <li>휴무 요일: {proposal.closed_weekdays.map(d => DAY_LABELS[d]).join('·')}</li>
