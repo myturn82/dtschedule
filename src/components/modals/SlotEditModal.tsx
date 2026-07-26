@@ -108,6 +108,36 @@ export function SlotEditModal({
     ? cellState.assignments.filter(a => a.member_type === defaultType)
     : cellState.assignments.filter(a => !a.member_type || a.member_type === memberType)
 
+  // 상세보기용 복호화 캐시: key = `${assignmentId}__${fieldId}`, value = 복호화된 전화번호
+  const [viewDecryptedPhones, setViewDecryptedPhones] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    if (phoneFieldIds.size === 0) return
+    const toDecrypt: { key: string; encVal: string }[] = []
+    for (const a of displayedAssignments) {
+      for (const fieldId of phoneFieldIds) {
+        const val = a.extra_data?.[fieldId]
+        if (val?.startsWith('enc:')) {
+          toDecrypt.push({ key: `${a.id}__${fieldId}`, encVal: val.slice(4) })
+        }
+      }
+    }
+    if (toDecrypt.length === 0) return
+    Promise.all(
+      toDecrypt.map(async ({ key, encVal }) => {
+        const { data } = await supabase.rpc('decrypt_phone', { encrypted_text: encVal })
+        return { key, phone: data ? String(data) : '' }
+      })
+    ).then(results => {
+      setViewDecryptedPhones(prev => {
+        const next = { ...prev }
+        for (const r of results) if (r.phone) next[r.key] = r.phone
+        return next
+      })
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [displayedAssignments, phoneFieldIds])
+
   // DB 제약: (year, month, day, time_slot, member_name) 고유 → 역할 무관하게 같은 슬롯 중복 배정 불가
   const nonEditingAssignments = cellState.assignments.filter(a => a.id !== editingId)
   const assignedNames = new Set(nonEditingAssignments.map(a => a.member_name))
@@ -799,8 +829,12 @@ export function SlotEditModal({
                       if (f.type === 'image_upload') return
                       const val = a.extra_data?.[f.id]
                       if (!val) return
-                      const unit = getOptionUnit(f.options?.find(o => o.value === val)?.value_type)
-                      detailChips.push({ key: f.id, label: f.label, value: `${fmtNumber(val)}${unit}` })
+                      if (f.type === 'phone') {
+                        detailChips.push({ key: f.id, label: f.label, value: val })
+                      } else {
+                        const unit = getOptionUnit(f.options?.find(o => o.value === val)?.value_type)
+                        detailChips.push({ key: f.id, label: f.label, value: `${fmtNumber(val)}${unit}` })
+                      }
                     })
                   }
                 } else if (showExtraCustomFields) {
@@ -808,8 +842,12 @@ export function SlotEditModal({
                     if (f.type === 'image_upload') return
                     const val = a.extra_data?.[f.id]
                     if (!val) return
-                    const unit = getOptionUnit(f.options?.find(o => o.value === val)?.value_type)
-                    detailChips.push({ key: f.id, label: f.label, value: `${fmtNumber(val)}${unit}` })
+                    if (f.type === 'phone') {
+                      detailChips.push({ key: f.id, label: f.label, value: val })
+                    } else {
+                      const unit = getOptionUnit(f.options?.find(o => o.value === val)?.value_type)
+                      detailChips.push({ key: f.id, label: f.label, value: `${fmtNumber(val)}${unit}` })
+                    }
                   })
                 }
                 if (a.note) detailChips.push({ key: 'note', label: '메모', value: a.note })
@@ -843,11 +881,17 @@ export function SlotEditModal({
                         <div className="flex flex-wrap gap-1.5 flex-1 min-w-0">
                           {detailChips.map(c => {
                             const isPhone = c.key === 'phone' || phoneFieldIds.has(c.key)
-                            const rawPhone = isPhone && !c.value.startsWith('enc:') ? c.value.replace(/[^0-9]/g, '') : ''
+                            const decrypted = isPhone ? viewDecryptedPhones[`${a.id}__${c.key}`] : undefined
+                            const displayVal = c.value.startsWith('enc:')
+                              ? (decrypted ? fmtPhone(decrypted) : '•••')
+                              : (isPhone ? fmtPhone(c.value) : c.value)
+                            const rawPhone = isPhone
+                              ? (decrypted ?? (!c.value.startsWith('enc:') ? c.value : '')).replace(/[^0-9]/g, '')
+                              : ''
                             return (
                               <span key={c.key} className="text-[11.5px] font-semibold text-[var(--color-text-secondary)] bg-[var(--color-surface-secondary)] border border-[var(--color-border)] px-2 py-1 rounded-lg inline-flex gap-1 flex-wrap min-w-0">
                                 <b className="font-extrabold text-[var(--color-text-muted)] whitespace-nowrap">{c.label}</b>
-                                <span className="break-words min-w-0">{c.value.startsWith('enc:') ? '•••' : c.value}</span>
+                                <span className="break-all min-w-0">{displayVal}</span>
                                 {isPhone && rawPhone && (
                                   <a href={`sms:${rawPhone}`} className="select-none hover:opacity-70" onClick={e => e.stopPropagation()} title="문자 보내기">📱</a>
                                 )}
