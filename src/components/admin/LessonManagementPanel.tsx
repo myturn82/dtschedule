@@ -302,7 +302,7 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
         <div className="mb-4">
           <div className="flex items-center gap-3">
             <h2 className="flex-1 min-w-0 truncate text-[17px] font-bold text-[var(--color-text-primary)]">결제 기록</h2>
-            <div className="relative w-40 shrink-0">
+            <div className="relative w-24 sm:w-40 shrink-0">
               <input
                 value={filterUserId ? selectedFilterMemberName : filterUserSearch}
                 onChange={e => { setFilterUserId(''); setFilterUserSearch(e.target.value); setShowFilterUserDropdown(true) }}
@@ -313,17 +313,17 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
                 className={inputCls + ' w-full'}
               />
               {showFilterUserDropdown && (
-                <div className="absolute z-10 mt-1 w-full max-h-48 overflow-y-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg">
+                <div className="absolute z-10 mt-1 right-0 w-max min-w-full max-w-[calc(100vw-2.5rem)] sm:max-w-none max-h-48 overflow-y-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg">
                   <button
                     type="button"
                     onMouseDown={e => e.preventDefault()}
                     onClick={() => { setFilterUserId(''); setFilterUserSearch(''); setShowFilterUserDropdown(false) }}
-                    className="w-full text-left px-3 py-2 text-sm text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)] border-b border-[var(--color-border)]"
+                    className="w-full text-left px-3 py-2 text-sm text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)] border-b border-[var(--color-border)] whitespace-nowrap"
                   >
                     전체 회원
                   </button>
                   {filteredFilterMemberOptions.length === 0 ? (
-                    <p className="px-3 py-2 text-xs text-[var(--color-text-muted)]">일치하는 회원이 없습니다.</p>
+                    <p className="px-3 py-2 text-xs text-[var(--color-text-muted)] whitespace-nowrap">일치하는 회원이 없습니다.</p>
                   ) : (
                     filteredFilterMemberOptions.map(m => (
                       <button
@@ -331,7 +331,7 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
                         key={m.user_id}
                         onMouseDown={e => e.preventDefault()}
                         onClick={() => { setFilterUserId(m.user_id); setFilterUserSearch(''); setShowFilterUserDropdown(false) }}
-                        className="w-full text-left px-3 py-2 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]"
+                        className="w-full text-left px-3 py-2 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] whitespace-nowrap"
                       >
                         {m.profile?.name ?? m.user_id}
                       </button>
