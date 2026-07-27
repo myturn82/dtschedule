@@ -291,24 +291,24 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
 
       {/* ── 결제 기록 ────────────────────────────────────── */}
       <section>
-        <div className="flex items-center gap-3 mb-4 flex-wrap">
-          <div className="flex-1">
-            <h2 className="text-[17px] font-bold text-[var(--color-text-primary)]">결제 기록</h2>
-            <p className="text-[13px] text-[var(--color-text-muted)] mt-0.5">회원별 레슨권 구매 이력과 소진 현황을 관리합니다.</p>
+        <div className="mb-4">
+          <div className="flex items-center gap-3">
+            <h2 className="flex-1 min-w-0 truncate text-[17px] font-bold text-[var(--color-text-primary)]">결제 기록</h2>
+            <select value={filterUserId} onChange={e => setFilterUserId(e.target.value)}
+              className={inputCls + ' w-40 shrink-0'}>
+              <option value="">전체 회원</option>
+              {approvedMembers.map(m => (
+                <option key={m.user_id} value={m.user_id}>{m.profile?.name ?? m.user_id}</option>
+              ))}
+            </select>
+            {packageTypes.some(t => t.is_active) && (
+              <button onClick={() => setShowAddPkg(true)}
+                className="h-[38px] px-4 rounded-xl bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-sm font-semibold hover:bg-[var(--color-brand-primary-hover)] transition-colors whitespace-nowrap shrink-0">
+                + 결제 추가
+              </button>
+            )}
           </div>
-          <select value={filterUserId} onChange={e => setFilterUserId(e.target.value)}
-            className={inputCls + ' w-40'}>
-            <option value="">전체 회원</option>
-            {approvedMembers.map(m => (
-              <option key={m.user_id} value={m.user_id}>{m.profile?.name ?? m.user_id}</option>
-            ))}
-          </select>
-          {packageTypes.some(t => t.is_active) && (
-            <button onClick={() => setShowAddPkg(true)}
-              className="h-[38px] px-4 rounded-xl bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-sm font-semibold hover:bg-[var(--color-brand-primary-hover)] transition-colors whitespace-nowrap">
-              + 결제 추가
-            </button>
-          )}
+          <p className="text-[13px] text-[var(--color-text-muted)] mt-1">회원별 레슨권 구매 이력과 소진 현황을 관리합니다.</p>
         </div>
 
         {loading ? (
@@ -340,7 +340,10 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
                         {memberMap.get(pkg.user_id ?? '') ?? '-'}
                       </td>
                       <td className="px-2 sm:px-3 py-3 text-[var(--color-text-secondary)] whitespace-nowrap">{pkg.package_name}</td>
-                      <td className="px-2 sm:px-3 py-3 text-center text-xs text-[var(--color-text-muted)] whitespace-nowrap">{pkg.payment_date}</td>
+                      <td className="px-2 sm:px-3 py-3 text-center text-xs text-[var(--color-text-muted)] whitespace-nowrap">
+                        <div>{pkg.payment_date}</div>
+                        <div className="sm:hidden">{pkg.expires_at ?? '무제한'}</div>
+                      </td>
                       <td className="px-2 sm:px-3 py-3 text-center text-xs text-[var(--color-text-muted)] hidden sm:table-cell whitespace-nowrap">
                         {pkg.expires_at ?? '무제한'}
                       </td>
