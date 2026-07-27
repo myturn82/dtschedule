@@ -78,6 +78,35 @@ chcp 65001 | Out-Null
 - 운영 DB 직접 수정은 금지한다. 항상 마이그레이션 파일을 통해 변경한다.
 - 승인 없는 운영 배포는 커밋·배포와 동일하게 금지된다.
 
+## Edge Functions 배포 워크플로우
+
+`supabase/functions/`의 코드는 로컬 파일을 수정해도 자동으로 서버에 반영되지 않는다.
+**반드시 `supabase functions deploy`로 별도 배포해야 실제 동작에 반영된다.**
+
+이 불일치를 놓치면 로컬 소스는 최신인데 서버는 구버전 코드로 동작해
+(예: DB 스키마 변경에 맞춰 코드는 고쳤지만 미배포 상태) 500 에러 등 원인 파악이 어려운 장애로 이어진다.
+실제로 `admin-create-user` 함수가 `profiles.phone` 컬럼 삭제 마이그레이션 이후에도 구버전으로 남아 있어
+회원 직접등록 시 500 에러가 발생한 사례가 있었다.
+
+### 반드시 지켜야 할 규칙
+
+1. **`supabase/functions/**/*.ts` 파일을 수정하면 커밋 전후로 개발 DB에 배포한다.**
+   ```
+   npx supabase functions deploy <function-name> --project-ref mcuszdvophmqrwostcah
+   ```
+2. **`git pull` 직후에는 변경된 함수가 있는지 확인한다.** 원격 커밋에 `supabase/functions/` 변경이 포함되어 있으면,
+   로컬에서 수정한 적이 없어도(다른 사람이 수정) 개발 DB에 배포가 안 되어 있을 수 있으므로 아래로 배포 여부를 점검한다.
+   ```
+   npx supabase functions list --project-ref mcuszdvophmqrwostcah
+   ```
+   각 함수의 `updated_at`이 관련 마이그레이션/코드 변경 시점보다 오래됐으면 재배포한다.
+3. **운영 반영은 DB 마이그레이션과 동일하게 사용자 승인 후에만 진행한다.**
+   ```
+   npx supabase functions deploy <function-name> --project-ref bjnmaajhcmhxwonybnqc
+   ```
+4. 여러 함수를 한 번에 배포해야 하면 함수명을 생략해 전체 배포할 수도 있지만,
+   의도치 않은 함수까지 재배포되지 않도록 가급적 변경된 함수명을 명시해서 배포한다.
+
 ## 변경사항 점검 체크리스트
 
 기능 추가/수정 작업을 완료하면 `docs/CHANGE_TEST_CHECKLIST_TEMPLATE.md`를 기준으로

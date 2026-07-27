@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect } from 'react'
+import { supabase } from '../../lib/supabase'
 import type { Customer, PlanType, Tenant } from '../../types'
 import { colorOf, initialsOf } from '../../lib/avatarColor'
 import { SlotEditor } from '../shared/SlotEditor'
@@ -70,14 +71,23 @@ export function HubMain({
 
   const currentOwnerEmail = customer.owner_user_id ? (ownerEmails[customer.owner_user_id] ?? '') : ''
   const [localPlan, setLocalPlan] = useState<PlanType>(customer.plan)
-  const [localPhone, setLocalPhone] = useState(fmtPhone(customer.phone ?? ''))
+  const [decryptedPhone, setDecryptedPhone] = useState<string | null>(null)
+  const [localPhone, setLocalPhone] = useState('')
   const [localOwnerEmail, setLocalOwnerEmail] = useState(currentOwnerEmail)
   const [fieldSaving, setFieldSaving] = useState(false)
 
   useEffect(() => {
     setLocalPlan(customer.plan)
-    setLocalPhone(fmtPhone(customer.phone ?? ''))
     setLocalOwnerEmail(customer.owner_user_id ? (ownerEmails[customer.owner_user_id] ?? '') : '')
+    setDecryptedPhone(null)
+    setLocalPhone('')
+    let cancelled = false
+    supabase.rpc('get_customer_phone', { p_customer_id: customer.id }).then(({ data }) => {
+      if (cancelled) return
+      setDecryptedPhone(data ?? null)
+      setLocalPhone(fmtPhone(data ?? ''))
+    })
+    return () => { cancelled = true }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [customer.id])
 
@@ -88,21 +98,21 @@ export function HubMain({
   }, [ownerEmails, customer.owner_user_id])
 
   const isPlanDirty = localPlan !== customer.plan
-  const isPhoneDirty = localPhone !== fmtPhone(customer.phone ?? '')
+  const isPhoneDirty = localPhone !== fmtPhone(decryptedPhone ?? '')
   const isOwnerDirty = localOwnerEmail !== currentOwnerEmail
   const isDirty = isPlanDirty || isPhoneDirty || isOwnerDirty
 
   async function handleSaveAll() {
     setFieldSaving(true)
     if (isPlanDirty) updateCustomerPlan(customer.id, localPlan)
-    if (isPhoneDirty) await savePhone(customer.id, localPhone)
+    if (isPhoneDirty) { await savePhone(customer.id, localPhone); setDecryptedPhone(localPhone) }
     if (isOwnerDirty) await saveOwner(customer.id, localOwnerEmail)
     setFieldSaving(false)
   }
 
   function handleCancel() {
     setLocalPlan(customer.plan)
-    setLocalPhone(fmtPhone(customer.phone ?? ''))
+    setLocalPhone(fmtPhone(decryptedPhone ?? ''))
     setLocalOwnerEmail(currentOwnerEmail)
   }
 

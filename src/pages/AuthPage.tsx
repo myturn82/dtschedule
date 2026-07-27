@@ -267,9 +267,10 @@ export function AuthPage() {
       if (!user) { setLoading(false); setJoinProgress(''); sessionStorage.removeItem('vs_setup_creating'); setError('인증 오류가 발생했습니다.'); return }
       const { data: custData, error: custErr } = await supabase
         .from('customers')
-        .insert({ name: orgName.trim(), phone: orgPhone.trim(), owner_user_id: user.id, plan: 'basic' })
+        .insert({ name: orgName.trim(), owner_user_id: user.id, plan: 'basic' })
         .select('id').single()
       if (custErr || !custData) { setLoading(false); setJoinProgress(''); sessionStorage.removeItem('vs_setup_creating'); setError(`조직 생성 오류: ${custErr?.message}`); return }
+      await supabase.rpc('update_customer_phone_enc', { p_customer_id: custData.id, p_phone: orgPhone.trim() })
 
       // tenant 바로 생성 → CustomerAdminPage 경유 없이 /setup으로 직행
       const DEFAULT_SLOTS = ['09-10','10-11','11-12','12-13','13-14','14-15','15-16','16-17','17-18']

@@ -171,17 +171,10 @@ export function SuperAdminPage() {
   async function savePhone(customerId: string, phone: string) {
     if (!isValidPhone(phone)) { setMessage('오류: 올바른 전화번호를 입력해 주세요. (예: 010-1234-5678)'); return }
     setPhoneSaving(true)
-    const { data, error } = await supabase
-      .from('customers')
-      .update({ phone: phone.trim(), updated_at: new Date().toISOString() })
-      .eq('id', customerId)
-      .select()
-      .single()
+    const { error } = await supabase.rpc('update_customer_phone_enc', { p_customer_id: customerId, p_phone: phone.trim() })
     if (error) { setMessage(`오류: ${error.message}`); setPhoneSaving(false); return }
-    if (data) {
-      setCustomers(prev => prev.map(c => c.id === customerId ? data as Customer : c))
-      setMessage('전화번호가 수정됐습니다.')
-    }
+    setCustomers(prev => prev.map(c => c.id === customerId ? { ...c, phone: phone.trim() } : c))
+    setMessage('전화번호가 수정됐습니다.')
     setPhoneSaving(false)
   }
 

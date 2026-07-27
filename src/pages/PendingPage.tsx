@@ -195,13 +195,14 @@ export function PendingPage() {
     } else {
       const { error: customerErr } = await supabase
         .from('customers')
-        .insert({ name: customerName.trim(), phone: customerPhone.trim(), owner_user_id: profile.id, plan: 'basic', is_active: true })
+        .insert({ name: customerName.trim(), owner_user_id: profile.id, plan: 'basic', is_active: true })
       if (customerErr) { setError(`오류: ${customerErr.message}`); setCustomerCreating(false); return }
       const { data: newCustomer } = await supabase
         .from('customers').select('id').eq('owner_user_id', profile.id)
         .order('created_at', { ascending: false }).limit(1).single()
       if (!newCustomer) { setError('오류: 고객 정보를 불러오지 못했습니다.'); setCustomerCreating(false); return }
       customerId = newCustomer.id
+      await supabase.rpc('update_customer_phone_enc', { p_customer_id: customerId, p_phone: customerPhone.trim() })
     }
 
     // 2. 조직 생성 — ID 미리 생성 후 INSERT만 수행 (SELECT 없이, RLS 우회)

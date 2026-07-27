@@ -62,6 +62,7 @@ export function CustomerAdminPage() {
   const [editingPhone, setEditingPhone] = useState(false)
   const [editPhone, setEditPhone]       = useState('')
   const [phoneSaving, setPhoneSaving]   = useState(false)
+  const [decryptedPhone, setDecryptedPhone] = useState<string | null>(null)
 
   const [showDeletionModal, setShowDeletionModal] = useState(false)
   const [deletionPending, setDeletionPending]     = useState(false)
@@ -74,6 +75,15 @@ export function CustomerAdminPage() {
   useEffect(() => {
     if (!authLoading && !myCustomer && !profile?.is_super_admin) navigate('/')
   }, [myCustomer, profile, authLoading, navigate])
+
+  useEffect(() => {
+    if (!myCustomer?.id) { setDecryptedPhone(null); return }
+    let cancelled = false
+    supabase.rpc('get_customer_phone', { p_customer_id: myCustomer.id }).then(({ data }) => {
+      if (!cancelled) setDecryptedPhone(data ?? null)
+    })
+    return () => { cancelled = true }
+  }, [myCustomer?.id])
 
   useEffect(() => {
     if (!myCustomer) return
@@ -189,15 +199,13 @@ export function CustomerAdminPage() {
     if (!myCustomer) return
     if (!isValidPhone(editPhone)) { setMessage('오류: 올바른 전화번호를 입력해 주세요. (예: 010-1234-5678)'); return }
     setPhoneSaving(true)
-    const { error } = await supabase
-      .from('customers')
-      .update({ phone: editPhone.trim(), updated_at: new Date().toISOString() })
-      .eq('id', myCustomer.id)
+    const { error } = await supabase.rpc('update_customer_phone_enc', { p_customer_id: myCustomer.id, p_phone: editPhone.trim() })
     if (error) {
       setMessage(`오류: ${error.message}`)
       setPhoneSaving(false)
       return
     }
+    setDecryptedPhone(editPhone.trim())
     await refreshCustomer()
     setEditingPhone(false)
     setPhoneSaving(false)
@@ -377,10 +385,10 @@ export function CustomerAdminPage() {
                     </span>
                   ) : (
                     <button
-                      onClick={() => { setEditingPhone(true); setEditPhone(fmtPhone(myCustomer.phone ?? '')) }}
+                      onClick={() => { setEditingPhone(true); setEditPhone(fmtPhone(decryptedPhone ?? '')) }}
                       className="flex items-center gap-1 px-2 py-1 rounded-lg border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-brand-primary)] hover:border-[var(--color-brand-primary)]/40 transition-colors text-xs"
                     >
-                      전화번호: {myCustomer.phone ? fmtPhone(myCustomer.phone) : '미입력'}
+                      전화번호: {decryptedPhone ? fmtPhone(decryptedPhone) : '미입력'}
                     </button>
                   )}
                   <span className="text-[var(--color-text-muted)] text-xs">가입일 {myCustomer.created_at.slice(0, 10)}</span>

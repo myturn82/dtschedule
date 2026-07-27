@@ -10,7 +10,8 @@
     "autoassign": "자동배정",
     "legend": "범례",
     "customFields": "입력항목",
-    "notifications": "배정알림"
+    "notifications": "배정알림",
+    "lessons": "레슨권"
   },
   "org": {
     "label": "조직",
