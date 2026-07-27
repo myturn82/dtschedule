@@ -1,7 +1,7 @@
 -- ============================================================
 -- 운영 DB 초기화 스크립트 (전체 재생성)
 -- 생성일: 2026-06-10
--- 기준 마이그레이션: 001 ~ 076
+-- 기준 마이그레이션: 001 ~ 077
 --
 -- ⚠️  주의: 이 스크립트는 모든 데이터를 삭제합니다.
 --           Supabase SQL Editor에서 직접 실행하세요.
@@ -1219,14 +1219,14 @@ CREATE POLICY "lesson_package_types_select" ON lesson_package_types
   FOR SELECT USING (is_tenant_member(tenant_id) OR is_super_admin_caller());
 
 CREATE POLICY "lesson_package_types_insert" ON lesson_package_types
-  FOR INSERT WITH CHECK (is_tenant_admin(tenant_id));
+  FOR INSERT WITH CHECK (is_tenant_admin(tenant_id) OR is_super_admin_caller());
 
 CREATE POLICY "lesson_package_types_update" ON lesson_package_types
-  FOR UPDATE USING (is_tenant_admin(tenant_id))
-  WITH CHECK (is_tenant_admin(tenant_id));
+  FOR UPDATE USING (is_tenant_admin(tenant_id) OR is_super_admin_caller())
+  WITH CHECK (is_tenant_admin(tenant_id) OR is_super_admin_caller());
 
 CREATE POLICY "lesson_package_types_delete" ON lesson_package_types
-  FOR DELETE USING (is_tenant_admin(tenant_id));
+  FOR DELETE USING (is_tenant_admin(tenant_id) OR is_super_admin_caller());
 
 -- ── lesson_packages ─────────────────────────────────────────
 CREATE POLICY "lesson_packages_select" ON lesson_packages
@@ -1237,14 +1237,14 @@ CREATE POLICY "lesson_packages_select" ON lesson_packages
   );
 
 CREATE POLICY "lesson_packages_insert" ON lesson_packages
-  FOR INSERT WITH CHECK (is_tenant_admin(tenant_id));
+  FOR INSERT WITH CHECK (is_tenant_admin(tenant_id) OR is_super_admin_caller());
 
 CREATE POLICY "lesson_packages_update" ON lesson_packages
-  FOR UPDATE USING (is_tenant_admin(tenant_id))
-  WITH CHECK (is_tenant_admin(tenant_id));
+  FOR UPDATE USING (is_tenant_admin(tenant_id) OR is_super_admin_caller())
+  WITH CHECK (is_tenant_admin(tenant_id) OR is_super_admin_caller());
 
 CREATE POLICY "lesson_packages_delete" ON lesson_packages
-  FOR DELETE USING (is_tenant_admin(tenant_id));
+  FOR DELETE USING (is_tenant_admin(tenant_id) OR is_super_admin_caller());
 
 
 -- ────────────────────────────────────────────────────────────
