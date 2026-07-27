@@ -183,7 +183,7 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
-                  <th className="text-left px-2.5 sm:px-4 py-2.5 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">이름</th>
+                  <th className="text-center px-2.5 sm:px-4 py-2.5 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">이름</th>
                   <th className="text-center px-2 sm:px-3 py-2.5 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">횟수</th>
                   <th className="text-center px-2 sm:px-3 py-2.5 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">유효기간</th>
                   <th className="text-center px-2 sm:px-3 py-2.5 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">활성</th>
@@ -361,9 +361,12 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
-                  <th className="text-left px-2.5 sm:px-4 py-2.5 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">회원</th>
-                  <th className="text-left px-2 sm:px-3 py-2.5 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">레슨종류</th>
-                  <th className="text-center px-2 sm:px-3 py-2.5 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">결제일</th>
+                  <th className="text-center px-2.5 sm:px-4 py-2.5 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">회원</th>
+                  <th className="text-center px-2 sm:px-3 py-2.5 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">레슨종류</th>
+                  <th className="text-center px-2 sm:px-3 py-2.5 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">
+                    <div>결제일</div>
+                    <div className="sm:hidden">만료일</div>
+                  </th>
                   <th className="text-center px-2 sm:px-3 py-2.5 text-xs font-semibold text-[var(--color-text-muted)] hidden sm:table-cell whitespace-nowrap">만료일</th>
                   <th className="text-center px-2 sm:px-3 py-2.5 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">소진</th>
                   <th className="text-center px-2 sm:px-3 py-2.5 text-xs font-semibold text-[var(--color-text-muted)] hidden md:table-cell whitespace-nowrap">상태</th>
