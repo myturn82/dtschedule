@@ -34,7 +34,7 @@ export function MemberSearchSelect({ value, onChange, options, placeholder = 'ì
         className={className}
       />
       {open && (
-        <div className="absolute z-10 mt-1 w-max min-w-full max-w-[calc(100vw-2.5rem)] max-h-48 overflow-y-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg">
+        <div className="absolute z-10 mt-1 w-max min-w-full max-w-[calc(100vw-2.5rem)] max-h-[60vh] overflow-y-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg">
           {clearLabel && (
             <button
               type="button"
