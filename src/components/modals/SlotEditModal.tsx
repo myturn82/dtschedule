@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect, useMemo } from 'react'
 import { AutoResizeTextarea } from '../shared/AutoResizeTextarea'
+import { MemberSearchSelect } from '../shared/MemberSearchSelect'
 import { DevFileLabel } from '../DevFileLabel'
 import type { Assignment, CellState, ModalTarget, Profile, TenantRole, MemberType, CustomFieldDef, TenantMode, LessonPackageWithUsage } from '../../types'
 import { getOptionUnit } from '../../types'
@@ -1143,18 +1144,13 @@ export function SlotEditModal({
                             : '모든 회원이 이미 배정되어 있습니다'}
                         </p>
                       ) : (
-                        <select
+                        <MemberSearchSelect
                           value={selectedUserId}
-                          onChange={e => setSelectedUserId(e.target.value)}
+                          onChange={setSelectedUserId}
+                          options={selectableProfiles}
+                          placeholder="-- 회원을 선택하세요 --"
                           className={inputClass}
-                        >
-                          <option value="">-- 회원을 선택하세요 --</option>
-                          {selectableProfiles.map(p => (
-                            <option key={p.id} value={p.id}>
-                              {p.name}
-                            </option>
-                          ))}
-                        </select>
+                        />
                       )}
                     </div>
                     )

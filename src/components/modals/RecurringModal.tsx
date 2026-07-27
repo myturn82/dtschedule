@@ -1,5 +1,6 @@
 ﻿import { useState, useMemo, useEffect } from 'react'
 import { DevFileLabel } from '../DevFileLabel'
+import { MemberSearchSelect } from '../shared/MemberSearchSelect'
 import { supabase } from '../../lib/supabase'
 import type { Profile, TenantRole, ScheduleRule, DateOverride, TenantMode, TenantAccessRole } from '../../types'
 import type { ProfileWithRole } from '../../hooks/useProfiles'
@@ -372,21 +373,18 @@ export function RecurringModal({
                   <input type="text" value={volunteerName} disabled className={`${inputCls} opacity-60 cursor-not-allowed`} />
                 )
               ) : isAdmin ? (
-                <select
+                <MemberSearchSelect
                   value={selectedUserId ?? ''}
-                  onChange={e => {
-                    const p = profiles.find(p => p.id === e.target.value)
-                    setSelectedUserId(e.target.value || null)
+                  onChange={id => {
+                    const p = profiles.find(p => p.id === id)
+                    setSelectedUserId(id || null)
                     setVolunteerName(p?.name ?? '')
                     setRoleId(p?.tenantRoleId ?? null)
                   }}
+                  options={profiles}
+                  placeholder="회원 선택"
                   className={inputCls}
-                >
-                  <option value="">회원 선택</option>
-                  {profiles.map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
+                />
               ) : (
                 <input type="text" value={volunteerName} disabled className={`${inputCls} opacity-60 cursor-not-allowed`} />
               )}

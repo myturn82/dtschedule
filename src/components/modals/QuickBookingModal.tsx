@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { DevFileLabel } from '../DevFileLabel'
+import { MemberSearchSelect } from '../shared/MemberSearchSelect'
 import { supabase } from '../../lib/supabase'
 import { useTenant } from '../../contexts/TenantContext'
 import { useAuth } from '../../hooks/useAuth'
@@ -494,19 +495,16 @@ export function QuickBookingModal({ onClose }: Props) {
                     />
                   ) : (
                     <>
-                      <select
+                      <MemberSearchSelect
                         value={selectedUserId}
-                        onChange={e => setSelectedUserId(e.target.value)}
+                        onChange={setSelectedUserId}
+                        options={[
+                          ...nameMatches.map(m => ({ id: m.id, name: `${m.name}${m.score < 1 ? ' (유사)' : ''}` })),
+                          ...profiles.filter(p => !nameMatches.some(m => m.id === p.id)),
+                        ]}
+                        placeholder="직접 선택해주세요"
                         className="w-full border border-[var(--color-border-strong)] rounded-lg px-2.5 py-1.5 text-sm bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none"
-                      >
-                        <option value="">직접 선택해주세요</option>
-                        {nameMatches.map(m => (
-                          <option key={m.id} value={m.id}>{m.name}{m.score < 1 ? ' (유사)' : ''}</option>
-                        ))}
-                        {profiles.filter(p => !nameMatches.some(m => m.id === p.id)).map(p => (
-                          <option key={p.id} value={p.id}>{p.name}</option>
-                        ))}
-                      </select>
+                      />
                       {proposal.person_name_guess && nameMatches.length === 0 && (
                         <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-1">
                           "{proposal.person_name_guess}"와 일치하는 회원을 찾지 못했어요. 직접 선택해주세요.
