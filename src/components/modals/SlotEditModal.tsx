@@ -172,9 +172,9 @@ export function SlotEditModal({
   const selectableProfiles = isAdmin && (isSplitMode || !isFreeform)
     ? isSplitMode
       ? (profiles as ProfileWithRole[]).filter(p =>
-            p.tenantRoleId === selectedRoleId && !assignedNames.has(p.name) && !assignedUserIds.has(p.id)
+            p.tenantRoleId === selectedRoleId && p.memberRole !== 'admin' && !assignedNames.has(p.name) && !assignedUserIds.has(p.id)
           )
-      : profiles.filter(p => !assignedNames.has(p.name))
+      : profiles.filter(p => p.memberRole !== 'admin' && !assignedNames.has(p.name))
     : []
 
   const pendingName = !editingId
@@ -186,8 +186,8 @@ export function SlotEditModal({
 
   const totalTypeProfiles = (!isFreeform && isAdmin)
     ? isSplitMode
-      ? (profiles as ProfileWithRole[]).filter(p => p.tenantRoleId === selectedRoleId)
-      : profiles
+      ? (profiles as ProfileWithRole[]).filter(p => p.tenantRoleId === selectedRoleId && p.memberRole !== 'admin')
+      : profiles.filter(p => p.memberRole !== 'admin')
     : []
 
   // 모달 열리면 배경 스크롤 차단 (모달 내부 스크롤은 유지)

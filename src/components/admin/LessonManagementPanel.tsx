@@ -55,6 +55,8 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
   const [pkgSaving, setPkgSaving] = useState(false)
   const [pkgError, setPkgError] = useState<string | null>(null)
   const [filterUserId, setFilterUserId] = useState('')
+  const [pkgUserSearch, setPkgUserSearch] = useState('')
+  const [showPkgUserDropdown, setShowPkgUserDropdown] = useState(false)
 
   // ── 레슨 종류 추가 ────────────────────────────────────────
   async function handleAddType(e: React.FormEvent) {
@@ -111,7 +113,8 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
 
   async function handleAddPackage(e: React.FormEvent) {
     e.preventDefault()
-    if (!pkgUserId || !pkgDate) return
+    if (!pkgUserId) { setPkgError('회원을 선택해 주세요.'); return }
+    if (!pkgDate) return
     setPkgSaving(true); setPkgError(null)
 
     const type = packageTypes.find(t => t.id === pkgTypeId)
@@ -135,15 +138,22 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
     setPkgSaving(false)
     if (err) { setPkgError(err); return }
     setShowAddPkg(false)
-    setPkgUserId(''); setPkgTypeId(''); setPkgDate(''); setPkgNotes('')
+    setPkgUserId(''); setPkgTypeId(''); setPkgDate(''); setPkgNotes(''); setPkgUserSearch('')
   }
 
   const memberMap = new Map(members.map(m => [m.user_id, m.profile?.name ?? m.user_id]))
-  const approvedMembers = members.filter(m => m.is_approved !== false)
+  // 관리자는 레슨권 결제 대상에서 제외
+  const approvedMembers = members.filter(m => m.is_approved !== false && m.role !== 'admin')
 
   const filteredPackages = filterUserId
     ? packages.filter(p => p.user_id === filterUserId)
     : packages
+
+  const pkgUserSearchQuery = pkgUserSearch.trim().toLowerCase()
+  const filteredMemberOptions = pkgUserSearchQuery
+    ? approvedMembers.filter(m => (m.profile?.name ?? '').toLowerCase().includes(pkgUserSearchQuery))
+    : approvedMembers
+  const selectedPkgMemberName = approvedMembers.find(m => m.user_id === pkgUserId)?.profile?.name ?? ''
 
   return (
     <div className="space-y-8 max-w-[720px]">
@@ -380,14 +390,36 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
           <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] p-6 w-full max-w-sm space-y-4 shadow-xl">
             <h3 className="font-bold text-[var(--color-text-primary)] text-[16px]">결제 추가</h3>
             <form onSubmit={handleAddPackage} className="space-y-3">
-              <div>
+              <div className="relative">
                 <label className="text-xs font-semibold text-[var(--color-text-secondary)] block mb-1">회원 *</label>
-                <select value={pkgUserId} onChange={e => setPkgUserId(e.target.value)} required className={inputCls + ' w-full'}>
-                  <option value="">회원 선택...</option>
-                  {approvedMembers.map(m => (
-                    <option key={m.user_id} value={m.user_id}>{m.profile?.name ?? m.user_id}</option>
-                  ))}
-                </select>
+                <input
+                  value={pkgUserId ? selectedPkgMemberName : pkgUserSearch}
+                  onChange={e => { setPkgUserId(''); setPkgUserSearch(e.target.value); setShowPkgUserDropdown(true) }}
+                  onFocus={() => { setPkgUserId(''); setShowPkgUserDropdown(true) }}
+                  onBlur={() => setTimeout(() => setShowPkgUserDropdown(false), 150)}
+                  placeholder="이름으로 검색..."
+                  autoComplete="off"
+                  className={inputCls + ' w-full'}
+                />
+                {showPkgUserDropdown && (
+                  <div className="absolute z-10 mt-1 w-full max-h-48 overflow-y-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg">
+                    {filteredMemberOptions.length === 0 ? (
+                      <p className="px-3 py-2 text-xs text-[var(--color-text-muted)]">일치하는 회원이 없습니다.</p>
+                    ) : (
+                      filteredMemberOptions.map(m => (
+                        <button
+                          type="button"
+                          key={m.user_id}
+                          onMouseDown={e => e.preventDefault()}
+                          onClick={() => { setPkgUserId(m.user_id); setPkgUserSearch(''); setShowPkgUserDropdown(false) }}
+                          className="w-full text-left px-3 py-2 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]"
+                        >
+                          {m.profile?.name ?? m.user_id}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
               </div>
               <div>
                 <label className="text-xs font-semibold text-[var(--color-text-secondary)] block mb-1">레슨 종류 *</label>
@@ -422,7 +454,7 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
                   className="flex-1 px-4 py-2 rounded-xl bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-sm font-semibold hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40 transition-colors">
                   {pkgSaving ? '저장 중...' : '저장'}
                 </button>
-                <button type="button" onClick={() => { setShowAddPkg(false); setPkgError(null) }}
+                <button type="button" onClick={() => { setShowAddPkg(false); setPkgError(null); setPkgUserId(''); setPkgUserSearch('') }}
                   className="flex-1 px-4 py-2 rounded-xl border border-[var(--color-border)] text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]">
                   취소
                 </button>
