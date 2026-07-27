@@ -57,6 +57,8 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
   const [filterUserId, setFilterUserId] = useState('')
   const [pkgUserSearch, setPkgUserSearch] = useState('')
   const [showPkgUserDropdown, setShowPkgUserDropdown] = useState(false)
+  const [filterUserSearch, setFilterUserSearch] = useState('')
+  const [showFilterUserDropdown, setShowFilterUserDropdown] = useState(false)
 
   // ── 레슨 종류 추가 ────────────────────────────────────────
   async function handleAddType(e: React.FormEvent) {
@@ -154,6 +156,12 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
     ? approvedMembers.filter(m => (m.profile?.name ?? '').toLowerCase().includes(pkgUserSearchQuery))
     : approvedMembers
   const selectedPkgMemberName = approvedMembers.find(m => m.user_id === pkgUserId)?.profile?.name ?? ''
+
+  const filterUserSearchQuery = filterUserSearch.trim().toLowerCase()
+  const filteredFilterMemberOptions = filterUserSearchQuery
+    ? approvedMembers.filter(m => (m.profile?.name ?? '').toLowerCase().includes(filterUserSearchQuery))
+    : approvedMembers
+  const selectedFilterMemberName = approvedMembers.find(m => m.user_id === filterUserId)?.profile?.name ?? ''
 
   return (
     <div className="space-y-8 max-w-[720px]">
@@ -294,13 +302,44 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
         <div className="mb-4">
           <div className="flex items-center gap-3">
             <h2 className="flex-1 min-w-0 truncate text-[17px] font-bold text-[var(--color-text-primary)]">결제 기록</h2>
-            <select value={filterUserId} onChange={e => setFilterUserId(e.target.value)}
-              className={inputCls + ' w-40 shrink-0'}>
-              <option value="">전체 회원</option>
-              {approvedMembers.map(m => (
-                <option key={m.user_id} value={m.user_id}>{m.profile?.name ?? m.user_id}</option>
-              ))}
-            </select>
+            <div className="relative w-40 shrink-0">
+              <input
+                value={filterUserId ? selectedFilterMemberName : filterUserSearch}
+                onChange={e => { setFilterUserId(''); setFilterUserSearch(e.target.value); setShowFilterUserDropdown(true) }}
+                onFocus={() => { setFilterUserId(''); setShowFilterUserDropdown(true) }}
+                onBlur={() => setTimeout(() => setShowFilterUserDropdown(false), 150)}
+                placeholder="전체 회원"
+                autoComplete="off"
+                className={inputCls + ' w-full'}
+              />
+              {showFilterUserDropdown && (
+                <div className="absolute z-10 mt-1 w-full max-h-48 overflow-y-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg">
+                  <button
+                    type="button"
+                    onMouseDown={e => e.preventDefault()}
+                    onClick={() => { setFilterUserId(''); setFilterUserSearch(''); setShowFilterUserDropdown(false) }}
+                    className="w-full text-left px-3 py-2 text-sm text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)] border-b border-[var(--color-border)]"
+                  >
+                    전체 회원
+                  </button>
+                  {filteredFilterMemberOptions.length === 0 ? (
+                    <p className="px-3 py-2 text-xs text-[var(--color-text-muted)]">일치하는 회원이 없습니다.</p>
+                  ) : (
+                    filteredFilterMemberOptions.map(m => (
+                      <button
+                        type="button"
+                        key={m.user_id}
+                        onMouseDown={e => e.preventDefault()}
+                        onClick={() => { setFilterUserId(m.user_id); setFilterUserSearch(''); setShowFilterUserDropdown(false) }}
+                        className="w-full text-left px-3 py-2 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]"
+                      >
+                        {m.profile?.name ?? m.user_id}
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
             {packageTypes.some(t => t.is_active) && (
               <button onClick={() => setShowAddPkg(true)}
                 className="h-[38px] px-4 rounded-xl bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-sm font-semibold hover:bg-[var(--color-brand-primary-hover)] transition-colors whitespace-nowrap shrink-0">
