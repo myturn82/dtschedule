@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 export interface MemberSearchOption {
   id: string
@@ -14,27 +15,52 @@ interface Props {
   clearLabel?: string
 }
 
+const ROW_HEIGHT = 36
+const MIN_VISIBLE_ROWS = 10
+const MARGIN = 8
+
 export function MemberSearchSelect({ value, onChange, options, placeholder = '이름으로 검색...', className = '', clearLabel }: Props) {
   const [search, setSearch] = useState('')
   const [open, setOpen] = useState(false)
-  const dropdownRef = useRef<HTMLDivElement>(null)
+  const [pos, setPos] = useState<{ top: number; left: number; minWidth: number; maxWidth: number; maxHeight: number } | null>(null)
+  const wrapRef = useRef<HTMLDivElement>(null)
 
-  // 드롭다운이 모달/페이지의 스크롤 영역 하단에서 잘려 보이지 않는 문제 방지 —
-  // 열릴 때 가까운 스크롤 컨테이너를 최소한으로 스크롤해 전체가 보이게 함
+  const updatePosition = useCallback(() => {
+    const el = wrapRef.current
+    if (!el) return
+    const r = el.getBoundingClientRect()
+    const spaceBelow = window.innerHeight - r.bottom - MARGIN
+    const spaceAbove = r.top - MARGIN
+    const desiredHeight = MIN_VISIBLE_ROWS * ROW_HEIGHT + 8
+    const openUp = spaceBelow < desiredHeight && spaceAbove > spaceBelow
+    const available = openUp ? spaceAbove : spaceBelow
+    const height = Math.max(Math.min(available, desiredHeight), ROW_HEIGHT * 2)
+    setPos({
+      top: openUp ? r.top - height : r.bottom,
+      left: r.left,
+      minWidth: r.width,
+      maxWidth: window.innerWidth - r.left - MARGIN,
+      maxHeight: height,
+    })
+  }, [])
+
   useEffect(() => {
     if (!open) return
-    const raf = requestAnimationFrame(() => {
-      dropdownRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-    })
-    return () => cancelAnimationFrame(raf)
-  }, [open])
+    updatePosition()
+    window.addEventListener('scroll', updatePosition, true)
+    window.addEventListener('resize', updatePosition)
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true)
+      window.removeEventListener('resize', updatePosition)
+    }
+  }, [open, updatePosition])
 
   const query = search.trim().toLowerCase()
   const filtered = query ? options.filter(o => o.name.toLowerCase().includes(query)) : options
   const selectedName = options.find(o => o.id === value)?.name ?? ''
 
   return (
-    <div className="relative">
+    <div ref={wrapRef} className="relative">
       <input
         value={value ? selectedName : search}
         onChange={e => { onChange(''); setSearch(e.target.value); setOpen(true) }}
@@ -44,8 +70,11 @@ export function MemberSearchSelect({ value, onChange, options, placeholder = '�
         autoComplete="off"
         className={className}
       />
-      {open && (
-        <div ref={dropdownRef} className="absolute z-10 mt-1 w-max min-w-full max-w-[calc(100vw-2.5rem)] max-h-[60vh] overflow-y-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg">
+      {open && pos && createPortal(
+        <div
+          style={{ position: 'fixed', top: pos.top, left: pos.left, minWidth: pos.minWidth, maxWidth: pos.maxWidth, maxHeight: pos.maxHeight }}
+          className="z-[1000] overflow-y-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-xl"
+        >
           {clearLabel && (
             <button
               type="button"
@@ -71,7 +100,8 @@ export function MemberSearchSelect({ value, onChange, options, placeholder = '�
               </button>
             ))
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
