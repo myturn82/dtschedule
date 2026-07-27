@@ -18,6 +18,7 @@ interface Props {
 const ROW_HEIGHT = 36
 const MIN_VISIBLE_ROWS = 10
 const MARGIN = 8
+const MAX_DROPDOWN_WIDTH = 280
 
 export function MemberSearchSelect({ value, onChange, options, placeholder = '이름으로 검색...', className = '', clearLabel }: Props) {
   const [search, setSearch] = useState('')
@@ -39,7 +40,7 @@ export function MemberSearchSelect({ value, onChange, options, placeholder = '�
       top: openUp ? r.top - height : r.bottom,
       left: r.left,
       minWidth: r.width,
-      maxWidth: window.innerWidth - r.left - MARGIN,
+      maxWidth: Math.min(window.innerWidth - r.left - MARGIN, Math.max(r.width, MAX_DROPDOWN_WIDTH)),
       maxHeight: height,
     })
   }, [])
@@ -55,9 +56,10 @@ export function MemberSearchSelect({ value, onChange, options, placeholder = '�
     }
   }, [open, updatePosition])
 
+  const sortedOptions = [...options].sort((a, b) => a.name.localeCompare(b.name, 'ko'))
   const query = search.trim().toLowerCase()
-  const filtered = query ? options.filter(o => o.name.toLowerCase().includes(query)) : options
-  const selectedName = options.find(o => o.id === value)?.name ?? ''
+  const filtered = query ? sortedOptions.filter(o => o.name.toLowerCase().includes(query)) : sortedOptions
+  const selectedName = sortedOptions.find(o => o.id === value)?.name ?? ''
 
   return (
     <div ref={wrapRef} className="relative">
