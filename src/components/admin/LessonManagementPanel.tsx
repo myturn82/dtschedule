@@ -190,7 +190,7 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--color-border)]">
-                {packageTypes.map((t, idx) => (
+                {[...packageTypes].sort((a, b) => a.display_order - b.display_order).map((t, idx, sortedTypes) => (
                   <tr key={t.id} className="bg-[var(--color-surface)] hover:bg-[var(--color-surface-hover)]">
                     {editTypeId === t.id ? (
                       <>
@@ -249,7 +249,7 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
                               className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center shrink-0 text-xs border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-surface-hover)] disabled:opacity-30 text-[var(--color-text-muted)]">
                               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
                             </button>
-                            <button type="button" onClick={() => movePackageType(t.id, 1)} disabled={idx === packageTypes.length - 1}
+                            <button type="button" onClick={() => movePackageType(t.id, 1)} disabled={idx === sortedTypes.length - 1}
                               className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center shrink-0 text-xs border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-surface-hover)] disabled:opacity-30 text-[var(--color-text-muted)]">
                               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
                             </button>
