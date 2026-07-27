@@ -30,8 +30,13 @@ export function MemberSearchSelect({ value, onChange, options, placeholder = '�
     const el = wrapRef.current
     if (!el) return
     const r = el.getBoundingClientRect()
-    const spaceBelow = window.innerHeight - r.bottom - MARGIN
-    const spaceAbove = r.top - MARGIN
+    // 모바일 키보드가 뜨면 visualViewport가 줄어들면서 window.innerHeight와 어긋남 —
+    // 실제로 보이는 영역(visualViewport) 기준으로 계산해야 드롭다운이 키보드 위쪽에 붙는다
+    const vv = window.visualViewport
+    const visibleTop = vv?.offsetTop ?? 0
+    const visibleBottom = vv ? vv.offsetTop + vv.height : window.innerHeight
+    const spaceBelow = visibleBottom - r.bottom - MARGIN
+    const spaceAbove = r.top - visibleTop - MARGIN
     const desiredHeight = MIN_VISIBLE_ROWS * ROW_HEIGHT + 8
     const openUp = spaceBelow < desiredHeight && spaceAbove > spaceBelow
     const available = openUp ? spaceAbove : spaceBelow
@@ -48,11 +53,19 @@ export function MemberSearchSelect({ value, onChange, options, placeholder = '�
   useEffect(() => {
     if (!open) return
     updatePosition()
+    // 모바일에서 키보드가 올라오는 애니메이션이 끝난 뒤 위치를 다시 계산
+    const settleTimer = setTimeout(updatePosition, 300)
+    const vv = window.visualViewport
     window.addEventListener('scroll', updatePosition, true)
     window.addEventListener('resize', updatePosition)
+    vv?.addEventListener('resize', updatePosition)
+    vv?.addEventListener('scroll', updatePosition)
     return () => {
+      clearTimeout(settleTimer)
       window.removeEventListener('scroll', updatePosition, true)
       window.removeEventListener('resize', updatePosition)
+      vv?.removeEventListener('resize', updatePosition)
+      vv?.removeEventListener('scroll', updatePosition)
     }
   }, [open, updatePosition])
 
