@@ -67,11 +67,12 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
     setTypeSaving(true); setTypeError(null)
     const count = parseInt(newTypeCount)
     const weeks = newTypeWeeks ? parseInt(newTypeWeeks) : null
+    const maxOrder = packageTypes.reduce((m, t) => Math.max(m, t.display_order), -1)
     const err = await addPackageType({
       name: newTypeName.trim(),
       session_count: count,
       validity_days: weeks ? weeks * 7 : null,
-      display_order: packageTypes.length,
+      display_order: maxOrder + 1,
     })
     setTypeSaving(false)
     if (err) { setTypeError(err); return }
