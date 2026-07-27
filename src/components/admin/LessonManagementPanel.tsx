@@ -35,7 +35,7 @@ const STATUS_CLS: Record<ReturnType<typeof pkgStatus>, string> = {
 const inputCls = 'px-3 py-2 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]'
 
 export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
-  const { packageTypes, packages, loading, addPackageType, updatePackageType, deletePackageType, addPackage, deletePackage } = useLessonPackages(tenantId)
+  const { packageTypes, packages, loading, addPackageType, updatePackageType, deletePackageType, movePackageType, addPackage, deletePackage } = useLessonPackages(tenantId)
 
   // ── 레슨 종류 폼 ─────────────────────────────────────────
   const [newTypeName, setNewTypeName] = useState('')
@@ -160,31 +160,32 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
 
         {packageTypes.length > 0 && (
           <div className="mb-4 rounded-2xl border border-[var(--color-border)] overflow-hidden">
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
-                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-[var(--color-text-muted)]">이름</th>
-                  <th className="text-center px-3 py-2.5 text-xs font-semibold text-[var(--color-text-muted)]">횟수</th>
-                  <th className="text-center px-3 py-2.5 text-xs font-semibold text-[var(--color-text-muted)]">유효기간</th>
-                  <th className="text-center px-3 py-2.5 text-xs font-semibold text-[var(--color-text-muted)]">활성</th>
-                  <th className="px-3 py-2.5" />
+                  <th className="text-left px-2.5 sm:px-4 py-2.5 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">이름</th>
+                  <th className="text-center px-2 sm:px-3 py-2.5 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">횟수</th>
+                  <th className="text-center px-2 sm:px-3 py-2.5 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">유효기간</th>
+                  <th className="text-center px-2 sm:px-3 py-2.5 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">활성</th>
+                  <th className="px-2 sm:px-3 py-2.5" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--color-border)]">
-                {packageTypes.map(t => (
+                {packageTypes.map((t, idx) => (
                   <tr key={t.id} className="bg-[var(--color-surface)] hover:bg-[var(--color-surface-hover)]">
                     {editTypeId === t.id ? (
                       <>
-                        <td className="px-3 py-2">
+                        <td className="px-2 sm:px-3 py-2">
                           <input value={editTypeData.name} onChange={e => setEditTypeData(p => ({ ...p, name: e.target.value }))}
                             className={inputCls + ' w-full'} />
                         </td>
-                        <td className="px-3 py-2">
+                        <td className="px-2 sm:px-3 py-2">
                           <input type="number" min={1} value={editTypeData.session_count}
                             onChange={e => setEditTypeData(p => ({ ...p, session_count: e.target.value }))}
                             className={inputCls + ' w-16 text-center'} />
                         </td>
-                        <td className="px-3 py-2">
+                        <td className="px-2 sm:px-3 py-2">
                           <div className="flex items-center gap-1">
                             <input type="number" min={1} value={editTypeData.validity_days}
                               onChange={e => setEditTypeData(p => ({ ...p, validity_days: e.target.value }))}
@@ -194,14 +195,14 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
                           </div>
                         </td>
                         <td />
-                        <td className="px-3 py-2">
-                          <div className="flex gap-1">
+                        <td className="px-2 sm:px-3 py-2">
+                          <div className="flex gap-1 justify-end">
                             <button onClick={saveEditType} disabled={typeSaving}
-                              className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] disabled:opacity-40">
+                              className="px-2 sm:px-2.5 py-1 text-xs font-semibold rounded-lg bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] disabled:opacity-40 whitespace-nowrap">
                               저장
                             </button>
                             <button onClick={() => setEditTypeId(null)}
-                              className="px-2.5 py-1 text-xs font-semibold rounded-lg border border-[var(--color-border-strong)] text-[var(--color-text-secondary)]">
+                              className="px-2 sm:px-2.5 py-1 text-xs font-semibold rounded-lg border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] whitespace-nowrap">
                               취소
                             </button>
                           </div>
@@ -209,14 +210,14 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
                       </>
                     ) : (
                       <>
-                        <td className="px-4 py-2.5 font-medium text-[var(--color-text-primary)]">{t.name}</td>
-                        <td className="px-3 py-2.5 text-center text-[var(--color-text-secondary)]">{t.session_count}회</td>
-                        <td className="px-3 py-2.5 text-center text-[var(--color-text-muted)] text-xs">
+                        <td className="px-2.5 sm:px-4 py-2.5 font-medium text-[var(--color-text-primary)] whitespace-nowrap">{t.name}</td>
+                        <td className="px-2 sm:px-3 py-2.5 text-center text-[var(--color-text-secondary)] whitespace-nowrap">{t.session_count}회</td>
+                        <td className="px-2 sm:px-3 py-2.5 text-center text-[var(--color-text-muted)] text-xs whitespace-nowrap">
                           {t.validity_days ? `${t.validity_days / 7}주` : '무제한'}
                         </td>
-                        <td className="px-3 py-2.5 text-center">
+                        <td className="px-2 sm:px-3 py-2.5 text-center">
                           <button onClick={() => toggleActive(t)}
-                            className={`text-xs font-semibold px-2 py-0.5 rounded-full border transition-colors ${
+                            className={`text-xs font-semibold px-2 py-0.5 rounded-full border transition-colors whitespace-nowrap ${
                               t.is_active
                                 ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-700'
                                 : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] border-[var(--color-border)]'
@@ -224,14 +225,22 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
                             {t.is_active ? '활성' : '비활성'}
                           </button>
                         </td>
-                        <td className="px-3 py-2.5">
-                          <div className="flex gap-1 justify-end">
+                        <td className="px-2 sm:px-3 py-2.5">
+                          <div className="flex gap-0.5 sm:gap-1 justify-end items-center">
+                            <button type="button" onClick={() => movePackageType(t.id, -1)} disabled={idx === 0}
+                              className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center shrink-0 text-xs border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-surface-hover)] disabled:opacity-30 text-[var(--color-text-muted)]">
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                            </button>
+                            <button type="button" onClick={() => movePackageType(t.id, 1)} disabled={idx === packageTypes.length - 1}
+                              className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center shrink-0 text-xs border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-surface-hover)] disabled:opacity-30 text-[var(--color-text-muted)]">
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+                            </button>
                             <button onClick={() => startEditType(t)}
-                              className="px-2.5 py-1 text-xs font-semibold rounded-lg border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)]">
+                              className="px-2 sm:px-2.5 py-1 text-xs font-semibold rounded-lg border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)] whitespace-nowrap">
                               수정
                             </button>
                             <button onClick={() => handleDeleteType(t.id)}
-                              className="px-2.5 py-1 text-xs font-semibold rounded-lg border border-red-200 text-red-600 hover:bg-red-50">
+                              className="px-2 sm:px-2.5 py-1 text-xs font-semibold rounded-lg border border-red-200 text-red-600 hover:bg-red-50 whitespace-nowrap">
                               삭제
                             </button>
                           </div>
@@ -242,6 +251,7 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
 
@@ -297,16 +307,17 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
           <p className="text-sm text-[var(--color-text-muted)] text-center py-8">결제 기록이 없습니다.</p>
         ) : (
           <div className="rounded-2xl border border-[var(--color-border)] overflow-hidden">
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
-                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-[var(--color-text-muted)]">회원</th>
-                  <th className="text-left px-3 py-2.5 text-xs font-semibold text-[var(--color-text-muted)]">레슨종류</th>
-                  <th className="text-center px-3 py-2.5 text-xs font-semibold text-[var(--color-text-muted)]">결제일</th>
-                  <th className="text-center px-3 py-2.5 text-xs font-semibold text-[var(--color-text-muted)] hidden sm:table-cell">만료일</th>
-                  <th className="text-center px-3 py-2.5 text-xs font-semibold text-[var(--color-text-muted)]">소진</th>
-                  <th className="text-center px-3 py-2.5 text-xs font-semibold text-[var(--color-text-muted)] hidden md:table-cell">상태</th>
-                  <th className="px-3 py-2.5" />
+                  <th className="text-left px-2.5 sm:px-4 py-2.5 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">회원</th>
+                  <th className="text-left px-2 sm:px-3 py-2.5 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">레슨종류</th>
+                  <th className="text-center px-2 sm:px-3 py-2.5 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">결제일</th>
+                  <th className="text-center px-2 sm:px-3 py-2.5 text-xs font-semibold text-[var(--color-text-muted)] hidden sm:table-cell whitespace-nowrap">만료일</th>
+                  <th className="text-center px-2 sm:px-3 py-2.5 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">소진</th>
+                  <th className="text-center px-2 sm:px-3 py-2.5 text-xs font-semibold text-[var(--color-text-muted)] hidden md:table-cell whitespace-nowrap">상태</th>
+                  <th className="px-2 sm:px-3 py-2.5" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--color-border)]">
@@ -315,16 +326,16 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
                   const pct = Math.min(100, Math.round(pkg.used_sessions / pkg.total_sessions * 100))
                   return (
                     <tr key={pkg.id} className="bg-[var(--color-surface)] hover:bg-[var(--color-surface-hover)]">
-                      <td className="px-4 py-3 font-medium text-[var(--color-text-primary)]">
+                      <td className="px-2.5 sm:px-4 py-3 font-medium text-[var(--color-text-primary)] whitespace-nowrap">
                         {memberMap.get(pkg.user_id ?? '') ?? '-'}
                       </td>
-                      <td className="px-3 py-3 text-[var(--color-text-secondary)]">{pkg.package_name}</td>
-                      <td className="px-3 py-3 text-center text-xs text-[var(--color-text-muted)]">{pkg.payment_date}</td>
-                      <td className="px-3 py-3 text-center text-xs text-[var(--color-text-muted)] hidden sm:table-cell">
+                      <td className="px-2 sm:px-3 py-3 text-[var(--color-text-secondary)] whitespace-nowrap">{pkg.package_name}</td>
+                      <td className="px-2 sm:px-3 py-3 text-center text-xs text-[var(--color-text-muted)] whitespace-nowrap">{pkg.payment_date}</td>
+                      <td className="px-2 sm:px-3 py-3 text-center text-xs text-[var(--color-text-muted)] hidden sm:table-cell whitespace-nowrap">
                         {pkg.expires_at ?? '무제한'}
                       </td>
-                      <td className="px-3 py-3">
-                        <div className="flex flex-col items-center gap-1 min-w-[60px]">
+                      <td className="px-2 sm:px-3 py-3">
+                        <div className="flex flex-col items-center gap-1 min-w-[52px] sm:min-w-[60px]">
                           <span className="text-xs font-semibold tabular-nums text-[var(--color-text-primary)]">
                             {pkg.used_sessions}/{pkg.total_sessions}
                           </span>
@@ -342,12 +353,12 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
                           </div>
                         </div>
                       </td>
-                      <td className="px-3 py-3 text-center hidden md:table-cell">
+                      <td className="px-2 sm:px-3 py-3 text-center hidden md:table-cell whitespace-nowrap">
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${STATUS_CLS[status]}`}>
                           {STATUS_LABEL[status]}
                         </span>
                       </td>
-                      <td className="px-3 py-3">
+                      <td className="px-2 sm:px-3 py-3 whitespace-nowrap">
                         <button onClick={() => { if (confirm('이 결제 기록을 삭제할까요?')) deletePackage(pkg.id) }}
                           className="text-xs text-red-500 hover:text-red-700 font-semibold">
                           삭제
@@ -358,6 +369,7 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
                 })}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </section>

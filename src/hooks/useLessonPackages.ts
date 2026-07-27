@@ -9,6 +9,7 @@ export interface UseLessonPackagesResult {
   addPackageType: (data: { name: string; session_count: number; validity_days: number | null; display_order?: number }) => Promise<string | null>
   updatePackageType: (id: string, data: Partial<Pick<LessonPackageType, 'name' | 'session_count' | 'validity_days' | 'is_active' | 'display_order'>>) => Promise<string | null>
   deletePackageType: (id: string) => Promise<string | null>
+  movePackageType: (id: string, dir: -1 | 1) => void
   addPackage: (data: { user_id: string; package_type_id: string | null; package_name: string; total_sessions: number; payment_date: string; expires_at: string | null; notes: string | null; created_by: string | null }) => Promise<string | null>
   deletePackage: (id: string) => Promise<string | null>
   reload: () => Promise<void>
@@ -96,6 +97,24 @@ export function useLessonPackages(tenantId: string): UseLessonPackagesResult {
     return null
   }, [tenantId])
 
+  const movePackageType = useCallback((id: string, dir: -1 | 1) => {
+    const sorted = [...packageTypes].sort((a, b) => a.display_order - b.display_order)
+    const idx = sorted.findIndex(t => t.id === id)
+    const target = idx + dir
+    if (idx < 0 || target < 0 || target >= sorted.length) return
+    const a = sorted[idx], b = sorted[target]
+    const [orderA, orderB] = [a.display_order, b.display_order]
+    setPackageTypes(prev => prev.map(t =>
+      t.id === a.id ? { ...t, display_order: orderB }
+      : t.id === b.id ? { ...t, display_order: orderA }
+      : t
+    ))
+    Promise.all([
+      supabase.from('lesson_package_types').update({ display_order: orderB }).eq('id', a.id),
+      supabase.from('lesson_package_types').update({ display_order: orderA }).eq('id', b.id),
+    ])
+  }, [packageTypes])
+
   const addPackage = useCallback(async (data: { user_id: string; package_type_id: string | null; package_name: string; total_sessions: number; payment_date: string; expires_at: string | null; notes: string | null; created_by: string | null }): Promise<string | null> => {
     const { data: inserted, error } = await supabase
       .from('lesson_packages')
@@ -118,5 +137,5 @@ export function useLessonPackages(tenantId: string): UseLessonPackagesResult {
     return null
   }, [tenantId])
 
-  return { packageTypes, packages, loading, addPackageType, updatePackageType, deletePackageType, addPackage, deletePackage, reload: load }
+  return { packageTypes, packages, loading, addPackageType, updatePackageType, deletePackageType, movePackageType, addPackage, deletePackage, reload: load }
 }
