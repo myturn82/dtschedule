@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 export interface MemberSearchOption {
   id: string
@@ -17,6 +17,17 @@ interface Props {
 export function MemberSearchSelect({ value, onChange, options, placeholder = '이름으로 검색...', className = '', clearLabel }: Props) {
   const [search, setSearch] = useState('')
   const [open, setOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // 드롭다운이 모달/페이지의 스크롤 영역 하단에서 잘려 보이지 않는 문제 방지 —
+  // 열릴 때 가까운 스크롤 컨테이너를 최소한으로 스크롤해 전체가 보이게 함
+  useEffect(() => {
+    if (!open) return
+    const raf = requestAnimationFrame(() => {
+      dropdownRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [open])
 
   const query = search.trim().toLowerCase()
   const filtered = query ? options.filter(o => o.name.toLowerCase().includes(query)) : options
@@ -34,7 +45,7 @@ export function MemberSearchSelect({ value, onChange, options, placeholder = '�
         className={className}
       />
       {open && (
-        <div className="absolute z-10 mt-1 w-max min-w-full max-w-[calc(100vw-2.5rem)] max-h-[60vh] overflow-y-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg">
+        <div ref={dropdownRef} className="absolute z-10 mt-1 w-max min-w-full max-w-[calc(100vw-2.5rem)] max-h-[60vh] overflow-y-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg">
           {clearLabel && (
             <button
               type="button"
