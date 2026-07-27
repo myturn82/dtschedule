@@ -23,7 +23,7 @@ const MAX_DROPDOWN_WIDTH = 280
 export function MemberSearchSelect({ value, onChange, options, placeholder = '이름으로 검색...', className = '', clearLabel }: Props) {
   const [search, setSearch] = useState('')
   const [open, setOpen] = useState(false)
-  const [pos, setPos] = useState<{ top: number; left: number; minWidth: number; maxWidth: number; maxHeight: number } | null>(null)
+  const [pos, setPos] = useState<{ openUp: boolean; top: number; bottom: number; left: number; minWidth: number; maxWidth: number; maxHeight: number } | null>(null)
   const wrapRef = useRef<HTMLDivElement>(null)
 
   const updatePosition = useCallback(() => {
@@ -31,7 +31,7 @@ export function MemberSearchSelect({ value, onChange, options, placeholder = '�
     if (!el) return
     const r = el.getBoundingClientRect()
     // 모바일 키보드가 뜨면 visualViewport가 줄어들면서 window.innerHeight와 어긋남 —
-    // 실제로 보이는 영역(visualViewport) 기준으로 계산해야 드롭다운이 키보드 위쪽에 붙는다
+    // 위/아래 중 어디로 펼칠지, 최대 높이는 얼마인지는 실제로 보이는 영역(visualViewport) 기준으로 판단한다
     const vv = window.visualViewport
     const visibleTop = vv?.offsetTop ?? 0
     const visibleBottom = vv ? vv.offsetTop + vv.height : window.innerHeight
@@ -39,14 +39,17 @@ export function MemberSearchSelect({ value, onChange, options, placeholder = '�
     const spaceAbove = r.top - visibleTop - MARGIN
     const desiredHeight = MIN_VISIBLE_ROWS * ROW_HEIGHT + 8
     const openUp = spaceBelow < desiredHeight && spaceAbove > spaceBelow
-    const available = openUp ? spaceAbove : spaceBelow
-    const height = Math.max(Math.min(available, desiredHeight), ROW_HEIGHT * 2)
+    const maxHeight = Math.max(openUp ? spaceAbove : spaceBelow, ROW_HEIGHT * 2)
+    // top/bottom 앵커는 실제 렌더링 높이와 무관하게 입력창에 딱 붙도록
+    // (내용이 짧아도 항상 flush — 미리 예약한 높이만큼 빈 공간이 생기지 않게)
     setPos({
-      top: openUp ? r.top - height : r.bottom,
+      openUp,
+      top: r.bottom,
+      bottom: window.innerHeight - r.top,
       left: r.left,
       minWidth: r.width,
       maxWidth: Math.min(window.innerWidth - r.left - MARGIN, Math.max(r.width, MAX_DROPDOWN_WIDTH)),
-      maxHeight: height,
+      maxHeight,
     })
   }, [])
 
@@ -87,7 +90,14 @@ export function MemberSearchSelect({ value, onChange, options, placeholder = '�
       />
       {open && pos && createPortal(
         <div
-          style={{ position: 'fixed', top: pos.top, left: pos.left, minWidth: pos.minWidth, maxWidth: pos.maxWidth, maxHeight: pos.maxHeight }}
+          style={{
+            position: 'fixed',
+            ...(pos.openUp ? { bottom: pos.bottom } : { top: pos.top }),
+            left: pos.left,
+            minWidth: pos.minWidth,
+            maxWidth: pos.maxWidth,
+            maxHeight: pos.maxHeight,
+          }}
           className="z-[1000] overflow-y-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-xl"
         >
           {clearLabel && (
