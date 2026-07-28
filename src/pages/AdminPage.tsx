@@ -1130,7 +1130,7 @@ export function AdminPage() {
                   >
                     + 회원 추가
                   </button>
-                  <div className="w-40 sm:w-48 ml-auto">
+                  <div className="w-full sm:w-[280px] sm:ml-auto">
                     <MemberSearchSelect
                       value={memberFilterId}
                       onChange={setMemberFilterId}
