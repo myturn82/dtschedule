@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { fmtPhone } from '../../lib/format'
+import { KakaoBadge } from '../icons/KakaoBadge'
 
 export interface ProfileWithOrgCount {
   id: string
@@ -167,7 +168,7 @@ export function UserManagementPanel({ users, loading, onDeleteUsers }: Props) {
               </span>
               <span className="flex items-center gap-1 flex-wrap">
                 {user.signup_provider === 'kakao' && (
-                  <span className="text-sm leading-none select-none" title="카카오 가입">💬</span>
+                  <KakaoBadge size={13} />
                 )}
                 <span className="text-[11px] text-[var(--color-text-muted)] truncate">{user.email ?? '-'}</span>
               </span>

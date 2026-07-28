@@ -23,6 +23,7 @@ import { formatPhone } from '../lib/phone'
 import { BrandLegendIcon, isBrandLegendIcon } from '../lib/legendIcons'
 import { LessonManagementPanel } from '../components/admin/LessonManagementPanel'
 import { MemberSearchSelect } from '../components/shared/MemberSearchSelect'
+import { KakaoBadge } from '../components/icons/KakaoBadge'
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
 const HEX_COLOR_RE = /^#[0-9A-Fa-f]{6}$/
@@ -1290,7 +1291,7 @@ export function AdminPage() {
                                   className="text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-brand-primary)] truncate max-w-full inline-flex items-center gap-0.5"
                                 >
                                   {m.profile?.signup_provider === 'kakao' && (
-                                    <span className="text-sm leading-none select-none shrink-0" title="카카오 가입">💬</span>
+                                    <KakaoBadge size={13} className="shrink-0" />
                                   )}
                                   {m.profile?.email ?? '이메일 없음'}
                                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
@@ -1333,7 +1334,7 @@ export function AdminPage() {
                                   title="이메일 수정"
                                 >
                                   {m.profile?.signup_provider === 'kakao' && (
-                                    <span className="text-sm leading-none select-none" title="카카오 가입">💬</span>
+                                    <KakaoBadge size={13} />
                                   )}
                                   {m.profile?.email ?? '-'}
                                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
