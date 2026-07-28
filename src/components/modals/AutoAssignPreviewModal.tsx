@@ -98,21 +98,21 @@ export function AutoAssignPreviewModal({ proposals, onConfirm, onClose, memberPr
                 <table className="w-full text-[10px] border-collapse">
                   <thead>
                     <tr className="text-[var(--color-text-muted)]">
-                      <th className="text-left pb-1 font-semibold w-24">회원</th>
-                      <th className="text-left pb-1 font-semibold">가능 요일</th>
-                      <th className="text-right pb-1 font-semibold w-20">월 최대</th>
+                      <th className="text-center pb-1 font-semibold w-24">회원</th>
+                      <th className="text-center pb-1 font-semibold">가능 요일</th>
+                      <th className="text-center pb-1 font-semibold w-20">월 최대</th>
                     </tr>
                   </thead>
                   <tbody>
                     {memberRows.map(r => (
                       <tr key={r.name} className="border-t border-[var(--color-border-table)]">
-                        <td className="py-0.5 pr-2 font-medium text-[var(--color-text-primary)] truncate max-w-[6rem]">{r.name}</td>
-                        <td className="py-0.5 text-[var(--color-text-secondary)]">
+                        <td className="py-0.5 pr-2 text-center font-medium text-[var(--color-text-primary)] truncate max-w-[6rem]">{r.name}</td>
+                        <td className="py-0.5 text-center text-[var(--color-text-secondary)]">
                           {r.pref?.availableDays?.length
                             ? r.pref.availableDays.map(d => DAY_LABELS[d]).join('·')
                             : <span className="text-[var(--color-text-muted)]">제한없음</span>}
                         </td>
-                        <td className="py-0.5 text-right text-[var(--color-text-secondary)]">
+                        <td className="py-0.5 text-center text-[var(--color-text-secondary)]">
                           {r.pref?.monthlyLimit != null
                             ? `${r.pref.monthlyLimit}회`
                             : <span className="text-[var(--color-text-muted)]">—</span>}
@@ -136,7 +136,7 @@ export function AutoAssignPreviewModal({ proposals, onConfirm, onClose, memberPr
             <table className="w-full text-xs border-collapse">
               <thead className="sticky top-0 bg-[var(--color-surface-secondary)] z-10">
                 <tr>
-                  <th className="px-3 py-2 text-left w-8">
+                  <th className="px-3 py-2 text-center w-8">
                     <input
                       type="checkbox"
                       checked={allChecked}
@@ -144,10 +144,10 @@ export function AutoAssignPreviewModal({ proposals, onConfirm, onClose, memberPr
                       className="rounded accent-[var(--color-brand-primary)]"
                     />
                   </th>
-                  <th className="px-3 py-2 text-left font-semibold text-[var(--color-text-muted)]">날짜</th>
-                  <th className="px-3 py-2 text-left font-semibold text-[var(--color-text-muted)]">시간대</th>
-                  <th className="px-3 py-2 text-left font-semibold text-[var(--color-text-muted)]">역할</th>
-                  <th className="px-3 py-2 text-left font-semibold text-[var(--color-text-muted)]">배정 회원</th>
+                  <th className="px-3 py-2 text-center font-semibold text-[var(--color-text-muted)]">날짜</th>
+                  <th className="px-3 py-2 text-center font-semibold text-[var(--color-text-muted)]">시간대</th>
+                  <th className="px-3 py-2 text-center font-semibold text-[var(--color-text-muted)]">역할</th>
+                  <th className="px-3 py-2 text-center font-semibold text-[var(--color-text-muted)]">배정 회원</th>
                 </tr>
               </thead>
               <tbody>
@@ -162,7 +162,7 @@ export function AutoAssignPreviewModal({ proposals, onConfirm, onClose, memberPr
                           ? 'opacity-40 bg-[var(--color-surface-secondary)]'
                           : 'hover:bg-[var(--color-surface-hover)]'}`}
                     >
-                      <td className="px-3 py-2">
+                      <td className="px-3 py-2 text-center">
                         <input
                           type="checkbox"
                           checked={!isExcluded}
@@ -171,10 +171,10 @@ export function AutoAssignPreviewModal({ proposals, onConfirm, onClose, memberPr
                           className="rounded accent-[var(--color-brand-primary)]"
                         />
                       </td>
-                      <td className="px-3 py-2 text-[var(--color-text-secondary)] whitespace-nowrap">{p.dayLabel}</td>
-                      <td className="px-3 py-2 text-[var(--color-text-secondary)] font-mono whitespace-nowrap">{p.timeSlot}</td>
-                      <td className="px-3 py-2 text-[var(--color-text-muted)]">{p.roleName}</td>
-                      <td className="px-3 py-2 font-semibold text-[var(--color-text-primary)]">{p.userName}</td>
+                      <td className="px-3 py-2 text-center text-[var(--color-text-secondary)] whitespace-nowrap">{p.dayLabel}</td>
+                      <td className="px-3 py-2 text-center text-[var(--color-text-secondary)] font-mono whitespace-nowrap">{p.timeSlot}</td>
+                      <td className="px-3 py-2 text-center text-[var(--color-text-muted)]">{p.roleName}</td>
+                      <td className="px-3 py-2 text-center font-semibold text-[var(--color-text-primary)]">{p.userName}</td>
                     </tr>
                   )
                 })}

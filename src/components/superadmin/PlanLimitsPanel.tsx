@@ -62,16 +62,16 @@ function PlanLimitsTable({ planLimits, updatePlanLimit }: {
       <table className="w-full text-sm">
         <thead>
           <tr className="bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
-            <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">플랜</th>
-            <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">최대 조직 수</th>
-            <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">최대 회원 수</th>
-            <th className="px-4 py-3"></th>
+            <th className="text-center px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">플랜</th>
+            <th className="text-center px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">최대 조직 수</th>
+            <th className="text-center px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">최대 회원 수</th>
+            <th className="px-4 py-3 text-center"></th>
           </tr>
         </thead>
         <tbody className="divide-y divide-[var(--color-border)]">
           {PLANS.map(plan => (
             <tr key={plan} className="hover:bg-[var(--color-surface-hover)]">
-              <td className="px-4 py-3 font-medium text-[var(--color-text-primary)] whitespace-nowrap">{PLAN_LABELS[plan]}</td>
+              <td className="px-4 py-3 text-center font-medium text-[var(--color-text-primary)] whitespace-nowrap">{PLAN_LABELS[plan]}</td>
               <td className="px-4 py-3">
                 <input
                   type="number"
@@ -79,7 +79,7 @@ function PlanLimitsTable({ planLimits, updatePlanLimit }: {
                   placeholder="무제한"
                   value={drafts[plan].maxOrgs}
                   onChange={e => setDrafts(prev => ({ ...prev, [plan]: { ...prev[plan], maxOrgs: e.target.value } }))}
-                  className="w-24 px-2 py-1.5 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]"
+                  className="w-24 px-2 py-1.5 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] text-sm text-center focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]"
                 />
               </td>
               <td className="px-4 py-3">
@@ -89,10 +89,10 @@ function PlanLimitsTable({ planLimits, updatePlanLimit }: {
                   placeholder="무제한"
                   value={drafts[plan].maxUsers}
                   onChange={e => setDrafts(prev => ({ ...prev, [plan]: { ...prev[plan], maxUsers: e.target.value } }))}
-                  className="w-24 px-2 py-1.5 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]"
+                  className="w-24 px-2 py-1.5 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] text-sm text-center focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]"
                 />
               </td>
-              <td className="px-4 py-3">
+              <td className="px-4 py-3 text-center">
                 <button
                   onClick={() => handleSave(plan)}
                   disabled={savingPlan === plan}

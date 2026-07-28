@@ -1899,7 +1899,7 @@ export function AdminPage() {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
-                          <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">시간</th>
+                          <th className="text-center px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">시간</th>
                           {DAY_LABELS.map((d, idx) => (
                             <th key={d} className={`px-3 py-3 text-xs font-semibold text-center ${idx === 0 ? 'text-red-500' : idx === 6 ? 'text-blue-500' : 'text-[var(--color-text-muted)]'}`}>{d}</th>
                           ))}
@@ -1908,7 +1908,7 @@ export function AdminPage() {
                       <tbody className="divide-y divide-[var(--color-border)]">
                         {adminTimeSlots.map(slot => (
                           <tr key={slot}>
-                            <td className="px-4 py-2.5 font-medium text-[var(--color-text-secondary)] whitespace-nowrap">{parseSlotLabel(slot)}</td>
+                            <td className="px-4 py-2.5 text-center font-medium text-[var(--color-text-secondary)] whitespace-nowrap">{parseSlotLabel(slot)}</td>
                             {DAY_LABELS.map((_, dayIdx) => {
                               const rule = getRule(dayIdx, slot)
                               return (

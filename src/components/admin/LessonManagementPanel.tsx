@@ -191,7 +191,7 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
                             className={inputCls + ' w-16 text-center'} />
                         </td>
                         <td className="px-2 sm:px-3 py-2">
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center justify-center gap-1">
                             <input type="number" min={1} value={editTypeData.validity_days}
                               onChange={e => setEditTypeData(p => ({ ...p, validity_days: e.target.value }))}
                               placeholder="무제한"
@@ -201,7 +201,7 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
                         </td>
                         <td />
                         <td className="px-2 sm:px-3 py-2">
-                          <div className="flex gap-1 justify-end">
+                          <div className="flex gap-1 justify-center">
                             <button onClick={saveEditType} disabled={typeSaving}
                               className="px-2 sm:px-2.5 py-1 text-xs font-semibold rounded-lg bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] disabled:opacity-40 whitespace-nowrap">
                               저장
@@ -215,7 +215,7 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
                       </>
                     ) : (
                       <>
-                        <td className="px-2.5 sm:px-4 py-2.5 font-medium text-[var(--color-text-primary)] whitespace-nowrap">{t.name}</td>
+                        <td className="px-2.5 sm:px-4 py-2.5 text-center font-medium text-[var(--color-text-primary)] whitespace-nowrap">{t.name}</td>
                         <td className="px-2 sm:px-3 py-2.5 text-center text-[var(--color-text-secondary)] whitespace-nowrap">{t.session_count}회</td>
                         <td className="px-2 sm:px-3 py-2.5 text-center text-[var(--color-text-muted)] text-xs whitespace-nowrap">
                           {t.validity_days ? `${t.validity_days / 7}주` : '무제한'}
@@ -231,7 +231,7 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
                           </button>
                         </td>
                         <td className="px-2 sm:px-3 py-2.5">
-                          <div className="flex gap-0.5 sm:gap-1 justify-end items-center">
+                          <div className="flex gap-0.5 sm:gap-1 justify-center items-center">
                             <button type="button" onClick={() => movePackageType(t.id, -1)} disabled={idx === 0}
                               className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center shrink-0 text-xs border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-surface-hover)] disabled:opacity-30 text-[var(--color-text-muted)]">
                               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
@@ -337,10 +337,10 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
                   const pct = Math.min(100, Math.round(pkg.used_sessions / pkg.total_sessions * 100))
                   return (
                     <tr key={pkg.id} className="bg-[var(--color-surface)] hover:bg-[var(--color-surface-hover)]">
-                      <td className="px-2.5 sm:px-4 py-3 font-medium text-[var(--color-text-primary)] whitespace-nowrap">
+                      <td className="px-2.5 sm:px-4 py-3 text-center font-medium text-[var(--color-text-primary)] whitespace-nowrap">
                         {memberMap.get(pkg.user_id ?? '') ?? '-'}
                       </td>
-                      <td className="px-2 sm:px-3 py-3 text-[var(--color-text-secondary)] whitespace-nowrap">{pkg.package_name}</td>
+                      <td className="px-2 sm:px-3 py-3 text-center text-[var(--color-text-secondary)] whitespace-nowrap">{pkg.package_name}</td>
                       <td className="px-2 sm:px-3 py-3 text-center text-xs text-[var(--color-text-muted)] whitespace-nowrap">
                         <div>{pkg.payment_date}</div>
                         <div className="sm:hidden">{pkg.expires_at ?? '무제한'}</div>
@@ -372,7 +372,7 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
                           {STATUS_LABEL[status]}
                         </span>
                       </td>
-                      <td className="px-2 sm:px-3 py-3 whitespace-nowrap">
+                      <td className="px-2 sm:px-3 py-3 text-center whitespace-nowrap">
                         <button onClick={() => { if (confirm('이 결제 기록을 삭제할까요?')) deletePackage(pkg.id) }}
                           className="text-xs text-red-500 hover:text-red-700 font-semibold">
                           삭제
