@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useLessonPackages } from '../../hooks/useLessonPackages'
 import { MemberSearchSelect } from '../shared/MemberSearchSelect'
+import { ExpiringPackageSmsModal } from '../modals/ExpiringPackageSmsModal'
 import type { TenantMemberWithRole, LessonPackageType } from '../../types'
 
 interface Props {
@@ -56,6 +57,9 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
   const [pkgSaving, setPkgSaving] = useState(false)
   const [pkgError, setPkgError] = useState<string | null>(null)
   const [filterUserId, setFilterUserId] = useState('')
+  const [showExpirySms, setShowExpirySms] = useState(false)
+  const [thresholdPreset, setThresholdPreset] = useState<'7' | '14' | 'custom'>('7')
+  const [customDays, setCustomDays] = useState('7')
 
   // ── 레슨 종류 추가 ────────────────────────────────────────
   async function handleAddType(e: React.FormEvent) {
@@ -142,6 +146,7 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
   }
 
   const memberMap = new Map(members.map(m => [m.user_id, m.profile?.name ?? m.user_id]))
+  const phoneMap = new Map(members.map(m => [m.user_id, m.profile?.phone ?? '']))
   // 관리자는 레슨권 결제 대상에서 제외
   const approvedMembers = members.filter(m => m.is_approved !== false && m.role !== 'admin')
   const memberOptions = approvedMembers.map(m => ({ id: m.user_id, name: m.profile?.name ?? m.user_id }))
@@ -150,8 +155,87 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
     ? packages.filter(p => p.user_id === filterUserId)
     : packages
 
+  // 만료 도래 기준일 (선택한 프리셋 또는 직접 입력한 n일)
+  const thresholdDays = thresholdPreset === 'custom'
+    ? Math.max(1, parseInt(customDays) || 0)
+    : parseInt(thresholdPreset)
+
+  // 선택한 기간 내 만료가 도래하지만 아직 소진되지 않은 레슨권 보유 회원 (소진 독려 문자 대상)
+  const expiringUnusedRecipients = packages
+    .filter(p => {
+      if (p.used_sessions >= p.total_sessions) return false
+      if (!p.expires_at) return false
+      const daysLeft = Math.ceil((new Date(p.expires_at).getTime() - Date.now()) / 86400000)
+      return daysLeft >= 0 && daysLeft <= thresholdDays
+    })
+    .map(p => {
+      const daysLeft = Math.ceil((new Date(p.expires_at!).getTime() - Date.now()) / 86400000)
+      return {
+        id: p.id,
+        name: memberMap.get(p.user_id ?? '') ?? '알 수 없음',
+        phone: phoneMap.get(p.user_id ?? '') ?? '',
+        packageName: p.package_name,
+        expiresAt: p.expires_at ?? '',
+        remaining: p.total_sessions - p.used_sessions,
+        daysLeft,
+      }
+    })
+
   return (
     <div className="space-y-8 max-w-[720px]">
+      {/* ── 만료 임박 알림 배너 ──────────────────────────── */}
+      <section className="rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-4 py-3.5">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-amber-800 dark:text-amber-400">⏰ 만료 임박 레슨권 미소진 회원 {expiringUnusedRecipients.length}명</p>
+            <p className="text-xs text-amber-700/80 dark:text-amber-400/70 mt-0.5">선택한 기간 내 만료가 도래하지만 아직 다 사용하지 않은 회원입니다. 문자로 소진을 독려해 보세요.</p>
+          </div>
+          <button
+            onClick={() => setShowExpirySms(true)}
+            disabled={expiringUnusedRecipients.length === 0}
+            className="shrink-0 h-[36px] px-4 rounded-xl bg-amber-600 text-white text-sm font-semibold hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+          >
+            📱 문자 발송
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2 mt-3 flex-wrap">
+          <span className="text-xs font-semibold text-amber-800/80 dark:text-amber-400/80">만료 도래 기준</span>
+          <div className="flex gap-1">
+            <button
+              onClick={() => setThresholdPreset('7')}
+              className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-colors ${thresholdPreset === '7' ? 'bg-amber-600 text-white border-amber-600' : 'border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/40'}`}
+            >
+              1주일 전
+            </button>
+            <button
+              onClick={() => setThresholdPreset('14')}
+              className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-colors ${thresholdPreset === '14' ? 'bg-amber-600 text-white border-amber-600' : 'border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/40'}`}
+            >
+              2주일 전
+            </button>
+            <button
+              onClick={() => setThresholdPreset('custom')}
+              className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-colors ${thresholdPreset === 'custom' ? 'bg-amber-600 text-white border-amber-600' : 'border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/40'}`}
+            >
+              직접입력
+            </button>
+          </div>
+          {thresholdPreset === 'custom' && (
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                min={1}
+                value={customDays}
+                onChange={e => setCustomDays(e.target.value)}
+                className="w-14 px-2 py-1 rounded-lg border border-amber-300 dark:border-amber-700 bg-[var(--color-surface)] text-xs text-center focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+              />
+              <span className="text-xs text-amber-800/80 dark:text-amber-400/80">일 전</span>
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* ── 레슨 종류 설정 ──────────────────────────────── */}
       <section>
         <header className="mb-4">
@@ -444,6 +528,15 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
             </form>
           </div>
         </div>
+      )}
+
+      {/* ── 만료 알림 문자 발송 모달 ─────────────────────── */}
+      {showExpirySms && (
+        <ExpiringPackageSmsModal
+          tenantId={tenantId}
+          recipients={expiringUnusedRecipients}
+          onClose={() => setShowExpirySms(false)}
+        />
       )}
     </div>
   )

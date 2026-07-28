@@ -106,9 +106,9 @@ export interface LegendItem {
 export type PlanType = 'basic' | 'pro' | 'business'
 
 export const PLAN_LABELS: Record<PlanType, string> = {
-  basic:    'Basic (무료)',
-  pro:      'Pro (월 9,900원)',
-  business: 'Business (월 29,000원)',
+  basic:    'Basic',
+  pro:      'Pro',
+  business: 'Business',
 }
 
 export interface PlanLimits {
