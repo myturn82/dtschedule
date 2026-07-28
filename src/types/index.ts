@@ -10,7 +10,9 @@ export const TIME_SLOTS: TimeSlot[] = [
   '10-12', '12-13', '13-14', '14-16', '16-18', '20-22',
 ];
 
-export const DEFAULT_MAX_CAPACITY = 2;
+// 0 = 인원 제한 없음(무제한). 조직이 인원설정을 별도로 저장하지 않은 시간대는
+// 이 기본값을 따르며, 필요한 조직만 CapacityModal에서 실제 인원수를 입력해 관리한다.
+export const DEFAULT_MAX_CAPACITY = 0;
 
 // ─── Tenant types ─────────────────────────────────────────────────────────────
 

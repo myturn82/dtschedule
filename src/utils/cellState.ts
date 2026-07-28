@@ -80,6 +80,7 @@ export function getCellState(
     isLocked: override?.is_locked === true,
     assignments: dayAssignments,
     maxCapacity,
-    isFull: dayAssignments.length >= maxCapacity,
+    // maxCapacity가 0이면 인원 제한 없음(무제한) — 항상 isFull=false
+    isFull: maxCapacity > 0 && dayAssignments.length >= maxCapacity,
   }
 }

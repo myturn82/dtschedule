@@ -594,7 +594,7 @@ export function SchedulePage() {
           const roleAssigns = target.roleId
             ? cs.assignments.filter(a => a.role_id === target.roleId)
             : cs.assignments
-          const remaining = cs.maxCapacity - roleAssigns.length
+          const remaining = cs.maxCapacity > 0 ? cs.maxCapacity - roleAssigns.length : Infinity
           if (remaining > 0) {
             const timeSubOptions = getTimeSubOptions(target.timeSlot)
             const timeSub = timeSubOptions ? timeSubOptions[timeSubOptions.length - 1].value : undefined

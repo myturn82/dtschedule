@@ -27,7 +27,7 @@ export function CapacityModal({ slotSettings, timeSlots, slotLabels = {}, onClos
 
   function handleInputChange(slot: TimeSlot, raw: string) {
     const n = parseInt(raw, 10)
-    if (!isNaN(n) && n >= 1) {
+    if (!isNaN(n) && n >= 0) {
       setValues(prev => ({ ...prev, [slot]: n }))
       setError(null)
     }
@@ -36,7 +36,7 @@ export function CapacityModal({ slotSettings, timeSlots, slotLabels = {}, onClos
   async function handleSave() {
     for (const slot of timeSlots) {
       const n = values[slot]
-      if (isNaN(n) || n < 1) { setError('최소 인원은 1명 이상이어야 합니다.'); return }
+      if (isNaN(n) || n < 0) { setError('0(무제한) 이상의 값을 입력해 주세요.'); return }
     }
     setError(null)
     setSaving(true)
@@ -51,7 +51,7 @@ export function CapacityModal({ slotSettings, timeSlots, slotLabels = {}, onClos
 
   async function handleBulkApply() {
     const n = parseInt(bulkValue, 10)
-    if (isNaN(n) || n < 1) { setError('최소 인원은 1명 이상이어야 합니다.'); return }
+    if (isNaN(n) || n < 0) { setError('0(무제한) 이상의 값을 입력해 주세요.'); return }
     setError(null)
     setBulkApplying(true)
     for (const slot of timeSlots) {
@@ -71,7 +71,7 @@ export function CapacityModal({ slotSettings, timeSlots, slotLabels = {}, onClos
         <div className="flex justify-between items-center px-5 pt-5 pb-3 border-b border-[var(--color-border)] shrink-0">
           <div>
             <h2 className="text-base font-bold text-[var(--color-text-primary)]">인원 설정</h2>
-            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">시간대별 최대 인원 수</p>
+            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">시간대별 최대 인원 수 — 0은 무제한</p>
           </div>
           <button
             onClick={onClose}
@@ -87,10 +87,10 @@ export function CapacityModal({ slotSettings, timeSlots, slotLabels = {}, onClos
           <div className="flex items-center gap-2 mb-4 p-3 rounded-xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)]">
             <span className="text-xs font-medium text-[var(--color-text-muted)] shrink-0">일괄 적용</span>
             <input
-              type="number" min={1} max={99}
+              type="number" min={0} max={99}
               value={bulkValue}
               onChange={e => setBulkValue(e.target.value)}
-              placeholder="인원"
+              placeholder="0=무제한"
               className="w-16 border border-[var(--color-border-strong)] rounded-lg px-2 py-1 text-sm text-center bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500/60"
             />
             <span className="text-xs text-[var(--color-text-muted)] shrink-0">명</span>
@@ -121,13 +121,13 @@ export function CapacityModal({ slotSettings, timeSlots, slotLabels = {}, onClos
                 <div className="flex items-center gap-1 ml-2">
                   <input
                     type="number"
-                    min={1}
+                    min={0}
                     max={99}
                     value={values[slot] ?? DEFAULT_MAX_CAPACITY}
                     onChange={e => handleInputChange(slot as TimeSlot, e.target.value)}
                     className="w-16 border border-[var(--color-border-strong)] rounded-lg px-1 py-1 text-sm text-center bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500/60 transition-all duration-200"
                   />
-                  <span className="text-xs text-[var(--color-text-muted)]">명</span>
+                  <span className="text-xs text-[var(--color-text-muted)]">{(values[slot] ?? DEFAULT_MAX_CAPACITY) === 0 ? '무제한' : '명'}</span>
                 </div>
               </div>
             ))}

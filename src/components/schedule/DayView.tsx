@@ -197,7 +197,7 @@ export function DayView({
                   <b style={isFull ? { color: 'oklch(0.56 0.11 150)' } : { color: 'var(--color-text-primary)' }}>
                     {capacityCount}
                   </b>
-                  <span className="text-[var(--color-text-secondary)]">/{cs.maxCapacity}명</span>
+                  <span className="text-[var(--color-text-secondary)]">{cs.maxCapacity > 0 ? `/${cs.maxCapacity}명` : ' (무제한)'}</span>
                 </span>
               </div>
 

@@ -124,7 +124,7 @@ export function SharePage() {
               </button>
             </div>
             <div className="text-xs text-[var(--color-text-muted)] mb-3">
-              {modalCellState.assignments.filter(a => a.member_type !== 'admin_note').length}명 / {modalCellState.maxCapacity}명
+              {modalCellState.assignments.filter(a => a.member_type !== 'admin_note').length}명{modalCellState.maxCapacity > 0 ? ` / ${modalCellState.maxCapacity}명` : ' (무제한)'}
             </div>
             <div className="flex flex-col gap-2 max-h-64 overflow-y-auto">
               {modalCellState.assignments

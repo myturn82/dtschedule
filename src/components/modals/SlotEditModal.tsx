@@ -769,7 +769,7 @@ export function SlotEditModal({
                   ? { color: 'oklch(0.56 0.11 150)', backgroundColor: 'color-mix(in srgb, oklch(0.56 0.11 150) 12%, transparent)' }
                   : { color: 'var(--color-brand-primary)', backgroundColor: 'color-mix(in srgb, var(--color-brand-primary) 10%, transparent)' }}
               >
-                {cellState.assignments.length}/{cellState.maxCapacity}명
+                {cellState.assignments.length}{cellState.maxCapacity > 0 ? `/${cellState.maxCapacity}` : ''}명{cellState.maxCapacity === 0 ? ' (무제한)' : ''}
               </span>
             </div>
           </div>
