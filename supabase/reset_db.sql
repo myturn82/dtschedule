@@ -1,7 +1,7 @@
 -- ============================================================
 -- 운영 DB 초기화 스크립트 (전체 재생성)
 -- 생성일: 2026-06-10
--- 기준 마이그레이션: 001 ~ 079
+-- 기준 마이그레이션: 001 ~ 080
 --
 -- ⚠️  주의: 이 스크립트는 모든 데이터를 삭제합니다.
 --           Supabase SQL Editor에서 직접 실행하세요.
@@ -101,6 +101,7 @@ CREATE TABLE profiles (
   push_agreed_at      timestamptz,
   phone_agreed_at     timestamptz,
   last_login_at       timestamptz,
+  signup_provider     text,
   created_at     timestamptz NOT NULL DEFAULT now()
 );
 
@@ -1273,7 +1274,7 @@ BEGIN
     id, name, email, avatar_url,
     is_approved, is_super_admin,
     terms_agreed_at, privacy_agreed_at,
-    phone_enc
+    phone_enc, signup_provider
   )
   VALUES (
     new.id,
@@ -1291,7 +1292,8 @@ BEGIN
     false,
     (new.raw_user_meta_data->>'terms_agreed_at')::timestamptz,
     (new.raw_user_meta_data->>'privacy_agreed_at')::timestamptz,
-    encrypted_enc
+    encrypted_enc,
+    new.raw_app_meta_data->>'provider'
   )
   ON CONFLICT (id) DO NOTHING;
 
