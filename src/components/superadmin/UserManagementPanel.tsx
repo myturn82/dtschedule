@@ -1,5 +1,4 @@
 import { useState, useMemo } from 'react'
-import { colorOf, initialsOf } from '../../lib/avatarColor'
 import { fmtPhone } from '../../lib/format'
 
 export interface ProfileWithOrgCount {
@@ -10,6 +9,8 @@ export interface ProfileWithOrgCount {
   is_super_admin: boolean
   created_at: string
   org_count: number
+  org_names: string[]
+  signup_provider: string | null
 }
 
 interface Props {
@@ -27,10 +28,15 @@ export function UserManagementPanel({ users, loading, onDeleteUsers }: Props) {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
+    const qDigits = q.replace(/-/g, '')
     return users.filter(u => {
       if (filterInactive && u.org_count > 0) return false
-      if (q && !u.name.toLowerCase().includes(q) && !(u.email ?? '').toLowerCase().includes(q) && !(u.phone ?? '').replace(/-/g, '').includes(q.replace(/-/g, ''))) return false
-      return true
+      if (!q) return true
+      if (u.name.toLowerCase().includes(q)) return true
+      if ((u.email ?? '').toLowerCase().includes(q)) return true
+      if (qDigits && (u.phone ?? '').replace(/-/g, '').includes(qDigits)) return true
+      if (u.org_names.some(name => name.toLowerCase().includes(q))) return true
+      return false
     })
   }, [users, search, filterInactive])
 
@@ -86,7 +92,7 @@ export function UserManagementPanel({ users, loading, onDeleteUsers }: Props) {
           type="text"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="이름 또는 이메일 검색"
+          placeholder="이름·이메일·전화번호·조직 검색"
           className="flex-1 min-w-0 px-3 py-2 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]"
         />
         <button
@@ -122,7 +128,7 @@ export function UserManagementPanel({ users, loading, onDeleteUsers }: Props) {
           onChange={toggleAll}
           className="w-4 h-4 rounded accent-[var(--color-brand-primary)]"
         />
-        <span className="flex-1">이름 / 이메일 / 전화번호</span>
+        <span className="flex-1">이름 / 이메일 / 전화번호 / 소속</span>
         <span className="w-16 text-right">조직</span>
         <span className="w-20 text-right">가입일</span>
       </div>
@@ -135,7 +141,6 @@ export function UserManagementPanel({ users, loading, onDeleteUsers }: Props) {
         <p className="text-sm text-[var(--color-text-muted)] text-center py-8">검색 결과가 없습니다.</p>
       )}
       {!loading && filtered.map(user => {
-        const { bg, fg } = colorOf(user.name)
         const isChecked = selectedIds.has(user.id)
         const isDisabled = user.is_super_admin
 
@@ -153,7 +158,6 @@ export function UserManagementPanel({ users, loading, onDeleteUsers }: Props) {
               onChange={() => !isDisabled && toggleOne(user.id)}
               className="w-4 h-4 rounded accent-[var(--color-brand-primary)] flex-shrink-0"
             />
-            <span className="hub-avatar flex-shrink-0" style={{ background: bg, color: fg }}>{initialsOf(user.name)}</span>
             <span className="flex-1 min-w-0">
               <span className="flex items-center gap-1.5 flex-wrap">
                 <span className="text-[13px] font-semibold text-[var(--color-text-primary)] truncate">{user.name}</span>
@@ -161,7 +165,12 @@ export function UserManagementPanel({ users, loading, onDeleteUsers }: Props) {
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)]">슈퍼관리자</span>
                 )}
               </span>
-              <span className="block text-[11px] text-[var(--color-text-muted)] truncate">{user.email ?? '-'}</span>
+              <span className="flex items-center gap-1 flex-wrap">
+                {user.signup_provider === 'kakao' && (
+                  <span className="text-sm leading-none select-none" title="카카오 가입">💬</span>
+                )}
+                <span className="text-[11px] text-[var(--color-text-muted)] truncate">{user.email ?? '-'}</span>
+              </span>
               {user.phone && (
                 <span className="flex items-center gap-1 mt-0.5">
                   <span className="text-[11px] text-[var(--color-text-muted)]">{fmtPhone(user.phone)}</span>
@@ -171,6 +180,11 @@ export function UserManagementPanel({ users, loading, onDeleteUsers }: Props) {
                     onClick={e => e.stopPropagation()}
                     title="문자 보내기"
                   >📱</a>
+                </span>
+              )}
+              {user.org_names.length > 0 && (
+                <span className="block text-[11px] text-[var(--color-text-muted)] truncate mt-0.5">
+                  소속: {user.org_names.join(', ')}
                 </span>
               )}
             </span>

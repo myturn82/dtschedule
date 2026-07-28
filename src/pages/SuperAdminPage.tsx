@@ -224,8 +224,8 @@ export function SuperAdminPage() {
   async function fetchAllUsers() {
     setUsersLoading(true)
     const [profilesRes, membersRes, phonesRes] = await Promise.all([
-      supabase.from('profiles').select('id, name, email, is_super_admin, created_at').order('created_at', { ascending: false }),
-      supabase.from('tenant_members').select('user_id').eq('is_approved', true),
+      supabase.from('profiles').select('id, name, email, is_super_admin, created_at, signup_provider').order('created_at', { ascending: false }),
+      supabase.from('tenant_members').select('user_id, tenant_id').eq('is_approved', true),
       supabase.rpc('get_all_user_phones'),
     ])
     if (profilesRes.error) {
@@ -238,12 +238,22 @@ export function SuperAdminPage() {
       if (r.p_phone) phoneMap[r.p_user_id] = r.p_phone
     }
     setUserPhoneMap(phoneMap)
+    const tenantNameById: Record<string, string> = {}
+    for (const t of tenants) tenantNameById[t.id] = t.name
     const orgCounts: Record<string, number> = {}
+    const orgNames: Record<string, string[]> = {}
     for (const m of membersRes.data ?? []) {
       orgCounts[m.user_id] = (orgCounts[m.user_id] ?? 0) + 1
+      const name = tenantNameById[m.tenant_id]
+      if (name) (orgNames[m.user_id] ??= []).push(name)
     }
     setAllUsers(
-      (profilesRes.data ?? []).map(p => ({ ...p, org_count: orgCounts[p.id] ?? 0, phone: phoneMap[p.id] }))
+      (profilesRes.data ?? []).map(p => ({
+        ...p,
+        org_count: orgCounts[p.id] ?? 0,
+        org_names: orgNames[p.id] ?? [],
+        phone: phoneMap[p.id],
+      }))
     )
     setUsersLoading(false)
     setUsersLoaded(true)
