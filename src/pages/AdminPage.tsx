@@ -1248,7 +1248,11 @@ export function AdminPage() {
                       {members
                         .filter(m => m.is_approved)
                         .filter(m => !memberFilterId || m.user_id === memberFilterId)
-                        .sort((a, b) => (a.profile?.name ?? '').localeCompare(b.profile?.name ?? '', 'ko'))
+                        .sort((a, b) => {
+                          const roleDiff = (a.role === 'admin' ? 0 : 1) - (b.role === 'admin' ? 0 : 1)
+                          if (roleDiff !== 0) return roleDiff
+                          return (a.profile?.name ?? '').localeCompare(b.profile?.name ?? '', 'ko')
+                        })
                         .map(m => (
                         <Fragment key={m.user_id}>
                           <tr className="hover:bg-[var(--color-surface-hover)]">
