@@ -30,15 +30,21 @@ export function UserManagementPanel({ users, loading, onDeleteUsers }: Props) {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
     const qDigits = q.replace(/-/g, '')
-    return users.filter(u => {
-      if (filterInactive && u.org_count > 0) return false
-      if (!q) return true
-      if (u.name.toLowerCase().includes(q)) return true
-      if ((u.email ?? '').toLowerCase().includes(q)) return true
-      if (qDigits && (u.phone ?? '').replace(/-/g, '').includes(qDigits)) return true
-      if (u.org_names.some(name => name.toLowerCase().includes(q))) return true
-      return false
-    })
+    return users
+      .filter(u => {
+        if (filterInactive && u.org_count > 0) return false
+        if (!q) return true
+        if (u.name.toLowerCase().includes(q)) return true
+        if ((u.email ?? '').toLowerCase().includes(q)) return true
+        if (qDigits && (u.phone ?? '').replace(/-/g, '').includes(qDigits)) return true
+        if (u.org_names.some(name => name.toLowerCase().includes(q))) return true
+        return false
+      })
+      .sort((a, b) => {
+        const dateDiff = b.created_at.localeCompare(a.created_at)
+        if (dateDiff !== 0) return dateDiff
+        return a.name.localeCompare(b.name, 'ko')
+      })
   }, [users, search, filterInactive])
 
   const selectableIds = useMemo(
@@ -130,6 +136,7 @@ export function UserManagementPanel({ users, loading, onDeleteUsers }: Props) {
           className="w-4 h-4 rounded accent-[var(--color-brand-primary)]"
         />
         <span className="flex-1">이름 / 이메일 / 전화번호</span>
+        <span className="w-20 text-right">가입일</span>
         <span className="w-32 text-right">소속 조직</span>
       </div>
 
@@ -180,6 +187,9 @@ export function UserManagementPanel({ users, loading, onDeleteUsers }: Props) {
                   >📱</a>
                 </span>
               )}
+            </span>
+            <span className="w-20 text-right text-[11px] text-[var(--color-text-muted)] flex-shrink-0" style={{ fontFamily: 'var(--font-mono, monospace)' }}>
+              {user.created_at.slice(0, 10)}
             </span>
             <span className="w-32 flex flex-col items-end gap-0.5 flex-shrink-0">
               {user.org_names.length === 0 ? (
