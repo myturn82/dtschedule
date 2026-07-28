@@ -22,6 +22,7 @@ import { fmtPhone } from '../lib/format'
 import { formatPhone } from '../lib/phone'
 import { BrandLegendIcon, isBrandLegendIcon } from '../lib/legendIcons'
 import { LessonManagementPanel } from '../components/admin/LessonManagementPanel'
+import { MemberSearchSelect } from '../components/shared/MemberSearchSelect'
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
 const HEX_COLOR_RE = /^#[0-9A-Fa-f]{6}$/
@@ -259,6 +260,7 @@ export function AdminPage() {
   // Members tab
   const [showAddMember, setShowAddMember] = useState(false)
   const [addEmail, setAddEmail] = useState('')
+  const [memberFilterId, setMemberFilterId] = useState('')
 
   // 회원 선호 설정 (자동배정)
   const [expandedPrefUserId, setExpandedPrefUserId] = useState<string | null>(null)
@@ -1114,8 +1116,8 @@ export function AdminPage() {
                   </span>
                 </header>
 
-                {/* 회원 추가 / 직접 등록 버튼 */}
-                <div className="flex gap-2 mb-4">
+                {/* 회원 추가 / 직접 등록 버튼 + 회원 검색 */}
+                <div className="flex items-center gap-2 mb-4 flex-wrap">
                   <button
                     onClick={() => { setShowDirectCreate(v => !v); setShowAddMember(false) }}
                     className="px-3 py-1.5 text-xs font-medium border border-orange-400 text-orange-600 rounded-lg hover:bg-orange-50"
@@ -1128,6 +1130,16 @@ export function AdminPage() {
                   >
                     + 회원 추가
                   </button>
+                  <div className="w-40 sm:w-48 ml-auto">
+                    <MemberSearchSelect
+                      value={memberFilterId}
+                      onChange={setMemberFilterId}
+                      options={members.filter(m => m.is_approved).map(m => ({ id: m.user_id, name: m.profile?.name ?? m.user_id }))}
+                      placeholder="전체 회원"
+                      clearLabel="전체 회원"
+                      className={inputCls + ' w-full'}
+                    />
+                  </div>
                 </div>
 
                 {showDirectCreate && (
@@ -1233,7 +1245,11 @@ export function AdminPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[var(--color-border)]">
-                      {members.filter(m => m.is_approved).map(m => (
+                      {members
+                        .filter(m => m.is_approved)
+                        .filter(m => !memberFilterId || m.user_id === memberFilterId)
+                        .sort((a, b) => (a.profile?.name ?? '').localeCompare(b.profile?.name ?? '', 'ko'))
+                        .map(m => (
                         <Fragment key={m.user_id}>
                           <tr className="hover:bg-[var(--color-surface-hover)]">
                             <td className="px-2 py-2 sm:px-4 sm:py-3 font-medium text-[var(--color-text-primary)] text-center">
