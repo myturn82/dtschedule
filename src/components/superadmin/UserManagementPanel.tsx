@@ -129,9 +129,8 @@ export function UserManagementPanel({ users, loading, onDeleteUsers }: Props) {
           onChange={toggleAll}
           className="w-4 h-4 rounded accent-[var(--color-brand-primary)]"
         />
-        <span className="flex-1">이름 / 이메일 / 전화번호 / 소속</span>
-        <span className="w-16 text-right">조직</span>
-        <span className="w-20 text-right">가입일</span>
+        <span className="flex-1">이름 / 이메일 / 전화번호</span>
+        <span className="w-32 text-right">소속 조직</span>
       </div>
 
       {/* 목록 */}
@@ -161,17 +160,15 @@ export function UserManagementPanel({ users, loading, onDeleteUsers }: Props) {
             />
             <span className="flex-1 min-w-0">
               <span className="flex items-center gap-1.5 flex-wrap">
+                {user.signup_provider === 'kakao' && (
+                  <KakaoBadge size={13} />
+                )}
                 <span className="text-[13px] font-semibold text-[var(--color-text-primary)] truncate">{user.name}</span>
                 {user.is_super_admin && (
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)]">슈퍼관리자</span>
                 )}
               </span>
-              <span className="flex items-center gap-1 flex-wrap">
-                {user.signup_provider === 'kakao' && (
-                  <KakaoBadge size={13} />
-                )}
-                <span className="text-[11px] text-[var(--color-text-muted)] truncate">{user.email ?? '-'}</span>
-              </span>
+              <span className="block text-[11px] text-[var(--color-text-muted)] truncate">{user.email ?? '-'}</span>
               {user.phone && (
                 <span className="flex items-center gap-1 mt-0.5">
                   <span className="text-[11px] text-[var(--color-text-muted)]">{fmtPhone(user.phone)}</span>
@@ -183,23 +180,19 @@ export function UserManagementPanel({ users, loading, onDeleteUsers }: Props) {
                   >📱</a>
                 </span>
               )}
-              {user.org_names.length > 0 && (
-                <span className="block text-[11px] text-[var(--color-text-muted)] truncate mt-0.5">
-                  소속: {user.org_names.join(', ')}
-                </span>
-              )}
             </span>
-            <span className="w-16 flex justify-end flex-shrink-0">
-              {user.org_count === 0 ? (
+            <span className="w-32 flex flex-col items-end gap-0.5 flex-shrink-0">
+              {user.org_names.length === 0 ? (
                 <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-700">
                   미가입
                 </span>
               ) : (
-                <span className="text-[12px] font-semibold text-[var(--color-text-secondary)]">{user.org_count}개</span>
+                user.org_names.map((name, i) => (
+                  <span key={i} className="text-[11px] font-semibold text-[var(--color-text-secondary)] truncate max-w-full">
+                    {name}
+                  </span>
+                ))
               )}
-            </span>
-            <span className="w-20 text-right text-[11px] text-[var(--color-text-muted)] flex-shrink-0" style={{ fontFamily: 'var(--font-mono, monospace)' }}>
-              {user.created_at.slice(0, 10)}
             </span>
           </label>
         )
