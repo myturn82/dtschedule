@@ -217,6 +217,7 @@ export interface Profile {
   phone_agreed_at: string | null;
   last_login_at: string | null;
   created_at: string;
+  signup_provider: string | null;
 }
 
 export interface Assignment {
