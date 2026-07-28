@@ -30,7 +30,7 @@ body {
 .boardbg { position: absolute; inset: 0; z-index: 0; transform-origin: 50% 30%; }
 .boardwindow {
   position: absolute;
-  top: 7.81%; left: 0; right: 0; bottom: 0;
+  top: 12%; left: 0; right: 0; bottom: 0;
   background: var(--color-surface, #fff);
   padding: 0; overflow: hidden;
   display: flex; flex-direction: column;
@@ -130,10 +130,305 @@ body {
   padding: 2.6cqw 4cqw; border-radius: 999px; width: fit-content;
 }
 
-body:has(.record) { padding: 0; }
-.record { gap: 0; }
-.record .reel { width: 100vw; height: 100vh; border-radius: 0; box-shadow: none; }
+body:has(.record) { padding: 0; width: 100vw; height: 100vh; }
+.record { gap: 0; width: 100vw; height: 100vh; justify-content: center; }
+.record .reel { width: min(100vw, calc(100vh * 9 / 16)); border-radius: 0; box-shadow: none; }
 
 .hint { color: #7a8098; font-size: 12px; text-align: center; max-width: 340px; line-height: 1.6; }
 .hint b { color: #eef0f8; }
 .hint code { background: #1e2030; color: #38bdf8; padding: 1px 5px; border-radius: 4px; font-size: 11px; }
+
+:root { --tint-brand-ink: #1c1c1e; --tint-plus-ink: #1c1c1e; }
+
+
+/* ═══════════════════════════════════════════════════
+   관리자 설정 패널  (ap-*)
+   light-theme 카드, 실제 AdminPage 스타일 모사
+══════════════════════════════════════════════════ */
+.ap-overlay {
+  position: absolute;
+  top: 11%;
+  left: 3%;
+  right: 3%;
+  z-index: 10;
+  pointer-events: none;
+  font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+}
+
+.ap-wrap {
+  background: #ffffff;
+  border-radius: 4cqw;
+  box-shadow: 0 6px 40px rgba(0,0,0,0.40), 0 2px 10px rgba(0,0,0,0.20);
+  overflow: hidden;
+}
+
+.ap-header {
+  padding: 2.8cqw 3.5cqw 2.2cqw;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.ap-badge {
+  display: inline-flex; align-items: center; gap: 1.4cqw;
+  font-size: 2.1cqw; font-weight: 700; color: #2563eb;
+  background: #eff6ff; padding: 0.8cqw 2.2cqw; border-radius: 999px;
+  margin-bottom: 1.8cqw;
+}
+
+.ap-title {
+  font-size: 4.8cqw; font-weight: 800; color: #111827;
+  margin: 0 0 0.6cqw; letter-spacing: -0.02em;
+}
+
+.ap-desc {
+  font-size: 2.3cqw; color: #6b7280; margin: 0; line-height: 1.45;
+}
+
+.ap-card { padding: 2.8cqw 3.5cqw; }
+.ap-card-sm { padding: 2.4cqw 3.5cqw; }
+
+.ap-card-label {
+  font-size: 2cqw; font-weight: 700; color: #6b7280;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin: 0 0 2cqw;
+}
+.ap-card-hint { font-size: 2cqw; color: #9ca3af; margin: 0 0 2cqw; }
+
+.ap-ratio-rows { display: flex; flex-direction: column; gap: 1.8cqw; margin-bottom: 2cqw; }
+
+.ap-ratio-row { display: flex; align-items: center; gap: 2cqw; }
+
+.ap-role-name {
+  font-size: 2.5cqw; font-weight: 500; color: #374151;
+  width: 18cqw; flex-shrink: 0;
+}
+
+.ap-input {
+  width: 13cqw; border: 1px solid #d1d5db; border-radius: 1.8cqw;
+  padding: 0.9cqw 0; text-align: center;
+  font-size: 2.5cqw; font-weight: 600; color: #111827;
+  background: #fff;
+  font-family: inherit;
+}
+
+.ap-pct { font-size: 2.2cqw; color: #6b7280; }
+
+.ap-sum { font-size: 2.2cqw; color: #6b7280; margin: 0 0 2.2cqw; }
+.ap-sum strong { color: #16a34a; }
+
+.ap-save-btn {
+  display: inline-block; background: #2563eb; color: #fff;
+  font-size: 2.4cqw; font-weight: 700; border: none; border-radius: 2.2cqw;
+  padding: 1.6cqw 3.5cqw; cursor: default; font-family: inherit;
+}
+
+/* 회원별 설정 */
+.ap-member-row {
+  border: 1px solid #e5e7eb; border-radius: 2.5cqw;
+  overflow: hidden; margin-bottom: 1.6cqw;
+}
+.ap-member-row:last-child { margin-bottom: 0; }
+
+.ap-member-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 2cqw 2.6cqw;
+  background: #f9fafb;
+}
+
+.ap-expanded .ap-member-hd { background: #eff6ff; }
+
+.ap-member-name { font-size: 2.6cqw; font-weight: 700; color: #111827; }
+
+.ap-member-meta {
+  display: flex; align-items: center; gap: 1.5cqw;
+  font-size: 2cqw; color: #9ca3af;
+}
+
+.ap-member-bd {
+  padding: 2cqw 2.6cqw;
+  border-top: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+.ap-field-label { font-size: 1.9cqw; font-weight: 700; color: #9ca3af; margin: 0 0 1.4cqw; }
+
+.ap-days { display: flex; gap: 1.5cqw; margin-bottom: 2cqw; }
+
+.ap-day {
+  display: flex; flex-direction: column; align-items: center; gap: 0.5cqw;
+  font-size: 1.9cqw; color: #6b7280; cursor: default;
+}
+.ap-day input { accent-color: #2563eb; cursor: default; }
+
+.ap-limit-row { display: flex; align-items: center; gap: 1.5cqw; margin-bottom: 2cqw; }
+
+.ap-save-btn-sm {
+  display: inline-block; background: #2563eb; color: #fff;
+  font-size: 2.2cqw; font-weight: 700; border: none; border-radius: 1.8cqw;
+  padding: 1.2cqw 2.8cqw; cursor: default; font-family: inherit;
+}
+
+
+/* ═══════════════════════════════════════════════════
+   스케줄 화면 자동배정 메뉴  (sr-*)
+══════════════════════════════════════════════════ */
+.sr-overlay {
+  position: absolute;
+  top: 20%;
+  right: 4%;
+  z-index: 10;
+  pointer-events: none;
+  font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+}
+
+.sr-menu {
+  background: #fff;
+  border-radius: 3cqw;
+  box-shadow: 0 4px 28px rgba(0,0,0,0.28), 0 1px 6px rgba(0,0,0,0.12);
+  overflow: hidden;
+  min-width: 36cqw;
+}
+
+.sr-item {
+  display: flex; align-items: center; gap: 2cqw;
+  padding: 2.6cqw 3.5cqw;
+  font-size: 2.8cqw; color: #374151;
+  border-bottom: 1px solid #f3f4f6;
+}
+.sr-item:last-child { border-bottom: none; }
+
+.sr-hi {
+  color: #2563eb; font-weight: 700;
+  box-shadow: inset 3px 0 0 #2563eb;
+  animation: srPulse 1.1s ease-in-out infinite;
+}
+
+@keyframes srPulse {
+  0%, 100% { background: #eff6ff; }
+  50%       { background: #dbeafe; }
+}
+
+
+/* ═══════════════════════════════════════════════════
+   자동배정 미리보기 모달  (pm-*)
+   실제 AutoAssignPreviewModal 스타일 모사
+══════════════════════════════════════════════════ */
+.pm-overlay {
+  position: absolute;
+  top: 11%;
+  left: 3%;
+  right: 3%;
+  bottom: 24%;
+  z-index: 10;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+}
+
+.pm-modal {
+  flex: 1;
+  min-height: 0;
+  background: #fff;
+  border-radius: 4.5cqw;
+  box-shadow: 0 8px 48px rgba(0,0,0,0.42), 0 2px 12px rgba(0,0,0,0.18);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+
+.pm-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 3cqw 3.5cqw 2cqw;
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.pm-title { font-size: 3.2cqw; font-weight: 800; color: #111827; margin: 0 0 0.5cqw; }
+.pm-subtitle { font-size: 2.2cqw; color: #6b7280; margin: 0; }
+.pm-count { font-weight: 700; color: #2563eb; }
+
+.pm-close {
+  width: 7cqw; height: 7cqw;
+  border: 1px solid #e5e7eb; border-radius: 2.5cqw;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 4cqw; color: #9ca3af;
+  background: #f9fafb; cursor: default; line-height: 1;
+  flex-shrink: 0;
+}
+
+.pm-settings {
+  padding: 2cqw 3.5cqw;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+  flex-shrink: 0;
+}
+
+.pm-settings-label { font-size: 1.9cqw; font-weight: 700; color: #9ca3af; margin: 0 0 1.2cqw; }
+
+.pm-tags { display: flex; gap: 1.4cqw; flex-wrap: wrap; }
+
+.pm-tag {
+  padding: 0.5cqw 2cqw; border-radius: 999px;
+  font-size: 1.9cqw; font-weight: 500;
+  background: #dbeafe; color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.pm-tag-gray {
+  padding: 0.5cqw 2cqw; border-radius: 999px;
+  font-size: 1.9cqw; font-weight: 500;
+  background: #f3f4f6; color: #6b7280;
+  border: 1px solid #e5e7eb;
+}
+
+.pm-table-wrap { overflow: auto; flex: 1; min-height: 0; }
+
+.pm-table { width: 100%; border-collapse: collapse; font-size: 2.2cqw; }
+
+.pm-table thead { position: sticky; top: 0; background: #f9fafb; z-index: 1; }
+
+.pm-table th {
+  padding: 1.6cqw 1.8cqw; text-align: center;
+  font-weight: 700; color: #9ca3af;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.pm-table td {
+  padding: 1.5cqw 1.8cqw; text-align: center;
+  border-bottom: 1px solid #f3f4f6;
+  color: #6b7280;
+}
+
+.pm-table input[type="checkbox"] { accent-color: #2563eb; cursor: default; }
+.pm-mono { font-family: monospace; font-size: 2cqw; }
+.pm-muted { color: #9ca3af; }
+.pm-name { font-weight: 700; color: #111827; }
+
+.pm-more-row td {
+  text-align: center; color: #9ca3af; font-size: 2cqw;
+  padding: 1.2cqw; background: #fafafa;
+}
+
+.pm-footer {
+  padding: 2.4cqw 3.5cqw;
+  border-top: 1px solid #e5e7eb;
+  display: flex; gap: 2cqw;
+  flex-shrink: 0;
+}
+
+.pm-confirm {
+  flex: 1; background: #2563eb; color: #fff;
+  font-size: 2.6cqw; font-weight: 700;
+  border: none; border-radius: 2.5cqw;
+  padding: 2.2cqw;
+  cursor: default; font-family: inherit;
+  box-shadow: 0 2px 8px rgba(37,99,235,0.30);
+}
+
+.pm-cancel {
+  flex: 1; background: #fff; color: #6b7280;
+  font-size: 2.6cqw; font-weight: 500;
+  border: 1px solid #d1d5db; border-radius: 2.5cqw;
+  padding: 2.2cqw;
+  cursor: default; font-family: inherit;
+}
