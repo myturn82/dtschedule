@@ -2,7 +2,7 @@
 import { AutoResizeTextarea } from '../shared/AutoResizeTextarea'
 import { MemberSearchSelect } from '../shared/MemberSearchSelect'
 import { DevFileLabel } from '../DevFileLabel'
-import type { Assignment, CellState, ModalTarget, Profile, TenantRole, MemberType, CustomFieldDef, TenantMode, LessonPackageWithUsage } from '../../types'
+import type { Assignment, CellState, ModalTarget, Profile, TenantRole, MemberType, CustomFieldDef, TenantMode, LessonPackage, LessonPackageWithUsage } from '../../types'
 import { getOptionUnit } from '../../types'
 import { parseSlotLabel, getTimeSubOptions, formatTimeSub } from '../../utils/timeSlots'
 import { useProfiles } from '../../hooks/useProfiles'
@@ -164,6 +164,31 @@ export function SlotEditModal({
       setUserPackages(active)
     })
   }, [isFreeform, isAdmin, selectedUserId, tenantId])
+
+  // 등록된 스케줄 목록 상세조회용 — 각 배정에 연결된 레슨권 정보 조회 (비회원 모드 제외)
+  const [packageInfoMap, setPackageInfoMap] = useState<Record<string, LessonPackageWithUsage>>({})
+  useEffect(() => {
+    const ids = Array.from(new Set(
+      displayedAssignments.map(a => a.lesson_package_id).filter((id): id is string => !!id)
+    ))
+    if (isFreeform || ids.length === 0 || !tenantId) { setPackageInfoMap({}); return }
+    Promise.all([
+      supabase.from('lesson_packages').select('*').eq('tenant_id', tenantId).in('id', ids),
+      supabase.from('assignments').select('lesson_package_id').eq('tenant_id', tenantId).in('lesson_package_id', ids),
+    ]).then(([pkgsRes, assRes]) => {
+      if (!pkgsRes.data) return
+      const countMap = new Map<string, number>()
+      for (const a of assRes.data ?? []) {
+        if (a.lesson_package_id) countMap.set(a.lesson_package_id, (countMap.get(a.lesson_package_id) ?? 0) + 1)
+      }
+      const map: Record<string, LessonPackageWithUsage> = {}
+      for (const p of pkgsRes.data as LessonPackage[]) {
+        map[p.id] = { ...p, used_sessions: countMap.get(p.id) ?? 0 }
+      }
+      setPackageInfoMap(map)
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [displayedAssignments, isFreeform, tenantId])
 
   // DB 제약: (year, month, day, time_slot, member_name) 고유 → 역할 무관하게 같은 슬롯 중복 배정 불가
   const nonEditingAssignments = cellState.assignments.filter(a => a.id !== editingId)
@@ -979,6 +1004,18 @@ export function SlotEditModal({
                               )}
                               {a.is_locked && <span title="관리자에 의해 고정됨"><LockIcon size={12} className="inline -mt-0.5" /></span>}
                             </span>
+                            {a.lesson_package_id && packageInfoMap[a.lesson_package_id] && (
+                              <span className="text-[11px] font-semibold text-[var(--color-text-muted)] inline-flex items-center gap-1 flex-wrap">
+                                <span aria-hidden>🎫</span>
+                                {packageInfoMap[a.lesson_package_id].package_name}
+                                <span className="tabular-nums">
+                                  {packageInfoMap[a.lesson_package_id].used_sessions}/{packageInfoMap[a.lesson_package_id].total_sessions}회
+                                </span>
+                                <span>
+                                  · {packageInfoMap[a.lesson_package_id].payment_date}~{packageInfoMap[a.lesson_package_id].expires_at ?? '무제한'}
+                                </span>
+                              </span>
+                            )}
                           </div>
                           {(canEdit || (onToggleLock && a.is_locked && isSuperAdmin)) && (
                             <div className="flex gap-0.5 shrink-0">
