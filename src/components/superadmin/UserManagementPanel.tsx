@@ -10,7 +10,7 @@ export interface ProfileWithOrgCount {
   is_super_admin: boolean
   created_at: string
   org_count: number
-  org_names: string[]
+  org_names: { name: string; joinedAt: string }[]
   signup_provider: string | null
 }
 
@@ -37,7 +37,7 @@ export function UserManagementPanel({ users, loading, onDeleteUsers }: Props) {
         if (u.name.toLowerCase().includes(q)) return true
         if ((u.email ?? '').toLowerCase().includes(q)) return true
         if (qDigits && (u.phone ?? '').replace(/-/g, '').includes(qDigits)) return true
-        if (u.org_names.some(name => name.toLowerCase().includes(q))) return true
+        if (u.org_names.some(o => o.name.toLowerCase().includes(q))) return true
         return false
       })
       .sort((a, b) => {
@@ -136,8 +136,7 @@ export function UserManagementPanel({ users, loading, onDeleteUsers }: Props) {
           className="w-4 h-4 rounded accent-[var(--color-brand-primary)]"
         />
         <span className="flex-1">이름 / 이메일 / 전화번호</span>
-        <span className="w-20 text-right">가입일</span>
-        <span className="w-32 text-right">소속 조직</span>
+        <span className="w-44 text-right">소속 조직 / 가입일</span>
       </div>
 
       {/* 목록 */}
@@ -175,7 +174,7 @@ export function UserManagementPanel({ users, loading, onDeleteUsers }: Props) {
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)]">슈퍼관리자</span>
                 )}
               </span>
-              <span className="block text-[11px] text-[var(--color-text-muted)] truncate">{user.email ?? '-'}</span>
+              <span className="block text-[11px] text-[var(--color-text-muted)] truncate whitespace-nowrap">{user.email ?? '-'}</span>
               {user.phone && (
                 <span className="flex items-center gap-1 mt-0.5">
                   <span className="text-[11px] text-[var(--color-text-muted)]">{fmtPhone(user.phone)}</span>
@@ -188,18 +187,20 @@ export function UserManagementPanel({ users, loading, onDeleteUsers }: Props) {
                 </span>
               )}
             </span>
-            <span className="w-20 text-right text-[11px] text-[var(--color-text-muted)] flex-shrink-0" style={{ fontFamily: 'var(--font-mono, monospace)' }}>
-              {user.created_at.slice(0, 10)}
-            </span>
-            <span className="w-32 flex flex-col items-end gap-0.5 flex-shrink-0">
+            <span className="w-44 flex flex-col items-end gap-1 flex-shrink-0">
               {user.org_names.length === 0 ? (
                 <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-700">
                   미가입
                 </span>
               ) : (
-                user.org_names.map((name, i) => (
-                  <span key={i} className="text-[11px] font-semibold text-[var(--color-text-secondary)] truncate max-w-full">
-                    {name}
+                user.org_names.map((o, i) => (
+                  <span key={i} className="flex flex-col items-end max-w-full">
+                    <span className="text-[11px] font-semibold text-[var(--color-text-secondary)] truncate max-w-full">
+                      {o.name}
+                    </span>
+                    <span className="text-[10px] text-[var(--color-text-muted)]" style={{ fontFamily: 'var(--font-mono, monospace)' }}>
+                      {o.joinedAt.slice(0, 10)}
+                    </span>
                   </span>
                 ))
               )}

@@ -225,7 +225,7 @@ export function SuperAdminPage() {
     setUsersLoading(true)
     const [profilesRes, membersRes, phonesRes] = await Promise.all([
       supabase.from('profiles').select('id, name, email, is_super_admin, created_at, signup_provider').order('created_at', { ascending: false }),
-      supabase.from('tenant_members').select('user_id, tenant_id').eq('is_approved', true),
+      supabase.from('tenant_members').select('user_id, tenant_id, created_at').eq('is_approved', true),
       supabase.rpc('get_all_user_phones'),
     ])
     if (profilesRes.error) {
@@ -241,11 +241,11 @@ export function SuperAdminPage() {
     const tenantNameById: Record<string, string> = {}
     for (const t of tenants) tenantNameById[t.id] = t.name
     const orgCounts: Record<string, number> = {}
-    const orgNames: Record<string, string[]> = {}
+    const orgNames: Record<string, { name: string; joinedAt: string }[]> = {}
     for (const m of membersRes.data ?? []) {
       orgCounts[m.user_id] = (orgCounts[m.user_id] ?? 0) + 1
       const name = tenantNameById[m.tenant_id]
-      if (name) (orgNames[m.user_id] ??= []).push(name)
+      if (name) (orgNames[m.user_id] ??= []).push({ name, joinedAt: m.created_at })
     }
     setAllUsers(
       (profilesRes.data ?? []).map(p => ({
