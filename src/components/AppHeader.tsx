@@ -170,14 +170,15 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
                 href={feedbackUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 px-2 py-1.5 sm:px-2.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] text-[12px] font-semibold hover:bg-[var(--color-surface-hover)] transition-colors select-none shrink-0"
+                aria-label="피드백"
+                className="flex items-center justify-center gap-1.5 w-8 h-8 sm:w-auto sm:h-auto px-0 py-0 sm:px-3 sm:py-1.5 text-xs font-medium rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-all shrink-0 select-none"
               >
                 <span className="text-sm leading-none select-none">💬</span>
                 <span className="hidden sm:inline">피드백</span>
               </a>
             )}
             {profile && (
-              <div className="flex items-center gap-1.5">
+              <div className="hidden sm:flex items-center gap-1.5">
                 <span className="hidden sm:block text-sm font-semibold text-[var(--color-text-primary)] max-w-[80px] truncate">{profile.name}</span>
                 {roleLabel && (
                   <span className="text-xs text-[var(--color-text-muted)] bg-[var(--color-surface-secondary)] px-2 py-0.5 rounded-lg border border-[var(--color-border)] whitespace-nowrap hidden sm:block">
