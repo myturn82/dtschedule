@@ -8,6 +8,7 @@ import { WizardIcon, type WizardIconKey } from '../../components/setup/WizardIco
 import { DEMO_FIELDS, PROMO_FIELD_DEFS } from './mockData'
 
 const IS_RECORD = new URLSearchParams(location.search).has('record')
+const noop = () => {}
 
 type Phase = 'intro' | 'mode' | 'fields' | 'sync' | 'outro'
 const PHASES: { key: Phase; ms: number }[] = [

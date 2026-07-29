@@ -342,3 +342,70 @@ useEffect(() => {
 1. **`CustomFieldType` union에 새 타입 추가 시** — `Step7CustomFields.tsx`의 `FIELD_TYPE_DEFS`와 `FieldPreview` 수정 후, `AdminPage.tsx`의 `FIELD_TYPE_DEFS`, `CfTypeIcon`, `FieldPreview`도 반드시 같이 수정한다.
 2. **관리자콘솔에서 먼저 수정한 경우** — 위자드 동일 단계도 확인하여 누락 여부를 검증한다.
 3. **image_upload 등 파일 관련 필드** — `show_in_dashboard`, `FIELD_TYPES_WITH_OPTIONS`, `PLACEHOLDER_TYPES` 배열에서 제외되어야 하므로, 양쪽 파일 모두에서 이 배열에 추가하지 않는다.
+
+---
+
+## 버티컬 멀티앱 시스템 규칙
+
+DTS는 단일 코드베이스에서 7개 버티컬 앱(LESSON:ON, CLASS:ON, SHIFT:ON 등)을 운영한다.
+모든 차이는 `feature_flags`, `verticalPresets`, `brandConfig`로만 표현한다.
+
+> 상세 설계: `docs/implementation-design-2026-07-30.md`
+> 포트폴리오 전략: `docs/multi-app-portfolio-strategy-2026-07-29.md`
+
+### 반드시 지켜야 할 규칙
+
+1. **버티컬 식별자 하드코딩 금지**
+   - `if (vertical === 'lesson-sports')` 같은 분기를 소스코드에 쓰지 않는다.
+   - 버티컬별 차이는 `src/lib/verticalPresets.ts`의 `VERTICAL_PRESETS` 맵에 데이터로 등록한다.
+   - 기능 on/off는 반드시 `feature_flags` 키로 처리한다.
+
+2. **기능 표시 여부는 `getFF()` 로만 판단**
+   ```ts
+   // ✅ 올바른 방법
+   import { getFF } from '@/lib/featureFlags'
+   const ff = tenant?.settings?.feature_flags
+   if (getFF(ff, 'lesson_packages')) { ... }
+
+   // ❌ 금지
+   if (tenant?.settings?.feature_flags?.lesson_packages) { ... }  // undefined 처리 누락
+   if (vertical === 'lesson-sports') { ... }                       // 버티컬 하드코딩
+   ```
+
+3. **앱 이름·브랜드 색상은 `BRAND` 상수에서만 읽기**
+   - `src/lib/brandConfig.ts`의 `BRAND` 상수를 통해서만 접근한다.
+   - `"LESSON:ON"`, `"#FF6B35"` 같은 앱 이름·색상을 소스에 직접 쓰지 않는다.
+   - 버티컬별 환경 변수 파일(`.env.lesson-on` 등)이 빌드 시 주입한다.
+
+4. **플랜 한도 체크는 `usePlanLimits` 훅으로만**
+   - 멤버 수·레슨권 종류·SMS 건수 한도는 반드시 `usePlanLimits()`의 값과 `isAtLimit()` 헬퍼를 사용한다.
+   - 숫자 10, 3, 100 등 한도값을 컴포넌트에 직접 쓰지 않는다.
+
+5. **광고 표시 여부는 `useAdDisplay` 훅으로만**
+   - `plan === 'free'` 조건을 컴포넌트에 직접 쓰지 않는다.
+   - `const { showAds } = useAdDisplay()` 를 통해서만 제어한다.
+
+6. **신규 버티컬 추가 시 체크리스트**
+   - [ ] `VERTICAL_PRESETS`에 새 항목 등록 (`verticalPresets.ts`)
+   - [ ] `.env.<vertical-name>` 환경 변수 파일 작성
+   - [ ] `package.json`에 `build:<vertical-name>` 스크립트 추가
+   - [ ] 필요한 `feature_flags` 키가 `FeatureFlags` 인터페이스에 있는지 확인
+   - [ ] 슈퍼관리자 `AdminPage`의 `feature_flags` 토글 UI에 새 키 반영
+
+### 버티컬 앱 빌드 방법
+
+```bash
+# 특정 버티컬 빌드 (환경 변수 자동 적용)
+npm run build:lesson-on    # LESSON:ON
+npm run build:shift-on     # SHIFT:ON
+npm run build:serve-on     # SERVE:ON
+
+# Capacitor Android 동기화
+npx cap sync android
+```
+
+### 수익화 게이트 구현 원칙
+
+- 무료 플랜 한도 도달 시 `UpgradePromptModal`을 표시한다.
+- 광고는 무료 플랜 사용자에게만 표시하고, `useAdDisplay` 훅으로 제어한다.
+- 앱 내 결제 링크는 Apple 정책상 직접 노출이 불가하므로, "웹사이트에서 구독 관리" 방식으로 안내한다.
