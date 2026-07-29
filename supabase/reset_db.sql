@@ -1,7 +1,7 @@
 -- ============================================================
 -- 운영 DB 초기화 스크립트 (전체 재생성)
 -- 생성일: 2026-06-10
--- 기준 마이그레이션: 001 ~ 082
+-- 기준 마이그레이션: 001 ~ 083
 --
 -- ⚠️  주의: 이 스크립트는 모든 데이터를 삭제합니다.
 --           Supabase SQL Editor에서 직접 실행하세요.
@@ -1440,6 +1440,12 @@ WITH CHECK (
       )
   )
 );
+
+CREATE POLICY "feedback_posts_delete" ON feedback_posts FOR DELETE
+USING (public.is_super_admin_caller());
+
+CREATE POLICY "feedback_replies_delete" ON feedback_replies FOR DELETE
+USING (public.is_super_admin_caller());
 
 
 -- ────────────────────────────────────────────────────────────

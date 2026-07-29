@@ -87,3 +87,8 @@ export async function updateFeedbackStatus(postId: string, status: FeedbackStatu
   const { error } = await supabase.from('feedback_posts').update({ status, updated_at: new Date().toISOString() }).eq('id', postId)
   return error?.message ?? null
 }
+
+export async function deleteFeedbackPost(postId: string): Promise<string | null> {
+  const { error } = await supabase.from('feedback_posts').delete().eq('id', postId)
+  return error?.message ?? null
+}

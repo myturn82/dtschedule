@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../../hooks/useAuth'
-import { fetchFeedbackPosts, fetchFeedbackReplies, addFeedbackReply, updateFeedbackStatus } from '../../lib/feedback'
+import { fetchFeedbackPosts, fetchFeedbackReplies, addFeedbackReply, updateFeedbackStatus, deleteFeedbackPost } from '../../lib/feedback'
 import { FEEDBACK_CATEGORY_LABELS, FEEDBACK_STATUS_LABELS } from '../../types'
 import type { FeedbackPost, FeedbackReply, FeedbackStatus } from '../../types'
 
@@ -26,6 +26,7 @@ export function FeedbackBoardPanel({ scope }: Props) {
   const [repliesLoading, setRepliesLoading] = useState(false)
   const [replyText, setReplyText] = useState('')
   const [replySaving, setReplySaving] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const load = () => {
     setLoading(true)
@@ -59,6 +60,15 @@ export function FeedbackBoardPanel({ scope }: Props) {
 
   async function handleStatusChange(postId: string, status: FeedbackStatus) {
     await updateFeedbackStatus(postId, status)
+    load()
+  }
+
+  async function handleDelete(postId: string) {
+    if (!window.confirm('이 문의를 삭제하시겠습니까? 답변 내역도 함께 삭제되며 되돌릴 수 없습니다.')) return
+    setDeletingId(postId)
+    await deleteFeedbackPost(postId)
+    setDeletingId(null)
+    if (expandedId === postId) setExpandedId(null)
     load()
   }
 
@@ -159,14 +169,26 @@ export function FeedbackBoardPanel({ scope }: Props) {
                     </button>
                   </div>
 
-                  {post.status !== 'closed' && (
-                    <button
-                      onClick={() => handleStatusChange(post.id, 'closed')}
-                      className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] underline"
-                    >
-                      문의 종료 처리
-                    </button>
-                  )}
+                  <div className="flex items-center justify-between gap-2">
+                    {post.status !== 'closed' ? (
+                      <button
+                        onClick={() => handleStatusChange(post.id, 'closed')}
+                        className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] underline"
+                      >
+                        문의 종료 처리
+                      </button>
+                    ) : <span />}
+
+                    {scope.kind === 'system' && (
+                      <button
+                        onClick={() => handleDelete(post.id)}
+                        disabled={deletingId === post.id}
+                        className="text-xs text-red-500 hover:text-red-600 underline disabled:opacity-40"
+                      >
+                        {deletingId === post.id ? '삭제 중...' : '삭제'}
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
