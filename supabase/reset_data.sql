@@ -34,6 +34,8 @@ TRUNCATE TABLE
   assignments,
   lesson_packages,
   lesson_package_types,
+  feedback_replies,
+  feedback_posts,
   tenant_members,
   tenant_roles,
   tenants,

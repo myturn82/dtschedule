@@ -1,7 +1,7 @@
 -- ============================================================
 -- 운영 DB 초기화 스크립트 (전체 재생성)
 -- 생성일: 2026-06-10
--- 기준 마이그레이션: 001 ~ 080
+-- 기준 마이그레이션: 001 ~ 082
 --
 -- ⚠️  주의: 이 스크립트는 모든 데이터를 삭제합니다.
 --           Supabase SQL Editor에서 직접 실행하세요.
@@ -23,6 +23,9 @@ DROP TRIGGER IF EXISTS trg_anonymize_on_user_delete              ON profiles;
 DROP TRIGGER IF EXISTS trg_encrypt_profile_phone                 ON profiles;
 DROP TRIGGER IF EXISTS trg_encrypt_assignment_customer_phone     ON assignments;
 DROP TRIGGER IF EXISTS trg_encrypt_customer_phone                ON customers;
+DROP TRIGGER IF EXISTS trg_feedback_post_before_insert           ON feedback_posts;
+DROP TRIGGER IF EXISTS trg_feedback_reply_before_insert          ON feedback_replies;
+DROP TRIGGER IF EXISTS trg_feedback_reply_after_insert           ON feedback_replies;
 
 -- 함수 삭제
 DROP FUNCTION IF EXISTS public.handle_new_user()                          CASCADE;
@@ -59,8 +62,13 @@ DROP FUNCTION IF EXISTS public.update_customer_phone_enc(uuid, text)      CASCAD
 DROP FUNCTION IF EXISTS public.service_set_customer_phone_enc(uuid, text) CASCADE;
 DROP FUNCTION IF EXISTS public.batch_decrypt_phones(text[])              CASCADE;
 DROP FUNCTION IF EXISTS public.encrypt_extra_data_phone_fields()         CASCADE;
+DROP FUNCTION IF EXISTS public.set_feedback_post_defaults()              CASCADE;
+DROP FUNCTION IF EXISTS public.set_feedback_reply_role()                 CASCADE;
+DROP FUNCTION IF EXISTS public.handle_feedback_reply()                   CASCADE;
 
 -- 테이블 삭제 (CASCADE로 FK·인덱스·정책 자동 제거)
+DROP TABLE IF EXISTS feedback_replies CASCADE;
+DROP TABLE IF EXISTS feedback_posts   CASCADE;
 DROP TABLE IF EXISTS consent_logs    CASCADE;
 DROP TABLE IF EXISTS policy_versions CASCADE;
 DROP TABLE IF EXISTS push_subscriptions CASCADE;
@@ -192,6 +200,35 @@ CREATE TABLE lesson_packages (
   notes           text,
   created_by      uuid REFERENCES profiles(id) ON DELETE SET NULL,
   created_at      timestamptz NOT NULL DEFAULT now()
+);
+
+-- feedback_posts (자체 피드백 게시판 — 문의 글)
+CREATE TABLE feedback_posts (
+  id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id    uuid NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  tenant_name  text,
+  author_id    uuid REFERENCES profiles(id) ON DELETE SET NULL,
+  author_name  text NOT NULL,
+  author_email text,
+  category     text NOT NULL CHECK (category IN ('inquiry', 'bug', 'feature')),
+  target_type  text NOT NULL CHECK (target_type IN ('system', 'org_admin')),
+  title        text NOT NULL,
+  content      text NOT NULL,
+  attachments  text[] NOT NULL DEFAULT '{}',
+  status       text NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'answered', 'closed')),
+  created_at   timestamptz NOT NULL DEFAULT now(),
+  updated_at   timestamptz NOT NULL DEFAULT now()
+);
+
+-- feedback_replies (자체 피드백 게시판 — 답변/추가 문의)
+CREATE TABLE feedback_replies (
+  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  post_id     uuid NOT NULL REFERENCES feedback_posts(id) ON DELETE CASCADE,
+  author_id   uuid REFERENCES profiles(id) ON DELETE SET NULL,
+  author_name text NOT NULL,
+  author_role text NOT NULL DEFAULT 'author' CHECK (author_role IN ('system_admin', 'org_admin', 'author')),
+  content     text NOT NULL,
+  created_at  timestamptz NOT NULL DEFAULT now()
 );
 
 -- assignments
@@ -369,6 +406,10 @@ CREATE INDEX idx_assignment_snapshots_lookup
   ON assignment_snapshots(tenant_id, year, month, created_at DESC);
 CREATE INDEX idx_slot_highlights_tenant_date
   ON slot_highlights(tenant_id, date);
+CREATE INDEX idx_feedback_posts_tenant   ON feedback_posts(tenant_id);
+CREATE INDEX idx_feedback_posts_target   ON feedback_posts(target_type, status);
+CREATE INDEX idx_feedback_posts_author   ON feedback_posts(author_id);
+CREATE INDEX idx_feedback_replies_post   ON feedback_replies(post_id);
 
 -- 같은 조직·날짜·시간대에 동일 이름 중복 방지 (admin_note 제외)
 CREATE UNIQUE INDEX unique_member_assignment
@@ -410,6 +451,8 @@ ALTER TABLE policy_versions       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE consent_logs          ENABLE ROW LEVEL SECURITY;
 ALTER TABLE lesson_package_types  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE lesson_packages       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE feedback_posts        ENABLE ROW LEVEL SECURITY;
+ALTER TABLE feedback_replies      ENABLE ROW LEVEL SECURITY;
 
 
 -- ────────────────────────────────────────────────────────────
@@ -948,6 +991,77 @@ GRANT EXECUTE ON FUNCTION public.get_dormant_accounts(int) TO authenticated;
 COMMENT ON FUNCTION public.get_dormant_accounts(int) IS
   '장기 미이용 계정 목록 조회. 슈퍼어드민 전용. 예: SELECT * FROM get_dormant_accounts(3);';
 
+-- feedback_posts BEFORE INSERT: target_type·tenant_name 서버 결정
+CREATE OR REPLACE FUNCTION public.set_feedback_post_defaults()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = public
+AS $$
+BEGIN
+  NEW.target_type := CASE WHEN NEW.category = 'inquiry' THEN 'org_admin' ELSE 'system' END;
+  SELECT name INTO NEW.tenant_name FROM tenants WHERE id = NEW.tenant_id;
+  RETURN NEW;
+END;
+$$;
+
+-- feedback_replies BEFORE INSERT: author_role 서버 결정
+CREATE OR REPLACE FUNCTION public.set_feedback_reply_role()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_post_author uuid;
+BEGIN
+  SELECT author_id INTO v_post_author FROM feedback_posts WHERE id = NEW.post_id;
+
+  IF v_post_author = NEW.author_id THEN
+    NEW.author_role := 'author';
+  ELSIF public.is_super_admin_caller() THEN
+    NEW.author_role := 'system_admin';
+  ELSE
+    NEW.author_role := 'org_admin';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+-- feedback_replies AFTER INSERT: 상태 갱신 + 작성자 알림
+CREATE OR REPLACE FUNCTION public.handle_feedback_reply()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_post RECORD;
+BEGIN
+  SELECT * INTO v_post FROM feedback_posts WHERE id = NEW.post_id;
+
+  IF NEW.author_role = 'author' THEN
+    UPDATE feedback_posts SET status = 'open', updated_at = now() WHERE id = NEW.post_id;
+  ELSE
+    UPDATE feedback_posts SET status = 'answered', updated_at = now() WHERE id = NEW.post_id;
+
+    IF v_post.author_id IS NOT NULL AND v_post.author_id <> NEW.author_id THEN
+      INSERT INTO notifications (tenant_id, user_id, title, body, type, metadata)
+      VALUES (
+        v_post.tenant_id,
+        v_post.author_id,
+        '💬 문의에 답변이 등록됐습니다',
+        left(NEW.content, 120),
+        'feedback_reply',
+        jsonb_build_object('feedback_post_id', NEW.post_id)
+      );
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
 
 -- ────────────────────────────────────────────────────────────
 -- STEP 6. RLS 정책
@@ -1247,6 +1361,86 @@ CREATE POLICY "lesson_packages_update" ON lesson_packages
 CREATE POLICY "lesson_packages_delete" ON lesson_packages
   FOR DELETE USING (is_tenant_admin(tenant_id) OR is_super_admin_caller());
 
+-- ── feedback_posts / feedback_replies (자체 피드백 게시판) ──────
+CREATE POLICY "feedback_posts_select" ON feedback_posts FOR SELECT
+USING (
+  author_id = auth.uid()
+  OR public.is_super_admin_caller()
+  OR (
+    target_type = 'org_admin'
+    AND EXISTS (
+      SELECT 1 FROM tenant_members tm
+      WHERE tm.tenant_id = feedback_posts.tenant_id
+        AND tm.user_id = auth.uid() AND tm.role = 'admin' AND tm.is_approved = true
+    )
+  )
+);
+
+CREATE POLICY "feedback_posts_insert" ON feedback_posts FOR INSERT
+WITH CHECK (
+  author_id = auth.uid()
+  AND (
+    public.is_super_admin_caller()
+    OR EXISTS (
+      SELECT 1 FROM tenant_members tm
+      WHERE tm.tenant_id = feedback_posts.tenant_id AND tm.user_id = auth.uid() AND tm.is_approved = true
+    )
+  )
+);
+
+CREATE POLICY "feedback_posts_update" ON feedback_posts FOR UPDATE
+USING (
+  author_id = auth.uid()
+  OR public.is_super_admin_caller()
+  OR (
+    target_type = 'org_admin'
+    AND EXISTS (
+      SELECT 1 FROM tenant_members tm
+      WHERE tm.tenant_id = feedback_posts.tenant_id
+        AND tm.user_id = auth.uid() AND tm.role = 'admin' AND tm.is_approved = true
+    )
+  )
+);
+
+CREATE POLICY "feedback_replies_select" ON feedback_replies FOR SELECT
+USING (
+  EXISTS (
+    SELECT 1 FROM feedback_posts fp
+    WHERE fp.id = feedback_replies.post_id
+      AND (
+        fp.author_id = auth.uid()
+        OR public.is_super_admin_caller()
+        OR (
+          fp.target_type = 'org_admin'
+          AND EXISTS (
+            SELECT 1 FROM tenant_members tm
+            WHERE tm.tenant_id = fp.tenant_id AND tm.user_id = auth.uid() AND tm.role = 'admin' AND tm.is_approved = true
+          )
+        )
+      )
+  )
+);
+
+CREATE POLICY "feedback_replies_insert" ON feedback_replies FOR INSERT
+WITH CHECK (
+  author_id = auth.uid()
+  AND EXISTS (
+    SELECT 1 FROM feedback_posts fp
+    WHERE fp.id = feedback_replies.post_id
+      AND (
+        fp.author_id = auth.uid()
+        OR public.is_super_admin_caller()
+        OR (
+          fp.target_type = 'org_admin'
+          AND EXISTS (
+            SELECT 1 FROM tenant_members tm
+            WHERE tm.tenant_id = fp.tenant_id AND tm.user_id = auth.uid() AND tm.role = 'admin' AND tm.is_approved = true
+          )
+        )
+      )
+  )
+);
+
 
 -- ────────────────────────────────────────────────────────────
 -- STEP 7. 트리거
@@ -1501,6 +1695,19 @@ EXCEPTION WHEN OTHERS THEN NULL;
 END;
 $$;
 
+-- feedback_posts / feedback_replies
+CREATE TRIGGER trg_feedback_post_before_insert
+  BEFORE INSERT ON feedback_posts
+  FOR EACH ROW EXECUTE FUNCTION public.set_feedback_post_defaults();
+
+CREATE TRIGGER trg_feedback_reply_before_insert
+  BEFORE INSERT ON feedback_replies
+  FOR EACH ROW EXECUTE FUNCTION public.set_feedback_reply_role();
+
+CREATE TRIGGER trg_feedback_reply_after_insert
+  AFTER INSERT ON feedback_replies
+  FOR EACH ROW EXECUTE FUNCTION public.handle_feedback_reply();
+
 
 -- ────────────────────────────────────────────────────────────
 -- STEP 8. Realtime 활성화
@@ -1575,6 +1782,38 @@ CREATE POLICY "authenticated_delete_schedule_images"
       AND tm.is_approved = true
     )
   );
+
+-- feedback-attachments (마이그레이션 081, 082 — 슈퍼관리자 예외 포함)
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'feedback-attachments',
+  'feedback-attachments',
+  true,
+  5242880,
+  ARRAY['image/webp', 'image/jpeg', 'image/png', 'image/gif']
+)
+ON CONFLICT (id) DO NOTHING;
+
+DROP POLICY IF EXISTS "authenticated_upload_feedback_attachments" ON storage.objects;
+CREATE POLICY "authenticated_upload_feedback_attachments"
+  ON storage.objects FOR INSERT TO authenticated
+  WITH CHECK (
+    bucket_id = 'feedback-attachments'
+    AND (
+      public.is_super_admin_caller()
+      OR EXISTS (
+        SELECT 1 FROM tenant_members tm
+        WHERE tm.user_id = auth.uid()
+        AND tm.tenant_id::text = (storage.foldername(name))[1]
+        AND tm.is_approved = true
+      )
+    )
+  );
+
+DROP POLICY IF EXISTS "public_read_feedback_attachments" ON storage.objects;
+CREATE POLICY "public_read_feedback_attachments"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'feedback-attachments');
 
 
 -- ────────────────────────────────────────────────────────────
