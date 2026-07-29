@@ -30,7 +30,14 @@ dist-promo
 .env
 .env.*
 !.env.example
+# Vertical brand env files (no secrets — safe to commit)
+!.env.lesson-on
+!.env.shift-on
+!.env.serve-on
 
 # Generated design tokens (built from tokens.json)
 src/styles/tokens.css
 .env*
+!.env.lesson-on
+!.env.shift-on
+!.env.serve-on
