@@ -976,6 +976,8 @@ export function AdminPage() {
         ? { ...prev, settings: { ...prev.settings, feature_flags: nextFlags } }
         : prev
       )
+    } else {
+      msg('기능 플래그 저장 중 오류가 발생했습니다.', true)
     }
   }
 
