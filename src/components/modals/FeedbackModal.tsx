@@ -170,12 +170,24 @@ export function FeedbackModal({ onClose, onSubmitted, initialTab = 'new' }: Prop
               !tenant ? (
                 <p className="text-sm text-[var(--color-text-muted)] text-center py-8">조직을 먼저 선택해 주세요.</p>
               ) : submittedOk ? (
-                <div className="text-center py-8 space-y-2">
+                <div className="text-center py-8 space-y-3">
                   <p className="text-2xl select-none">✅</p>
                   <p className="text-sm font-semibold text-[var(--color-text-primary)]">문의가 등록됐습니다.</p>
                   <p className="text-xs text-[var(--color-text-muted)]">답변이 등록되면 알림으로 안내드립니다.</p>
-                  <button onClick={() => { setSubmittedOk(false); setTab('mine') }} className="text-xs text-[var(--color-brand-primary)] hover:underline mt-1">내 문의 내역 보기 →</button>
-                  <button onClick={() => setSubmittedOk(false)} className="block mx-auto text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:underline">새 문의 작성</button>
+                  <div className="max-w-[220px] mx-auto space-y-2 pt-2">
+                    <button
+                      onClick={() => setSubmittedOk(false)}
+                      className="w-full py-2.5 text-sm font-semibold rounded-xl bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] hover:bg-[var(--color-brand-primary-hover)] transition-colors"
+                    >
+                      새 문의 작성
+                    </button>
+                    <button
+                      onClick={() => { setSubmittedOk(false); setTab('mine') }}
+                      className="w-full py-2 text-xs font-semibold rounded-xl border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
+                    >
+                      내 문의 내역 보기
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-3">
