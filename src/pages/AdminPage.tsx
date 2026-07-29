@@ -21,6 +21,8 @@ import { getFunctionErrorMessage } from '../lib/functionsError'
 import { fmtPhone } from '../lib/format'
 import { formatPhone } from '../lib/phone'
 import { BrandLegendIcon, isBrandLegendIcon } from '../lib/legendIcons'
+import { getFF } from '../lib/featureFlags'
+import type { FeatureFlags } from '../lib/featureFlags'
 import { LessonManagementPanel } from '../components/admin/LessonManagementPanel'
 import { FeedbackBoardPanel } from '../components/admin/FeedbackBoardPanel'
 import { useFeedbackBadge } from '../hooks/useFeedbackBadge'
@@ -957,6 +959,23 @@ export function AdminPage() {
       }
       setAdminTenant(updated)
       if (adminTenant.id === tenant?.id) updateCurrentTenant(updated)
+    }
+  }
+
+  // AdminPage.tsx — feature_flags 토글 핸들러
+  async function handleFeatureFlagToggle(key: keyof FeatureFlags, value: boolean) {
+    if (!adminTenant) return
+    const currentFlags: FeatureFlags = adminTenant.settings?.feature_flags ?? {}
+    const nextFlags: FeatureFlags = { ...currentFlags, [key]: value }
+    const { error } = await supabase
+      .from('tenants')
+      .update({ settings: { ...adminTenant.settings, feature_flags: nextFlags } })
+      .eq('id', adminTenant.id)
+    if (!error) {
+      setAdminTenant(prev => prev
+        ? { ...prev, settings: { ...prev.settings, feature_flags: nextFlags } }
+        : prev
+      )
     }
   }
 
@@ -2227,6 +2246,41 @@ export function AdminPage() {
                       </button>
                     ))}
                   </div>
+                </div>
+
+                {/* Feature Flags — 슈퍼관리자 전용 */}
+                <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid var(--color-border)' }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 10 }}>
+                    기능 플래그 (슈퍼관리자 전용)
+                  </div>
+                  {(
+                    [
+                      { key: 'lesson_packages' as const,  label: '레슨권/수강권' },
+                      { key: 'autoassign'      as const,  label: '자동 배정' },
+                      { key: 'notifications'   as const,  label: 'D-1 알림' },
+                      { key: 'attendance'      as const,  label: '출석 체크' },
+                      { key: 'volunteer_hours' as const,  label: '봉사/근무 시간 집계' },
+                      { key: 'care_mapping'    as const,  label: '담당자-케어 대상 매핑' },
+                      { key: 'public_booking'  as const,  label: '고객용 예약 링크' },
+                      { key: 'calendar_sync'   as const,  label: 'Google Calendar 연동' },
+                    ] as { key: keyof FeatureFlags; label: string }[]
+                  ).map(({ key, label }) => {
+                    const ff = adminTenant?.settings?.feature_flags
+                    const isOn = getFF(ff, key)
+                    return (
+                      <label
+                        key={key}
+                        style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, cursor: 'pointer', fontSize: 13 }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isOn}
+                          onChange={e => handleFeatureFlagToggle(key, e.target.checked)}
+                        />
+                        {label}
+                      </label>
+                    )
+                  })}
                 </div>
 
                 <button type="submit" disabled={saving}
