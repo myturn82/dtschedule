@@ -2,6 +2,10 @@
 
 > 선행 문서: [`industry-feature-mapping-2026-07-29.md`](./industry-feature-mapping-2026-07-29.md)
 > (업종별 기능 필요성 조사 — 이 문서의 근거 자료)
+>
+> 완성형 비전 프로토타입(현재 버전과의 차이를 강조한 시각 목업):
+> [LESSON:ON — 완성형 프로토타입](https://claude.ai/code/artifact/64448d09-814a-4792-b0d9-bfd6b7139a2f)
+> (실제 서비스 아님, 이 전략이 다 구현됐다고 가정한 내부 검토용 목업)
 
 ## 0. 방향성 요약
 
