@@ -152,21 +152,23 @@ export function FeedbackBoardPanel({ scope }: Props) {
                     )}
                   </div>
 
-                  <div className="flex gap-1.5">
-                    <input
+                  <div className="space-y-1.5">
+                    <textarea
                       value={replyText}
                       onChange={e => setReplyText(e.target.value)}
                       placeholder="답변을 입력하세요"
-                      onKeyDown={e => { if (e.key === 'Enter') handleReply(post.id) }}
-                      className="flex-1 text-sm px-3 py-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] focus:outline-none focus:border-[var(--color-brand-primary)]"
+                      rows={3}
+                      className="w-full text-sm px-3 py-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] focus:outline-none focus:border-[var(--color-brand-primary)] resize-none"
                     />
-                    <button
-                      onClick={() => handleReply(post.id)}
-                      disabled={replySaving || !replyText.trim()}
-                      className="px-3.5 py-2 text-sm font-semibold rounded-xl bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] disabled:opacity-40"
-                    >
-                      답변
-                    </button>
+                    <div className="flex justify-end">
+                      <button
+                        onClick={() => handleReply(post.id)}
+                        disabled={replySaving || !replyText.trim()}
+                        className="px-3.5 py-2 text-sm font-semibold rounded-xl bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] disabled:opacity-40"
+                      >
+                        답변
+                      </button>
+                    </div>
                   </div>
 
                   <div className="flex items-center justify-between gap-2">
