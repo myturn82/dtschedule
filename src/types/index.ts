@@ -115,17 +115,21 @@ export const PLAN_LABELS: Record<PlanType, string> = {
 }
 
 export interface PlanLimits {
-  maxOrgs: number
-  maxUsers: number
+  maxOrgs:         number   // 기존 유지
+  maxUsers:        number   // 기존 유지
+  maxMembers:      number   // -1 = 무제한
+  maxLessonTypes:  number   // -1 = 무제한
+  smsMonthly:      number
+  hasAds:          boolean
 }
 
 export type PlanLimitsMap = Record<PlanType, PlanLimits>
 
 // Fallback defaults, used until plan_limits table loads (or if a row is missing).
 export const PLAN_LIMITS: PlanLimitsMap = {
-  basic:    { maxOrgs: 1,        maxUsers: 20  },
-  pro:      { maxOrgs: 5,        maxUsers: 100 },
-  business: { maxOrgs: Infinity, maxUsers: Infinity },
+  basic:    { maxOrgs: 1,        maxUsers: 20,       maxMembers: 10,  maxLessonTypes: 3,   smsMonthly: 10,  hasAds: true  },
+  pro:      { maxOrgs: 5,        maxUsers: 100,      maxMembers: 50,  maxLessonTypes: -1,  smsMonthly: 100, hasAds: false },
+  business: { maxOrgs: Infinity, maxUsers: Infinity, maxMembers: -1,  maxLessonTypes: -1,  smsMonthly: 500, hasAds: false },
 }
 
 export const PLAN_FEATURES: Record<PlanType, { autoNotify: boolean; excelExport: boolean; dashboard: boolean }> = {
@@ -155,6 +159,7 @@ export interface Tenant {
   settings: TenantSettings;
   is_active: boolean;
   customer_id: string;
+  plan: PlanType;
   created_at: string;
   updated_at: string;
 }

@@ -1,7 +1,7 @@
 -- ============================================================
 -- 운영 DB 초기화 스크립트 (전체 재생성)
 -- 생성일: 2026-06-10
--- 기준 마이그레이션: 001 ~ 083
+-- 기준 마이그레이션: 001 ~ 085
 --
 -- ⚠️  주의: 이 스크립트는 모든 데이터를 삭제합니다.
 --           Supabase SQL Editor에서 직접 실행하세요.
@@ -138,6 +138,7 @@ CREATE TABLE tenants (
   settings      jsonb       NOT NULL DEFAULT '{}'::jsonb,
   is_active     boolean     NOT NULL DEFAULT true,
   customer_id   uuid        NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+  plan          text        NOT NULL DEFAULT 'basic' REFERENCES plan_limits(plan),
   created_at    timestamptz NOT NULL DEFAULT now(),
   updated_at    timestamptz NOT NULL DEFAULT now()
 );
@@ -294,10 +295,14 @@ CREATE TABLE date_overrides (
 
 -- plan_limits
 CREATE TABLE plan_limits (
-  plan       text        PRIMARY KEY CHECK (plan IN ('basic', 'pro', 'business')),
-  max_orgs   integer,
-  max_users  integer,
-  updated_at timestamptz NOT NULL DEFAULT now()
+  plan             text        PRIMARY KEY CHECK (plan IN ('basic', 'pro', 'business')),
+  max_orgs         integer,
+  max_users        integer,
+  max_members      integer     NOT NULL DEFAULT 10,
+  max_lesson_types integer     NOT NULL DEFAULT 3,
+  sms_monthly      integer     NOT NULL DEFAULT 10,
+  has_ads          boolean     NOT NULL DEFAULT true,
+  updated_at       timestamptz NOT NULL DEFAULT now()
 );
 
 -- assignment_snapshots
@@ -1720,6 +1725,8 @@ CREATE TRIGGER trg_feedback_reply_after_insert
 -- ────────────────────────────────────────────────────────────
 
 ALTER PUBLICATION supabase_realtime ADD TABLE assignments;
+ALTER TABLE plan_limits REPLICA IDENTITY FULL;
+ALTER PUBLICATION supabase_realtime ADD TABLE plan_limits;
 ALTER PUBLICATION supabase_realtime ADD TABLE slot_highlights;
 ALTER TABLE slot_highlights REPLICA IDENTITY FULL;
 ALTER PUBLICATION supabase_realtime ADD TABLE date_overrides;
@@ -1737,10 +1744,10 @@ ALTER TABLE lesson_packages REPLICA IDENTITY FULL;
 -- ────────────────────────────────────────────────────────────
 
 -- 요금제별 기본 제한 (슈퍼어드민이 나중에 수정 가능)
-INSERT INTO plan_limits (plan, max_orgs, max_users) VALUES
-  ('basic',    1,    20),
-  ('pro',      5,   100),
-  ('business', null, null)
+INSERT INTO plan_limits (plan, max_orgs, max_users, max_members, max_lesson_types, sms_monthly, has_ads) VALUES
+  ('basic',    1,    20,   10,  3,  10,  true),
+  ('pro',      5,   100,   50, -1, 100, false),
+  ('business', null, null, -1, -1, 500, false)
 ON CONFLICT (plan) DO NOTHING;
 
 

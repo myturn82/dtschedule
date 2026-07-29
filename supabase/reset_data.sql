@@ -49,10 +49,10 @@ RESTART IDENTITY CASCADE;
 -- STEP 3. 초기 데이터 재삽입
 -- ────────────────────────────────────────────────────────────
 
-INSERT INTO plan_limits (plan, max_orgs, max_users) VALUES
-  ('basic',    1,    20),
-  ('pro',      5,   100),
-  ('business', null, null)
+INSERT INTO plan_limits (plan, max_orgs, max_users, max_members, max_lesson_types, sms_monthly, has_ads) VALUES
+  ('basic',    1,    20,   10,  3,  10,  true),
+  ('pro',      5,   100,   50, -1, 100, false),
+  ('business', null, null, -1, -1, 500, false)
 ON CONFLICT (plan) DO NOTHING;
 
 

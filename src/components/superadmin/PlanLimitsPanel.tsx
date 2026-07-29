@@ -1,7 +1,7 @@
 ﻿import { useState } from 'react'
 import { usePlanLimits } from '../../contexts/PlanLimitsContext'
 import { PLAN_LABELS } from '../../types'
-import type { PlanType, PlanLimitsMap } from '../../types'
+import type { PlanType, PlanLimits, PlanLimitsMap } from '../../types'
 
 const PLANS: PlanType[] = ['basic', 'pro', 'business']
 
@@ -39,7 +39,7 @@ export function PlanLimitsPanel() {
 
 function PlanLimitsTable({ planLimits, updatePlanLimit }: {
   planLimits: PlanLimitsMap
-  updatePlanLimit: (plan: PlanType, limits: { maxOrgs: number; maxUsers: number }) => Promise<string | null>
+  updatePlanLimit: (plan: PlanType, limits: PlanLimits) => Promise<string | null>
 }) {
   const [drafts, setDrafts] = useState<Record<PlanType, { maxOrgs: string; maxUsers: string }>>(() =>
     Object.fromEntries(PLANS.map(p => [p, { maxOrgs: toInput(planLimits[p].maxOrgs), maxUsers: toInput(planLimits[p].maxUsers) }])) as Record<PlanType, { maxOrgs: string; maxUsers: string }>
@@ -50,7 +50,12 @@ function PlanLimitsTable({ planLimits, updatePlanLimit }: {
   async function handleSave(plan: PlanType) {
     setSavingPlan(plan)
     setMessage('')
-    const limits = { maxOrgs: fromInput(drafts[plan].maxOrgs), maxUsers: fromInput(drafts[plan].maxUsers) }
+    // Preserve the existing new fields; only maxOrgs/maxUsers are editable here
+    const limits: PlanLimits = {
+      ...planLimits[plan],
+      maxOrgs:  fromInput(drafts[plan].maxOrgs),
+      maxUsers: fromInput(drafts[plan].maxUsers),
+    }
     const error = await updatePlanLimit(plan, limits)
     setMessage(error ? `오류: ${error}` : `${PLAN_LABELS[plan]} 한도가 저장되었습니다.`)
     setSavingPlan(null)

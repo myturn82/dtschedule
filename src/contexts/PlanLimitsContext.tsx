@@ -23,8 +23,12 @@ export function PlanLimitsProvider({ children }: { children: React.ReactNode }) 
         const next = { ...prev }
         for (const row of data) {
           next[row.plan as PlanType] = {
-            maxOrgs: row.max_orgs ?? Infinity,
-            maxUsers: row.max_users ?? Infinity,
+            maxOrgs:         row.max_orgs        ?? Infinity,
+            maxUsers:        row.max_users       ?? Infinity,
+            maxMembers:      row.max_members      ?? 10,
+            maxLessonTypes:  row.max_lesson_types ?? 3,
+            smsMonthly:      row.sms_monthly      ?? 10,
+            hasAds:          row.has_ads          ?? true,
           }
         }
         return next
