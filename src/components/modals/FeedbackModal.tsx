@@ -175,6 +175,7 @@ export function FeedbackModal({ onClose, onSubmitted, initialTab = 'new' }: Prop
                   <p className="text-sm font-semibold text-[var(--color-text-primary)]">문의가 등록됐습니다.</p>
                   <p className="text-xs text-[var(--color-text-muted)]">답변이 등록되면 알림으로 안내드립니다.</p>
                   <button onClick={() => { setSubmittedOk(false); setTab('mine') }} className="text-xs text-[var(--color-brand-primary)] hover:underline mt-1">내 문의 내역 보기 →</button>
+                  <button onClick={() => setSubmittedOk(false)} className="block mx-auto text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:underline">새 문의 작성</button>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-3">
