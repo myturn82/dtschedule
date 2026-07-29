@@ -45,8 +45,20 @@ Deno.serve(async (req) => {
     const isAuthorized = callerProfile?.is_super_admin === true || callerMember?.role === 'admin'
     if (!isAuthorized) return json({ error: '권한 없음' }, 403, corsHeaders)
 
+    // 대상 계정이 실제로 이 조직 소속인지 확인 (조직 관리자가 다른 조직 회원의
+    // user_id를 끼워 넣어 이메일을 바꿔치기하는 것을 방지). 슈퍼관리자는 예외.
+    if (callerProfile?.is_super_admin !== true) {
+      const { data: targetMember } = await supabaseAdmin
+        .from('tenant_members').select('user_id')
+        .eq('tenant_id', tenant_id).eq('user_id', user_id).maybeSingle()
+      if (!targetMember) return json({ error: '해당 조직의 회원이 아닙니다.' }, 403, corsHeaders)
+    }
+
     // auth.users 이메일 업데이트
-    const { error: authErr } = await supabaseAdmin.auth.admin.updateUserById(user_id, { email })
+    // email_confirm: true 없이 호출하면 "Confirm email" 설정이 켜진 프로젝트에서
+    // 새 이메일이 미확인 상태로 남아 해당 이메일로 로그인이 거부된다.
+    // 이 흐름은 관리자가 즉시 변경하는 것이므로 확인 메일 없이 바로 확정 처리한다.
+    const { error: authErr } = await supabaseAdmin.auth.admin.updateUserById(user_id, { email, email_confirm: true })
     if (authErr) {
       console.error(`[admin-update-member-email] auth update failed: ${authErr.message}`)
       return json({ error: '이메일 변경에 실패했습니다.' }, 500, corsHeaders)

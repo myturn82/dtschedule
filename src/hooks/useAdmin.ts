@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { PLAN_LABELS } from '../types'
 import { usePlanLimits } from '../contexts/PlanLimitsContext'
+import { getFunctionErrorMessage } from '../lib/functionsError'
 import type { Profile, ScheduleRule, DateOverride, TenantSettings, TenantMemberWithRole, TenantAccessRole, PlanType } from '../types'
 
 interface AdminState {
@@ -183,7 +184,7 @@ export function useAdmin(tenantId: string): AdminState {
     const { data, error } = await supabase.functions.invoke('admin-update-member-email', {
       body: { user_id: userId, email: trimmed, tenant_id: tenantId },
     })
-    if (error || data?.error) return data?.error ?? error?.message ?? '이메일 변경에 실패했습니다.'
+    if (error || data?.error) return data?.error ?? await getFunctionErrorMessage(error, '이메일 변경에 실패했습니다.')
     setMembers(prev => prev.map(m =>
       m.user_id === userId && m.profile ? { ...m, profile: { ...m.profile, email: trimmed } } : m
     ))

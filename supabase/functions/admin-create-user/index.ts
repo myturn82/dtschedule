@@ -56,8 +56,19 @@ Deno.serve(async (req) => {
     let userId: string
 
     if (existingProfile) {
-      // 기존 유저 — 비밀번호 갱신 후 tenant_members에 추가
       userId = existingProfile.id
+
+      // 이미 다른 조직에 승인된 멤버로 있는 계정이면 차단 (타 조직 관리자가
+      // 남의 이메일만 알고 "직접 등록"으로 비밀번호를 갈아치워 계정을 탈취하는 것을 방지)
+      // 2개 이상 조직에 걸쳐있을 수 있어 maybeSingle() 대신 limit(1)로 존재 여부만 확인한다.
+      const { data: otherOrgMemberships } = await supabaseAdmin
+        .from('tenant_members').select('tenant_id')
+        .eq('user_id', userId).eq('is_approved', true).neq('tenant_id', tenant_id).limit(1)
+      if (otherOrgMemberships && otherOrgMemberships.length > 0) {
+        return json({ error: '이미 다른 조직에 가입된 이메일입니다. "회원 추가"(초대 방식)로 등록해 주세요.' }, 409, corsHeaders)
+      }
+
+      // 기존 유저 — 비밀번호 갱신 후 tenant_members에 추가
       const { error: pwErr } = await supabaseAdmin.auth.admin.updateUserById(userId, {
         password,
         user_metadata: { name },
