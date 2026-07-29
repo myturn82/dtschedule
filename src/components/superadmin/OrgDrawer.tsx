@@ -3,6 +3,8 @@ import type { Tenant, TenantMode } from '../../types'
 import { colorOf, avatarColorFor, initialsOf } from '../../lib/avatarColor'
 import { displayMode } from '../../lib/tenantMode'
 import { THEME_PRESET_LIST, type ThemePresetKey } from '../../lib/themePresets'
+import { getFF } from '../../lib/featureFlags'
+import type { FeatureFlags } from '../../lib/featureFlags'
 
 export interface DrawerMember {
   id: string
@@ -42,6 +44,8 @@ interface Props {
   themeSaving: boolean
   onThemeChange: (tenant: Tenant, presetKey: ThemePresetKey | '') => void
 
+  onFeatureFlagToggle: (tenant: Tenant, key: keyof FeatureFlags, value: boolean) => void
+
   onOpenSchedule: (tenant: Tenant) => void
   onOpenAdmin: (tenant: Tenant) => void
 
@@ -60,6 +64,7 @@ export function OrgDrawer({
   editingSlugId, editSlug, setEditSlug, slugSaving, setEditingSlugId, saveSlug,
   modeSaving, onModeChange,
   themeSaving, onThemeChange,
+  onFeatureFlagToggle,
   onOpenSchedule, onOpenAdmin,
   deletingSaving, onDelete, onReactivate,
   onApproveMember, onRejectMember, approvingMemberId,
@@ -215,6 +220,36 @@ export function OrgDrawer({
             삭제
           </button>
         )}
+      </div>
+
+      {/* ── 기능 플래그 ── */}
+      <div className="mb-5">
+        <h3 className="text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wide mb-2">기능 플래그</h3>
+        {(
+          [
+            { key: 'lesson_packages' as const,  label: '레슨권/수강권' },
+            { key: 'autoassign'      as const,  label: '자동 배정' },
+            { key: 'notifications'   as const,  label: 'D-1 알림' },
+            { key: 'attendance'      as const,  label: '출석 체크' },
+            { key: 'volunteer_hours' as const,  label: '봉사/근무 시간 집계' },
+            { key: 'care_mapping'    as const,  label: '담당자-케어 대상 매핑' },
+            { key: 'public_booking'  as const,  label: '고객용 예약 링크' },
+            { key: 'calendar_sync'   as const,  label: 'Google Calendar 연동' },
+          ] as { key: keyof FeatureFlags; label: string }[]
+        ).map(({ key, label }) => {
+          const ff = tenant.settings?.feature_flags
+          const isOn = getFF(ff, key)
+          return (
+            <label key={key} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5, cursor: 'pointer', fontSize: 12 }}>
+              <input
+                type="checkbox"
+                checked={isOn}
+                onChange={e => onFeatureFlagToggle(tenant, key, e.target.checked)}
+              />
+              {label}
+            </label>
+          )
+        })}
       </div>
 
       {/* ── 멤버 ── */}

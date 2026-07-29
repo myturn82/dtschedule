@@ -18,6 +18,7 @@ import { EMPTY_ORG_FORM, SLUG_RE, type CreateOrgForm } from '../components/super
 import { displayMode } from '../lib/tenantMode'
 import { isValidPhone } from '../lib/phone'
 import { THEME_PRESETS, type ThemePresetKey } from '../lib/themePresets'
+import type { FeatureFlags } from '../lib/featureFlags'
 import { getFunctionErrorMessage } from '../lib/functionsError'
 import '../styles/account-hub.css'
 
@@ -667,6 +668,22 @@ export function SuperAdminPage() {
     setPendingModeChange({ tenant, from: fromMode, to: newMode })
   }
 
+  async function handleFeatureFlagToggle(tenant: Tenant, key: keyof FeatureFlags, value: boolean) {
+    const currentFlags = tenant.settings?.feature_flags ?? {}
+    const nextFlags = { ...currentFlags, [key]: value }
+    const { data, error } = await supabase
+      .from('tenants')
+      .update({ settings: { ...tenant.settings, feature_flags: nextFlags } })
+      .eq('id', tenant.id)
+      .select()
+      .single()
+    if (error) {
+      setMessage(`오류: ${error.message}`)
+    } else if (data) {
+      setTenants(prev => prev.map(t => t.id === tenant.id ? data : t))
+    }
+  }
+
   async function handleThemeChange(tenant: Tenant, presetKey: ThemePresetKey | '') {
     setThemeSaving(true)
     const { data, error } = await supabase
@@ -1013,6 +1030,7 @@ export function SuperAdminPage() {
               onModeChange={handleModeChange}
               themeSaving={themeSaving}
               onThemeChange={handleThemeChange}
+              onFeatureFlagToggle={handleFeatureFlagToggle}
               onOpenSchedule={t => { setTenant(t, 'admin'); navigate('/') }}
               onOpenAdmin={t => navigate(`/admin?org=${t.id}`)}
               deletingSaving={deletingSaving}
