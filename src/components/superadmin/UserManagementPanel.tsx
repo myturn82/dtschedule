@@ -127,8 +127,8 @@ export function UserManagementPanel({ users, loading, onDeleteUsers }: Props) {
         </div>
       )}
 
-      {/* 헤더 */}
-      <div className="flex items-center gap-3 px-3 py-2 text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wide border-b border-[var(--color-border)]">
+      {/* 헤더 (모바일 전용) */}
+      <div className="sm:hidden flex items-center gap-3 px-3 py-2 text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wide border-b border-[var(--color-border)]">
         <input
           type="checkbox"
           checked={allChecked}
@@ -139,75 +139,186 @@ export function UserManagementPanel({ users, loading, onDeleteUsers }: Props) {
         <span className="w-44 text-right">소속 조직 / 가입일</span>
       </div>
 
-      {/* 목록 */}
       {loading && (
         <p className="text-sm text-[var(--color-text-muted)] text-center py-8">불러오는 중...</p>
       )}
       {!loading && filtered.length === 0 && (
         <p className="text-sm text-[var(--color-text-muted)] text-center py-8">검색 결과가 없습니다.</p>
       )}
-      {!loading && filtered.map(user => {
-        const isChecked = selectedIds.has(user.id)
-        const isDisabled = user.is_super_admin
 
-        return (
-          <label
-            key={user.id}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-colors cursor-pointer ${isChecked
-              ? 'bg-[var(--color-brand-primary)]/5 border-[var(--color-brand-primary)]/30'
-              : 'border-transparent hover:bg-[var(--color-surface-hover)]'} ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
-          >
-            <input
-              type="checkbox"
-              checked={isChecked}
-              disabled={isDisabled}
-              onChange={() => !isDisabled && toggleOne(user.id)}
-              className="w-4 h-4 rounded accent-[var(--color-brand-primary)] flex-shrink-0"
-            />
-            <span className="flex-1 min-w-0">
-              <span className="flex items-center gap-1.5 flex-wrap">
-                {user.signup_provider === 'kakao' && (
-                  <KakaoBadge size={13} />
-                )}
-                <span className="text-[13px] font-semibold text-[var(--color-text-primary)] truncate">{user.name}</span>
-                {user.is_super_admin && (
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)]">슈퍼관리자</span>
-                )}
-              </span>
-              <span className="block text-[11px] text-[var(--color-text-muted)] truncate whitespace-nowrap">{user.email ?? '-'}</span>
-              {user.phone && (
-                <span className="flex items-center gap-1 mt-0.5">
-                  <span className="text-[11px] text-[var(--color-text-muted)]">{fmtPhone(user.phone)}</span>
-                  <a
-                    href={`sms:${user.phone.replace(/[^0-9]/g, '')}`}
-                    className="select-none text-sm leading-none"
-                    onClick={e => e.stopPropagation()}
-                    title="문자 보내기"
-                  >📱</a>
-                </span>
-              )}
-            </span>
-            <span className="w-44 flex flex-col items-end gap-1 flex-shrink-0">
-              {user.org_names.length === 0 ? (
-                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-700">
-                  미가입
-                </span>
-              ) : (
-                user.org_names.map((o, i) => (
-                  <span key={i} className="flex flex-col items-end max-w-full">
-                    <span className="text-[11px] font-semibold text-[var(--color-text-secondary)] truncate max-w-full">
-                      {o.name}
+      {!loading && filtered.length > 0 && (
+        <>
+          {/* 목록 (모바일 카드형) */}
+          <div className="sm:hidden space-y-1.5">
+            {filtered.map(user => {
+              const isChecked = selectedIds.has(user.id)
+              const isDisabled = user.is_super_admin
+
+              return (
+                <label
+                  key={user.id}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-colors cursor-pointer ${isChecked
+                    ? 'bg-[var(--color-brand-primary)]/5 border-[var(--color-brand-primary)]/30'
+                    : 'border-transparent hover:bg-[var(--color-surface-hover)]'} ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    disabled={isDisabled}
+                    onChange={() => !isDisabled && toggleOne(user.id)}
+                    className="w-4 h-4 rounded accent-[var(--color-brand-primary)] flex-shrink-0"
+                  />
+                  <span className="flex-1 min-w-0">
+                    <span className="flex items-center gap-1.5 flex-wrap">
+                      {user.signup_provider === 'kakao' && (
+                        <KakaoBadge size={13} />
+                      )}
+                      <span className="text-[13px] font-semibold text-[var(--color-text-primary)] truncate">{user.name}</span>
+                      {user.is_super_admin && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)]">슈퍼관리자</span>
+                      )}
                     </span>
-                    <span className="text-[10px] text-[var(--color-text-muted)]" style={{ fontFamily: 'var(--font-mono, monospace)' }}>
-                      {o.joinedAt.slice(0, 10)}
-                    </span>
+                    <span className="block text-[11px] text-[var(--color-text-muted)] truncate whitespace-nowrap">{user.email ?? '-'}</span>
+                    {user.phone && (
+                      <span className="flex items-center gap-1 mt-0.5">
+                        <span className="text-[11px] text-[var(--color-text-muted)]">{fmtPhone(user.phone)}</span>
+                        <a
+                          href={`sms:${user.phone.replace(/[^0-9]/g, '')}`}
+                          className="select-none text-sm leading-none"
+                          onClick={e => e.stopPropagation()}
+                          title="문자 보내기"
+                        >📱</a>
+                      </span>
+                    )}
                   </span>
-                ))
-              )}
-            </span>
-          </label>
-        )
-      })}
+                  <span className="w-44 flex flex-col items-end gap-1 flex-shrink-0">
+                    {user.org_names.length === 0 ? (
+                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-700">
+                        미가입
+                      </span>
+                    ) : (
+                      user.org_names.map((o, i) => (
+                        <span key={i} className="flex flex-col items-end max-w-full">
+                          <span className="text-[11px] font-semibold text-[var(--color-text-secondary)] truncate max-w-full">
+                            {o.name}
+                          </span>
+                          <span className="text-[10px] text-[var(--color-text-muted)]" style={{ fontFamily: 'var(--font-mono, monospace)' }}>
+                            {o.joinedAt.slice(0, 10)}
+                          </span>
+                        </span>
+                      ))
+                    )}
+                  </span>
+                </label>
+              )
+            })}
+          </div>
+
+          {/* 목록 (PC 테이블형) */}
+          <div className="hidden sm:block rounded-2xl border border-[var(--color-border)] overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
+                    <th className="px-3 py-2.5 text-center">
+                      <input
+                        type="checkbox"
+                        checked={allChecked}
+                        onChange={toggleAll}
+                        className="w-4 h-4 rounded accent-[var(--color-brand-primary)]"
+                      />
+                    </th>
+                    <th className="px-3 py-2.5 text-center text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">이름</th>
+                    <th className="px-3 py-2.5 text-center text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">이메일</th>
+                    <th className="px-3 py-2.5 text-center text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">전화번호</th>
+                    <th className="px-3 py-2.5 text-center text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">소속 조직</th>
+                    <th className="px-3 py-2.5 text-center text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">가입일</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--color-border)]">
+                  {filtered.map(user => {
+                    const isChecked = selectedIds.has(user.id)
+                    const isDisabled = user.is_super_admin
+
+                    return (
+                      <tr
+                        key={user.id}
+                        className={`transition-colors ${isChecked
+                          ? 'bg-[var(--color-brand-primary)]/5'
+                          : 'hover:bg-[var(--color-surface-hover)]'} ${isDisabled ? 'opacity-60' : ''}`}
+                      >
+                        <td className="px-3 py-2.5 text-center">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            disabled={isDisabled}
+                            onChange={() => !isDisabled && toggleOne(user.id)}
+                            className="w-4 h-4 rounded accent-[var(--color-brand-primary)]"
+                          />
+                        </td>
+                        <td className="px-3 py-2.5 text-center whitespace-nowrap">
+                          <span className="flex items-center justify-center gap-1.5">
+                            {user.signup_provider === 'kakao' && (
+                              <KakaoBadge size={13} />
+                            )}
+                            <span className="text-[13px] font-semibold text-[var(--color-text-primary)]">{user.name}</span>
+                            {user.is_super_admin && (
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)]">슈퍼관리자</span>
+                            )}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5 text-center text-[12px] text-[var(--color-text-muted)] whitespace-nowrap">
+                          {user.email ?? '-'}
+                        </td>
+                        <td className="px-3 py-2.5 text-center whitespace-nowrap">
+                          {user.phone ? (
+                            <span className="inline-flex items-center gap-1">
+                              <span className="text-[12px] text-[var(--color-text-muted)]">{fmtPhone(user.phone)}</span>
+                              <a
+                                href={`sms:${user.phone.replace(/[^0-9]/g, '')}`}
+                                className="select-none text-sm leading-none"
+                                title="문자 보내기"
+                              >📱</a>
+                            </span>
+                          ) : (
+                            <span className="text-[12px] text-[var(--color-text-muted)]">-</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2.5 text-center">
+                          {user.org_names.length === 0 ? (
+                            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-700">
+                              미가입
+                            </span>
+                          ) : (
+                            <div className="flex flex-col items-center gap-1">
+                              {user.org_names.map((o, i) => (
+                                <span key={i} className="text-[12px] font-semibold text-[var(--color-text-secondary)] whitespace-nowrap">{o.name}</span>
+                              ))}
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-3 py-2.5 text-center">
+                          {user.org_names.length === 0 ? (
+                            <span className="text-[12px] text-[var(--color-text-muted)]">-</span>
+                          ) : (
+                            <div className="flex flex-col items-center gap-1">
+                              {user.org_names.map((o, i) => (
+                                <span key={i} className="text-[11px] text-[var(--color-text-muted)] whitespace-nowrap" style={{ fontFamily: 'var(--font-mono, monospace)' }}>
+                                  {o.joinedAt.slice(0, 10)}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* 삭제 확인 모달 */}
       {deleteConfirm && (
