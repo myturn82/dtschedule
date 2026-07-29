@@ -128,6 +128,18 @@ CREATE TABLE customers (
   updated_at            timestamptz NOT NULL DEFAULT now()
 );
 
+-- plan_limits (tenants.plan FK 대상이므로 tenants보다 먼저 생성)
+CREATE TABLE plan_limits (
+  plan             text        PRIMARY KEY CHECK (plan IN ('basic', 'pro', 'business')),
+  max_orgs         integer,
+  max_users        integer,
+  max_members      integer     NOT NULL DEFAULT 10,
+  max_lesson_types integer     NOT NULL DEFAULT 3,
+  sms_monthly      integer     NOT NULL DEFAULT 10,
+  has_ads          boolean     NOT NULL DEFAULT true,
+  updated_at       timestamptz NOT NULL DEFAULT now()
+);
+
 -- tenants
 CREATE TABLE tenants (
   id            uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -291,18 +303,6 @@ CREATE TABLE date_overrides (
   label      text,
   tenant_id  uuid        NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
   UNIQUE (tenant_id, date)
-);
-
--- plan_limits
-CREATE TABLE plan_limits (
-  plan             text        PRIMARY KEY CHECK (plan IN ('basic', 'pro', 'business')),
-  max_orgs         integer,
-  max_users        integer,
-  max_members      integer     NOT NULL DEFAULT 10,
-  max_lesson_types integer     NOT NULL DEFAULT 3,
-  sms_monthly      integer     NOT NULL DEFAULT 10,
-  has_ads          boolean     NOT NULL DEFAULT true,
-  updated_at       timestamptz NOT NULL DEFAULT now()
 );
 
 -- assignment_snapshots
