@@ -2269,7 +2269,7 @@ export function AdminPage() {
                     [
                       { key: 'lesson_packages' as const,  label: '레슨권/수강권' },
                       { key: 'autoassign'      as const,  label: '자동 배정' },
-                      { key: 'notifications'   as const,  label: 'D-1 알림' },
+                      { key: 'notifications'   as const,  label: '배정알림' },
                       { key: 'attendance'      as const,  label: '출석 체크' },
                       { key: 'volunteer_hours' as const,  label: '봉사/근무 시간 집계' },
                       { key: 'care_mapping'    as const,  label: '담당자-케어 대상 매핑' },
