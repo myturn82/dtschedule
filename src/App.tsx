@@ -15,6 +15,10 @@ import { PendingPage } from './pages/PendingPage'
 import { SuperAdminPage } from './pages/SuperAdminPage'
 import { CustomerAdminPage } from './pages/CustomerAdminPage'
 import { LandingPage }  from './pages/LandingPage'
+import { BRAND } from './lib/brandConfig'
+import { LandingLessonOn } from './pages/landing/LandingLessonOn'
+import { LandingShiftOn  } from './pages/landing/LandingShiftOn'
+import { LandingServeOn  } from './pages/landing/LandingServeOn'
 import { ConsentPage }  from './pages/ConsentPage'
 import { AuthPage }     from './pages/AuthPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
@@ -56,7 +60,12 @@ function AppRoutes() {
   if (!profile) {
     return (
       <Routes>
-        <Route path="/"        element={<LandingPage />} />
+        <Route path="/" element={
+          BRAND.vertical === 'lesson-sports'  ? <LandingLessonOn /> :
+          BRAND.vertical === 'food-retail'    ? <LandingShiftOn  /> :
+          BRAND.vertical === 'public-welfare' ? <LandingServeOn  /> :
+          <LandingPage />
+        } />
         <Route path="/consent" element={<ConsentPage />} />
         <Route path="/auth"           element={<AuthPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
