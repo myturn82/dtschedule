@@ -87,6 +87,7 @@ export function AuthPage() {
   const [searchParams] = useSearchParams()
 
   const initTab = searchParams.get('tab') === 'login' ? 'login' : 'signup'
+  const verticalParam = searchParams.get('vertical')
   const [tab, setTab] = useState<Tab>(initTab)
 
   const signupInProgress = useRef(false)
@@ -296,7 +297,8 @@ export function AuthPage() {
       )
       sessionStorage.setItem('vs_setup_tenant', JSON.stringify({ id: tenantId, slug: tenantSlug, name: tenantName, customer_id: custData.id, is_active: true, settings: tenantSettings }))
       setJoinProgress('이동하는 중...')
-      window.location.href = '/setup?org=' + tenantId
+      const setupUrl = `/setup?org=${tenantId}${verticalParam ? `&vertical=${verticalParam}` : ''}`
+      window.location.href = setupUrl
     } finally {
       window.removeEventListener('beforeunload', clearCreatingFlag)
     }

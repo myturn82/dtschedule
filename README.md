@@ -32,6 +32,12 @@
 
 ## ✨ 핵심 기능
 
+### 🌐 버티컬 멀티앱 & 수익화
+
+- **버티컬 멀티앱 지원** — 단일 코드베이스에서 LESSON:ON·SHIFT:ON·SERVE:ON 등 7개 버티컬 앱 빌드 (`npm run build:lesson-on` 등)
+- **feature_flags** — 슈퍼관리자가 조직별로 기능 on/off 가능 (레슨권, 자동배정, 출석 등)
+- **플랜 게이팅** — 무료/Pro/Business 플랜별 멤버·레슨권·SMS 한도 관리 (`useTenantPlan` 훅)
+
 ### 🏢 슈퍼관리자 (Super Admin)
 
 - 🗂 **고객 계정 허브** — Basic · Pro · Business 요금제별 고객 목록을 직관적인 레일 UI로 관리
@@ -78,6 +84,7 @@
 | **Backend** | Supabase (PostgreSQL, Auth, Storage, Realtime) |
 | **DB 관리** | Supabase Migrations (SQL 파일 60개+) |
 | **상태 관리** | React Context (TenantContext, AuthContext, PlanLimitsContext) |
+| **버티컬 멀티앱** | Vertical Presets, Feature Flags, Brand Config — 환경 변수 기반 앱 구분 |
 | **이미지 처리** | HTML5 Canvas API — WebP 압축, Supabase Storage 업로드 |
 | **다국어 (i18n)** | react-i18next, i18next-browser-languagedetector — 한국어/영어, 브라우저 자동 감지 |
 | **AI** | Anthropic Claude (Messages API, tool use) — Edge Function(`ai-parse`)에서 서버사이드 호출, 자연어 → 구조화 데이터 파싱 |
@@ -155,20 +162,25 @@ dtschedule/
 │   │   ├── AuthContext.tsx
 │   │   ├── TenantContext.tsx    # 조직 설정 전역 주입
 │   │   └── PlanLimitsContext.tsx
-│   ├── hooks/                   # useAdmin, useTenantRoles 등 커스텀 훅
+│   ├── hooks/                   # useAdmin, useTenantRoles, useTenantPlan 등 커스텀 훅
 │   ├── lib/
 │   │   ├── supabase.ts
 │   │   ├── themePresets.ts      # 포인트 컬러 프리셋 14종
 │   │   ├── imageCompress.ts     # Canvas API WebP 압축
 │   │   ├── aiParse.ts           # AI 자연어 파싱 Edge Function 호출 래퍼
 │   │   ├── datePicker.ts        # 날짜 선택 모달용 연도/일수/스크롤 인덱스 계산
-│   │   └── uploadScheduleImage.ts
+│   │   ├── uploadScheduleImage.ts
+│   │   ├── featureFlags.ts      # 기능 플래그 on/off 관리
+│   │   ├── verticalPresets.ts   # 버티컬별 프리셋 (LESSON:ON 등)
+│   │   └── brandConfig.ts       # 앱 브랜드 설정 (이름, 색상 등)
 │   ├── pages/
 │   │   ├── SuperAdminPage.tsx   # 슈퍼관리자 허브
 │   │   ├── AdminPage.tsx        # 조직 관리자 콘솔
 │   │   ├── SchedulePage.tsx     # 스케줄 메인 화면
 │   │   ├── CustomerAdminPage.tsx
+│   │   ├── ConsentPage.tsx      # 서비스 이용 동의
 │   │   ├── SetupWizardPage.tsx  # 조직 셋업 위자드
+│   │   ├── landing/             # 버티컬별 랜딩페이지 (LandingLessonOn 등)
 │   │   └── ...
 │   ├── types/
 │   │   └── index.ts             # CustomFieldDef, Tenant, Assignment 등 공통 타입

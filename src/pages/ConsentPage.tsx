@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { DevFileLabel } from '../components/DevFileLabel'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ScheduleBackground } from '../components/auth/ScheduleBackground'
 import { TERMS, type DocKey } from '../lib/legalTerms'
 
@@ -37,6 +37,8 @@ function CheckRow({ on, label, onToggle, onView }: {
 
 export function ConsentPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const verticalParam = searchParams.get('vertical')
   const [tos, setTos]         = useState(false)
   const [privacy, setPrivacy] = useState(false)
   const [doc, setDoc]         = useState<DocKey | null>(null)
@@ -73,7 +75,8 @@ export function ConsentPage() {
           onClick={() => {
             sessionStorage.setItem('vs_consent_ok', '1')
             sessionStorage.setItem('vs_consent_ts', new Date().toISOString())
-            navigate('/auth?tab=signup')
+            const authUrl = `/auth?tab=signup${verticalParam ? `&vertical=${verticalParam}` : ''}`
+            navigate(authUrl)
           }}>
           동의 및 계속하기 {canProceed && <IArrow />}
         </button>
