@@ -8,7 +8,8 @@ export async function fetchFeedbackPosts(scope: FeedbackScope): Promise<Feedback
 
   if (scope.kind === 'mine') query = query.eq('author_id', scope.userId)
   else if (scope.kind === 'org') query = query.eq('target_type', 'org_admin').eq('tenant_id', scope.tenantId)
-  else query = query.eq('target_type', 'system')
+  // scope.kind === 'system': target_type 필터 없이 전체 조회.
+  // 조직관리자가 없거나 본인뿐인 조직에서 올라온 '단순 문의(org_admin)'도 시스템관리자가 항상 확인할 수 있어야 사각지대가 없다.
 
   const { data, error } = await query
   if (error) throw new Error(error.message)
@@ -17,9 +18,8 @@ export async function fetchFeedbackPosts(scope: FeedbackScope): Promise<Feedback
 
 export async function countOpenFeedback(scope: Exclude<FeedbackScope, { kind: 'mine'; userId: string }>): Promise<number> {
   let query = supabase.from('feedback_posts').select('id', { count: 'exact', head: true }).eq('status', 'open')
-  query = scope.kind === 'org'
-    ? query.eq('target_type', 'org_admin').eq('tenant_id', scope.tenantId)
-    : query.eq('target_type', 'system')
+  if (scope.kind === 'org') query = query.eq('target_type', 'org_admin').eq('tenant_id', scope.tenantId)
+  // scope.kind === 'system': fetchFeedbackPosts와 동일하게 target_type 필터 없이 전체 카운트
 
   const { count, error } = await query
   if (error) return 0

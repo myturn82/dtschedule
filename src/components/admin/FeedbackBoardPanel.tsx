@@ -105,8 +105,15 @@ export function FeedbackBoardPanel({ scope }: Props) {
                     <span className="text-sm select-none shrink-0">{CATEGORY_ICON[post.category]}</span>
                     <span className="text-sm font-semibold text-[var(--color-text-primary)] truncate">{post.title}</span>
                   </span>
-                  <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full border ${STATUS_CLS[post.status]}`}>
-                    {FEEDBACK_STATUS_LABELS[post.status]}
+                  <span className="flex items-center gap-1 shrink-0">
+                    {scope.kind === 'system' && post.target_type === 'org_admin' && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] border-[var(--color-border)]">
+                        조직관리자용
+                      </span>
+                    )}
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${STATUS_CLS[post.status]}`}>
+                      {FEEDBACK_STATUS_LABELS[post.status]}
+                    </span>
                   </span>
                 </div>
                 <div className="text-[11px] text-[var(--color-text-muted)] mt-1">
