@@ -77,7 +77,7 @@
 ## N+1. DB / 마이그레이션 반영 상태
 
 - [x] 개발 DB(`mcuszdvophmqrwostcah`) 마이그레이션(`081_feedback_board.sql`, `083_feedback_posts_delete.sql`) 적용 확인
-- [ ] **[운영 DB]** 사용자 승인 후 운영 DB(`bjnmaajhcmhxwonybnqc`)에 마이그레이션 적용
+- [x] **[운영 DB]** 사용자 승인 후 운영 DB(`bjnmaajhcmhxwonybnqc`)에 마이그레이션 적용
 - [x] `supabase/reset_db.sql` / `reset_data.sql`을 최신 마이그레이션 번호(083)로 갱신
 - [x] `npx tsc -b` 통과
 - [x] `npm run build` 통과
