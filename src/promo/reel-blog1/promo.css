@@ -51,7 +51,7 @@ body {
 }
 .boardwindow {
   position: absolute;
-  top: 7.81%;
+  top: 12%;
   left: 0; right: 0; bottom: 0;
   background: var(--color-surface, #fff);
   padding: 0;
@@ -62,6 +62,10 @@ body {
   mask-image: linear-gradient(to bottom, black 50%, transparent 90%);
 }
 
+.calslide-wrap { display: grid; overflow: hidden; flex: 1; min-height: 0; }
+.calslide-wrap > * { grid-area: 1 / 1; }
+.calslide { width: 100%; }
+
 /* 캡션이 걸리는 하단/상단을 어둡게 눌러 가독성 확보 — 그 사이(중간)는 달력이 그대로 비친다 */
 .scrim {
   position: absolute;
@@ -71,9 +75,9 @@ body {
   background: linear-gradient(
     to bottom,
     rgba(8, 9, 14, 0) 0%,
-    rgba(8, 9, 14, 0) 44%,
-    rgba(8, 9, 14, 0.58) 66%,
-    rgba(8, 9, 14, 0.92) 100%
+    rgba(8, 9, 14, 0) 40%,
+    rgba(8, 9, 14, 0.72) 62%,
+    rgba(8, 9, 14, 0.96) 100%
   );
 }
 .scrimtop {
@@ -87,7 +91,7 @@ body {
 .brandmark {
   position: absolute;
   top: 7.81%;
-  left: 14px;
+  left: 3.5cqw;
   z-index: 30;
   font-size: 3cqw;
   font-weight: 300;
@@ -106,7 +110,7 @@ body {
   top: 7.81%;     /* 150/1920 */
   bottom: 23.44%; /* 450/1920 */
   z-index: 20;
-  padding: 0 20px;
+  padding: 0 4.5cqw;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -130,7 +134,8 @@ body {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #ff7a66;
-  margin: 0 0 6px;
+  margin: 0 0 1.4cqw;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.7);
 }
 .headline {
   margin: 0;
@@ -139,45 +144,39 @@ body {
   line-height: 1.26;
   letter-spacing: -0.01em;
   color: #eef0f8;
-  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.35);
+  text-shadow: 0 2px 16px rgba(0,0,0,0.5);
 }
 .sub {
-  margin: 6px 0 0;
+  margin: 1.4cqw 0 0;
   font-size: 3.2cqw;
   line-height: 1.5;
   color: #c3c6d4;
   max-width: 34ch;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.8);
 }
 
 .outrowrap {
   display: flex;
   flex-direction: column;
 }
-.wordmark { font-size: 8cqw; font-weight: 800; letter-spacing: -0.01em; color: #eef0f8; }
+.wordmark { font-size: 7cqw; font-weight: 800; letter-spacing: -0.01em; color: #eef0f8; }
 .wordmark em { font-style: normal; color: #ff7a66; }
-.tagline { margin: 10px 0 20px; color: #c3c6d4; font-size: 3.2cqw; }
+.tagline { margin: 2.5cqw 0 4.5cqw; color: #c3c6d4; font-size: 3.1cqw; }
 .cta {
   display: inline-flex; align-items: center; gap: 8px;
   background: #ff7a66; color: #1a0d08;
-  font-weight: 800; font-size: 3.5cqw;
-  padding: 11px 17px; border-radius: 999px;
+  font-weight: 800; font-size: 3.2cqw;
+  padding: 2.6cqw 4cqw; border-radius: 999px;
   width: fit-content;
 }
 
-/* ?record 모드: reel이 뷰포트를 정확히 꽉 채워 1080×1920 에뮬레이션과 1:1 매핑 */
-body:has(.record) {
-  padding: 0;
-}
-.record {
-  gap: 0;
-}
-.record .reel {
-  width: 100vw;
-  height: 100vh;
-  border-radius: 0;
-  box-shadow: none;
-}
+body:has(.record) { padding: 0; width: 100vw; height: 100vh; }
+.record { gap: 0; width: 100vw; height: 100vh; justify-content: center; }
+.record .reel { width: min(100vw, calc(100vh * 9 / 16)); border-radius: 0; box-shadow: none; }
 
 .hint { color: #7a8098; font-size: 12px; text-align: center; max-width: 340px; line-height: 1.6; }
 .hint b { color: #eef0f8; }
 .hint code { background: #1e2030; color: #ff7a66; padding: 1px 5px; border-radius: 4px; font-size: 11px; }
+
+/* 배정 이름 텍스트: 살짝 얹은 블랙 (--color-brand-primary-text 미설정 시 폴백 수정) */
+:root { --tint-brand-ink: #1c1c1e; --tint-plus-ink: #1c1c1e; }

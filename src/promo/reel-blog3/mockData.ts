@@ -31,9 +31,9 @@ function role(id: string, name: string, splitCell: boolean, indicatorBar: boolea
 }
 
 // ── 역할 정의 ─────────────────────────────────────────────────────────────────
-export const ROLE_LEADER = role('r3-leader', '팀장',     false, true,  0)
-export const ROLE_CUT    = role('r3-cut',    '커트팀',    true,  false, 0)
-export const ROLE_PERM   = role('r3-perm',   '펌·염색팀', true,  false, 1)
+export const ROLE_LEADER = role('r3-leader', '팀장',   false, true,  0)
+export const ROLE_CUT    = role('r3-cut',    '봉사자', true,  false, 0)
+export const ROLE_PERM   = role('r3-perm',   '활동가', true,  false, 1)
 
 // ── 시나리오 A: 스터디카페 — 역할 없음 ────────────────────────────────────────
 const SLOTS_STUDY: TimeSlot[] = ['09-10','10-11','11-12','13-14','14-15','15-16','16-17','17-18','18-19','19-20']

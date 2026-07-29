@@ -37,7 +37,7 @@ const SCENARIO_BY_PHASE: Partial<Record<Phase, Scenario>> = {
 type HLKind = 'indicator' | 'split'
 const HIGHLIGHT_BY_PHASE: Partial<Record<Phase, { day: number; kind: HLKind; label: string }>> = {
   indicator: { day: HIGHLIGHT_INDICATOR_DAY, kind: 'indicator', label: '팀장' },
-  split:     { day: HIGHLIGHT_SPLIT_DAY,     kind: 'split',     label: '커트팀 / 펌팀' },
+  split:     { day: HIGHLIGHT_SPLIT_DAY,     kind: 'split',     label: '봉사자 / 활동가' },
 }
 
 const CAPTION: Partial<Record<Phase, { kicker: string; headline: string; sub: string }>> = {
@@ -53,13 +53,13 @@ const CAPTION: Partial<Record<Phase, { kicker: string; headline: string; sub: st
   },
   indicator: {
     kicker: 'indicator_bar',
-    headline: '팀장은\n상단 색 줄로',
-    sub: '셀을 나누지 않고 얇은 색 줄로 구분 — 나머지 공간은 봉사자 차지',
+    headline: '팀장은\n좌측 바 표시로',
+    sub: '셀을 나누지 않고 좌측 색 바로 구분 — 나머지 공간은 봉사자 차지',
   },
   split: {
     kicker: 'split_cell',
-    headline: '커트팀 · 펌팀\n역할별로',
-    sub: '같은 시간대에 역할마다 독립적으로 — 예약이 섞이지 않습니다',
+    headline: '봉사자 · 활동가\n역할별로',
+    sub: '같은 시간대에 역할마다 독립적으로 — 배정이 섞이지 않습니다',
   },
 }
 

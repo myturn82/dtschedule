@@ -31,102 +31,13 @@ body {
 
 .boardwindow {
   position: absolute;
-  top: 7.81%; left: 0; right: 0; bottom: 0;
+  top: 12%; left: 0; right: 0; bottom: 0;
   background: #f8f7ff;
   padding: 0; overflow: hidden;
   display: flex; flex-direction: column;
   -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 92%);
   mask-image: linear-gradient(to bottom, black 50%, transparent 92%);
 }
-
-/* ── 위자드 mock UI ────────────────────────────────────── */
-.wiz-wrap {
-  flex: 1; min-height: 0;
-  display: flex; flex-direction: column;
-  padding: 4cqw 4cqw 2cqw;
-  gap: 3cqw;
-}
-
-.wiz-step-bar {
-  display: flex; align-items: center; gap: 1.5cqw;
-  font-size: 2.2cqw; color: #6b7280;
-}
-.wiz-step-dot {
-  width: 2.2cqw; height: 2.2cqw; border-radius: 50%;
-  background: #e5e7eb; flex-shrink: 0;
-}
-.wiz-step-dot.active { background: #a78bfa; }
-.wiz-step-dot.done   { background: #c4b5fd; }
-
-.wiz-title {
-  font-size: 3.5cqw; font-weight: 700; color: #1f2937;
-  margin: 0;
-}
-
-/* 운영 모드 카드 */
-.mode-cards {
-  display: flex; flex-direction: column; gap: 2cqw;
-  flex: 1; min-height: 0;
-}
-.mode-card {
-  flex: 1;
-  border: 2px solid #e5e7eb; border-radius: 3cqw;
-  padding: 2.5cqw 3cqw;
-  display: flex; align-items: center; gap: 2.5cqw;
-  background: #fff;
-  transition: all 0.2s;
-}
-.mode-card.selected {
-  border-color: #a78bfa;
-  background: #faf5ff;
-  box-shadow: 0 0 0 3px #a78bfa30;
-}
-.mode-card-icon { font-size: 5cqw; flex-shrink: 0; }
-.mode-card-text {}
-.mode-card-label { font-size: 3.2cqw; font-weight: 700; color: #1f2937; }
-.mode-card-desc  { font-size: 2.4cqw; color: #6b7280; margin-top: 0.3cqw; }
-.mode-card-check {
-  margin-left: auto; flex-shrink: 0;
-  width: 5cqw; height: 5cqw; border-radius: 50%;
-  background: #a78bfa; color: #fff;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 3cqw; font-weight: 900;
-  opacity: 0;
-}
-.mode-card.selected .mode-card-check { opacity: 1; }
-
-/* 커스텀 필드 타입 그리드 */
-.field-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 2cqw;
-}
-.field-type-btn {
-  border: 1.5px solid #e5e7eb; border-radius: 2cqw;
-  padding: 2cqw 1cqw;
-  background: #fff;
-  display: flex; flex-direction: column; align-items: center; gap: 1cqw;
-  transition: all 0.18s;
-}
-.field-type-btn.active {
-  border-color: #a78bfa;
-  background: #faf5ff;
-  box-shadow: 0 0 0 2px #a78bfa40;
-}
-.field-type-icon { font-size: 4.5cqw; line-height: 1; }
-.field-type-label { font-size: 2cqw; color: #374151; font-weight: 600; text-align: center; }
-
-.field-preview {
-  border: 1.5px solid #e5e7eb; border-radius: 2cqw;
-  padding: 2.5cqw 3cqw;
-  background: #fff;
-}
-.field-preview-label { font-size: 2.2cqw; color: #6b7280; margin-bottom: 1.5cqw; }
-.field-preview-input {
-  width: 100%; box-sizing: border-box;
-  border: 1.5px solid #d1d5db; border-radius: 1.5cqw;
-  padding: 1.8cqw 2cqw; font-size: 2.6cqw; color: #9ca3af;
-  background: #f9fafb; outline: none;
-}
-.field-preview-input.focus { border-color: #a78bfa; background: #fff; }
 
 /* sync split 화면 */
 .sync-split {
@@ -165,7 +76,8 @@ body {
 .sync-field-item.hi {
   border-color: #a78bfa; background: #faf5ff;
 }
-.sync-field-item .sfi-icon { font-size: 3.2cqw; flex-shrink: 0; }
+.sync-field-item .sfi-icon { flex-shrink: 0; display: flex; align-items: center; color: #6b7280; }
+.sync-field-item.hi .sfi-icon { color: #7c3aed; }
 
 .sync-equal-badge {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
@@ -234,9 +146,9 @@ body {
   padding: 2.6cqw 4cqw; border-radius: 999px; width: fit-content;
 }
 
-body:has(.record) { padding: 0; }
-.record { gap: 0; }
-.record .reel { width: 100vw; height: 100vh; border-radius: 0; box-shadow: none; }
+body:has(.record) { padding: 0; width: 100vw; height: 100vh; }
+.record { gap: 0; width: 100vw; height: 100vh; justify-content: center; }
+.record .reel { width: min(100vw, calc(100vh * 9 / 16)); border-radius: 0; box-shadow: none; }
 
 .hint { color: #7a8098; font-size: 12px; text-align: center; max-width: 340px; line-height: 1.6; }
 .hint b { color: #eef0f8; }

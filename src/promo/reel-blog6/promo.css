@@ -31,12 +31,12 @@ body {
 
 .boardwindow {
   position: absolute;
-  top: 7.81%; left: 0; right: 0; bottom: 0;
+  top: 12%; left: 0; right: 0; bottom: 42%;
   background: #111318;
   padding: 0; overflow: hidden;
   display: flex; flex-direction: column;
-  -webkit-mask-image: linear-gradient(to bottom, black 55%, transparent 92%);
-  mask-image: linear-gradient(to bottom, black 55%, transparent 92%);
+  -webkit-mask-image: linear-gradient(to bottom, black 62%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 62%, transparent 100%);
 }
 
 /* ── 이미지 업로드 mock UI ────────────────────────────── */
@@ -44,8 +44,8 @@ body {
   flex: 1; min-height: 0;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  padding: 5cqw 4cqw 3cqw;
-  gap: 4cqw;
+  padding: 3cqw 4cqw 2cqw;
+  gap: 3cqw;
 }
 
 /* 파일 카드 */
@@ -190,9 +190,9 @@ body {
   padding: 2.6cqw 4cqw; border-radius: 999px; width: fit-content;
 }
 
-body:has(.record) { padding: 0; }
-.record { gap: 0; }
-.record .reel { width: 100vw; height: 100vh; border-radius: 0; box-shadow: none; }
+body:has(.record) { padding: 0; width: 100vw; height: 100vh; }
+.record { gap: 0; width: 100vw; height: 100vh; justify-content: center; }
+.record .reel { width: min(100vw, calc(100vh * 9 / 16)); border-radius: 0; box-shadow: none; }
 
 .hint { color: #7a8098; font-size: 12px; text-align: center; max-width: 340px; line-height: 1.6; }
 .hint b { color: #eef0f8; }

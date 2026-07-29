@@ -2,7 +2,10 @@ import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DarkModeProvider } from '../../contexts/DarkModeContext'
 import { TenantProvider } from '../../contexts/TenantContext'
-import { FIELD_TYPES, MODE_CARDS } from './mockData'
+import { Step2Mode } from '../../components/setup/steps/Step2Mode'
+import { Step7CustomFields } from '../../components/setup/steps/Step7CustomFields'
+import { WizardIcon, type WizardIconKey } from '../../components/setup/WizardIcons'
+import { DEMO_FIELDS, PROMO_FIELD_DEFS } from './mockData'
 
 const IS_RECORD = new URLSearchParams(location.search).has('record')
 
@@ -55,98 +58,10 @@ function usePhaseLoop() {
   return { phase: PHASES[idx].key }
 }
 
-const STEP_COUNT = 7
-
-function StepBar({ current }: { current: number }) {
-  return (
-    <div className="wiz-step-bar">
-      {Array.from({ length: STEP_COUNT }).map((_, i) => (
-        <div key={i} className={`wiz-step-dot ${i < current - 1 ? 'done' : i === current - 1 ? 'active' : ''}`} />
-      ))}
-      <span>{current} / {STEP_COUNT}</span>
-    </div>
-  )
-}
-
-function ModePhase() {
-  return (
-    <div className="wiz-wrap">
-      <StepBar current={2} />
-      <p className="wiz-title">어떻게 운영하시나요?</p>
-      <div className="mode-cards">
-        {MODE_CARDS.map((card, idx) => (
-          <motion.div
-            key={card.id}
-            className={`mode-card${card.id === 'individual' ? ' selected' : ''}`}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.08 + idx * 0.1 }}
-          >
-            <span className="mode-card-icon select-none">{card.icon}</span>
-            <div className="mode-card-text">
-              <div className="mode-card-label">{card.label}</div>
-              <div className="mode-card-desc">{card.desc}</div>
-            </div>
-            <div className="mode-card-check">✓</div>
-          </motion.div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function FieldsPhase() {
-  const [activeId, setActiveId] = useState(FIELD_TYPES[0].id)
-  useEffect(() => {
-    const ids = FIELD_TYPES.map(f => f.id)
-    let i = 0
-    const timer = setInterval(() => {
-      i = (i + 1) % ids.length
-      setActiveId(ids[i])
-    }, 480)
-    return () => clearInterval(timer)
-  }, [])
-
-  const activeField = FIELD_TYPES.find(f => f.id === activeId)
-  return (
-    <div className="wiz-wrap">
-      <StepBar current={7} />
-      <p className="wiz-title">추가 정보를 수집할까요?</p>
-      <div className="field-grid">
-        {FIELD_TYPES.map(ft => (
-          <div key={ft.id} className={`field-type-btn${ft.id === activeId ? ' active' : ''}`}>
-            <span className="field-type-icon select-none">{ft.icon}</span>
-            <span className="field-type-label">{ft.label}</span>
-          </div>
-        ))}
-      </div>
-      <div className="field-preview">
-        <div className="field-preview-label">{activeField?.label} 미리보기</div>
-        {activeField?.id === 'image_upload' ? (
-          <div className="field-preview-input" style={{ textAlign: 'center', fontSize: '3cqw', color: '#9ca3af' }}>
-            📎 파일 선택
-          </div>
-        ) : activeField?.id === 'checkbox' ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5cqw', padding: '0.8cqw 0' }}>
-            <div style={{ width: '4cqw', height: '4cqw', borderRadius: '0.8cqw', background: '#a78bfa', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.4cqw', flexShrink: 0 }}>✓</div>
-            <span style={{ fontSize: '2.6cqw', color: '#374151' }}>동의합니다</span>
-          </div>
-        ) : (
-          <input
-            className="field-preview-input focus"
-            placeholder={activeField?.id === 'select' ? '선택해주세요 ▼' : activeField?.id === 'phone' ? '010-0000-0000' : '입력하세요'}
-            readOnly
-          />
-        )}
-      </div>
-    </div>
-  )
-}
-
 function SyncPhase() {
   const [hiIdx, setHiIdx] = useState(0)
   useEffect(() => {
-    const timer = setInterval(() => setHiIdx(i => (i + 1) % FIELD_TYPES.length), 440)
+    const timer = setInterval(() => setHiIdx(i => (i + 1) % PROMO_FIELD_DEFS.length), 440)
     return () => clearInterval(timer)
   }, [])
 
@@ -159,12 +74,15 @@ function SyncPhase() {
             {side === 'left' ? '셋업 위자드' : '관리자콘솔'}
           </div>
           <div className="sync-field-grid">
-            {FIELD_TYPES.map((ft, i) => (
-              <div key={ft.id} className={`sync-field-item${i === hiIdx ? ' hi' : ''}`}>
-                <span className="sfi-icon select-none">{ft.icon}</span>
-                {ft.label}
-              </div>
-            ))}
+            {PROMO_FIELD_DEFS.map((ft, i) => {
+              const Ic = WizardIcon[ft.icon as WizardIconKey]
+              return (
+                <div key={ft.id} className={`sync-field-item${i === hiIdx ? ' hi' : ''}`}>
+                  <span className="sfi-icon"><Ic size={14} /></span>
+                  {ft.label}
+                </div>
+              )
+            })}
           </div>
         </div>
       ))}
@@ -212,14 +130,14 @@ export default function App() {
             <AnimatePresence mode="popLayout">
               {phase === 'mode' && (
                 <motion.div key="mode" variants={slideVariants} initial="enter" animate="center" exit="exit" transition={slideTransition}
-                  style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
-                  <ModePhase />
+                  style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+                  <Step2Mode mode="회원개별" error="" industry="" onChange={noop} />
                 </motion.div>
               )}
               {phase === 'fields' && (
                 <motion.div key="fields" variants={slideVariants} initial="enter" animate="center" exit="exit" transition={slideTransition}
-                  style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
-                  <FieldsPhase />
+                  style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+                  <Step7CustomFields fields={DEMO_FIELDS} isFreeform={false} error="" onChange={noop} />
                 </motion.div>
               )}
               {phase === 'sync' && (

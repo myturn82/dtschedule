@@ -13,6 +13,16 @@ import { SCENARIOS, YEAR, MONTH, REGISTER_TARGET, REGISTER_MEMBER_NAME, type Sce
 const noop = () => {}
 const asyncNull = async () => null
 
+const calVariants = {
+  enter:  { x: '100%',  opacity: 0 },
+  center: { x: '0%',    opacity: 1 },
+  exit:   { x: '-100%', opacity: 0 },
+}
+const calTransition = {
+  x:       { type: 'spring' as const, stiffness: 280, damping: 30 },
+  opacity: { duration: 0.12 },
+}
+
 const FAKE_PROFILE: Profile = {
   id: 'me', name: REGISTER_MEMBER_NAME, email: null, phone: null, avatar_url: null,
   is_super_admin: false, is_approved: true,
@@ -107,27 +117,31 @@ export default function App() {
         >
           <div className="boardwindow">
             <ScheduleHeader year={YEAR} month={MONTH} viewType="month" onPrev={noop} onNext={noop} displayMode="day" onDisplayModeChange={noop} />
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={bgScenario.key}
-                initial={{ opacity: 0, scale: 0.97 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.97 }}
-                transition={{ duration: 0.4 }}
-              >
-                <MonthScheduleByDay
-                  year={YEAR}
-                  month={MONTH}
-                  timeSlots={bgScenario.timeSlots}
-                  assignments={boardAssignments}
-                  slotSettings={bgScenario.slotSettings}
-                  scheduleRules={bgScenario.scheduleRules}
-                  dateOverrides={[]}
-                  displayAssignmentFilter={bgScenario.displayAssignmentFilter}
-                  onCellClick={noop}
-                />
-              </motion.div>
-            </AnimatePresence>
+            <div className="calslide-wrap">
+              <AnimatePresence mode="popLayout">
+                <motion.div
+                  key={bgScenario.key}
+                  variants={calVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={calTransition}
+                  className="calslide"
+                >
+                  <MonthScheduleByDay
+                    year={YEAR}
+                    month={MONTH}
+                    timeSlots={bgScenario.timeSlots}
+                    assignments={boardAssignments}
+                    slotSettings={bgScenario.slotSettings}
+                    scheduleRules={bgScenario.scheduleRules}
+                    dateOverrides={[]}
+                    displayAssignmentFilter={bgScenario.displayAssignmentFilter}
+                    onCellClick={noop}
+                  />
+                </motion.div>
+              </AnimatePresence>
+            </div>
           </div>
         </motion.div>
 

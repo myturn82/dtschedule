@@ -14,7 +14,7 @@ body {
 }
 .boardbg { position: absolute; inset: 0; z-index: 0; transform-origin: 50% 30%; }
 .boardwindow {
-  position: absolute; top: 7.81%; left: 0; right: 0; bottom: 0;
+  position: absolute; top: 12%; left: 0; right: 0; bottom: 0;
   background: #13141a; padding: 0; overflow: hidden;
   display: flex; flex-direction: column;
   -webkit-mask-image: linear-gradient(to bottom,black 55%,transparent 92%);
@@ -106,6 +106,8 @@ body {
 .wordmark em { font-style: normal; color: #8b5cf6; }
 .tagline { margin: 2.5cqw 0 4.5cqw; color: #c3c6d4; font-size: 3.1cqw; }
 .cta { display: inline-flex; align-items: center; gap: 8px; background: #8b5cf6; color: #1a0030; font-weight: 800; font-size: 3.2cqw; padding: 2.6cqw 4cqw; border-radius: 999px; width: fit-content; }
-body:has(.record) { padding: 0; } .record { gap: 0; } .record .reel { width: 100vw; height: 100vh; border-radius: 0; box-shadow: none; }
+body:has(.record) { padding: 0; width: 100vw; height: 100vh; }
+.record { gap: 0; width: 100vw; height: 100vh; justify-content: center; }
+.record .reel { width: min(100vw, calc(100vh * 9 / 16)); border-radius: 0; box-shadow: none; }
 .hint { color: #7a8098; font-size: 12px; text-align: center; max-width: 340px; line-height: 1.6; }
 .hint b { color: #eef0f8; } .hint code { background: #1e2030; color: #8b5cf6; padding: 1px 5px; border-radius: 4px; font-size: 11px; }

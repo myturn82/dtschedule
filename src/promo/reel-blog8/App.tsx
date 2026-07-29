@@ -10,6 +10,7 @@ import { BASE_ASSIGNMENTS, PASTE_ASSIGNMENTS, SCHEDULE_RULES, SLOT_SETTINGS, WEE
 const noop = () => {}
 const IS_RECORD = new URLSearchParams(location.search).has('record')
 const SLOTS: TimeSlot[] = ['09-10','10-11','11-12','13-14','14-15','15-16','16-17','17-18']
+const WEEK_DAYS_2 = [14,15,16,17,18,19,20].map(d => new Date(2026, 6, d))
 
 type Phase = 'intro' | 'select' | 'paste' | 'export' | 'outro'
 const PHASES: { key: Phase; ms: number }[] = [
@@ -78,8 +79,28 @@ export default function App() {
   const badge   = BADGE[phase]
 
   const assignments = phase === 'paste' ? PASTE_ASSIGNMENTS : BASE_ASSIGNMENTS
-  const selRange    = (phase === 'select' || phase === 'paste') ? SELECTION_RANGE : null
-  const copyRange   = phase === 'paste' ? COPY_RANGE : null
+  const weekDays    = phase === 'paste' ? WEEK_DAYS_2 : WEEK_DAYS
+  const selRange    = phase === 'select' ? SELECTION_RANGE : null
+  const copyRange   = phase === 'paste'  ? COPY_RANGE      : null
+
+  const [cursorPos, setCursorPos] = useState<'off' | 'top' | 'bottom' | 'click'>('off')
+  const [kbdBadge, setKbdBadge]  = useState<'' | 'c' | 'v'>('')
+
+  useEffect(() => {
+    setCursorPos('off')
+    setKbdBadge('')
+    if (phase === 'select') {
+      const t1 = setTimeout(() => setCursorPos('top'),    250)
+      const t2 = setTimeout(() => setCursorPos('bottom'), 900)
+      const t3 = setTimeout(() => setKbdBadge('c'),      1500)
+      return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
+    }
+    if (phase === 'paste') {
+      const t1 = setTimeout(() => setCursorPos('click'), 400)
+      const t2 = setTimeout(() => setKbdBadge('v'),      950)
+      return () => { clearTimeout(t1); clearTimeout(t2) }
+    }
+  }, [phase])
 
   return (
     <div className={`stage${IS_RECORD ? ' record' : ''}`}>
@@ -96,7 +117,7 @@ export default function App() {
                 >
                   <div className="calslide-wrap">
                     <div className="calslide">
-                      <WeekGrid weekDays={WEEK_DAYS} timeSlots={SLOTS} assignments={assignments}
+                      <WeekGrid weekDays={weekDays} timeSlots={SLOTS} assignments={assignments}
                         slotSettings={SLOT_SETTINGS} scheduleRules={SCHEDULE_RULES} dateOverrides={[]}
                         splitRoles={[]} indicatorBarRoles={[]} isSplitMode={false}
                         highlightName={null} profile={null} canAdd={false} onCellClick={noop}
@@ -121,6 +142,42 @@ export default function App() {
               initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}
             >
               📋 엑셀모드
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* 복사/붙여넣기 커서 */}
+        <AnimatePresence>
+          {(phase === 'select' || phase === 'paste') && (
+            <motion.div
+              key="cursor"
+              className="cursor"
+              animate={{
+                opacity: cursorPos === 'off' ? 0 : 1,
+                left: '16%',
+                top: cursorPos === 'top' ? '18%' : cursorPos === 'bottom' ? '50%' : cursorPos === 'click' ? '36%' : '36%',
+                scale: cursorPos === 'click' ? [1, 0.65, 1] : 1,
+              }}
+              transition={{
+                top: { type: 'spring', stiffness: cursorPos === 'bottom' ? 35 : 160, damping: 20 },
+                scale: { duration: 0.28, delay: 0.05 },
+              }}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* 키보드 단축키 배지 */}
+        <AnimatePresence>
+          {kbdBadge && (
+            <motion.div
+              key={kbdBadge}
+              className="kbd-badge"
+              initial={{ opacity: 0, y: 12, scale: 0.82 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+            >
+              ⌨️ Ctrl + {kbdBadge === 'c' ? 'C' : 'V'}
             </motion.div>
           )}
         </AnimatePresence>
