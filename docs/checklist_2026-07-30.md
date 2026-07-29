@@ -29,14 +29,14 @@
 - [ ] /setup?vertical=lesson-sports 접속 → Step 2에서 '회원 개별' 자동 선택 확인
 - [ ] /setup?vertical=food-retail 접속 → Step 2에서 '회원 공유' 자동 선택 확인
 - [ ] /setup?vertical=public-welfare 접속 → Step 2에서 '비회원' 자동 선택 확인
-- [ ] 배너 "LESSON:ON 추천 설정이 자동으로 적용되었습니다" 표시 확인
 
-## T06 랜딩페이지
+## T06 랜딩페이지 & 위자드 배너
 
 - [ ] npm run dev → http://localhost:5173 → 기존 DTS 랜딩 표시 (BRAND.vertical = generic)
 - [ ] VITE_VERTICAL=lesson-sports 환경에서 LandingLessonOn 표시 확인
 - [ ] 랜딩 "무료로 시작하기" 버튼 → /consent?vertical=lesson-sports 이동 확인
 - [ ] /consent → 위자드 진입 → ?vertical 파라미터 전파 확인 (ConsentPage → SetupWizardPage)
+- [ ] 배너 "LESSON:ON 추천 설정이 자동으로 적용되었습니다" 표시 확인 (SetupWizardPage Step 2)
 
 ## T07 전체 흐름 통합 테스트
 
