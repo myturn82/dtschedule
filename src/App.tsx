@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useSearchParams } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import { PlanLimitsProvider } from './contexts/PlanLimitsContext'
 import { TenantProvider, useTenant } from './contexts/TenantContext'
@@ -27,6 +27,15 @@ import { HelpPage } from './pages/HelpPage'
 import { DarkModeProvider } from './contexts/DarkModeContext'
 import { InstallBanner } from './components/InstallBanner'
 import { DevFileLabelDisplay } from './components/DevFileLabel'
+
+function LandingRouter() {
+  const [params] = useSearchParams()
+  const vertical = params.get('vertical') ?? BRAND.vertical
+  if (vertical === 'lesson-sports')  return <LandingLessonOn />
+  if (vertical === 'food-retail')    return <LandingShiftOn  />
+  if (vertical === 'public-welfare') return <LandingServeOn  />
+  return <LandingPage />
+}
 
 function AppRoutes() {
   const { profile, loading: authLoading } = useAuth()
@@ -60,12 +69,7 @@ function AppRoutes() {
   if (!profile) {
     return (
       <Routes>
-        <Route path="/" element={
-          BRAND.vertical === 'lesson-sports'  ? <LandingLessonOn /> :
-          BRAND.vertical === 'food-retail'    ? <LandingShiftOn  /> :
-          BRAND.vertical === 'public-welfare' ? <LandingServeOn  /> :
-          <LandingPage />
-        } />
+        <Route path="/" element={<LandingRouter />} />
         <Route path="/consent" element={<ConsentPage />} />
         <Route path="/auth"           element={<AuthPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
