@@ -1,3 +1,5 @@
+import type { FeatureFlags } from '../lib/featureFlags'
+
 // TimeSlot is now a plain string (e.g. '10-12', '09-10') generated
 // dynamically from tenant settings via generateTimeSlots().
 export type TimeSlot = string;
@@ -89,6 +91,7 @@ export interface TenantSettings {
   role_ratios?: Record<string, number>; // roleId → 퍼센트, 합계 100
   setup_completed_at?: string;
   hidden_days?: number[];              // 숨길 요일 (0=일, 1=월, ..., 6=토)
+  feature_flags?: FeatureFlags;
 }
 
 export type LegendColor = 'amber' | 'pink' | 'slate' | 'yellow' | 'blue' | 'green' | 'purple' | 'red' | 'indigo' | 'black'
