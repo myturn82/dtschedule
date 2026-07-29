@@ -3,6 +3,8 @@ import { AutoResizeTextarea } from '../shared/AutoResizeTextarea'
 import { MemberSearchSelect } from '../shared/MemberSearchSelect'
 import { DevFileLabel } from '../DevFileLabel'
 import type { Assignment, CellState, ModalTarget, Profile, TenantRole, MemberType, CustomFieldDef, TenantMode, LessonPackage, LessonPackageWithUsage } from '../../types'
+import { useTenant } from '../../contexts/TenantContext'
+import { getFF } from '../../lib/featureFlags'
 import { getOptionUnit } from '../../types'
 import { parseSlotLabel, getTimeSubOptions, formatTimeSub } from '../../utils/timeSlots'
 import { useProfiles } from '../../hooks/useProfiles'
@@ -79,6 +81,9 @@ export function SlotEditModal({
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(
     initialRoleId ?? (!isAdmin && memberRoleId ? memberRoleId : (splitRoles[0]?.id ?? null))
   )
+  const { tenant } = useTenant()
+  const showLessonPackages = getFF(tenant?.settings?.feature_flags, 'lesson_packages')
+
   const [userPackages, setUserPackages] = useState<LessonPackageWithUsage[]>([])
   const [selectedPackageId, setSelectedPackageId] = useState<string | null>(null)
 
@@ -141,9 +146,9 @@ export function SlotEditModal({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [displayedAssignments, phoneFieldIds])
 
-  // 선택된 회원의 레슨 패키지 조회 (비회원 모드 제외, 관리자만)
+  // 선택된 회원의 레슨 패키지 조회 (비회원 모드 제외, 관리자만, 레슨권 기능 활성 시)
   useEffect(() => {
-    if (isFreeform || !isAdmin || !selectedUserId || !tenantId) { setUserPackages([]); return }
+    if (!showLessonPackages || isFreeform || !isAdmin || !selectedUserId || !tenantId) { setUserPackages([]); return }
     const today = new Date().toISOString().slice(0, 10)
     Promise.all([
       supabase.from('lesson_packages').select('*')
@@ -1202,7 +1207,7 @@ export function SlotEditModal({
                   )}
                   {showExtraCustomFields && !!selectedUserId && customFields.map(field => renderFieldInput(field))}
                   {/* 레슨 패키지 연결 */}
-                  {isAdmin && !isFreeform && !!selectedUserId && userPackages.length > 0 && (
+                  {showLessonPackages && isAdmin && !isFreeform && !!selectedUserId && userPackages.length > 0 && (
                     <div>
                       <p className="text-xs font-bold text-[var(--color-text-muted)] mb-2">레슨 패키지 연결 <span className="font-normal">선택</span></p>
                       <select

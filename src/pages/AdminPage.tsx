@@ -258,11 +258,15 @@ export function AdminPage() {
   const feedbackBadgeCount = useFeedbackBadge(adminTenantId ? { kind: 'org', tenantId: adminTenantId } : null, tab === 'feedback' ? 1 : 0)
   const [message, setMessage] = useState<{ text: string; isError: boolean } | null>(null)
   const [saving, setSaving] = useState(false)
+  const tenantFF = adminTenant?.settings?.feature_flags
 
-  // 비회원 모드는 배정알림 기능을 지원하지 않으므로 탭 자체를 노출하지 않는다
+  // 비회원 모드 또는 feature flag 꺼짐 시 해당 탭 강제 이탈
   useEffect(() => {
-    if (adminIsFreeform && tab === 'notifications') setTab('members')
-  }, [adminIsFreeform, tab])
+    if (adminIsFreeform && tab === 'notifications') { setTab('members'); return }
+    if (tab === 'lessons' && !getFF(tenantFF, 'lesson_packages')) setTab('members')
+    if (tab === 'autoassign' && !getFF(tenantFF, 'autoassign')) setTab('members')
+    if (tab === 'notifications' && !getFF(tenantFF, 'notifications')) setTab('members')
+  }, [adminIsFreeform, tab, tenantFF])
 
   // Members tab
   const [showAddMember, setShowAddMember] = useState(false)
@@ -1065,7 +1069,13 @@ export function AdminPage() {
           <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-[var(--color-surface)] to-transparent z-10" />
           <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-[var(--color-surface)] to-transparent z-10" />
           <nav className="max-w-5xl mx-auto flex gap-0.5 px-4 sm:px-6 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {(Object.keys(TAB_LABELS) as Tab[]).filter(t => !(adminIsFreeform && (t === 'notifications' || t === 'autoassign'))).map(t => {
+            {(Object.keys(TAB_LABELS) as Tab[]).filter(t => {
+              if (adminIsFreeform && (t === 'notifications' || t === 'autoassign')) return false
+              if (t === 'lessons' && !getFF(tenantFF, 'lesson_packages')) return false
+              if (t === 'autoassign' && !getFF(tenantFF, 'autoassign')) return false
+              if (t === 'notifications' && !getFF(tenantFF, 'notifications')) return false
+              return true
+            }).map(t => {
               const count = t === 'members'
                 ? members.filter(m => m.is_approved !== false).length
                 : t === 'pending'
@@ -2293,7 +2303,7 @@ export function AdminPage() {
             )}
 
             {/* ── 자동배정 ── */}
-            {tab === 'autoassign' && (
+            {tab === 'autoassign' && getFF(tenantFF, 'autoassign') && (
               <div className="max-w-lg space-y-6">
                 {/* 페이지 헤더 */}
                 <header className="mb-5">
@@ -2999,7 +3009,7 @@ export function AdminPage() {
               </div>
             )}
             {/* ── 배정알림 (비회원 모드는 지원하지 않음) ── */}
-            {tab === 'notifications' && !adminIsFreeform && (
+            {tab === 'notifications' && !adminIsFreeform && getFF(tenantFF, 'notifications') && (
               <div className="max-w-lg space-y-4">
                 <header className="mb-5">
                   <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10 px-3 py-[5px] rounded-full">
@@ -3224,7 +3234,7 @@ export function AdminPage() {
               </div>
             )}
             {/* ── 레슨권 관리 ── */}
-            {tab === 'lessons' && (
+            {tab === 'lessons' && getFF(tenantFF, 'lesson_packages') && (
               <LessonManagementPanel
                 tenantId={adminTenantId}
                 members={members}
