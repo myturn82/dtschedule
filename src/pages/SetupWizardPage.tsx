@@ -21,6 +21,8 @@ import { Step5Rules } from '../components/setup/steps/Step5Rules'
 import { Step7CustomFields } from '../components/setup/steps/Step7CustomFields'
 import { StepDone } from '../components/setup/steps/StepDone'
 import type { Tenant, TenantMode, CustomFieldDef } from '../types'
+import { getPresetFromParam } from '../lib/verticalPresets'
+import type { VerticalPreset } from '../lib/verticalPresets'
 
 const TOTAL = WIZARD_STEPS.length // 7
 
@@ -34,6 +36,8 @@ const MODE_LABEL: Record<string, string> = {
 export function SetupWizardPage() {
   const [params] = useSearchParams()
   const orgId = params.get('org') ?? ''
+  const verticalParam = params.get('vertical')
+  const [activePreset] = useState<VerticalPreset | null>(() => getPresetFromParam(verticalParam))
   const navigate = useNavigate()
   const { setTenant, reloadMemberships } = useTenant()
 
@@ -134,6 +138,13 @@ export function SetupWizardPage() {
     setIndustry(tenant.business_type ?? '')
     setCustomFields(tenant.settings?.custom_fields ?? [])
   }, [tenant])
+
+  // 버티컬 프리셋 자동 적용
+  useEffect(() => {
+    if (!activePreset) return
+    if (orgId) return  // 기존 조직 편집 시 덮어쓰기 방지
+    setMode(activePreset.tenant_mode)
+  }, [activePreset, orgId])
 
   const isFreeform = mode === '비회원'
 
@@ -345,6 +356,20 @@ export function SetupWizardPage() {
                 onChange={(n, t, ind) => { setName(n); setTitle(t); setIndustry(ind) }}
               />
             </>
+          )}
+          {step === 2 && activePreset && (
+            <div style={{
+              background: 'rgba(224, 90, 58, 0.08)',
+              border: '1px solid rgba(224, 90, 58, 0.2)',
+              borderRadius: 10,
+              padding: '10px 14px',
+              marginBottom: 12,
+              fontSize: 13,
+              color: 'var(--color-text-secondary)',
+            }}>
+              <strong>{activePreset.appName}</strong> 추천 설정이 자동으로 적용되었습니다.
+              원하는 경우 아래에서 직접 변경할 수 있습니다.
+            </div>
           )}
           {step === 2 && (
             <Step2Mode
