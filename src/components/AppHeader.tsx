@@ -13,6 +13,8 @@ import { useNotifications } from '../hooks/useNotifications'
 import { usePushSubscription } from '../hooks/usePushSubscription'
 import { NotificationPanel } from './notifications/NotificationPanel'
 import { useDarkMode } from '../contexts/DarkModeContext'
+import { FeedbackModal } from './modals/FeedbackModal'
+import { useFeedbackBadge } from '../hooks/useFeedbackBadge'
 
 // 웹푸시 배치 발송(GitHub Actions cron)이 비활성화된 동안 구독 유도 UI도 숨김.
 // 재활성화 시 true로 되돌리면 됨.
@@ -66,10 +68,15 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
 
   const [showMobileSearch, setShowMobileSearch] = useState(false)
   const { isDark, toggle: toggleDark } = useDarkMode()
-  const feedbackUrl = import.meta.env.VITE_FEEDBACK_URL as string | undefined
+  const [showFeedback, setShowFeedback] = useState(false)
+  const [feedbackReloadKey, setFeedbackReloadKey] = useState(0)
   const isTenantFreeform = displayMode(tenant?.settings?.tenant_mode) === '비회원'
   const isPrivileged = profile?.is_super_admin || tenantRole === 'admin'
   const showHamburger = !!isPrivileged || isCustomerAdmin
+  const feedbackBadgeScope = profile?.is_super_admin
+    ? ({ kind: 'system' as const })
+    : (tenantRole === 'admin' && tenant) ? ({ kind: 'org' as const, tenantId: tenant.id }) : null
+  const feedbackBadgeCount = useFeedbackBadge(feedbackBadgeScope, feedbackReloadKey)
 
   useEffect(() => {
     const handleResize = () => {
@@ -165,17 +172,20 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
                 </button>
               </div>
             )}
-            {feedbackUrl && profile && (
-              <a
-                href={feedbackUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+            {profile && (
+              <button
+                onClick={() => setShowFeedback(true)}
                 aria-label="피드백"
-                className="flex items-center justify-center gap-1.5 w-8 h-8 sm:w-auto sm:h-auto px-0 py-0 sm:px-3 sm:py-1.5 text-xs font-medium rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-all shrink-0 select-none"
+                className="relative flex items-center justify-center gap-1.5 w-8 h-8 sm:w-auto sm:h-auto px-0 py-0 sm:px-3 sm:py-1.5 text-xs font-medium rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-all shrink-0 select-none"
               >
                 <span className="text-sm leading-none select-none">💬</span>
                 <span className="hidden sm:inline">피드백</span>
-              </a>
+                {feedbackBadgeCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold leading-none select-none">
+                    {feedbackBadgeCount > 9 ? '9+' : feedbackBadgeCount}
+                  </span>
+                )}
+              </button>
             )}
             {profile && (
               <div className="hidden sm:flex items-center gap-1.5">
@@ -423,6 +433,13 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
 
       {showQuickBooking && (
         <QuickBookingModal onClose={() => setShowQuickBooking(false)} />
+      )}
+
+      {showFeedback && (
+        <FeedbackModal
+          onClose={() => { setShowFeedback(false); setFeedbackReloadKey(k => k + 1) }}
+          onSubmitted={() => setFeedbackReloadKey(k => k + 1)}
+        />
       )}
 
       {showWithdrawModal && (

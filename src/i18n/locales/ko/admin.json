@@ -11,7 +11,8 @@
     "legend": "범례",
     "customFields": "입력항목",
     "notifications": "배정알림",
-    "lessons": "레슨권"
+    "lessons": "레슨권",
+    "feedback": "피드백"
   },
   "org": {
     "label": "조직",

@@ -22,6 +22,8 @@ import { fmtPhone } from '../lib/format'
 import { formatPhone } from '../lib/phone'
 import { BrandLegendIcon, isBrandLegendIcon } from '../lib/legendIcons'
 import { LessonManagementPanel } from '../components/admin/LessonManagementPanel'
+import { FeedbackBoardPanel } from '../components/admin/FeedbackBoardPanel'
+import { useFeedbackBadge } from '../hooks/useFeedbackBadge'
 import { MemberSearchSelect } from '../components/shared/MemberSearchSelect'
 import { KakaoBadge } from '../components/icons/KakaoBadge'
 
@@ -192,7 +194,7 @@ function roleDisplayMode(role: TenantRole): RoleDisplayMode {
   return 'none'
 }
 
-type Tab = 'members' | 'pending' | 'roles' | 'rules' | 'dates' | 'settings' | 'autoassign' | 'legend' | 'custom_fields' | 'notifications' | 'lessons'
+type Tab = 'members' | 'pending' | 'roles' | 'rules' | 'dates' | 'settings' | 'autoassign' | 'legend' | 'custom_fields' | 'notifications' | 'lessons' | 'feedback'
 
 const TAB_LABELS: Record<Tab, string> = {
   members: '회원 관리',
@@ -206,6 +208,7 @@ const TAB_LABELS: Record<Tab, string> = {
   custom_fields: '입력항목',
   notifications: '배정알림',
   lessons: '레슨권',
+  feedback: '피드백',
 }
 
 export function AdminPage() {
@@ -250,6 +253,7 @@ export function AdminPage() {
   const [tab, setTab] = useState<Tab>(
     initTab && (Object.keys(TAB_LABELS) as Tab[]).includes(initTab) ? initTab : 'members'
   )
+  const feedbackBadgeCount = useFeedbackBadge(adminTenantId ? { kind: 'org', tenantId: adminTenantId } : null, tab === 'feedback' ? 1 : 0)
   const [message, setMessage] = useState<{ text: string; isError: boolean } | null>(null)
   const [saving, setSaving] = useState(false)
 
@@ -1045,6 +1049,8 @@ export function AdminPage() {
                 ? members.filter(m => m.is_approved !== false).length
                 : t === 'pending'
                 ? members.filter(m => m.is_approved === false).length
+                : t === 'feedback'
+                ? feedbackBadgeCount
                 : 0
               const isActive = tab === t
               return (
@@ -3168,6 +3174,10 @@ export function AdminPage() {
                 members={members}
                 profileId={profile?.id ?? ''}
               />
+            )}
+            {/* ── 피드백 ── */}
+            {tab === 'feedback' && (
+              <FeedbackBoardPanel scope={{ kind: 'org', tenantId: adminTenantId }} />
             )}
           </>
         )}

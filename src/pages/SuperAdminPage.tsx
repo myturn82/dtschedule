@@ -12,6 +12,8 @@ import { OrgDrawer, type DrawerMember } from '../components/superadmin/OrgDrawer
 import { PendingApprovalsBanner, type PendingMember } from '../components/superadmin/PendingApprovalsBanner'
 import { PlanLimitsPanel } from '../components/superadmin/PlanLimitsPanel'
 import { UserManagementPanel, type ProfileWithOrgCount } from '../components/superadmin/UserManagementPanel'
+import { FeedbackBoardPanel } from '../components/admin/FeedbackBoardPanel'
+import { useFeedbackBadge } from '../hooks/useFeedbackBadge'
 import { EMPTY_ORG_FORM, SLUG_RE, type CreateOrgForm } from '../components/superadmin/createOrgForm'
 import { displayMode } from '../lib/tenantMode'
 import { isValidPhone } from '../lib/phone'
@@ -98,7 +100,8 @@ export function SuperAdminPage() {
   const [deleteCustomerNameInput, setDeleteCustomerNameInput] = useState('')
 
   // Tab state
-  const [activeTab, setActiveTab] = useState<'hub' | 'users'>('hub')
+  const [activeTab, setActiveTab] = useState<'hub' | 'users' | 'feedback'>('hub')
+  const feedbackBadgeCount = useFeedbackBadge({ kind: 'system' }, activeTab === 'feedback' ? 1 : 0)
 
   // User management state
   const [allUsers, setAllUsers] = useState<ProfileWithOrgCount[]>([])
@@ -470,7 +473,7 @@ export function SuperAdminPage() {
     setBulkCustomerSaving(false)
   }
 
-  function handleTabChange(tab: 'hub' | 'users') {
+  function handleTabChange(tab: 'hub' | 'users' | 'feedback') {
     setActiveTab(tab)
     if (tab === 'users' && !usersLoaded) fetchAllUsers()
   }
@@ -845,6 +848,17 @@ export function SuperAdminPage() {
           >
             {ts('users.title')}
           </button>
+          <button
+            onClick={() => handleTabChange('feedback')}
+            className={`px-4 py-1.5 rounded-lg text-[13px] font-semibold transition-colors flex items-center gap-1.5 ${activeTab === 'feedback'
+              ? 'bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-sm'
+              : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'}`}
+          >
+            피드백
+            {feedbackBadgeCount > 0 && (
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-500 text-white leading-none">{feedbackBadgeCount}</span>
+            )}
+          </button>
         </div>
 
         {activeTab === 'hub' && (
@@ -1019,6 +1033,10 @@ export function SuperAdminPage() {
             loading={usersLoading}
             onDeleteUsers={handleDeleteUsers}
           />
+        )}
+
+        {activeTab === 'feedback' && (
+          <FeedbackBoardPanel scope={{ kind: 'system' }} />
         )}
 
       </div>

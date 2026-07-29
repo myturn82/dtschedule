@@ -11,7 +11,8 @@
     "legend": "Legend",
     "customFields": "Custom Fields",
     "notifications": "Notifications",
-    "lessons": "Lessons"
+    "lessons": "Lessons",
+    "feedback": "Feedback"
   },
   "org": {
     "label": "Organization",

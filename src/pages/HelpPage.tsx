@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useTenant } from '../contexts/TenantContext'
 import { AppHeader } from '../components/AppHeader'
 import { DevFileLabel } from '../components/DevFileLabel'
+import { FeedbackModal } from '../components/modals/FeedbackModal'
 
 type Tab = 'member' | 'admin'
 
@@ -128,6 +129,7 @@ export function HelpPage() {
 
   const isAdmin = profile?.is_super_admin || tenantRole === 'admin'
   const [tab, setTab] = useState<Tab>(isAdmin ? 'admin' : 'member')
+  const [showFeedback, setShowFeedback] = useState(false)
 
   const sections = tab === 'member' ? MEMBER_SECTIONS : ADMIN_SECTIONS
 
@@ -183,19 +185,19 @@ export function HelpPage() {
           <p className="text-sm text-[var(--color-text-muted)]">
             더 궁금한 점이 있으신가요?
           </p>
-          {import.meta.env.VITE_FEEDBACK_URL && (
-            <a
-              href={import.meta.env.VITE_FEEDBACK_URL as string}
-              target="_blank"
-              rel="noopener noreferrer"
+          {profile && (
+            <button
+              onClick={() => setShowFeedback(true)}
               className="inline-flex items-center gap-1.5 mt-2 text-sm font-semibold text-[var(--color-brand-primary)] hover:underline"
             >
               <span className="text-base leading-none select-none">💬</span>
               피드백 보내기
-            </a>
+            </button>
           )}
         </div>
       </div>
+
+      {showFeedback && <FeedbackModal onClose={() => setShowFeedback(false)} />}
 
       <DevFileLabel file="HelpPage.tsx" />
     </div>

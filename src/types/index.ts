@@ -272,6 +272,58 @@ export interface LessonPackageWithUsage extends LessonPackage {
   used_sessions: number;
 }
 
+// ─── 피드백 게시판 ────────────────────────────────────────────────────────
+
+export type FeedbackCategory = 'inquiry' | 'bug' | 'feature';
+export type FeedbackTarget = 'system' | 'org_admin';
+export type FeedbackStatus = 'open' | 'answered' | 'closed';
+export type FeedbackReplyRole = 'system_admin' | 'org_admin' | 'author';
+
+export const FEEDBACK_CATEGORY_LABELS: Record<FeedbackCategory, string> = {
+  inquiry: '단순 문의',
+  bug: '오류 신고',
+  feature: '기능 개선',
+};
+
+export const FEEDBACK_CATEGORY_HINT: Record<FeedbackCategory, string> = {
+  inquiry: '예약 변경 등 우리 조직 관리자에게 보내는 문의입니다.',
+  bug: '오작동·에러 등 시스템 오류를 시스템 관리자에게 신고합니다.',
+  feature: '새 기능·개선 아이디어를 시스템 관리자에게 제안합니다.',
+};
+
+export const FEEDBACK_STATUS_LABELS: Record<FeedbackStatus, string> = {
+  open: '답변대기',
+  answered: '답변완료',
+  closed: '종료',
+};
+
+export interface FeedbackPost {
+  id: string;
+  tenant_id: string;
+  tenant_name: string | null;
+  author_id: string | null;
+  author_name: string;
+  author_email: string | null;
+  category: FeedbackCategory;
+  target_type: FeedbackTarget;
+  title: string;
+  content: string;
+  attachments: string[];
+  status: FeedbackStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FeedbackReply {
+  id: string;
+  post_id: string;
+  author_id: string | null;
+  author_name: string;
+  author_role: FeedbackReplyRole;
+  content: string;
+  created_at: string;
+}
+
 export interface SlotSetting {
   id: string;
   tenant_id: string;
