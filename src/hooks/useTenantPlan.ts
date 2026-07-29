@@ -14,12 +14,17 @@ export function useTenantPlan(): TenantPlanInfo {
   return { plan, ...planLimits[plan] }
 }
 
-// -1 = 무제한. current >= max 이면 한도 도달.
+// Dual-sentinel convention for "unlimited":
+//   max === -1       → unlimited for maxMembers, maxLessonTypes, smsMonthly
+//   max === Infinity → unlimited for maxOrgs, maxUsers (legacy convention from original code)
+// Both sentinels are handled explicitly below to prevent future regression.
 export function isAtLimit(current: number, max: number): boolean {
-  return max !== -1 && current >= max
+  if (max === -1 || max === Infinity) return false
+  return current >= max
 }
 
-// 한도의 90% 이상이면 경고
+// 한도의 90% 이상이면 경고 (same dual-sentinel guard)
 export function isNearLimit(current: number, max: number): boolean {
-  return max !== -1 && current >= max * 0.9
+  if (max === -1 || max === Infinity) return false
+  return current >= max * 0.9
 }

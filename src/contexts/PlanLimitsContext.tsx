@@ -51,6 +51,10 @@ export function PlanLimitsProvider({ children }: { children: React.ReactNode }) 
       .update({
         max_orgs: limits.maxOrgs === Infinity ? null : limits.maxOrgs,
         max_users: limits.maxUsers === Infinity ? null : limits.maxUsers,
+        max_members: limits.maxMembers,
+        max_lesson_types: limits.maxLessonTypes,
+        sms_monthly: limits.smsMonthly,
+        has_ads: limits.hasAds,
         updated_at: new Date().toISOString(),
       })
       .eq('plan', plan)
