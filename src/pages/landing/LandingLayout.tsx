@@ -1,4 +1,5 @@
 // src/pages/landing/LandingLayout.tsx
+import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 interface LandingLayoutProps {
@@ -6,7 +7,7 @@ interface LandingLayoutProps {
   tagline: string
   accentColor: string
   verticalId: string
-  children?: React.ReactNode
+  children?: ReactNode
 }
 
 export function LandingLayout({ appName, tagline, accentColor, verticalId, children }: LandingLayoutProps) {
