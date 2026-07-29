@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DTS 모바일 앱 출시 전략</title>
+<style>
+  :root {
+    --bg: #0a0b10;
+    --surface: #13151f;
+    --surface2: #1a1d2e;
+    --coral: #E05A3A;
+    --coral2: #ff7a5c;
+    --blue: #5b8aff;
+    --green: #22c55e;
+    --yellow: #f59e0b;
+    --text: #eef0f8;
+    --muted: #8892a4;
+    --border: rgba(255,255,255,0.08);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Pretendard Variable',Pretendard,system-ui,sans-serif; line-height:1.6; }
+  a { color:inherit; text-decoration:none; }
+
+  /* NAV */
+  nav { position:fixed; top:0; left:0; right:0; z-index:100; padding:16px 40px; display:flex; justify-content:space-between; align-items:center; background:rgba(10,11,16,0.85); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); }
+  .nav-brand { font-size:14px; font-weight:600; letter-spacing:0.5px; }
+  .nav-brand span { color:var(--coral); }
+  .nav-links { display:flex; gap:28px; font-size:13px; color:var(--muted); }
+  .nav-links a:hover { color:var(--text); }
+
+  /* HERO */
+  .hero { min-height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:120px 24px 80px; position:relative; overflow:hidden; }
+  .hero::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 80% 60% at 50% 30%, rgba(224,90,58,0.12) 0%, transparent 70%); pointer-events:none; }
+  .badge { display:inline-flex; align-items:center; gap:8px; background:rgba(224,90,58,0.12); border:1px solid rgba(224,90,58,0.3); border-radius:999px; padding:6px 16px; font-size:12px; color:var(--coral2); margin-bottom:28px; }
+  .hero h1 { font-size:clamp(36px,6vw,80px); font-weight:700; letter-spacing:-2px; line-height:1.1; margin-bottom:24px; }
+  .hero h1 em { font-style:normal; color:var(--coral); }
+  .hero p { font-size:clamp(15px,2vw,20px); color:var(--muted); max-width:600px; margin-bottom:48px; }
+  .hero-stats { display:flex; gap:40px; justify-content:center; flex-wrap:wrap; }
+  .stat { text-align:center; }
+  .stat-val { font-size:32px; font-weight:700; color:var(--coral); }
+  .stat-label { font-size:13px; color:var(--muted); margin-top:4px; }
+
+  /* SECTIONS */
+  section { padding:100px 24px; max-width:1100px; margin:0 auto; }
+  .section-tag { font-size:12px; color:var(--coral); font-weight:600; letter-spacing:2px; text-transform:uppercase; margin-bottom:16px; }
+  .section-title { font-size:clamp(28px,4vw,48px); font-weight:700; letter-spacing:-1px; margin-bottom:16px; }
+  .section-sub { font-size:16px; color:var(--muted); max-width:600px; margin-bottom:60px; }
+
+  /* ARCH DIAGRAM */
+  .arch { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:48px; margin-bottom:40px; }
+  .arch-row { display:flex; align-items:center; gap:0; flex-wrap:wrap; justify-content:center; }
+  .arch-box { background:var(--surface2); border:1px solid var(--border); border-radius:14px; padding:20px 28px; text-align:center; min-width:140px; }
+  .arch-box.highlight { border-color:var(--coral); background:rgba(224,90,58,0.08); }
+  .arch-box.store-a { border-color:var(--green); background:rgba(34,197,94,0.08); }
+  .arch-box.store-i { border-color:var(--blue); background:rgba(91,138,255,0.08); }
+  .arch-icon { font-size:28px; margin-bottom:8px; }
+  .arch-label { font-size:13px; font-weight:600; }
+  .arch-sub { font-size:11px; color:var(--muted); margin-top:4px; }
+  .arch-arrow { font-size:20px; color:var(--muted); padding:0 12px; flex-shrink:0; }
+  .arch-branch { display:flex; flex-direction:column; gap:16px; }
+
+  /* COMPARE TABS */
+  .tab-bar { display:flex; gap:8px; margin-bottom:32px; flex-wrap:wrap; }
+  .tab-btn { padding:10px 24px; border-radius:999px; border:1px solid var(--border); background:transparent; color:var(--muted); font-size:13px; cursor:pointer; transition:all 0.2s; }
+  .tab-btn.active { background:var(--coral); border-color:var(--coral); color:#fff; font-weight:600; }
+  .tab-content { display:none; }
+  .tab-content.active { display:block; }
+  .compare-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px; }
+  .compare-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:28px; }
+  .compare-card.recommended { border-color:var(--coral); position:relative; }
+  .rec-badge { position:absolute; top:-12px; left:24px; background:var(--coral); color:#fff; font-size:11px; font-weight:700; padding:4px 12px; border-radius:999px; }
+  .compare-card h3 { font-size:18px; font-weight:700; margin-bottom:8px; }
+  .compare-card .pros, .compare-card .cons { margin-top:16px; }
+  .compare-card .pros h4 { color:var(--green); font-size:12px; font-weight:600; margin-bottom:8px; }
+  .compare-card .cons h4 { color:#ef4444; font-size:12px; font-weight:600; margin-bottom:8px; }
+  .compare-card li { font-size:13px; color:var(--muted); margin-bottom:6px; padding-left:16px; position:relative; list-style:none; }
+  .compare-card li::before { content:'•'; position:absolute; left:0; }
+
+  /* TIMELINE */
+  .timeline { position:relative; padding-left:40px; }
+  .timeline::before { content:''; position:absolute; left:14px; top:0; bottom:0; width:2px; background:var(--border); }
+  .timeline-item { position:relative; margin-bottom:40px; }
+  .timeline-dot { position:absolute; left:-34px; top:4px; width:16px; height:16px; border-radius:50%; background:var(--coral); border:3px solid var(--bg); }
+  .timeline-week { font-size:11px; color:var(--coral); font-weight:600; letter-spacing:1px; margin-bottom:6px; }
+  .timeline-title { font-size:18px; font-weight:700; margin-bottom:8px; }
+  .timeline-items { display:flex; flex-wrap:wrap; gap:8px; }
+  .timeline-tag { background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:4px 10px; font-size:12px; color:var(--muted); }
+
+  /* COST TABLE */
+  .cost-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:20px; }
+  .cost-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:28px; }
+  .cost-card .amount { font-size:36px; font-weight:700; color:var(--coral); margin:12px 0; }
+  .cost-card .amount.free { color:var(--green); }
+  .cost-card h3 { font-size:14px; color:var(--muted); font-weight:500; }
+  .cost-card p { font-size:13px; color:var(--muted); }
+  .cost-total { background:rgba(224,90,58,0.08); border:1px solid rgba(224,90,58,0.3); border-radius:16px; padding:28px; margin-top:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; }
+  .cost-total .label { font-size:16px; font-weight:600; }
+  .cost-total .val { font-size:28px; font-weight:700; color:var(--coral); }
+
+  /* CHECKLIST */
+  .checklist { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:12px; }
+  .check-item { display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 18px; font-size:14px; }
+  .check-box { width:20px; height:20px; border-radius:6px; border:2px solid var(--border); flex-shrink:0; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s; }
+  .check-box.done { background:var(--green); border-color:var(--green); }
+  .check-box.done::after { content:'✓'; color:#fff; font-size:12px; font-weight:700; }
+  .check-item.urgent { border-color:rgba(224,90,58,0.4); }
+
+  /* PHONE MOCKUP */
+  .mockup-section { display:flex; gap:60px; align-items:center; flex-wrap:wrap; }
+  .phone-frame { width:220px; height:440px; border-radius:36px; border:8px solid #2a2d3e; background:var(--surface); position:relative; flex-shrink:0; box-shadow:0 40px 80px rgba(0,0,0,0.5); overflow:hidden; }
+  .phone-screen { width:100%; height:100%; background:linear-gradient(180deg,#13151f 0%,#0a0b10 100%); display:flex; flex-direction:column; }
+  .phone-status { padding:12px 16px 8px; display:flex; justify-content:space-between; font-size:10px; color:var(--muted); }
+  .phone-header { padding:8px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; }
+  .phone-logo { width:24px; height:24px; border-radius:8px; background:var(--coral); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:#fff; }
+  .phone-title { font-size:12px; font-weight:600; }
+  .phone-body { padding:12px; flex:1; }
+  .phone-card { background:var(--surface2); border-radius:10px; padding:10px 12px; margin-bottom:8px; }
+  .phone-card-title { font-size:10px; color:var(--muted); margin-bottom:4px; }
+  .phone-card-val { font-size:14px; font-weight:700; color:var(--coral); }
+  .phone-list { }
+  .phone-li { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); font-size:10px; }
+  .phone-li:last-child { border:none; }
+  .phone-badge { background:rgba(224,90,58,0.2); color:var(--coral); border-radius:4px; padding:2px 6px; font-size:9px; font-weight:600; }
+  .mockup-info { flex:1; min-width:280px; }
+  .mockup-info h3 { font-size:28px; font-weight:700; letter-spacing:-0.5px; margin-bottom:16px; }
+  .mockup-info p { color:var(--muted); font-size:15px; margin-bottom:24px; }
+  .feature-list { display:flex; flex-direction:column; gap:12px; }
+  .feature-row { display:flex; align-items:center; gap:12px; }
+  .feature-icon { width:36px; height:36px; border-radius:10px; background:rgba(224,90,58,0.12); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+  .feature-text { font-size:14px; }
+  .feature-text strong { display:block; font-weight:600; margin-bottom:2px; }
+  .feature-text span { color:var(--muted); font-size:13px; }
+
+  /* FOOTER */
+  footer { text-align:center; padding:60px 24px; border-top:1px solid var(--border); color:var(--muted); font-size:13px; }
+
+  @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+  .fade-up { animation:fadeUp 0.6s ease forwards; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">Dynamic <span>Team</span> Schedule</div>
+  <div class="nav-links">
+    <a href="#arch">아키텍처</a>
+    <a href="#compare">방식 비교</a>
+    <a href="#timeline">출시 로드맵</a>
+    <a href="#cost">비용</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="badge">📱 모바일 앱 출시 전략 · 2026</div>
+  <h1>웹앱 그대로,<br><em>앱스토어</em>에 올린다</h1>
+  <p>기존 React 코드를 재사용해 Android·iOS 앱을 출시하는 최단 경로. 코드 한 줄도 버리지 않는다.</p>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-val">$25</div><div class="stat-label">Android 등록비 (일회)</div></div>
+    <div class="stat"><div class="stat-val">$99/년</div><div class="stat-label">iOS 개발자 계정</div></div>
+    <div class="stat"><div class="stat-val">2~4주</div><div class="stat-label">첫 앱 출시까지</div></div>
+    <div class="stat"><div class="stat-val">7개</div><div class="stat-label">버티컬 앱 출시 계획</div></div>
+  </div>
+</div>
+
+<!-- ARCHITECTURE -->
+<section id="arch">
+  <div class="section-tag">Architecture</div>
+  <h2 class="section-title">단일 코드베이스, 세 개의 채널</h2>
+  <p class="section-sub">React/Vite 빌드 결과물 하나가 웹·Android·iOS 세 곳으로 동시에 배포됩니다.</p>
+
+  <div class="arch">
+    <div class="arch-row" style="gap:0;justify-content:center;align-items:center;flex-wrap:wrap;">
+      <div class="arch-box highlight">
+        <div class="arch-icon">⚛️</div>
+        <div class="arch-label">React + Vite</div>
+        <div class="arch-sub">기존 코드 100% 재사용</div>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box highlight">
+        <div class="arch-icon">🏗</div>
+        <div class="arch-label">npm run build</div>
+        <div class="arch-sub">dist/ 정적 빌드</div>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div class="arch-box">
+          <div class="arch-icon">🌐</div>
+          <div class="arch-label">Vercel 배포</div>
+          <div class="arch-sub">dtschedule.vercel.app</div>
+        </div>
+        <div class="arch-box highlight">
+          <div class="arch-icon">⚡</div>
+          <div class="arch-label">Capacitor sync</div>
+          <div class="arch-sub">npx cap sync</div>
+        </div>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div class="arch-box store-a">
+          <div class="arch-icon">🤖</div>
+          <div class="arch-label">Google Play</div>
+          <div class="arch-sub">Android AAB</div>
+        </div>
+        <div class="arch-box store-i">
+          <div class="arch-icon">🍎</div>
+          <div class="arch-label">App Store</div>
+          <div class="arch-sub">iOS IPA</div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:32px;padding:20px;background:rgba(224,90,58,0.06);border-radius:12px;font-size:14px;color:var(--muted);text-align:center;">
+      💡 <strong style="color:var(--text);">핵심:</strong> Supabase Realtime·Auth·Storage는 WebSocket/Fetch 표준 API 사용 → Capacitor WebView에서 <strong style="color:var(--green);">수정 없이 그대로 동작</strong>
+    </div>
+  </div>
+
+  <!-- Phone mockup -->
+  <div class="mockup-section" style="margin-top:60px;">
+    <div class="phone-frame">
+      <div class="phone-screen">
+        <div class="phone-status">
+          <span>9:41</span><span>🔋</span>
+        </div>
+        <div class="phone-header">
+          <div class="phone-logo">L</div>
+          <div class="phone-title">LESSON:ON</div>
+        </div>
+        <div class="phone-body">
+          <div class="phone-card">
+            <div class="phone-card-title">이번 달 레슨권 현황</div>
+            <div class="phone-card-val">12/20 소진</div>
+          </div>
+          <div class="phone-card" style="background:rgba(224,90,58,0.1);border:1px solid rgba(224,90,58,0.3);">
+            <div class="phone-card-title" style="color:var(--coral);">⚠️ 만료 임박</div>
+            <div class="phone-card-val">3명 이번 주 만료</div>
+          </div>
+          <div style="font-size:10px;color:var(--muted);margin:10px 0 6px;">오늘 스케줄</div>
+          <div class="phone-list">
+            <div class="phone-li"><span>박지은 · 10:00</span><span class="phone-badge">요가</span></div>
+            <div class="phone-li"><span>김민준 · 11:30</span><span class="phone-badge">PT</span></div>
+            <div class="phone-li"><span>이서연 · 14:00</span><span class="phone-badge">필라</span></div>
+            <div class="phone-li"><span>최예린 · 16:00</span><span class="phone-badge">요가</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="mockup-info">
+      <h3>앱에서 더 강력해지는 기능들</h3>
+      <p>웹과 동일한 기능이지만, 모바일 앱으로 전환하면 네이티브 경험이 추가됩니다.</p>
+      <div class="feature-list">
+        <div class="feature-row">
+          <div class="feature-icon">🔔</div>
+          <div class="feature-text"><strong>푸시 알림</strong><span>레슨권 만료·내일 스케줄 알림을 잠금화면에서 수신</span></div>
+        </div>
+        <div class="feature-row">
+          <div class="feature-icon">📱</div>
+          <div class="feature-text"><strong>홈 화면 아이콘</strong><span>앱 아이콘이 매일 눈에 띄어 재방문율 상승</span></div>
+        </div>
+        <div class="feature-row">
+          <div class="feature-icon">📷</div>
+          <div class="feature-text"><strong>네이티브 카메라</strong><span>이미지 첨부 UX 개선 (갤러리·카메라 직접 연동)</span></div>
+        </div>
+        <div class="feature-row">
+          <div class="feature-icon">🏪</div>
+          <div class="feature-text"><strong>앱스토어 검색 노출</strong><span>"요가 스케줄 앱" 검색 시 경쟁자 적은 채널 확보</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARE -->
+<section id="compare" style="background:var(--surface);border-radius:32px;max-width:100%;padding:80px 40px;">
+  <div style="max-width:1100px;margin:0 auto;">
+    <div class="section-tag">Method Comparison</div>
+    <h2 class="section-title">세 가지 방식, 하나의 선택</h2>
+    <p class="section-sub">기존 React 코드 자산을 최대한 활용하는 방식을 선택했습니다.</p>
+    <div class="compare-grid">
+      <div class="compare-card">
+        <h3>🌐 PWA</h3>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Progressive Web App</div>
+        <div class="pros"><h4>✅ 장점</h4>
+          <ul><li>추가 코드 거의 없음</li><li>VitePWA 이미 설정됨</li><li>Android TWA로 Play Store 등록 가능</li></ul>
+        </div>
+        <div class="cons"><h4>❌ 단점</h4>
+          <ul><li>iOS App Store 출시 불가</li><li>네이티브 API 제한</li></ul>
+        </div>
+        <div style="margin-top:20px;padding:10px;background:rgba(239,68,68,0.08);border-radius:8px;font-size:12px;color:#ef4444;">iOS 포기 시에만 유효</div>
+      </div>
+      <div class="compare-card recommended">
+        <div class="rec-badge">✅ 권장</div>
+        <h3>⚡ Capacitor</h3>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Ionic Capacitor</div>
+        <div class="pros"><h4>✅ 장점</h4>
+          <ul><li>기존 React 코드 100% 재사용</li><li>Android + iOS 동시 지원</li><li>네이티브 API 플러그인 추가 가능</li><li>Supabase 수정 없이 동작</li></ul>
+        </div>
+        <div class="cons"><h4>⚠️ 고려사항</h4>
+          <ul><li>iOS 빌드에 Mac 또는 클라우드 필요</li></ul>
+        </div>
+        <div style="margin-top:20px;padding:10px;background:rgba(224,90,58,0.08);border-radius:8px;font-size:12px;color:var(--coral2);">DTS에 최적의 선택</div>
+      </div>
+      <div class="compare-card">
+        <h3>📦 React Native</h3>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Expo 포함</div>
+        <div class="pros"><h4>✅ 장점</h4>
+          <ul><li>진정한 네이티브 성능</li><li>Android + iOS 동시 지원</li></ul>
+        </div>
+        <div class="cons"><h4>❌ 단점</h4>
+          <ul><li>기존 코드 거의 전부 재작성</li><li>DOM 기반 → RN 컴포넌트 변환</li><li>개발 기간 3~6개월 추가</li></ul>
+        </div>
+        <div style="margin-top:20px;padding:10px;background:rgba(239,68,68,0.08);border-radius:8px;font-size:12px;color:#ef4444;">신규 앱에만 권장</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TIMELINE -->
+<section id="timeline">
+  <div class="section-tag">Launch Roadmap</div>
+  <h2 class="section-title">5주 만에 첫 앱 출시</h2>
+  <p class="section-sub">LESSON:ON Android를 시작으로, 이후 앱은 1/5 공수로 순차 출시합니다.</p>
+  <div class="timeline">
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="timeline-week">WEEK 1</div>
+      <div class="timeline-title">환경 세팅</div>
+      <div class="timeline-items">
+        <span class="timeline-tag">Google Play Console 가입 ($25)</span>
+        <span class="timeline-tag">Apple Developer 가입 ($99/년)</span>
+        <span class="timeline-tag">Capacitor 설치</span>
+        <span class="timeline-tag">Android 빌드 확인</span>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="timeline-week">WEEK 2</div>
+      <div class="timeline-title">LESSON:ON Android 준비</div>
+      <div class="timeline-items">
+        <span class="timeline-tag">.env.lesson-on 작성</span>
+        <span class="timeline-tag">앱 아이콘 512×512</span>
+        <span class="timeline-tag">스크린샷 5장</span>
+        <span class="timeline-tag">개인정보처리방침 페이지</span>
+        <span class="timeline-tag">키스토어 생성</span>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="timeline-week">WEEK 3</div>
+      <div class="timeline-title">✅ Android 출시</div>
+      <div class="timeline-items">
+        <span class="timeline-tag">AAB 서명 빌드</span>
+        <span class="timeline-tag">내부 테스트 제출</span>
+        <span class="timeline-tag" style="border-color:var(--green);color:var(--green);">심사 승인 (1~3일)</span>
+        <span class="timeline-tag" style="border-color:var(--green);color:var(--green);">Google Play 정식 출시</span>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-dot" style="background:var(--blue);"></div>
+      <div class="timeline-week">WEEK 4</div>
+      <div class="timeline-title">iOS 준비</div>
+      <div class="timeline-items">
+        <span class="timeline-tag">Codemagic 클라우드 빌드 설정</span>
+        <span class="timeline-tag">코드 서명 인증서</span>
+        <span class="timeline-tag">App Store Connect 앱 생성</span>
+        <span class="timeline-tag">iPhone 스크린샷 (1320×2868)</span>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-dot" style="background:var(--blue);"></div>
+      <div class="timeline-week">WEEK 5</div>
+      <div class="timeline-title">✅ iOS 출시</div>
+      <div class="timeline-items">
+        <span class="timeline-tag">TestFlight 내부 테스트</span>
+        <span class="timeline-tag">App Store 심사 제출</span>
+        <span class="timeline-tag" style="border-color:var(--blue);color:var(--blue);">심사 승인 (1~7일)</span>
+        <span class="timeline-tag" style="border-color:var(--blue);color:var(--blue);">App Store 정식 출시</span>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-dot" style="background:var(--green);"></div>
+      <div class="timeline-week">WEEK 6+</div>
+      <div class="timeline-title">나머지 버티컬 앱 순차 출시</div>
+      <div class="timeline-items">
+        <span class="timeline-tag">SHIFT:ON (환경변수만 변경 → 2~3일)</span>
+        <span class="timeline-tag">SERVE:ON</span>
+        <span class="timeline-tag">CLASS:ON</span>
+        <span class="timeline-tag">...</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COST -->
+<section id="cost" style="background:var(--surface);border-radius:32px;max-width:100%;padding:80px 40px;">
+  <div style="max-width:1100px;margin:0 auto;">
+    <div class="section-tag">Cost Breakdown</div>
+    <h2 class="section-title">전체 출시 비용</h2>
+    <p class="section-sub">7개 버티컬 앱 모두 등록해도 계정 비용은 동일합니다. 앱당 추가 비용 없음.</p>
+    <div class="cost-grid">
+      <div class="cost-card">
+        <h3>Google Play Console</h3>
+        <div class="amount">$25</div>
+        <p>일회성 · 개발자 계정 1개로 앱 무제한 등록</p>
+      </div>
+      <div class="cost-card">
+        <h3>Apple Developer Program</h3>
+        <div class="amount">$99<span style="font-size:18px;color:var(--muted);">/년</span></div>
+        <p>연간 갱신 · 개발자 계정 1개로 앱 무제한 등록</p>
+      </div>
+      <div class="cost-card">
+        <h3>Capacitor</h3>
+        <div class="amount free">무료</div>
+        <p>오픈소스 · 상업적 사용 제한 없음</p>
+      </div>
+      <div class="cost-card">
+        <h3>Codemagic (iOS 클라우드 빌드)</h3>
+        <div class="amount free">$0~35<span style="font-size:18px;">/월</span></div>
+        <p>Mac 없이 iOS 빌드 · 무료 플랜으로 시작 가능</p>
+      </div>
+    </div>
+    <div class="cost-total">
+      <div>
+        <div class="label">첫 해 총 비용 (Android + iOS)</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:4px;">버티컬 7개 앱 모두 포함</div>
+      </div>
+      <div class="val">약 17만원</div>
+    </div>
+  </div>
+</section>
+
+<!-- CHECKLIST -->
+<section>
+  <div class="section-tag">Action Items</div>
+  <h2 class="section-title">지금 당장 시작할 일</h2>
+  <p class="section-sub">순서대로 체크하세요. 클릭하면 완료 표시됩니다.</p>
+  <div class="checklist">
+    <div class="check-item urgent" onclick="toggleCheck(this)">
+      <div class="check-box"></div>
+      <span>Google Play Console 계정 생성 ($25)</span>
+    </div>
+    <div class="check-item urgent" onclick="toggleCheck(this)">
+      <div class="check-box"></div>
+      <span>Apple Developer Program 가입 ($99/년)</span>
+    </div>
+    <div class="check-item" onclick="toggleCheck(this)">
+      <div class="check-box"></div>
+      <span>npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/ios</span>
+    </div>
+    <div class="check-item" onclick="toggleCheck(this)">
+      <div class="check-box"></div>
+      <span>npx cap init 실행</span>
+    </div>
+    <div class="check-item" onclick="toggleCheck(this)">
+      <div class="check-box"></div>
+      <span>npm run build && npx cap sync android</span>
+    </div>
+    <div class="check-item" onclick="toggleCheck(this)">
+      <div class="check-box"></div>
+      <span>Android Studio에서 앱 실행 확인</span>
+    </div>
+    <div class="check-item" onclick="toggleCheck(this)">
+      <div class="check-box"></div>
+      <span>앱 아이콘 512×512 제작</span>
+    </div>
+    <div class="check-item" onclick="toggleCheck(this)">
+      <div class="check-box"></div>
+      <span>개인정보처리방침 페이지 생성</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div style="font-size:20px;font-weight:700;margin-bottom:8px;">Dynamic <span style="color:var(--coral);">Team</span> Schedule</div>
+  <div>모바일 앱 출시 전략 · 2026</div>
+</footer>
+
+<script>
+function toggleCheck(el) {
+  const box = el.querySelector('.check-box');
+  box.classList.toggle('done');
+}
+</script>
+</body>
+</html>

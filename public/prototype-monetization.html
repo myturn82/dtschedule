@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DTS 수익화 전략</title>
+<style>
+  :root {
+    --bg: #0a0b10;
+    --surface: #13151f;
+    --surface2: #1a1d2e;
+    --coral: #E05A3A;
+    --coral2: #ff7a5c;
+    --blue: #5b8aff;
+    --green: #22c55e;
+    --yellow: #f59e0b;
+    --purple: #a78bfa;
+    --text: #eef0f8;
+    --muted: #8892a4;
+    --border: rgba(255,255,255,0.08);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Pretendard Variable',Pretendard,system-ui,sans-serif; line-height:1.6; }
+
+  nav { position:fixed; top:0; left:0; right:0; z-index:100; padding:16px 40px; display:flex; justify-content:space-between; align-items:center; background:rgba(10,11,16,0.9); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); }
+  .nav-brand { font-size:14px; font-weight:600; }
+  .nav-brand span { color:var(--coral); }
+  .nav-links { display:flex; gap:24px; font-size:13px; color:var(--muted); }
+
+  /* HERO */
+  .hero { min-height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:120px 24px 80px; position:relative; overflow:hidden; }
+  .hero::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 80% 50% at 50% 20%, rgba(34,197,94,0.08) 0%, rgba(224,90,58,0.06) 50%, transparent 80%); pointer-events:none; }
+  .badge { display:inline-flex; align-items:center; gap:8px; background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.3); border-radius:999px; padding:6px 16px; font-size:12px; color:var(--green); margin-bottom:28px; }
+  .hero h1 { font-size:clamp(36px,6vw,80px); font-weight:700; letter-spacing:-2px; line-height:1.1; margin-bottom:24px; }
+  .hero h1 em { font-style:normal; color:var(--green); }
+  .hero p { font-size:clamp(15px,2vw,20px); color:var(--muted); max-width:560px; margin-bottom:56px; }
+  .hero-phases { display:flex; gap:0; align-items:stretch; flex-wrap:wrap; justify-content:center; max-width:800px; }
+  .hero-phase { flex:1; min-width:200px; padding:24px 28px; text-align:left; position:relative; }
+  .hero-phase:not(:last-child)::after { content:'→'; position:absolute; right:-12px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:18px; z-index:1; }
+  .hero-phase-num { font-size:11px; font-weight:700; letter-spacing:2px; margin-bottom:8px; }
+  .hero-phase-title { font-size:16px; font-weight:700; margin-bottom:4px; }
+  .hero-phase-sub { font-size:12px; color:var(--muted); }
+  .phase-box-1 { background:rgba(224,90,58,0.08); border:1px solid rgba(224,90,58,0.2); border-radius:16px; }
+  .phase-box-1 .hero-phase-num { color:var(--coral); }
+  .phase-box-2 { background:rgba(91,138,255,0.08); border:1px solid rgba(91,138,255,0.2); border-radius:16px; }
+  .phase-box-2 .hero-phase-num { color:var(--blue); }
+  .phase-box-3 { background:rgba(34,197,94,0.08); border:1px solid rgba(34,197,94,0.2); border-radius:16px; }
+  .phase-box-3 .hero-phase-num { color:var(--green); }
+
+  section { padding:100px 24px; max-width:1100px; margin:0 auto; }
+  .section-tag { font-size:12px; color:var(--coral); font-weight:600; letter-spacing:2px; text-transform:uppercase; margin-bottom:16px; }
+  .section-title { font-size:clamp(28px,4vw,48px); font-weight:700; letter-spacing:-1px; margin-bottom:16px; }
+  .section-sub { font-size:16px; color:var(--muted); max-width:600px; margin-bottom:60px; }
+
+  /* FREE PLAN */
+  .free-plan { display:grid; grid-template-columns:1fr 1fr; gap:32px; align-items:start; }
+  @media(max-width:700px){.free-plan{grid-template-columns:1fr;}}
+  .free-left h3 { font-size:22px; font-weight:700; margin-bottom:16px; }
+  .free-left p { color:var(--muted); font-size:15px; margin-bottom:24px; }
+  .limit-list { display:flex; flex-direction:column; gap:12px; }
+  .limit-item { display:flex; justify-content:space-between; align-items:center; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 18px; }
+  .limit-label { font-size:14px; }
+  .limit-free { font-size:13px; font-weight:600; color:var(--coral); }
+  .limit-paid { font-size:13px; font-weight:600; color:var(--green); }
+  .funnel { display:flex; flex-direction:column; gap:0; }
+  .funnel-step { padding:16px 20px; font-size:14px; position:relative; }
+  .funnel-step::after { content:'↓'; display:block; text-align:center; color:var(--muted); font-size:16px; margin-top:8px; }
+  .funnel-step:last-child::after { display:none; }
+  .funnel-step.highlight { background:rgba(224,90,58,0.08); border:1px solid rgba(224,90,58,0.3); border-radius:12px; }
+  .funnel-step.highlight::after { color:var(--coral); }
+  .funnel-label { font-size:11px; color:var(--muted); margin-bottom:4px; }
+  .funnel-text { font-weight:600; }
+  .trigger-badge { display:inline-block; background:var(--coral); color:#fff; font-size:10px; font-weight:700; padding:2px 8px; border-radius:999px; margin-left:8px; vertical-align:middle; }
+
+  /* AD SECTION */
+  .ad-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:24px; }
+  .ad-card { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:32px; }
+  .ad-card h3 { font-size:20px; font-weight:700; margin-bottom:6px; display:flex; align-items:center; gap:10px; }
+  .ad-card p { font-size:14px; color:var(--muted); margin-bottom:24px; }
+  .ad-revenue-table { width:100%; }
+  .ad-revenue-table td { padding:8px 0; font-size:13px; border-bottom:1px solid var(--border); }
+  .ad-revenue-table td:last-child { text-align:right; color:var(--green); font-weight:600; }
+  .ad-revenue-table tr:last-child td { border:none; }
+  .ad-types { display:flex; flex-direction:column; gap:10px; margin-top:16px; }
+  .ad-type { display:flex; justify-content:space-between; align-items:center; background:var(--surface2); border-radius:8px; padding:10px 14px; font-size:13px; }
+  .ad-type-name { font-weight:600; }
+  .ad-type-val { color:var(--muted); }
+
+  /* PRICING */
+  .billing-toggle { display:flex; align-items:center; gap:12px; margin-bottom:40px; }
+  .toggle-label { font-size:14px; color:var(--muted); }
+  .toggle-switch { width:52px; height:28px; background:var(--surface); border:1px solid var(--border); border-radius:999px; position:relative; cursor:pointer; transition:background 0.2s; }
+  .toggle-switch.on { background:var(--green); border-color:var(--green); }
+  .toggle-knob { position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:#fff; transition:transform 0.2s; }
+  .toggle-switch.on .toggle-knob { transform:translateX(24px); }
+  .save-badge { background:rgba(34,197,94,0.15); color:var(--green); border:1px solid rgba(34,197,94,0.3); border-radius:999px; padding:3px 10px; font-size:11px; font-weight:700; }
+
+  .pricing-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:24px; }
+  .pricing-card { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:36px; position:relative; }
+  .pricing-card.featured { border-color:var(--coral); background:linear-gradient(160deg,rgba(224,90,58,0.08) 0%,var(--surface) 60%); }
+  .popular-badge { position:absolute; top:-14px; left:50%; transform:translateX(-50%); background:var(--coral); color:#fff; font-size:11px; font-weight:700; padding:4px 16px; border-radius:999px; white-space:nowrap; }
+  .plan-name { font-size:14px; font-weight:600; color:var(--muted); margin-bottom:8px; }
+  .plan-price { font-size:48px; font-weight:800; letter-spacing:-2px; line-height:1; margin-bottom:4px; }
+  .plan-period { font-size:14px; color:var(--muted); margin-bottom:24px; }
+  .plan-divider { border:none; border-top:1px solid var(--border); margin:24px 0; }
+  .plan-features { list-style:none; display:flex; flex-direction:column; gap:10px; }
+  .plan-features li { display:flex; align-items:flex-start; gap:10px; font-size:14px; }
+  .plan-features li::before { content:'✓'; color:var(--green); font-weight:700; flex-shrink:0; margin-top:1px; }
+  .plan-features li.gray { color:var(--muted); }
+  .plan-features li.gray::before { color:var(--muted); content:'—'; }
+  .plan-cta { display:block; text-align:center; margin-top:28px; padding:14px; border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; border:none; }
+  .cta-free { background:var(--surface2); color:var(--text); }
+  .cta-pro { background:var(--coral); color:#fff; }
+  .cta-biz { background:var(--surface2); color:var(--text); border:1px solid var(--border); }
+
+  /* PROJECTION */
+  .proj-toggle { display:flex; gap:8px; margin-bottom:32px; }
+  .proj-btn { padding:8px 20px; border-radius:999px; border:1px solid var(--border); background:transparent; color:var(--muted); font-size:13px; cursor:pointer; transition:all 0.2s; }
+  .proj-btn.active { background:var(--surface); color:var(--text); border-color:rgba(255,255,255,0.2); font-weight:600; }
+  .proj-chart { display:flex; flex-direction:column; gap:16px; }
+  .proj-row { display:flex; align-items:center; gap:16px; }
+  .proj-label { width:100px; font-size:13px; color:var(--muted); flex-shrink:0; }
+  .proj-bar-wrap { flex:1; background:var(--surface); border-radius:999px; height:32px; overflow:hidden; position:relative; }
+  .proj-bar { height:100%; border-radius:999px; display:flex; align-items:center; padding-left:12px; font-size:12px; font-weight:600; color:#fff; transition:width 0.8s cubic-bezier(.4,0,.2,1); }
+  .bar-ad { background:linear-gradient(90deg,#5b8aff,#818cf8); }
+  .bar-sub { background:linear-gradient(90deg,#22c55e,#4ade80); }
+  .proj-val { width:80px; text-align:right; font-size:14px; font-weight:700; flex-shrink:0; }
+  .proj-total { display:flex; justify-content:space-between; align-items:center; background:rgba(34,197,94,0.08); border:1px solid rgba(34,197,94,0.2); border-radius:14px; padding:20px 24px; flex-wrap:wrap; gap:12px; }
+  .proj-total-label { font-size:15px; font-weight:600; }
+  .proj-total-val { font-size:28px; font-weight:800; color:var(--green); }
+
+  /* BREAKEVEN */
+  .breakeven { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:20px; }
+  .be-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:24px; text-align:center; }
+  .be-card .val { font-size:40px; font-weight:800; margin:12px 0 4px; }
+  .be-card h4 { font-size:13px; color:var(--muted); margin-bottom:0; }
+  .be-card p { font-size:12px; color:var(--muted); margin-top:6px; }
+
+  /* PRINCIPLES */
+  .principles { display:flex; flex-direction:column; gap:16px; }
+  .principle { display:flex; gap:20px; align-items:flex-start; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:24px; }
+  .principle-num { font-size:28px; font-weight:800; color:var(--coral); opacity:0.4; flex-shrink:0; line-height:1; }
+  .principle h4 { font-size:16px; font-weight:700; margin-bottom:6px; }
+  .principle p { font-size:14px; color:var(--muted); }
+
+  footer { text-align:center; padding:60px 24px; border-top:1px solid var(--border); color:var(--muted); font-size:13px; }
+
+  @keyframes growBar { from{width:0} }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">Dynamic <span>Team</span> Schedule</div>
+  <div class="nav-links">
+    <a href="#free">무료 플랜</a>
+    <a href="#ads">광고 수익</a>
+    <a href="#pricing">구독 요금제</a>
+    <a href="#projection">수익 전망</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="badge">💰 수익화 전략 로드맵 · 2026</div>
+  <h1>무료로 시작해서<br><em>구독</em>으로 성장</h1>
+  <p>무료 사용자로 시스템을 검증하고, 광고로 운영비를 충당하고, 구독으로 본격 수익화합니다.</p>
+  <div class="hero-phases">
+    <div class="hero-phase phase-box-1">
+      <div class="hero-phase-num">PHASE 1</div>
+      <div class="hero-phase-title">사용자 확보</div>
+      <div class="hero-phase-sub">무료 플랜 · 시스템 안정화</div>
+    </div>
+    <div class="hero-phase phase-box-2" style="margin:0 8px;">
+      <div class="hero-phase-num">PHASE 2</div>
+      <div class="hero-phase-title">광고 수익</div>
+      <div class="hero-phase-sub">AdSense + AdMob · 운영비 충당</div>
+    </div>
+    <div class="hero-phase phase-box-3">
+      <div class="hero-phase-num">PHASE 3</div>
+      <div class="hero-phase-title">구독 성장</div>
+      <div class="hero-phase-sub">Pro/Business · 본격 수익화</div>
+    </div>
+  </div>
+</div>
+
+<!-- FREE PLAN -->
+<section id="free">
+  <div class="section-tag">Phase 1</div>
+  <h2 class="section-title">무료 플랜 — 진짜 쓸 수 있어야 한다</h2>
+  <p class="section-sub">너무 좁히면 가입을 안 하고, 너무 열면 유료 전환 동기가 없습니다. 핵심 기능은 무료, 규모·편의는 유료.</p>
+  <div class="free-plan">
+    <div class="free-left">
+      <h3>무료 ↔ 유료 한도 설계</h3>
+      <p>한도에 도달하는 순간이 가장 강력한 업그레이드 트리거입니다.</p>
+      <div class="limit-list">
+        <div class="limit-item">
+          <div class="limit-label">조직 수</div>
+          <div style="display:flex;gap:16px;">
+            <div class="limit-free">무료: 1개</div>
+            <div class="limit-paid">Pro: 3개</div>
+          </div>
+        </div>
+        <div class="limit-item" style="border-color:rgba(224,90,58,0.3);">
+          <div class="limit-label">멤버 수 ⚡</div>
+          <div style="display:flex;gap:16px;">
+            <div class="limit-free">무료: 10명</div>
+            <div class="limit-paid">Pro: 50명</div>
+          </div>
+        </div>
+        <div class="limit-item" style="border-color:rgba(224,90,58,0.3);">
+          <div class="limit-label">레슨권 종류 ⚡</div>
+          <div style="display:flex;gap:16px;">
+            <div class="limit-free">무료: 3종</div>
+            <div class="limit-paid">Pro: 무제한</div>
+          </div>
+        </div>
+        <div class="limit-item">
+          <div class="limit-label">SMS 발송</div>
+          <div style="display:flex;gap:16px;">
+            <div class="limit-free">무료: 10건/월</div>
+            <div class="limit-paid">Pro: 100건</div>
+          </div>
+        </div>
+        <div class="limit-item">
+          <div class="limit-label">광고 노출</div>
+          <div style="display:flex;gap:16px;">
+            <div class="limit-free" style="color:var(--muted);">있음</div>
+            <div class="limit-paid">없음</div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:16px;font-size:12px;color:var(--muted);">⚡ = 가장 강력한 업그레이드 트리거</div>
+    </div>
+    <div>
+      <h3 style="font-size:22px;font-weight:700;margin-bottom:16px;">유료 전환 퍼널</h3>
+      <div class="funnel">
+        <div class="funnel-step">
+          <div class="funnel-label">STEP 1</div>
+          <div class="funnel-text">신규 가입 (Free 플랜)</div>
+        </div>
+        <div class="funnel-step">
+          <div class="funnel-label">STEP 2</div>
+          <div class="funnel-text">온보딩 완료 · 멤버 초대</div>
+        </div>
+        <div class="funnel-step highlight">
+          <div class="funnel-label">STEP 3 — 핵심 트리거</div>
+          <div class="funnel-text">멤버 10명 도달 <span class="trigger-badge">업그레이드 모달</span></div>
+        </div>
+        <div class="funnel-step highlight">
+          <div class="funnel-label">STEP 4 — 핵심 트리거</div>
+          <div class="funnel-text">레슨권 3종 등록 완료 <span class="trigger-badge">업그레이드 안내</span></div>
+        </div>
+        <div class="funnel-step">
+          <div class="funnel-label">STEP 5</div>
+          <div class="funnel-text">Pro 결제 완료</div>
+        </div>
+        <div class="funnel-step" style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:12px;">
+          <div class="funnel-label" style="color:var(--green);">완료</div>
+          <div class="funnel-text">광고 즉시 제거 · 기능 잠금 해제</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ADS -->
+<section id="ads" style="background:var(--surface);border-radius:32px;max-width:100%;padding:80px 40px;">
+  <div style="max-width:1100px;margin:0 auto;">
+    <div class="section-tag">Phase 2</div>
+    <h2 class="section-title">광고 수익 — 운영비 충당</h2>
+    <p class="section-sub">B2B 관리 도구의 광고 수익은 크지 않습니다. 목표는 월 운영비(6~12만원) 충당입니다.</p>
+    <div class="ad-grid">
+      <div class="ad-card">
+        <h3><span style="font-size:24px;">🖥️</span> Google AdSense</h3>
+        <p>PC·모바일 브라우저 접속자 대상. 무료 플랜 사용자에게만 노출.</p>
+        <div class="ad-types">
+          <div class="ad-type"><span class="ad-type-name">사이드바 배너</span><span class="ad-type-val">300×250 · 항상 노출</span></div>
+          <div class="ad-type"><span class="ad-type-name">하단 고정 배너</span><span class="ad-type-val">728×90 · PC 전용</span></div>
+          <div class="ad-type"><span class="ad-type-name">인피드 광고</span><span class="ad-type-val">콘텐츠 사이 삽입</span></div>
+        </div>
+        <div style="margin-top:20px;">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">월 페이지뷰별 예상 수익 (CPM $1~3)</div>
+          <table class="ad-revenue-table">
+            <tr><td>10,000 PV</td><td>$10 ~ $30</td></tr>
+            <tr><td>50,000 PV</td><td>$50 ~ $150</td></tr>
+            <tr><td>200,000 PV</td><td>$200 ~ $600</td></tr>
+          </table>
+        </div>
+        <div style="margin-top:16px;padding:10px;background:rgba(245,158,11,0.08);border-radius:8px;font-size:12px;color:var(--yellow);">⚠️ 가입 조건: 사이트 운영 3개월+ 권장</div>
+      </div>
+      <div class="ad-card">
+        <h3><span style="font-size:24px;">📱</span> Google AdMob</h3>
+        <p>Android·iOS 앱 사용자 대상. 무료 플랜 사용자에게만 노출.</p>
+        <div class="ad-types">
+          <div class="ad-type"><span class="ad-type-name">배너 광고</span><span class="ad-type-val">하단 고정 · 항상 노출</span></div>
+          <div class="ad-type"><span class="ad-type-name">전면 광고</span><span class="ad-type-val">화면 전환 시 · 하루 1~2회</span></div>
+          <div class="ad-type"><span class="ad-type-name">보상형 광고 ⭐</span><span class="ad-type-val">자발적 선택 · 거부감 낮음</span></div>
+        </div>
+        <div style="margin-top:20px;">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">월 DAU별 예상 수익 (배너+전면)</div>
+          <table class="ad-revenue-table">
+            <tr><td>DAU 100</td><td>$15 ~ $25</td></tr>
+            <tr><td>DAU 500</td><td>$70 ~ $130</td></tr>
+            <tr><td>DAU 2,000</td><td>$270 ~ $500</td></tr>
+          </table>
+        </div>
+        <div style="margin-top:16px;padding:10px;background:rgba(34,197,94,0.08);border-radius:8px;font-size:12px;color:var(--green);">⭐ 보상형: "광고 보기 → 이번 달 내보내기 무료" 형태 권장</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="section-tag">Phase 3</div>
+  <h2 class="section-title">구독 요금제</h2>
+  <p class="section-sub">PT 강사 월 수입의 1% 미만. 가격 저항이 낮은 구간에 설정했습니다.</p>
+
+  <div class="billing-toggle" id="billingToggle" onclick="toggleBilling()">
+    <span class="toggle-label">월간 결제</span>
+    <div class="toggle-switch" id="toggleSwitch"><div class="toggle-knob"></div></div>
+    <span class="toggle-label">연간 결제</span>
+    <span class="save-badge" id="saveBadge" style="display:none;">20% 절약</span>
+  </div>
+
+  <div class="pricing-grid">
+    <div class="pricing-card">
+      <div class="plan-name">FREE</div>
+      <div class="plan-price">₩0</div>
+      <div class="plan-period">무료 · 영구</div>
+      <hr class="plan-divider">
+      <ul class="plan-features">
+        <li>조직 1개</li>
+        <li>멤버 최대 10명</li>
+        <li>레슨권 3종</li>
+        <li>스케줄 기본 기능</li>
+        <li>SMS 10건/월</li>
+        <li class="gray">광고 노출</li>
+        <li class="gray">이메일 지원</li>
+      </ul>
+      <button class="plan-cta cta-free">무료로 시작</button>
+    </div>
+    <div class="pricing-card featured">
+      <div class="popular-badge">가장 인기</div>
+      <div class="plan-name">PRO</div>
+      <div class="plan-price" id="proPrice">₩29,000</div>
+      <div class="plan-period" id="proPeriod">/ 월 · 월간 결제</div>
+      <hr class="plan-divider">
+      <ul class="plan-features">
+        <li>조직 3개</li>
+        <li>멤버 최대 50명</li>
+        <li>레슨권 무제한</li>
+        <li>광고 없음</li>
+        <li>SMS 100건/월</li>
+        <li>통계 기본 대시보드</li>
+        <li>이메일 지원</li>
+      </ul>
+      <button class="plan-cta cta-pro">Pro 시작하기</button>
+    </div>
+    <div class="pricing-card">
+      <div class="plan-name">BUSINESS</div>
+      <div class="plan-price" id="bizPrice">₩79,000</div>
+      <div class="plan-period" id="bizPeriod">/ 월 · 월간 결제</div>
+      <hr class="plan-divider">
+      <ul class="plan-features">
+        <li>조직 무제한</li>
+        <li>멤버 무제한</li>
+        <li>레슨권 무제한</li>
+        <li>광고 없음</li>
+        <li>SMS 500건/월</li>
+        <li>통계 고급 대시보드</li>
+        <li>우선 지원 + 전화</li>
+        <li>API 접근</li>
+        <li>전담 온보딩</li>
+      </ul>
+      <button class="plan-cta cta-biz">Business 문의</button>
+    </div>
+  </div>
+
+  <div style="margin-top:32px;padding:24px;background:rgba(224,90,58,0.08);border:1px solid rgba(224,90,58,0.2);border-radius:16px;">
+    <div style="font-size:14px;font-weight:700;margin-bottom:8px;color:var(--coral2);">🎯 Early Adopter 혜택 — 출시 후 3개월한정</div>
+    <div style="font-size:14px;color:var(--muted);">지금 연간 Pro 가입 시 <strong style="color:var(--text);">평생 50% 할인 (월 14,500원)</strong> 적용. 선착순 100개 조직 한정.</div>
+  </div>
+</section>
+
+<!-- PROJECTION -->
+<section id="projection" style="background:var(--surface);border-radius:32px;max-width:100%;padding:80px 40px;">
+  <div style="max-width:1100px;margin:0 auto;">
+    <div class="section-tag">Revenue Projection</div>
+    <h2 class="section-title">수익 전망</h2>
+    <p class="section-sub">수익의 90%는 광고가 아닌 구독에서 나옵니다. 유료 조직 5개면 운영비 자급자족입니다.</p>
+
+    <div class="proj-toggle">
+      <button class="proj-btn active" onclick="setScenario('conservative', this)">보수적 시나리오</button>
+      <button class="proj-btn" onclick="setScenario('aggressive', this)">적극적 시나리오</button>
+    </div>
+
+    <div class="proj-chart" id="projChart">
+      <!-- JS로 렌더 -->
+    </div>
+
+    <div class="proj-total" style="margin-top:32px;">
+      <div>
+        <div class="proj-total-label" id="projTotalLabel">12개월 후 예상 월 수익</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:4px;" id="projTotalSub">유료 조직 30개 기준</div>
+      </div>
+      <div class="proj-total-val" id="projTotalVal">약 115만원</div>
+    </div>
+  </div>
+</section>
+
+<!-- BREAKEVEN -->
+<section>
+  <div class="section-tag">Break-Even</div>
+  <h2 class="section-title">손익분기점</h2>
+  <p class="section-sub">월 운영비는 6~12만원. 생각보다 빠르게 달성할 수 있습니다.</p>
+  <div class="breakeven">
+    <div class="be-card">
+      <h4>월 고정 운영비</h4>
+      <div class="val" style="color:var(--coral);font-size:28px;">6~12만원</div>
+      <p>Supabase + Vercel + Apple + Codemagic</p>
+    </div>
+    <div class="be-card" style="border-color:rgba(34,197,94,0.3);">
+      <h4>구독 손익분기</h4>
+      <div class="val" style="color:var(--green);">5개</div>
+      <p>유료 조직 5개 = 월 145,000원 → 운영비 자급자족</p>
+    </div>
+    <div class="be-card">
+      <h4>월 100만원 달성</h4>
+      <div class="val" style="color:var(--blue);">30개</div>
+      <p>유료 조직 30개 기준 Pro 플랜 월 870,000원</p>
+    </div>
+    <div class="be-card">
+      <h4>월 1,000만원 달성</h4>
+      <div class="val" style="color:var(--purple);">300개</div>
+      <p>유료 조직 300개 기준 Pro 플랜 월 8,700,000원</p>
+    </div>
+  </div>
+</section>
+
+<!-- PRINCIPLES -->
+<section style="background:var(--surface);border-radius:32px;max-width:100%;padding:80px 40px;">
+  <div style="max-width:1100px;margin:0 auto;">
+    <div class="section-tag">Principles</div>
+    <h2 class="section-title">핵심 원칙</h2>
+    <div class="principles">
+      <div class="principle">
+        <div class="principle-num">01</div>
+        <div><h4>광고는 운영비 충당, 구독이 진짜 수익</h4><p>광고 수익에 기대치를 낮추세요. B2B 관리 도구는 DAU가 낮아 광고 효율이 떨어집니다. 구독 전환에 집중하는 것이 올바른 방향입니다.</p></div>
+      </div>
+      <div class="principle">
+        <div class="principle-num">02</div>
+        <div><h4>전환 트리거는 "불편함"이 아니라 "아쉬움"이어야 한다</h4><p>"더 쓰고 싶은데 한도가 됐네"가 업그레이드로 이어집니다. "기능이 막혀 아무것도 못 하겠네"는 이탈을 만듭니다.</p></div>
+      </div>
+      <div class="principle">
+        <div class="principle-num">03</div>
+        <div><h4>앱 결제 수수료(15~30%)를 피하려면 웹으로 유도</h4><p>앱 내 구독 결제 시 Apple·Google이 15~30% 수수료를 가져갑니다. "구독은 웹사이트에서" 안내로 합법적 우회가 가능합니다.</p></div>
+      </div>
+      <div class="principle">
+        <div class="principle-num">04</div>
+        <div><h4>유료 조직 5개가 생기는 순간 운영비 자급자족</h4><p>목표를 크게 잡을 필요 없습니다. 처음엔 5개, 그다음 30개. 단계별 마일스톤을 설정하고 하나씩 달성하세요.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div style="font-size:20px;font-weight:700;margin-bottom:8px;">Dynamic <span style="color:var(--coral);">Team</span> Schedule</div>
+  <div>수익화 전략 로드맵 · 2026</div>
+</footer>
+
+<script>
+// Billing toggle
+let isAnnual = false;
+function toggleBilling() {
+  isAnnual = !isAnnual;
+  const sw = document.getElementById('toggleSwitch');
+  const badge = document.getElementById('saveBadge');
+  sw.classList.toggle('on', isAnnual);
+  badge.style.display = isAnnual ? 'inline' : 'none';
+  document.getElementById('proPrice').textContent = isAnnual ? '₩24,000' : '₩29,000';
+  document.getElementById('proPeriod').textContent = isAnnual ? '/ 월 · 연간 결제' : '/ 월 · 월간 결제';
+  document.getElementById('bizPrice').textContent = isAnnual ? '₩65,000' : '₩79,000';
+  document.getElementById('bizPeriod').textContent = isAnnual ? '/ 월 · 연간 결제' : '/ 월 · 월간 결제';
+}
+
+// Projection chart
+const scenarios = {
+  conservative: {
+    rows: [
+      { label: '출시 3개월', ad: 3, sub: 0, adVal: '$20', subVal: '₩0', total: '약 2.8만원' },
+      { label: '출시 6개월', ad: 8, sub: 15, adVal: '$80', subVal: '₩145,000', total: '약 26만원' },
+      { label: '출시 12개월', ad: 20, sub: 87, adVal: '$200', subVal: '₩870,000', total: '약 115만원' },
+      { label: '출시 24개월', ad: 35, sub: 290, adVal: '$400', subVal: '₩2,900,000', total: '약 295만원' },
+    ],
+    totalLabel: '12개월 후 예상 월 수익',
+    totalSub: '유료 조직 30개 기준',
+    totalVal: '약 115만원'
+  },
+  aggressive: {
+    rows: [
+      { label: '출시 3개월', ad: 5, sub: 6, adVal: '$100', subVal: '₩290,000', total: '약 43만원' },
+      { label: '출시 6개월', ad: 12, sub: 58, adVal: '$200', subVal: '₩580,000', total: '약 85만원' },
+      { label: '출시 12개월', ad: 35, sub: 290, adVal: '$800', subVal: '₩2,900,000', total: '약 400만원' },
+      { label: '출시 24개월', ad: 100, sub: 870, adVal: '$2,000', subVal: '₩8,700,000', total: '약 1,100만원' },
+    ],
+    totalLabel: '12개월 후 예상 월 수익',
+    totalSub: '유료 조직 100개 기준',
+    totalVal: '약 400만원'
+  }
+};
+
+let currentScenario = 'conservative';
+
+function renderChart(scenario) {
+  const data = scenarios[scenario];
+  const chart = document.getElementById('projChart');
+  chart.innerHTML = data.rows.map(r => `
+    <div class="proj-row">
+      <div class="proj-label">${r.label}</div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="proj-bar-wrap" style="height:22px;">
+            <div class="proj-bar bar-ad" style="width:${r.ad}%;min-width:${r.ad>0?'40px':'0'};">${r.adVal}</div>
+          </div>
+          <span style="font-size:11px;color:var(--blue);width:60px;flex-shrink:0;">광고</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="proj-bar-wrap" style="height:22px;">
+            <div class="proj-bar bar-sub" style="width:${r.sub}%;min-width:${r.sub>0?'40px':'0'};">${r.subVal}</div>
+          </div>
+          <span style="font-size:11px;color:var(--green);width:60px;flex-shrink:0;">구독</span>
+        </div>
+      </div>
+      <div class="proj-val" style="color:var(--text);">${r.total}</div>
+    </div>
+  `).join('');
+  document.getElementById('projTotalLabel').textContent = data.totalLabel;
+  document.getElementById('projTotalSub').textContent = data.totalSub;
+  document.getElementById('projTotalVal').textContent = data.totalVal;
+}
+
+function setScenario(scenario, btn) {
+  currentScenario = scenario;
+  document.querySelectorAll('.proj-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderChart(scenario);
+}
+
+renderChart('conservative');
+</script>
+</body>
+</html>
