@@ -51,7 +51,7 @@ const HOLIDAY_STRIPE_STYLE = {
   background: '#f7f7f7',
 } as const
 
-function NameChips({ assignments, highlightName, tintBg, tintInk, teamLeaderUserIds, small, showTimeSub, withdrawnUserIds, isAdmin, myUserId }: {
+function NameChips({ assignments, highlightName, tintBg, tintInk, teamLeaderUserIds, small, showTimeSub, withdrawnUserIds, isAdmin, myUserId, hasBarInCell }: {
   assignments: Assignment[]
   highlightName: string | null
   tintBg: string
@@ -62,13 +62,14 @@ function NameChips({ assignments, highlightName, tintBg, tintInk, teamLeaderUser
   withdrawnUserIds?: Set<string>
   isAdmin?: boolean
   myUserId?: string
+  hasBarInCell?: boolean
 }) {
   const visible = assignments.filter(a => !(a.user_id && teamLeaderUserIds?.has(a.user_id ?? '')))
   if (!visible.length) return null
   const textSize = small ? 'text-[6px] sm:text-[9px]' : 'text-[8px] sm:text-[11px]'
   const subSize = small ? 'text-[5px]' : 'text-[6px] sm:text-[8px]'
   return (
-    <div className="flex flex-col gap-0.5 w-full px-0.5">
+    <div className={`flex flex-col gap-0.5 w-full ${hasBarInCell ? 'pl-[5px] pr-0.5' : 'px-0.5'}`}>
       {visible.map(a => {
         const isHighlighted = isAssignmentHighlighted(a, highlightName)
         const isWithdrawn = !!(a.user_id && withdrawnUserIds?.has(a.user_id)) || a.account_deleted
@@ -230,7 +231,7 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
               style={{ background: effectiveTint.bg }}
             >
               {renderBarOverlay(fullSlotRole)}
-              <NameChips assignments={fullSlotRole} highlightName={highlightName} tintBg={effectiveTint.bg} tintInk={effectiveTint.ink} teamLeaderUserIds={teamLeaderUserIds} showTimeSub withdrawnUserIds={withdrawnUserIds} isAdmin={isAdmin} myUserId={myUserId} />
+              <NameChips assignments={fullSlotRole} highlightName={highlightName} tintBg={effectiveTint.bg} tintInk={effectiveTint.ink} teamLeaderUserIds={teamLeaderUserIds} showTimeSub withdrawnUserIds={withdrawnUserIds} isAdmin={isAdmin} myUserId={myUserId} hasBarInCell={hasIndicatorBar} />
             </button>
           )}
           <div className="flex flex-col divide-y divide-[var(--color-border-table)] flex-1">
@@ -244,7 +245,7 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
                 >
                   {renderBarOverlay(hourAllAssignments)}
                   {hourA.length
-                    ? <NameChips assignments={hourA} highlightName={highlightName} tintBg={effectiveTint.bg} tintInk={effectiveTint.ink} teamLeaderUserIds={teamLeaderUserIds} showTimeSub withdrawnUserIds={withdrawnUserIds} isAdmin={isAdmin} myUserId={myUserId} />
+                    ? <NameChips assignments={hourA} highlightName={highlightName} tintBg={effectiveTint.bg} tintInk={effectiveTint.ink} teamLeaderUserIds={teamLeaderUserIds} showTimeSub withdrawnUserIds={withdrawnUserIds} isAdmin={isAdmin} myUserId={myUserId} hasBarInCell={hasIndicatorBar} />
                     : canInteract && <EmptyOrLockHint isLocked={isLocked} />
                   }
                 </button>
@@ -266,7 +267,7 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
         {renderBarOverlay(assignments)}
         {hasAssignments
           ? <>
-              <NameChips assignments={roleAssignments} highlightName={highlightName} tintBg={effectiveTint.bg} tintInk={effectiveTint.ink} teamLeaderUserIds={teamLeaderUserIds} withdrawnUserIds={withdrawnUserIds} isAdmin={isAdmin} myUserId={myUserId} />
+              <NameChips assignments={roleAssignments} highlightName={highlightName} tintBg={effectiveTint.bg} tintInk={effectiveTint.ink} teamLeaderUserIds={teamLeaderUserIds} withdrawnUserIds={withdrawnUserIds} isAdmin={isAdmin} myUserId={myUserId} hasBarInCell={hasIndicatorBar} />
               {isFull && <span className="text-[7px] sm:text-[9px] font-semibold mt-0.5 px-1.5 py-0.5 rounded-full" style={{ background: 'oklch(0.97 0.02 25)', color: 'oklch(0.55 0.16 25)' }}>마감</span>}
             </>
           : highlighted && !isLocked
@@ -306,7 +307,7 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
               style={{ background: fullSlotTint.bg }}
             >
               {renderBarOverlay(fullSlotVol)}
-              <NameChips assignments={fullSlotVisible} highlightName={highlightName} tintBg={fullSlotTint.bg} tintInk={fullSlotTint.ink} showTimeSub withdrawnUserIds={withdrawnUserIds} isAdmin={isAdmin} myUserId={myUserId} />
+              <NameChips assignments={fullSlotVisible} highlightName={highlightName} tintBg={fullSlotTint.bg} tintInk={fullSlotTint.ink} showTimeSub withdrawnUserIds={withdrawnUserIds} isAdmin={isAdmin} myUserId={myUserId} hasBarInCell={hasIndicatorBar} />
             </button>
           )}
           <div className="flex flex-col divide-y divide-[var(--color-border-table)] flex-1">
@@ -323,7 +324,7 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
                 >
                   {renderBarOverlay(hourVol)}
                   {hourVisible.length
-                    ? <NameChips assignments={hourVisible} highlightName={highlightName} tintBg={hourTint.bg} tintInk={hourTint.ink} teamLeaderUserIds={teamLeaderUserIds} showTimeSub withdrawnUserIds={withdrawnUserIds} isAdmin={isAdmin} myUserId={myUserId} />
+                    ? <NameChips assignments={hourVisible} highlightName={highlightName} tintBg={hourTint.bg} tintInk={hourTint.ink} teamLeaderUserIds={teamLeaderUserIds} showTimeSub withdrawnUserIds={withdrawnUserIds} isAdmin={isAdmin} myUserId={myUserId} hasBarInCell={hasIndicatorBar} />
                     : canInteract && <EmptyOrLockHint isLocked={isLocked} />
                   }
                 </button>
@@ -348,7 +349,7 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
         {renderBarOverlay(assignments)}
         {hasAssign
           ? <>
-              <NameChips assignments={visibleAssignments} highlightName={highlightName} tintBg={cellTint.bg} tintInk={cellTint.ink} teamLeaderUserIds={teamLeaderUserIds} withdrawnUserIds={withdrawnUserIds} isAdmin={isAdmin} myUserId={myUserId} />
+              <NameChips assignments={visibleAssignments} highlightName={highlightName} tintBg={cellTint.bg} tintInk={cellTint.ink} teamLeaderUserIds={teamLeaderUserIds} withdrawnUserIds={withdrawnUserIds} isAdmin={isAdmin} myUserId={myUserId} hasBarInCell={hasIndicatorBar} />
               {isFull && <span className="text-[7px] sm:text-[9px] font-semibold mt-0.5 px-1.5 py-0.5 rounded-full" style={{ background: 'oklch(0.97 0.02 25)', color: 'oklch(0.55 0.16 25)' }}>마감</span>}
             </>
           : highlighted && !isLocked

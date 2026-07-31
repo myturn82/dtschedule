@@ -1197,7 +1197,15 @@ export function SlotEditModal({
                         {profile.name.slice(0, 1)}
                       </div>
                       <span className="text-sm text-[var(--color-text-primary)] font-bold">{profile.name}</span>
-                      <span className="ml-auto text-[11px] font-extrabold bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] px-2 py-0.5 rounded-full">나</span>
+                      {editingId && (
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(editingId)}
+                          className="ml-auto text-xs font-bold text-red-500 px-2 py-0.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
+                        >
+                          삭제
+                        </button>
+                      )}
                     </div>
                   )}
                   {showExtraCustomFields && !!selectedUserId && customFields.map(field => renderFieldInput(field))}
