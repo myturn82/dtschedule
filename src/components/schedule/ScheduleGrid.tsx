@@ -189,16 +189,7 @@ export function ScheduleGrid({
   }
   const isIndicatorBarMember = !isAdmin && indicatorBarRoles.some(r => r.id === memberRoleId)
   const weeks = getCalendarWeeks(year, month)
-  const myAssignedDays = new Set<number>()
-  const mySlotKeys = new Set<string>()
-  if (tenantRole === 'member' && profile?.id) {
-    for (const a of assignments) {
-      if (a.user_id === profile.id && a.day != null) {
-        myAssignedDays.add(a.day as number)
-        mySlotKeys.add(`${a.day}|${a.time_slot}`)
-      }
-    }
-  }
+  const myUserId = tenantRole === 'member' ? (profile?.id ?? undefined) : undefined
   const visibleSplitRoles = isSplitMode
     ? (() => { const v = splitRoles.filter(r => !hiddenRoleIds.has(r.id)); return v.length > 0 ? v : splitRoles })()
     : splitRoles
@@ -274,9 +265,6 @@ export function ScheduleGrid({
                             : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)]'}`}
                       >
                         {day ?? ''}
-                        {day && myAssignedDays.has(day) && (
-                          <span className="block w-1.5 h-1.5 rounded-full bg-current mx-auto mt-0.5 opacity-70 select-none" />
-                        )}
                         {holidayName && (
                           <span className="block text-[7px] sm:text-[9px] font-medium leading-tight truncate px-0.5">
                             {holidayName}
@@ -443,9 +431,6 @@ export function ScheduleGrid({
                                 {copyRange && day && inRange(day, slotIdx, roleIdx, copyRange) && (
                                   <div className="absolute inset-0 border-2 border-dashed border-blue-500 pointer-events-none z-10" />
                                 )}
-                                {day && mySlotKeys.has(`${day}|${slot}`) && (
-                                  <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-[var(--color-brand-primary)] opacity-80 z-20 pointer-events-none" />
-                                )}
                                 <TimeSlotCell
                                   cellState={displayCellState}
                                   timeSlot={slot}
@@ -462,6 +447,7 @@ export function ScheduleGrid({
                                   withdrawnUserIds={withdrawnUserIds}
                                   isAdmin={isAdmin}
                                   highlighted={highlightedSlots?.has(`${year}-${pad2(month)}-${pad2(day)}|${slot}`) ?? false}
+                                  myUserId={myUserId}
                                 />
                               </td>
                               )
@@ -501,9 +487,6 @@ export function ScheduleGrid({
                               {copyRange && inRange(day, slotIdx, 0, copyRange) && (
                                 <div className="absolute inset-0 border-2 border-dashed border-blue-500 pointer-events-none z-10" />
                               )}
-                              {day && mySlotKeys.has(`${day}|${slot}`) && (
-                                <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-[var(--color-brand-primary)] opacity-80 z-20 pointer-events-none" />
-                              )}
                               <TimeSlotCell
                                 cellState={displayCellState}
                                 timeSlot={slot}
@@ -516,6 +499,7 @@ export function ScheduleGrid({
                                 withdrawnUserIds={withdrawnUserIds}
                                 isAdmin={isAdmin}
                                 highlighted={highlightedSlots?.has(`${year}-${pad2(month)}-${pad2(day)}|${slot}`) ?? false}
+                                myUserId={myUserId}
                               />
                             </td>
                           )}
