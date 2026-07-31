@@ -77,25 +77,25 @@ export function ScheduleHeader({ year, month, openCount, onPrev, onNext, viewTyp
     <div className="flex items-center rounded-lg border border-[var(--color-border)] overflow-hidden shrink-0">
       <button
         onClick={() => onDisplayModeChange('time')}
-        className={`inline-flex items-center justify-center gap-1 px-1.5 h-7 text-[11px] font-medium transition-colors border-r border-[var(--color-border)] whitespace-nowrap ${
+        title="시간별"
+        className={`inline-flex items-center justify-center px-2 h-7 transition-colors border-r border-[var(--color-border)] ${
           displayMode === 'time'
             ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]'
             : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
         }`}
       >
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
-        시간별
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
       </button>
       <button
         onClick={() => onDisplayModeChange('day')}
-        className={`inline-flex items-center justify-center gap-1 px-1.5 h-7 text-[11px] font-medium transition-colors whitespace-nowrap ${
+        title="일자별"
+        className={`inline-flex items-center justify-center px-2 h-7 transition-colors ${
           displayMode === 'day'
             ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]'
             : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
         }`}
       >
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-        일자별
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
       </button>
     </div>
   )

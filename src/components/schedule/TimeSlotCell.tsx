@@ -79,10 +79,10 @@ function NameChips({ assignments, highlightName, tintBg, tintInk, teamLeaderUser
         return (
           <div
             key={a.id}
-            className={`rounded-[6px] px-1.5 py-0.5 leading-tight ${textSize} font-semibold w-full truncate text-center`}
+            className={`rounded-[6px] px-1.5 py-0.5 leading-tight ${textSize} font-semibold w-full overflow-hidden whitespace-nowrap sm:text-ellipsis text-center`}
             style={isHighlighted
               ? { background: '#fef08a', color: '#92400e' }
-              : { background: tintBg, color: tintInk, ...(isMyOwn && !isWithdrawn ? { boxShadow: '0 0 0 2px var(--color-brand-primary)' } : {}) }}
+              : { background: tintBg, color: tintInk, ...(isMyOwn && !isWithdrawn ? { boxShadow: '0 0 0 1px var(--color-brand-primary)' } : {}) }}
           >
             <span style={isWithdrawn ? { textDecoration: 'line-through' } : undefined}>
               <span className="sm:hidden">{nameLabel.charAt(0)}</span>
