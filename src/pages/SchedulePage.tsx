@@ -19,7 +19,6 @@ import { WeekScheduleByDay } from '../components/schedule/WeekScheduleByDay'
 import { DayView } from '../components/schedule/DayView'
 import { Legend } from '../components/schedule/Legend'
 import { FilterBar } from '../components/shared/FilterBar'
-import { ExportButton } from '../components/shared/ExportButton'
 import { SlotEditModal } from '../components/modals/SlotEditModal'
 import { RecurringModal } from '../components/modals/RecurringModal'
 import { CapacityModal } from '../components/modals/CapacityModal'
@@ -640,8 +639,24 @@ export function SchedulePage() {
       <AppHeader
         leftSlot={<FilterBar value={highlightName} onChange={setHighlightName} />}
         memberSelectSlot={memberSelectEl}
-        rightSlot={<ExportButton year={year} month={month} />}
         roleLabel={memberTenantRoleName ?? undefined}
+        userMenuItems={(close) => (
+          tenant ? (
+            <button
+              onClick={() => {
+                const url = `${window.location.origin}/share?tid=${tenant.id}&year=${year}&month=${month}`
+                navigator.clipboard.writeText(url).then(() => alert('공유 URL이 클립보드에 복사되었습니다.\n' + url))
+                close()
+              }}
+              className="w-full text-left px-3 py-2 text-sm rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
+            >
+              <span className="flex items-center gap-2.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                공유 URL 복사
+              </span>
+            </button>
+          ) : null
+        )}
         funcMenuItems={(close) => (
           <>
             {isPrivileged && (

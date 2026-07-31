@@ -42,6 +42,7 @@ function NavLabel({ children }: { children: React.ReactNode }) {
 
 interface AppHeaderProps {
   funcMenuItems?: (closeMenu: () => void) => React.ReactNode
+  userMenuItems?: (closeMenu: () => void) => React.ReactNode
   leftSlot?: React.ReactNode
   memberSelectSlot?: React.ReactNode
   rightSlot?: React.ReactNode
@@ -49,7 +50,7 @@ interface AppHeaderProps {
   onShowLogin?: () => void
 }
 
-export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot, roleLabel, onShowLogin }: AppHeaderProps) {
+export function AppHeader({ funcMenuItems, userMenuItems, leftSlot, memberSelectSlot, rightSlot, roleLabel, onShowLogin }: AppHeaderProps) {
   const navigate = useNavigate()
   const { profile, loading: authLoading, signOut, deleteAccount, linkGoogle, linkKakao, getIdentities } = useAuth()
   const { isCustomerAdmin } = useCustomerAdmin()
@@ -171,21 +172,6 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
                   )}
                 </button>
               </div>
-            )}
-            {profile && (
-              <button
-                onClick={() => setShowFeedback(true)}
-                aria-label="피드백"
-                className="relative flex items-center justify-center gap-1.5 w-8 h-8 sm:w-auto sm:h-auto px-0 py-0 sm:px-3 sm:py-1.5 text-xs font-medium rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-all shrink-0 select-none"
-              >
-                <span className="text-sm leading-none select-none">💬</span>
-                <span className="hidden sm:inline">피드백</span>
-                {feedbackBadgeCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold leading-none select-none">
-                    {feedbackBadgeCount > 9 ? '9+' : feedbackBadgeCount}
-                  </span>
-                )}
-              </button>
             )}
             {profile && (
               <div className="hidden sm:flex items-center gap-1.5">
@@ -344,6 +330,19 @@ export function AppHeader({ funcMenuItems, leftSlot, memberSelectSlot, rightSlot
                     </span>
                   </button>
                 )}
+                {sep}
+                {userMenuItems?.(() => setShowUserMenu(false))}
+                <button onClick={() => { setShowFeedback(true); setShowUserMenu(false) }} className={menuBtn}>
+                  <span className="flex items-center gap-2.5">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    피드백
+                    {feedbackBadgeCount > 0 && (
+                      <span className="ml-auto min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold leading-none">
+                        {feedbackBadgeCount > 9 ? '9+' : feedbackBadgeCount}
+                      </span>
+                    )}
+                  </span>
+                </button>
                 {sep}
                 <button onClick={() => { navigate('/help'); setShowUserMenu(false) }} className={menuBtn}>
                   <span className="flex items-center gap-2.5">
