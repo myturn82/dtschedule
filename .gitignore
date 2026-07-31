@@ -41,3 +41,12 @@ src/styles/tokens.css
 !.env.lesson-on
 !.env.shift-on
 !.env.serve-on
+
+# Android 서명 키스토어 (절대 커밋 금지)
+android/app/keystore.properties
+android/app/keystores/
+
+# @capacitor/assets 소스 이미지 (빌드 산출물)
+assets/icon-only.png
+assets/icon-background.png
+assets/splash.png

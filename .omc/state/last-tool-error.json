@@ -1,7 +1,0 @@
-{
-  "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"grep -rn \\\"screens\\\\|--breakpoint\\\" C:/claudePrj/dtschedule/tailwind.config.* C:/claudePrj/dtschedule/src/index.css 2>/dev/null\",\"description\":\"Check for custom Tailwind breakpoint config\"...",
-  "error": "Exit code 2",
-  "timestamp": "2026-07-16T07:04:39.329Z",
-  "retry_count": 1
-}

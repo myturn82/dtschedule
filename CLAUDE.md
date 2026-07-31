@@ -409,3 +409,99 @@ npx cap sync android
 - 무료 플랜 한도 도달 시 `UpgradePromptModal`을 표시한다.
 - 광고는 무료 플랜 사용자에게만 표시하고, `useAdDisplay` 훅으로 제어한다.
 - 앱 내 결제 링크는 Apple 정책상 직접 노출이 불가하므로, "웹사이트에서 구독 관리" 방식으로 안내한다.
+
+---
+
+## Android 앱 출시 워크플로우
+
+새 버티컬 앱을 Android Play Store에 출시할 때마다 아래 순서를 따른다.
+
+> 최초 설정 사례: LESSON:ON (2026-07-30)
+
+### 1. applicationId 설정 규칙
+
+- `android/app/build.gradle`의 `namespace`와 `applicationId`를 버티컬별로 고유하게 설정한다.
+- **Play Store 제출 후 applicationId는 절대 변경할 수 없다.** 신중하게 결정한다.
+- 명명 규칙: `com.dtschedule.<vertical>` (예: `com.dtschedule.lessonon`)
+
+| 버티컬 | applicationId |
+|--------|---------------|
+| LESSON:ON | `com.dtschedule.lessonon` |
+| SHIFT:ON  | `com.dtschedule.shifton` |
+| SERVE:ON  | `com.dtschedule.serveon` |
+| CLASS:ON  | `com.dtschedule.classon` |
+| WORK:ON   | `com.dtschedule.workon` |
+| SALON:ON  | `com.dtschedule.salonon` |
+| CARE:ON   | `com.dtschedule.careon` |
+
+### 2. 키스토어 관리 규칙
+
+- 버티컬마다 키스토어를 **별도로** 생성한다. 하나를 공유하지 않는다.
+- 키스토어 파일: `android/app/keystores/<vertical>.keystore` (`.gitignore`로 Git 제외)
+- 서명 설정: `android/app/keystore.properties` (`.gitignore`로 Git 제외)
+- 템플릿: `android/app/keystore.properties.example` (Git 포함, 비밀번호 없음)
+- **키스토어 + 비밀번호를 분실하면 Play Store 업데이트가 영구적으로 불가능하다.**
+  반드시 암호 관리자(1Password, Bitwarden 등)에 백업한다.
+
+**신규 버티컬 키스토어 생성 명령:**
+```powershell
+mkdir android\app\keystores
+keytool -genkey -v `
+  -keystore android\app\keystores\<vertical>.keystore `
+  -alias <vertical> -keyalg RSA -keysize 2048 -validity 10000 `
+  -dname "CN=<AppName>, OU=Mobile, O=DTS, L=Seoul, ST=Seoul, C=KR" `
+  -storepass <PASSWORD> -keypass <PASSWORD>
+```
+
+### 3. 앱 아이콘 생성 규칙
+
+- 소스: `scripts/generate-icon.js` (Playwright 기반, 1024×1024 PNG 자동 생성)
+- 출력: `assets/icon-only.png` → `@capacitor/assets`가 Android 전체 사이즈로 변환
+- 버티컬별 색상/텍스트는 `scripts/generate-icon.js`의 `VERTICAL_ICONS` 맵에서 관리한다.
+- 아이콘 변경 시 반드시 `npm run icon:<vertical>` 후 `npm run build:<vertical>` 재실행.
+
+```bash
+npm run icon:lesson-on   # 아이콘 생성 + Android 전체 사이즈 자동 배포
+npm run build:lesson-on  # 웹 빌드 + cap sync
+```
+
+### 4. 릴리즈 AAB 빌드 절차
+
+```powershell
+# 1. 아이콘 최신 상태 확인
+npm run icon:lesson-on
+
+# 2. 웹 빌드 + Capacitor 동기화
+npm run build:lesson-on
+
+# 3. 릴리즈 AAB 빌드 (Android Studio 없이 터미널에서)
+cd android
+.\gradlew.bat bundleRelease
+
+# 4. 결과물 위치
+# android/app/build/outputs/bundle/release/app-release.aab
+```
+
+### 5. Play Store 제출 체크리스트
+
+- [ ] `applicationId` 확정 (제출 후 변경 불가)
+- [ ] 키스토어 생성 + 비밀번호 암호 관리자에 백업
+- [ ] `android/app/build.gradle` 서명 설정 완료
+- [ ] `versionCode` / `versionName` 업데이트 (업데이트마다 versionCode +1)
+- [ ] AAB 빌드 성공 확인
+- [ ] Google Play Console 계정 (개발자 등록 $25 일회성)
+- [ ] 스토어 등록 정보: 앱 이름, 설명(한/영), 스크린샷 최소 2장, 아이콘 512×512
+- [ ] 개인정보처리방침 URL (필수)
+- [ ] 데이터 안전 섹션 작성 (수집 데이터 항목)
+- [ ] 내부 테스트 트랙 → 비공개 테스트 → 프로덕션 순으로 단계적 출시
+
+### 6. 버전 관리 규칙
+
+- `versionCode`: Play Store 업데이트마다 정수 +1 (절대 감소 불가)
+- `versionName`: 사용자 표시용 문자열 (예: `"1.0.1"`)
+- 두 값 모두 `android/app/build.gradle`의 `defaultConfig`에서 관리한다.
+
+```groovy
+versionCode 1       // 업데이트마다 +1
+versionName "1.0"   // 사용자에게 보이는 버전
+```

@@ -4,6 +4,28 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+const VERTICAL_TO_FAVICON: Record<string, string> = {
+  'lesson-sports':       'lesson-on',
+  'food-retail':         'shift-on',
+  'public-welfare':      'serve-on',
+  'education-academy':   'class-on',
+  'professional-office': 'work-on',
+  'beauty-salon':        'salon-on',
+  'medical-care':        'care-on',
+}
+
+const verticalFaviconPlugin = {
+  name: 'vertical-favicon',
+  transformIndexHtml(html: string) {
+    const vertical = process.env.VITE_VERTICAL
+    const faviconKey = vertical ? VERTICAL_TO_FAVICON[vertical] : null
+    if (faviconKey) {
+      return html.replace('href="/favicon.svg"', `href="/favicons/${faviconKey}.svg"`)
+    }
+    return html
+  },
+}
+
 export default defineConfig(({ command }) => ({
   server: {
     watch: {
@@ -14,6 +36,7 @@ export default defineConfig(({ command }) => ({
   plugins: [
     react(),
     tailwindcss(),
+    verticalFaviconPlugin,
     // 개발 서버에서는 SW를 완전히 비활성화 (HMR 오프라인 방지)
     command === 'build' && VitePWA({
       registerType: 'autoUpdate',

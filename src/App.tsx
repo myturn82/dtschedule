@@ -1,5 +1,6 @@
 import { useRef, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useSearchParams } from 'react-router-dom'
+import { useAndroidBackButton } from './hooks/useAndroidBackButton'
 import { AuthProvider } from './contexts/AuthContext'
 import { PlanLimitsProvider } from './contexts/PlanLimitsContext'
 import { TenantProvider, useTenant } from './contexts/TenantContext'
@@ -41,6 +42,7 @@ function AppRoutes() {
   const { profile, loading: authLoading } = useAuth()
   const { isCustomerAdmin } = useCustomerAdmin()
   const { tenant, tenantRole, tenantPlan, memberships, loading: tenantLoading, tenantSelectedByUser } = useTenant()
+  useAndroidBackButton()
 
   // 로그인 직후 슈퍼관리자는 조직 선택 화면 대신 슈퍼관리자 어드민으로 바로 이동
   const justLoggedInRef = useRef(sessionStorage.getItem('vs_just_logged_in') === '1')
