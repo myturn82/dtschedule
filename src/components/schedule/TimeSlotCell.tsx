@@ -124,7 +124,12 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
 
   // 토요일도 평일과 동일한 배경색을 사용한다 (isSaturdayShift는 plus 회원 병합 표시에만 사용)
   const tint = resolveTint(colType, slotStart)
-  const effectiveTint = tint
+  const hasWithdrawnMember = assignments.some(a =>
+    (a.user_id && withdrawnUserIds?.has(a.user_id)) || a.account_deleted
+  )
+  const effectiveTint = hasWithdrawnMember
+    ? { bg: 'oklch(0.95 0.05 25)', ink: 'oklch(0.50 0.18 25)' }
+    : tint
 
   // ── CLOSE states ─────────────────────────────────────────────────────────────
   if (isBreaktime) {

@@ -189,6 +189,13 @@ export function ScheduleGrid({
   }
   const isIndicatorBarMember = !isAdmin && indicatorBarRoles.some(r => r.id === memberRoleId)
   const weeks = getCalendarWeeks(year, month)
+  const myAssignedDays = new Set<number>(
+    (tenantRole === 'member' && profile?.id)
+      ? assignments
+          .filter(a => a.user_id === profile!.id && a.day != null)
+          .map(a => a.day as number)
+      : []
+  )
   const visibleSplitRoles = isSplitMode
     ? (() => { const v = splitRoles.filter(r => !hiddenRoleIds.has(r.id)); return v.length > 0 ? v : splitRoles })()
     : splitRoles
@@ -264,6 +271,9 @@ export function ScheduleGrid({
                             : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)]'}`}
                       >
                         {day ?? ''}
+                        {day && myAssignedDays.has(day) && (
+                          <span className="block w-1.5 h-1.5 rounded-full bg-current mx-auto mt-0.5 opacity-70 select-none" />
+                        )}
                         {holidayName && (
                           <span className="block text-[7px] sm:text-[9px] font-medium leading-tight truncate px-0.5">
                             {holidayName}

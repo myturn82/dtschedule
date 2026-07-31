@@ -813,11 +813,6 @@ export function SlotEditModal({
                 ))}
               </div>
             </div>
-          ) : !isAdmin && selectedRole ? (
-            <div className="flex border-b border-[var(--color-border)] px-4 py-2.5 gap-2 items-center shrink-0">
-              <p className="text-xs font-bold text-[var(--color-text-muted)] shrink-0">역할</p>
-              <span className="px-3.5 h-9 inline-flex items-center rounded-xl text-[13px] font-bold bg-[var(--color-surface-secondary)] border border-[var(--color-border-strong)] text-[var(--color-text-secondary)]">{selectedRole.name}</span>
-            </div>
           ) : null
         ) : !isAdmin && !isFreeform && tenantRoles.length === 0 && (  // 커스텀 역할 없는 조직만 표시
           <div className="flex border-b border-[var(--color-border)] px-2 shrink-0">
@@ -848,7 +843,7 @@ export function SlotEditModal({
 
         <div className="px-5 py-4 flex flex-col gap-3 overflow-y-auto overflow-x-hidden flex-1">
           {/* Existing assignments */}
-          {displayedAssignments.length > 0 && (
+          {displayedAssignments.length > 0 && !(editingId && !isAdmin) && (
             <section className="rounded-2xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)] p-2.5 flex flex-col gap-2">
               <div className="flex items-center gap-1.5 px-1 pt-0.5">
                 <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="var(--color-text-muted)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M7 5h9M7 10h9M7 15h9"/><circle cx="3.5" cy="5" r="0.5"/><circle cx="3.5" cy="10" r="0.5"/><circle cx="3.5" cy="15" r="0.5"/></svg>
