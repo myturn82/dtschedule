@@ -7,7 +7,7 @@ import { fmtPhone, maskPhone } from '../../lib/format'
 const DAY_KR = ['일', '월', '화', '수', '목', '금', '토']
 
 const BREAK_STRIPE = {
-  background: 'repeating-linear-gradient(135deg, var(--color-surface-secondary) 0 7px, var(--color-surface-hover) 7px 14px)',
+  background: '#f7f7f7',
 } as const
 
 const HOLIDAY_STRIPE = {

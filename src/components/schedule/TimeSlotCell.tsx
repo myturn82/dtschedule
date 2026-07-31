@@ -44,10 +44,10 @@ function resolveTint(colType: 'vol' | 'plus' | 'role', _slotStart: number): { bg
 
 // Striped closed-cell pattern matching design
 const STRIPE_STYLE = {
-  background: 'repeating-linear-gradient(135deg, transparent 0 6px, rgba(20,23,28,0.03) 6px 12px)',
+  background: '#f7f7f7',
 } as const
 const HOLIDAY_STRIPE_STYLE = {
-  background: 'repeating-linear-gradient(135deg, transparent 0 8px, oklch(0.96 0.02 25 / 0.6) 8px 16px)',
+  background: '#f7f7f7',
 } as const
 
 function NameChips({ assignments, highlightName, tintBg, tintInk, teamLeaderUserIds, small, showTimeSub, withdrawnUserIds, isAdmin }: {
@@ -83,7 +83,10 @@ function NameChips({ assignments, highlightName, tintBg, tintInk, teamLeaderUser
                 ? { background: 'oklch(0.97 0.02 25)', color: 'oklch(0.55 0.16 25)', opacity: 0.85 }
                 : { background: tintBg, color: tintInk }}
           >
-            <span style={isWithdrawn ? { textDecoration: 'line-through' } : undefined}>{displayText}</span>
+            <span style={isWithdrawn ? { textDecoration: 'line-through' } : undefined}>
+              <span className="sm:hidden">{nameLabel.charAt(0)}</span>
+              <span className="hidden sm:inline">{displayText}</span>
+            </span>
             {a.is_locked && <span title="고정됨" className="inline-flex items-center"><LockIcon size={9} className="ml-0.5" /></span>}
             {isWithdrawn && <span className={`block ${subSize} font-normal`}>삭제됨</span>}
             {timeLabel && (

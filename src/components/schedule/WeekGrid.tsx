@@ -21,7 +21,7 @@ function IndicatorBar({ assigns, roles }: { assigns: Assignment[]; roles: Tenant
 }
 
 const STRIPE_STYLE = {
-  background: 'repeating-linear-gradient(135deg, transparent 0 6px, rgba(20,23,28,0.03) 6px 12px)',
+  background: '#f7f7f7',
 } as const
 const HOLIDAY_STRIPE = {
   background: 'var(--color-schedule-close)',
