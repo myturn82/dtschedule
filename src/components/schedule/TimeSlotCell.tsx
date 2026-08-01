@@ -80,15 +80,12 @@ function NameChips({ assignments, highlightName, tintBg, tintInk, teamLeaderUser
         return (
           <div
             key={a.id}
-            className={`rounded-[6px] px-1.5 py-0.5 leading-tight ${textSize} font-semibold w-full overflow-hidden whitespace-nowrap sm:text-ellipsis text-center`}
+            className={`rounded-[6px] px-1.5 py-0.5 leading-tight ${textSize} font-semibold w-full truncate text-center`}
             style={isHighlighted
               ? { background: '#fef08a', color: '#92400e' }
               : { background: tintBg, color: tintInk, ...(isMyOwn && !isWithdrawn ? { boxShadow: '0 0 0 1px var(--color-brand-primary)' } : {}) }}
           >
-            <span style={isWithdrawn ? { textDecoration: 'line-through' } : undefined}>
-              <span className="sm:hidden">{nameLabel.charAt(0)}</span>
-              <span className="hidden sm:inline">{displayText}</span>
-            </span>
+            <span style={isWithdrawn ? { textDecoration: 'line-through' } : undefined}>{displayText}</span>
             {a.is_locked && <span title="고정됨" className="inline-flex items-center"><LockIcon size={9} className="ml-0.5" /></span>}
             {isWithdrawn && <span className={`block ${subSize} font-normal`}>삭제됨</span>}
             {timeLabel && (
