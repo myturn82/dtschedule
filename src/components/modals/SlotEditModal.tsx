@@ -103,7 +103,7 @@ export function SlotEditModal({
 
   const lockedProfile = lockedUserId ? profiles.find(p => p.id === lockedUserId) ?? null : null
   const selectedProfile = isAdmin
-    ? (lockedProfile ?? profiles.find(p => p.id === selectedUserId) ?? null)
+    ? ((!editingId && lockedProfile) ? lockedProfile : profiles.find(p => p.id === selectedUserId) ?? null)
     : profile
 
   const effectiveMemberType: MemberType = isAdmin
@@ -1165,7 +1165,7 @@ export function SlotEditModal({
                     (isFreeform && isSplitMode && selectableProfiles.length > 0) ? null : (
                     <div>
                       <p className="text-xs font-bold text-[var(--color-text-muted)] mb-2">회원 선택</p>
-                      {lockedUserId ? (
+                      {lockedUserId && !editingId ? (
                         <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)]">
                           <div className="w-8 h-8 rounded-full grid place-items-center text-[13px] font-extrabold bg-[color-mix(in_srgb,var(--color-brand-primary)_12%,transparent)] text-[var(--color-brand-primary)] shrink-0">
                             {(lockedProfile?.name ?? '?').slice(0, 1)}
