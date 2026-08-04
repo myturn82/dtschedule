@@ -295,9 +295,9 @@ export function SlotEditModal({
         }
       }
       setFieldValues(restored)
-      if (isAdmin && isSplitMode) setSelectedUserId(a.user_id ?? '')
+      if (isAdmin && isSplitMode) setSelectedUserId(a.user_id ?? profiles.find(p => p.name === a.member_name)?.id ?? '')
     } else {
-      setSelectedUserId(a.user_id ?? '')
+      setSelectedUserId(a.user_id ?? profiles.find(p => p.name === a.member_name)?.id ?? '')
       setMemberType(a.member_type ?? 'member')
     }
     if (showExtraCustomFields) {
