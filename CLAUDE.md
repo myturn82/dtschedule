@@ -505,3 +505,43 @@ cd android
 versionCode 1       // 업데이트마다 +1
 versionName "1.0"   // 사용자에게 보이는 버전
 ```
+
+---
+
+## Supabase 대시보드 SQL 작성 규칙
+
+Supabase 대시보드 SQL 에디터에서 직접 실행할 SQL을 제공할 때 반드시 아래를 지킨다.
+
+### Dollar-quote delimiter
+
+`$$` 대신 **`$func$`** 를 사용한다.
+
+```sql
+-- ❌ 금지 — 대시보드가 $$ 파싱 시 오류를 낼 수 있음
+AS $$
+...
+$$;
+
+-- ✅ 올바른 방법
+AS $func$
+...
+$func$;
+```
+
+Supabase 대시보드는 쿼리 메타데이터 주석(`-- source: dashboard` 등)을 SQL에 삽입하는데,
+이 주석이 `$$...$$` 블록과 충돌해 "unterminated dollar-quoted string" 오류를 유발한다.
+
+### RAISE EXCEPTION 메시지
+
+PL/pgSQL 함수 내 `RAISE EXCEPTION` 메시지는 **영문**으로 작성한다.
+
+```sql
+-- ❌ 금지 — 한글 문자열이 대시보드 인코딩 오류를 유발할 수 있음
+RAISE EXCEPTION '이름을 입력해 주세요.';
+
+-- ✅ 올바른 방법
+RAISE EXCEPTION 'name required';
+```
+
+마이그레이션 파일(`.sql`) 내부 주석은 한글을 사용해도 무방하다.
+이 규칙은 **대시보드에서 직접 실행하도록 안내하는 SQL 스니펫**에만 적용된다.
