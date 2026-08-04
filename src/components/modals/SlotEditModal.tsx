@@ -322,7 +322,7 @@ export function SlotEditModal({
     setSelectedPackageId(null)
     Object.values(pendingImages).flat().forEach(img => URL.revokeObjectURL(img.previewUrl))
     setPendingImages({})
-    setSelectedUserId(isAdmin ? '' : (profile?.id ?? ''))
+    setSelectedUserId(isAdmin ? (lockedUserId ?? '') : (profile?.id ?? ''))
   }
 
   async function handleAdd() {
@@ -824,7 +824,7 @@ export function SlotEditModal({
                   onClick={() => {
                     if (!isDisabled) {
                       setMemberType(t)
-                      setSelectedUserId(isAdmin ? '' : (profile?.id ?? ''))
+                      setSelectedUserId(isAdmin ? (lockedUserId ?? '') : (profile?.id ?? ''))
                     }
                   }}
                   disabled={isDisabled}
