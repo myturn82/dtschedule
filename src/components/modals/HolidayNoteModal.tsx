@@ -15,9 +15,9 @@ interface Props {
     year: number; month: number; day: number
     time_slot: TimeSlot; member_name: string
     note?: string; member_type: string
-    time_sub?: string; user_id: string
+    time_sub?: string; user_id: string; color?: string
   }) => Promise<string | null>
-  onUpdate: (id: string, params: { member_name?: string; note?: string; time_sub?: string }) => Promise<string | null>
+  onUpdate: (id: string, params: { color?: string; note?: string; time_sub?: string }) => Promise<string | null>
   onDelete: (id: string) => Promise<string | null>
 }
 
@@ -90,7 +90,7 @@ export function HolidayNoteModal({
     setStartHour(s)
     setEndHour(e)
     setNoteText(note.note ?? '')
-    setColor(note.member_name ?? '')
+    setColor(note.color ?? '')
     setError(null)
   }
 
@@ -110,11 +110,12 @@ export function HolidayNoteModal({
     const err = await onAdd({
       year, month, day,
       time_slot: '10-12' as TimeSlot,
-      member_name: color,
+      member_name: '',
       member_type: 'admin_note',
       time_sub: toTimeSub(startHour, endHour),
       note: noteText.trim(),
       user_id: profile.id,
+      color: color || undefined,
     })
     setLoading(false)
     if (err) setError(err)
@@ -126,7 +127,7 @@ export function HolidayNoteModal({
     if (timeError) return
     setLoading(true)
     const err = await onUpdate(editingNote.id, {
-      member_name: color,
+      color: color || undefined,
       note: noteText.trim(),
       time_sub: toTimeSub(startHour, endHour),
     })
@@ -166,7 +167,7 @@ export function HolidayNoteModal({
                   key={n.id}
                   className={`flex items-center justify-between rounded-lg px-3 py-2 border transition-colors
                     ${editingNote?.id === n.id ? 'border-blue-400 dark:border-blue-500' : 'border-gray-100 dark:border-gray-700'}`}
-                  style={{ backgroundColor: n.member_name || undefined }}
+                  style={{ backgroundColor: n.color || undefined }}
                 >
                   <div>
                     <span className="text-xs font-semibold text-gray-700 mr-2">{formatRange(n.time_sub)}</span>
