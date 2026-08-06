@@ -17,6 +17,14 @@ export const WIZARD_STEPS: WizardStepMeta[] = [
   { n: 6, icon: 'list',     tone: 'green',  title: '추가 정보를 수집할까요?', desc: '배정 등록 시 이름·연락처 외에 더 받을 정보를 설정합니다.' },
 ]
 
+export const LESSON_STEP_META: WizardStepMeta = {
+  n: 6,
+  icon: 'sparkles',
+  tone: 'amber',
+  title: '레슨 종류를 등록해주세요',
+  desc: '회원에게 판매할 레슨권 종류를 미리 등록하면 결제 기록 시 바로 선택할 수 있어요.',
+}
+
 export function StepHeader({ step }: { step: WizardStepMeta }) {
   const Ic = WizardIcon[step.icon]
   return (
