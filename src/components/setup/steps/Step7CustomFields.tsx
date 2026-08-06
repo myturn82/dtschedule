@@ -115,8 +115,8 @@ function FieldEditor({ f, set }: { f: Omit<CustomFieldDef, 'id'>; set: (f: Omit<
   const hasDash = FIELD_TYPES_WITH_DASHBOARD.includes(f.type)
   return (
     <>
-      <Field label="필드명">
-        <input className="ipt" value={f.label} placeholder="필드명" onChange={e => set({ ...f, label: e.target.value })} />
+      <Field label="항목명">
+        <input className="ipt" value={f.label} placeholder="항목명" onChange={e => set({ ...f, label: e.target.value })} />
       </Field>
       <div className="erow-split">
         <div className="ecol">
@@ -255,7 +255,7 @@ export function Step7CustomFields({ fields, isFreeform, error, onChange }: Props
   }
 
   function removeField(id: string, label: string) {
-    if (!confirm(`"${label}" 필드를 삭제할까요?`)) return
+    if (!confirm(`"${label}" 항목을 삭제할까요?`)) return
     onChange(fields.filter(f => f.id !== id))
     if (editingId === id) setEditingId(null)
   }
@@ -302,7 +302,7 @@ export function Step7CustomFields({ fields, isFreeform, error, onChange }: Props
     <div className="step-body">
       <StepHeader step={WIZARD_STEPS[5]} />
       <p className="step-desc" style={{ marginTop: -8 }}>
-        {isFreeform ? '첫 번째 필드가 이름으로 사용됩니다. 연락처도 추가해두면 편리합니다.' : '배정 등록 시 이름·연락처 외에 더 받을 정보를 설정합니다. 건너뛰어도 됩니다.'}
+        {isFreeform ? '첫 번째 입력항목이 이름으로 사용됩니다. 연락처도 추가해두면 편리합니다.' : '배정 등록 시 이름·연락처 외에 더 받을 정보를 설정합니다. 건너뛰어도 됩니다.'}
       </p>
 
       <Field label="자주 쓰는 항목">
@@ -335,13 +335,13 @@ export function Step7CustomFields({ fields, isFreeform, error, onChange }: Props
         <div className="newcard-head">
           <span className="newcard-badge"><WizardIcon.plus size={15} sw={2.2} /></span>
           <div>
-            <p className="newcard-title">새 필드 추가</p>
-            <p className="newcard-sub">등록 팝업에 표시될 입력 항목을 만듭니다</p>
+            <p className="newcard-title">새 입력항목 추가</p>
+            <p className="newcard-sub">등록 팝업에 표시될 입력항목을 만듭니다</p>
           </div>
         </div>
         <div className="newcard-main">
           <div className="ecol newcard-name">
-            <label className="wlabel">필드명 <span className="wreq">*</span></label>
+            <label className="wlabel">항목명 <span className="wreq">*</span></label>
             <input className="ipt" value={newLabel} maxLength={50} placeholder="예: 성명, 회비, 동의 여부" onChange={e => setNewLabel(e.target.value)} />
           </div>
           <div className="ecol newcard-type">

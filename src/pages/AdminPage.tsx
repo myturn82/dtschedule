@@ -2707,7 +2707,7 @@ export function AdminPage() {
                                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                                 </button>
                                 <button type="button" title="삭제"
-                                  onClick={async e => { e.stopPropagation(); if (!confirm(`"${field.label}" 필드를 삭제할까요?`)) return; await removeCustomField(field.id) }}
+                                  onClick={async e => { e.stopPropagation(); if (!confirm(`"${field.label}" 항목을 삭제할까요?`)) return; await removeCustomField(field.id) }}
                                   className="w-[30px] h-[30px] rounded-lg flex items-center justify-center text-[var(--color-text-muted)] hover:bg-orange-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-colors">
                                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
                                 </button>
@@ -2721,8 +2721,8 @@ export function AdminPage() {
                         {isEd && (
                           <div className="flex flex-col gap-[10px]" onClick={e => e.stopPropagation()}>
                             <div className="flex flex-col gap-[7px]">
-                              <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">필드명</label>
-                              <AutoResizeTextarea minH={34} value={editField.label} placeholder="필드명" rows={1}
+                              <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">항목명</label>
+                              <AutoResizeTextarea minH={34} value={editField.label} placeholder="항목명" rows={1}
                                 onChange={e => setEditField(f => ({ ...f, label: e.target.value }))}
                                 className={inputCls + ' w-full min-h-[34px] resize-none overflow-hidden leading-snug'} />
                             </div>

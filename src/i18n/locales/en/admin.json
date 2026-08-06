@@ -42,8 +42,8 @@
   },
   "customField": {
     "title": "Custom Field Settings",
-    "addField": "Add New Field",
-    "fieldName": "Field Name",
+    "addField": "Add New Item",
+    "fieldName": "Item Name",
     "fieldType": "Type",
     "required": "Required",
     "frequentItems": "Frequent Items",

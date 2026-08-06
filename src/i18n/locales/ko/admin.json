@@ -42,8 +42,8 @@
   },
   "customField": {
     "title": "입력항목 설정",
-    "addField": "새 필드 추가",
-    "fieldName": "필드명",
+    "addField": "새 입력항목 추가",
+    "fieldName": "항목명",
     "fieldType": "타입",
     "required": "필수",
     "frequentItems": "자주 쓰는 항목",
