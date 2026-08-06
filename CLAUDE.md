@@ -109,8 +109,8 @@ chcp 65001 | Out-Null
 
 ## 변경사항 점검 체크리스트
 
-기능 추가/수정 작업을 완료하면 `docs/CHANGE_TEST_CHECKLIST_TEMPLATE.md`를 기준으로
-`docs/checklist_YYYY-MM-DD.md` 파일을 작성하여 사용자가 직접 동작을 점검할 수 있도록 한다.
+기능 추가/수정 작업을 완료하면 `docs/checklists/CHANGE_TEST_CHECKLIST_TEMPLATE.md`를 기준으로
+`docs/checklists/checklist_YYYY-MM-DD.md` 파일을 작성하여 사용자가 직접 동작을 점검할 수 있도록 한다.
 
 ## README.md 최신화 규칙
 
@@ -141,7 +141,7 @@ chcp 65001 | Out-Null
 - `getCellState()`가 반환하는 `CellState`의 필드(예: `isLocked`)를 활용하는 변경이라면,
   주간 뷰처럼 인접 월의 데이터를 함께 보여주는 화면에서는 해당 월의 `dateOverrides`/`assignments`가
   올바르게 병합되어 전달되는지도 확인한다.
-- 작업 완료 후 점검 체크리스트(`docs/checklist_YYYY-MM-DD.md`)에도 월/주/일 뷰 각각에 대한 확인 항목을 포함한다.
+- 작업 완료 후 점검 체크리스트(`docs/checklists/checklist_YYYY-MM-DD.md`)에도 월/주/일 뷰 각각에 대한 확인 항목을 포함한다.
 
 ## 다이나믹 구현 원칙 (하드코딩 금지)
 
@@ -197,7 +197,7 @@ chcp 65001 | Out-Null
 실시간 구독을 잘못 설계하면 메시지 수가 폭발해 비용이 급증한다.
 새 테이블에 구독을 추가하거나 기존 구독을 수정할 때 반드시 아래 기준을 따른다.
 
-> 상세 현황: `docs/realtime-subscription-status.md`
+> 상세 현황: `docs/architecture/realtime-subscription-status.md`
 
 ### 필수 규칙
 
@@ -350,8 +350,8 @@ useEffect(() => {
 DTS는 단일 코드베이스에서 7개 버티컬 앱(LESSON:ON, CLASS:ON, SHIFT:ON 등)을 운영한다.
 모든 차이는 `feature_flags`, `verticalPresets`, `brandConfig`로만 표현한다.
 
-> 상세 설계: `docs/implementation-design-2026-07-30.md`
-> 포트폴리오 전략: `docs/multi-app-portfolio-strategy-2026-07-29.md`
+> 상세 설계: `docs/architecture/implementation-design-2026-07-30.md`
+> 포트폴리오 전략: `docs/strategy/multi-app-portfolio-strategy-2026-07-29.md`
 
 ### 반드시 지켜야 할 규칙
 
