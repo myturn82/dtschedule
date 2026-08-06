@@ -18,13 +18,13 @@ import { getRecommendation } from '../lib/wizardModeRecommendation'
 import { Step3Slots } from '../components/setup/steps/Step3Slots'
 import { Step4Roles } from '../components/setup/steps/Step4Roles'
 import { Step5Rules } from '../components/setup/steps/Step5Rules'
+import { Step6LessonTypes } from '../components/setup/steps/Step6LessonTypes'
+import { LESSON_STEP_META } from '../components/setup/StepHeader'
 import { Step7CustomFields } from '../components/setup/steps/Step7CustomFields'
 import { StepDone } from '../components/setup/steps/StepDone'
 import type { Tenant, TenantMode, CustomFieldDef } from '../types'
 import { getPresetFromParam } from '../lib/verticalPresets'
 import type { VerticalPreset } from '../lib/verticalPresets'
-
-const TOTAL = WIZARD_STEPS.length // 7
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
 const MODE_LABEL: Record<string, string> = {
@@ -38,6 +38,10 @@ export function SetupWizardPage() {
   const orgId = params.get('org') ?? ''
   const verticalParam = params.get('vertical')
   const [activePreset] = useState<VerticalPreset | null>(() => getPresetFromParam(verticalParam))
+  const showLessonStep = !!activePreset &&
+    ['lesson-sports', 'education-academy'].includes(activePreset.id)
+  const TOTAL = WIZARD_STEPS.length + (showLessonStep ? 1 : 0)
+  const CUSTOM_FIELDS_STEP = showLessonStep ? 7 : 6
   const navigate = useNavigate()
   const { setTenant, reloadMemberships } = useTenant()
 
@@ -149,7 +153,9 @@ export function SetupWizardPage() {
   const isFreeform = mode === '비회원'
 
   // Step 6(커스텀필드) can be skipped (비회원 모드 제외)
-  const isSkippable = (s: number) => s === 6 && !isFreeform
+  const isSkippable = (s: number) =>
+    (s === CUSTOM_FIELDS_STEP && !isFreeform) ||
+    (showLessonStep && s === 6)
 
   // ── Persist helpers ────────────────────────────────────────────────────────
 
@@ -227,7 +233,7 @@ export function SetupWizardPage() {
     if (stepNum === 1) ok = await saveStep1()
     else if (stepNum === 2) ok = await saveStep2()
     else if (stepNum === 3) ok = await saveStep3()
-    else if (stepNum === 6) ok = await saveStep7()
+    else if (stepNum === CUSTOM_FIELDS_STEP) ok = await saveStep7()
     if (ok) {
       // 업종 기반 추천 모드를 2단계 진입 시 한 번만 기본값으로 적용 (이후 수동 선택은 그대로 존중)
       if (stepNum === 1 && !modeAutoAppliedRef.current) {
@@ -274,6 +280,15 @@ export function SetupWizardPage() {
 
   // ── Summary data for done screen ─────────────────────────────────────────
 
+  const displaySteps = useMemo(() => {
+    if (!showLessonStep) return WIZARD_STEPS
+    return [
+      ...WIZARD_STEPS.slice(0, 5),
+      { ...LESSON_STEP_META, n: 6 },
+      { ...WIZARD_STEPS[5], n: 7 },
+    ]
+  }, [showLessonStep])
+
   const openDaysSummary = useMemo(() => {
     const openDays = [0, 1, 2, 3, 4, 5, 6].filter(d =>
       scheduleRules.some(r => r.day_of_week === d && r.is_open)
@@ -291,7 +306,7 @@ export function SetupWizardPage() {
     saving ||
     (step === 1 && (!name.trim() || !isIndustryComplete(industry))) ||
     (step === 3 && slots.length === 0) ||
-    (step === 6 && isFreeform && customFields.length === 0)
+    (step === CUSTOM_FIELDS_STEP && isFreeform && customFields.length === 0)
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -334,7 +349,7 @@ export function SetupWizardPage() {
           <div className="wiz-top">
             <span className="wiz-step-no">STEP <b>{step}</b> / {TOTAL}</span>
             <div className="wiz-dots">
-              {WIZARD_STEPS.map(s => (
+              {displaySteps.map(s => (
                 <button key={s.n} className={`wiz-dot${s.n === step ? ' cur' : s.n < step ? ' done' : ''}`}
                   disabled={s.n >= step} onClick={() => jumpTo(s.n)} aria-label={`${s.n}단계로`} />
               ))}
@@ -397,7 +412,10 @@ export function SetupWizardPage() {
               onApplyTemplate={applyRuleTemplate}
             />
           )}
-          {step === 6 && (
+          {showLessonStep && step === 6 && (
+            <Step6LessonTypes tenantId={orgId} />
+          )}
+          {step === CUSTOM_FIELDS_STEP && (
             <Step7CustomFields
               fields={customFields} isFreeform={isFreeform} error={error}
               onChange={setCustomFields}
