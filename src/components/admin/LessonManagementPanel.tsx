@@ -61,6 +61,19 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
   const [thresholdPreset, setThresholdPreset] = useState<'7' | '14' | 'custom'>('7')
   const [customDays, setCustomDays] = useState('7')
 
+  // ── 레슨 종류 빠른 예시 ───────────────────────────────────
+  const TYPE_QUICK_EXAMPLES = [
+    { name: '1:1 레슨 10회', count: '10', weeks: '12' },
+    { name: '그룹 수업 20회', count: '20', weeks: '12' },
+    { name: '체험 레슨 3회', count: '3', weeks: '4' },
+  ]
+  function applyTypeExample(ex: typeof TYPE_QUICK_EXAMPLES[0]) {
+    setNewTypeName(ex.name)
+    setNewTypeCount(ex.count)
+    setNewTypeWeeks(ex.weeks)
+    setTypeError(null)
+  }
+
   // ── 레슨 종류 추가 ────────────────────────────────────────
   async function handleAddType(e: React.FormEvent) {
     e.preventDefault()
@@ -238,10 +251,19 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
 
       {/* ── 레슨 종류 설정 ──────────────────────────────── */}
       <section>
-        <header className="mb-4">
+        <header className="mb-3">
           <h2 className="text-[17px] font-bold text-[var(--color-text-primary)]">레슨 종류 설정</h2>
           <p className="text-[13px] text-[var(--color-text-muted)] mt-0.5">회차·유효기간을 정의합니다. 결제 기록 시 선택할 수 있습니다.</p>
         </header>
+
+        {/* 유효기간 안내 */}
+        <div className="mb-4 rounded-xl bg-amber-50 dark:bg-amber-900/15 border border-amber-200 dark:border-amber-700/30 px-3.5 py-3 text-xs">
+          <p className="font-semibold text-amber-900 dark:text-amber-200 mb-1">유효 기간 계산 방법</p>
+          <p className="text-amber-700 dark:text-amber-400 leading-relaxed">
+            결제일을 기준으로 만료일이 자동 계산돼요.
+            예: 결제일 1/1 + 12주 → 3/27 만료 · 비워두면 회차 소진 시까지 무기한
+          </p>
+        </div>
 
         {typeError && (
           <p className="mb-3 text-xs text-red-500 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{typeError}</p>
@@ -343,6 +365,21 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
             </div>
           </div>
         )}
+
+        {/* 빠른 예시 */}
+        <div className="flex flex-wrap gap-1.5 mb-2">
+          <span className="text-xs text-[var(--color-text-muted)] self-center">빠른 예시:</span>
+          {TYPE_QUICK_EXAMPLES.map(ex => (
+            <button
+              key={ex.name}
+              type="button"
+              onClick={() => applyTypeExample(ex)}
+              className="px-2.5 py-1 text-xs rounded-lg bg-[var(--color-surface-secondary)] border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors select-none"
+            >
+              {ex.name} · {ex.weeks}주
+            </button>
+          ))}
+        </div>
 
         {/* 추가 폼 */}
         <form onSubmit={handleAddType} className="flex items-end gap-2 flex-wrap">
