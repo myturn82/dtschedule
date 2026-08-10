@@ -18,7 +18,7 @@ import { getRecommendation } from '../lib/wizardModeRecommendation'
 import { Step3Slots } from '../components/setup/steps/Step3Slots'
 import { Step4Roles } from '../components/setup/steps/Step4Roles'
 import { Step5Rules } from '../components/setup/steps/Step5Rules'
-import { Step6LessonTypes } from '../components/setup/steps/Step6LessonTypes'
+import { Step6LessonTypes, type Step6LessonTypesRef } from '../components/setup/steps/Step6LessonTypes'
 import { LESSON_STEP_META } from '../components/setup/StepHeader'
 import { Step7CustomFields } from '../components/setup/steps/Step7CustomFields'
 import { StepDone } from '../components/setup/steps/StepDone'
@@ -45,6 +45,7 @@ export function SetupWizardPage() {
   const CUSTOM_FIELDS_STEP = showLessonStep ? 7 : 6
   const navigate = useNavigate()
   const { setTenant, reloadMemberships } = useTenant()
+  const step6Ref = useRef<Step6LessonTypesRef>(null)
 
   const [tenant, setLocalTenant] = useState<Tenant | null>(null)
   const [loadingTenant, setLoadingTenant] = useState(true)
@@ -237,6 +238,7 @@ export function SetupWizardPage() {
     if (stepNum === 1) ok = await saveStep1()
     else if (stepNum === 2) ok = await saveStep2()
     else if (stepNum === 3) ok = await saveStep3()
+    else if (showLessonStep && stepNum === 6) ok = await (step6Ref.current?.flush() ?? true)
     else if (stepNum === CUSTOM_FIELDS_STEP) ok = await saveStep7()
     if (ok) {
       // 업종 기반 추천 모드를 2단계 진입 시 한 번만 기본값으로 적용 (이후 수동 선택은 그대로 존중)
@@ -418,7 +420,7 @@ export function SetupWizardPage() {
             />
           )}
           {showLessonStep && step === 6 && (
-            <Step6LessonTypes tenantId={orgId} />
+            <Step6LessonTypes ref={step6Ref} tenantId={orgId} />
           )}
           {step === CUSTOM_FIELDS_STEP && (
             <Step7CustomFields
