@@ -15,6 +15,7 @@
     "build:lesson-on": "dotenv -e .env.lesson-on -- vite build && dotenv -e .env.lesson-on -- npx cap sync android",
     "build:shift-on": "dotenv -e .env.shift-on -- vite build",
     "build:serve-on": "dotenv -e .env.serve-on -- vite build",
+    "reel:landing": "vite build --config vite.promo-landing.config.ts && node scripts/record-reel-landing.js",
     "icon:lesson-on": "node scripts/generate-icon.js lesson-on && npx @capacitor/assets generate --android",
     "icon:shift-on": "node scripts/generate-icon.js shift-on && npx @capacitor/assets generate --android",
     "icon:serve-on": "node scripts/generate-icon.js serve-on && npx @capacitor/assets generate --android",

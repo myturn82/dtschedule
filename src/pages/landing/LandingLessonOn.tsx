@@ -18,7 +18,7 @@ export function LandingLessonOn() {
         @media (max-width:720px) {
           .lo-feat-grid { grid-template-columns:1fr !important; gap:0 !important; }
           .lo-feat-visual { max-width:none !important; justify-self:stretch !important; order:2 !important; }
-          .lo-feat-text { order:1 !important; }
+          .lo-feat-text { order:1 !important; text-align:center !important; }
         }
       `}</style>
 

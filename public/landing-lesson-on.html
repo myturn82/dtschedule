@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LESSON:ON — 레슨·수강권 관리 앱</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: #0a0b10;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", sans-serif;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    :root {
+      --accent: #F2604E;
+      --accent-glow: rgba(242,96,78,0.3);
+      --accent-dim: rgba(242,96,78,0.12);
+      --muted: rgba(255,255,255,0.5);
+      --dim: rgba(255,255,255,0.25);
+      --border: rgba(255,255,255,0.08);
+      --card: rgba(255,255,255,0.04);
+    }
+
+    /* ── NAV ── */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 28px;
+      background: rgba(10,11,16,0.85);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      transition: background 0.3s;
+    }
+    .nav-logo { font-size: 17px; font-weight: 800; letter-spacing: -0.5px; color: var(--accent); }
+    .nav-actions { display: flex; gap: 8px; }
+    .btn-ghost {
+      background: transparent; color: var(--muted);
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 7px 14px; font-size: 13px; cursor: pointer; font-family: inherit;
+      text-decoration: none; display: inline-flex; align-items: center;
+      transition: all 0.2s;
+    }
+    .btn-ghost:hover { border-color: rgba(255,255,255,0.25); color: #fff; }
+    .btn-accent {
+      background: var(--accent); color: #fff; border: 0; border-radius: 8px;
+      padding: 7px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
+      font-family: inherit; text-decoration: none; display: inline-flex; align-items: center;
+      transition: all 0.2s;
+    }
+    .btn-accent:hover { background: #e05040; box-shadow: 0 4px 20px var(--accent-glow); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 120px 24px 80px;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
+      width: 800px; height: 800px;
+      background: radial-gradient(circle, rgba(242,96,78,0.13) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--accent-dim); color: var(--accent);
+      border: 1px solid rgba(242,96,78,0.25); border-radius: 20px;
+      padding: 5px 14px; font-size: 12px; font-weight: 700; margin-bottom: 28px;
+      animation: fadeUp 0.6s ease both;
+    }
+    .hero h1 {
+      font-size: clamp(32px, 6vw, 64px);
+      font-weight: 800; line-height: 1.15; letter-spacing: -2px;
+      margin-bottom: 22px;
+      animation: fadeUp 0.7s ease 0.1s both;
+    }
+    .hero h1 em { font-style: normal; color: var(--accent); }
+    .hero-sub {
+      font-size: clamp(15px, 2vw, 18px); color: var(--muted);
+      max-width: 460px; margin: 0 auto 36px; line-height: 1.75;
+      animation: fadeUp 0.7s ease 0.2s both;
+    }
+    .hero-cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; animation: fadeUp 0.7s ease 0.3s both; }
+    .btn-hero {
+      background: var(--accent); color: #fff; border: 0; border-radius: 12px;
+      padding: 15px 36px; font-size: 16px; font-weight: 700; cursor: pointer;
+      font-family: inherit; box-shadow: 0 8px 32px var(--accent-glow);
+      transition: all 0.2s;
+    }
+    .btn-hero:hover { transform: translateY(-2px); box-shadow: 0 14px 44px var(--accent-glow); }
+    .btn-outline {
+      background: transparent; color: var(--muted);
+      border: 1px solid var(--border); border-radius: 12px;
+      padding: 15px 28px; font-size: 15px; cursor: pointer; font-family: inherit;
+      transition: all 0.2s;
+    }
+    .btn-outline:hover { border-color: rgba(255,255,255,0.3); color: #fff; }
+    .hero-note { margin-top: 18px; font-size: 12px; color: var(--dim); animation: fadeUp 0.7s ease 0.4s both; }
+
+    /* hero floating cards */
+    .hero-cards {
+      margin-top: 56px; display: grid; grid-template-columns: 1fr 1fr;
+      gap: 12px; max-width: 480px; width: 100%;
+      animation: fadeUp 0.8s ease 0.5s both;
+    }
+    .hcard {
+      background: #13141c; border: 1px solid var(--border);
+      border-radius: 16px; padding: 16px; text-align: left;
+    }
+    .hcard-label { font-size: 11px; color: var(--dim); margin-bottom: 8px; }
+    .hcard-val { font-size: 22px; font-weight: 800; }
+    .hcard-val span { font-size: 13px; font-weight: 400; color: var(--muted); }
+    .hcard-bar { height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; margin: 8px 0; overflow: hidden; }
+    .hcard-bar-fill { height: 100%; background: var(--accent); border-radius: 2px; }
+    .hcard-sub { font-size: 11px; color: var(--dim); }
+    .hcard-msg { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    .hcard-body { font-size: 11px; color: var(--muted); line-height: 1.55; }
+    .hcard-ok { margin-top: 8px; font-size: 10px; color: rgba(34,197,94,0.8); }
+    .hcard-week { display: flex; gap: 4px; }
+    .hcard-day { flex: 1; text-align: center; }
+    .hcard-dayname { font-size: 9px; color: var(--dim); margin-bottom: 4px; }
+    .hcard-slot {
+      height: 28px; border-radius: 4px; display: flex; align-items: center;
+      justify-content: center; font-size: 9px;
+    }
+    .hcard-slot.on { background: rgba(242,96,78,0.18); border: 1px solid rgba(242,96,78,0.35); color: var(--accent); }
+    .hcard-slot.off { background: var(--card); border: 1px solid var(--border); color: transparent; }
+    .hcard-stat { font-size: 22px; font-weight: 800; }
+    .hcard-trend { font-size: 11px; color: rgba(34,197,94,0.8); margin-top: 4px; }
+
+    /* float animations */
+    .float1 { animation: float 4s ease-in-out infinite; }
+    .float2 { animation: float 4s ease-in-out 1s infinite; }
+    .float3 { animation: float 4s ease-in-out 2s infinite; }
+    .float4 { animation: float 4s ease-in-out 3s infinite; }
+    @keyframes float {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-7px); }
+    }
+
+    /* scroll indicator */
+    .scroll-ind {
+      margin-top: 48px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--dim); animation: fadeUp 0.7s ease 0.9s both;
+    }
+    .scroll-mouse {
+      width: 20px; height: 30px; border: 1.5px solid rgba(255,255,255,0.18);
+      border-radius: 10px; display: flex; align-items: flex-start;
+      justify-content: center; padding-top: 4px;
+    }
+    .scroll-dot { width: 3px; height: 6px; background: rgba(255,255,255,0.35); border-radius: 2px; animation: scrollDot 1.5s ease-in-out infinite; }
+    @keyframes scrollDot { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(8px); opacity: 0; } }
+
+    /* ── SECTION COMMON ── */
+    .wave { height: 1px; background: linear-gradient(90deg, transparent, var(--border) 30%, var(--border) 70%, transparent); margin: 0 28px; }
+    .sec-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+    .sec-title { font-size: clamp(24px, 4vw, 42px); font-weight: 800; letter-spacing: -1px; line-height: 1.2; margin-bottom: 14px; }
+    .sec-sub { font-size: 16px; color: var(--muted); max-width: 440px; margin: 0 auto; }
+
+    /* ── PAIN ── */
+    .pain { padding: 100px 24px; max-width: 960px; margin: 0 auto; text-align: center; }
+    .pain-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin: 44px 0 52px; }
+    .pain-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+      padding: 24px; text-align: left; position: relative; overflow: hidden;
+    }
+    .pain-card::after { content: '✕'; position: absolute; top: 16px; right: 16px; color: #ef4444; font-size: 15px; font-weight: 800; }
+    .pain-icon { font-size: 26px; margin-bottom: 12px; }
+    .pain-ttl { font-size: 14px; font-weight: 700; margin-bottom: 6px; color: rgba(255,255,255,0.8); }
+    .pain-desc { font-size: 13px; color: var(--muted); line-height: 1.65; }
+    .bridge { font-size: clamp(18px, 3vw, 28px); font-weight: 700; color: var(--accent); text-align: center; padding: 0 0 52px; }
+
+    /* ── FEATURES ── */
+    .feats { max-width: 1100px; margin: 0 auto; padding: 0 28px; }
+    .feat {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 60px; align-items: center;
+      padding: 100px 0; border-bottom: 1px solid var(--border);
+    }
+    .feat:last-child { border-bottom: none; }
+    .feat.rev { direction: rtl; }
+    .feat.rev > * { direction: ltr; }
+    @media(max-width:768px) {
+      .feat { grid-template-columns: 1fr; gap: 36px; padding: 64px 0; }
+      .feat.rev { direction: ltr; }
+      .hero-cards { grid-template-columns: 1fr 1fr; }
+      .feat-center { text-align: center; }
+      .feat-center .feat-points li { justify-content: center; }
+      .feat-center .blog-ref { align-self: center; }
+    }
+    @media(max-width:480px) { .hero-cards { grid-template-columns: 1fr; } }
+
+    .feat-badge {
+      display: inline-block; background: var(--accent-dim);
+      border: 1px solid rgba(242,96,78,0.2); border-radius: 6px;
+      padding: 3px 10px; font-size: 11px; font-weight: 600; color: var(--accent);
+      margin-bottom: 14px;
+    }
+    .feat-num { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
+    .feat-title { font-size: clamp(22px, 3vw, 36px); font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; margin-bottom: 16px; }
+    .feat-desc { font-size: 15px; color: var(--muted); line-height: 1.8; margin-bottom: 22px; }
+    .feat-points { list-style: none; }
+    .feat-points li { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: rgba(255,255,255,0.68); margin-bottom: 9px; }
+    .feat-points li::before { content: '✓'; color: var(--accent); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+    .blog-ref {
+      display: inline-flex; align-items: center; gap: 4px; margin-top: 18px;
+      font-size: 11px; color: var(--dim);
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 4px; padding: 3px 9px;
+    }
+
+    /* ── DEMO BOX ── */
+    .demo { background: #13141c; border: 1px solid var(--border); border-radius: 20px; overflow: hidden; }
+    .demo-bar {
+      background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--border);
+      padding: 10px 16px; display: flex; align-items: center; gap: 6px;
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dr { background: #ff5f57; } .dy { background: #ffbd2e; } .dg { background: #28c840; }
+    .demo-label { font-size: 11px; color: rgba(255,255,255,0.28); margin-left: 6px; }
+    .demo-body { padding: 20px; }
+
+    /* ── DEMO 1: Package ── */
+    .pkg { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 10px; }
+    .pkg-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+    .pkg-name { font-size: 13px; font-weight: 700; }
+    .pkg-type { font-size: 10px; border-radius: 4px; padding: 2px 7px; }
+    .t-count { background: var(--accent-dim); color: var(--accent); }
+    .t-warn { background: rgba(245,158,11,0.12); color: #f59e0b; }
+    .t-period { background: rgba(99,102,241,0.12); color: #818cf8; }
+    .pkg-who { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
+    .pkg-bar-wrap { height: 5px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; margin-bottom: 6px; }
+    .pkg-bar { height: 100%; border-radius: 3px; }
+    .pkg-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
+    .pkg-row strong { color: #fff; }
+    .pkg-exp { font-size: 10px; color: var(--dim); margin-top: 6px; }
+    .pkg-exp.warn { color: #f59e0b; }
+    @keyframes pkgCount { 0%,100% { width: 75%; } 50% { width: 55%; } }
+
+    /* ── DEMO 2: Notification ── */
+    .phone {
+      background: #1a1b25; border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px; padding: 18px 14px;
+    }
+    .phone-top { display: flex; justify-content: space-between; font-size: 10px; color: var(--dim); margin-bottom: 14px; }
+    .notif {
+      background: rgba(255,255,255,0.1); border-radius: 14px; padding: 11px 13px;
+      display: flex; align-items: flex-start; gap: 10px;
+      animation: notifPop 6s ease-in-out infinite;
+    }
+    @keyframes notifPop {
+      0%,35%  { opacity:1; transform:translateY(0); }
+      45%,55% { opacity:0; transform:translateY(-8px); }
+      65%,100%{ opacity:1; transform:translateY(0); }
+    }
+    .notif-ico { width: 34px; height: 34px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+    .notif-app { font-size: 10px; color: var(--dim); margin-bottom: 2px; }
+    .notif-ttl { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+    .notif-body { font-size: 11px; color: var(--muted); line-height: 1.45; }
+    .sms-list { margin-top: 12px; }
+    .sms-head { font-size: 10px; color: var(--dim); margin-bottom: 8px; display: flex; justify-content: space-between; }
+    .sms-head span:last-child { color: var(--accent); }
+    .sms-row { display: flex; align-items: center; gap: 9px; padding: 9px 11px; background: var(--card); border-radius: 8px; margin-bottom: 5px; font-size: 12px; }
+    .sms-av { width: 27px; height: 27px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+    .sms-name { flex: 1; font-weight: 600; }
+    .sms-time { font-size: 10px; color: var(--dim); }
+    .badge-read { font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(34,197,94,0.13); color: #22c55e; }
+    .badge-unread { font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.07); color: var(--muted); }
+
+    /* ── DEMO 3: Calendar ── */
+    .mini-cal { font-size: 11px; }
+    .cal-hdr { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 700; margin-bottom: 10px; }
+    .cal-g { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; }
+    .cal-dn { text-align: center; font-size: 10px; color: var(--dim); padding: 4px 0; }
+    .cal-c { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; position: relative; cursor: default; }
+    .cal-c.today { background: var(--accent); border-radius: 50%; }
+    .cal-c.hol { background: rgba(239,68,68,0.12); color: #ef4444; }
+    .cal-c.spc { background: rgba(34,197,94,0.12); color: #22c55e; }
+    .cal-c.slot::after { content:''; position: absolute; bottom: 2px; width: 3px; height: 3px; background: var(--accent); border-radius: 50%; }
+    .cal-d { font-size: 11px; font-weight: 600; }
+    .cal-b { font-size: 9px; }
+    .cal-legend { display: flex; gap: 14px; margin-top: 10px; flex-wrap: wrap; }
+    .cal-li { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); }
+    .cal-dot { width: 8px; height: 8px; border-radius: 2px; }
+
+    /* ── DEMO 4: Realtime ── */
+    .rt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .rt-pane { background: #0e0f18; border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
+    .rt-head { font-size: 10px; color: var(--dim); margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
+    .rt-led { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; animation: ledPulse 1s ease-in-out infinite; }
+    @keyframes ledPulse { 0%,100%{opacity:1;} 50%{opacity:0.25;} }
+    .rt-slot { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; background: var(--card); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 4px; font-size: 11px; }
+    .rt-slot.live { animation: liveSlot 3s ease-in-out infinite; }
+    @keyframes liveSlot { 0%,100%{background:var(--card);border-color:var(--border);} 40%,60%{background:rgba(242,96,78,0.09);border-color:rgba(242,96,78,0.28);} }
+    .rt-new { font-size: 10px; color: var(--accent); }
+    .rt-badge { margin-top: 10px; padding: 9px 11px; background: rgba(34,197,94,0.07); border: 1px solid rgba(34,197,94,0.14); border-radius: 8px; font-size: 10px; color: rgba(34,197,94,0.8); display: flex; align-items: center; gap: 5px; }
+
+    /* ── DEMO 5: Export ── */
+    .export-g { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .export-c {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 16px; text-align: center; cursor: pointer; transition: all 0.25s;
+    }
+    .export-c:hover { background: rgba(255,255,255,0.07); transform: translateY(-2px); border-color: rgba(255,255,255,0.14); }
+    .export-ico { font-size: 26px; margin-bottom: 8px; }
+    .export-name { font-size: 13px; font-weight: 700; }
+    .export-desc { font-size: 11px; color: var(--muted); margin-top: 3px; }
+    @keyframes expPop { 0%,100%{transform:translateY(0);} 15%,30%{transform:translateY(-4px);} }
+    .export-c:nth-child(1){animation:expPop 5s ease-in-out 0s infinite;}
+    .export-c:nth-child(2){animation:expPop 5s ease-in-out 1.2s infinite;}
+    .export-c:nth-child(3){animation:expPop 5s ease-in-out 2.4s infinite;}
+    .export-c:nth-child(4){animation:expPop 5s ease-in-out 3.6s infinite;}
+    .copy-row { display: flex; gap: 8px; }
+    .copy-box { flex: 1; border-radius: 7px; padding: 9px 10px; text-align: center; font-size: 11px; font-weight: 600; }
+    .copy-from { background: rgba(242,96,78,0.1); border: 1px solid rgba(242,96,78,0.25); color: var(--accent); }
+    .copy-arr { color: var(--dim); display: flex; align-items: center; font-size: 14px; }
+    .copy-to { background: rgba(34,197,94,0.07); border: 1px solid rgba(34,197,94,0.2); color: #22c55e; }
+
+    /* ── DEMO 6: Login ── */
+    .login-box { background: #1a1b25; border-radius: 16px; padding: 24px; text-align: center; }
+    .login-logo { font-size: 20px; font-weight: 800; color: var(--accent); margin-bottom: 6px; }
+    .login-tagline { font-size: 12px; color: var(--muted); margin-bottom: 24px; }
+    .kakao-btn {
+      width: 100%; background: #FEE500; color: #000; border: none; border-radius: 10px;
+      padding: 13px; font-size: 14px; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      font-family: inherit; transition: all 0.2s;
+      animation: kakaoPulse 3.5s ease-in-out infinite;
+    }
+    @keyframes kakaoPulse { 0%,100%{box-shadow:0 0 0 0 rgba(254,229,0,0);} 50%{box-shadow:0 0 0 7px rgba(254,229,0,0.18);} }
+    .login-flow { margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 11px; color: var(--muted); flex-wrap: wrap; }
+    .flow-step { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 4px 10px; }
+    .flow-arr { color: var(--dim); }
+
+    /* ── DEMO 7: Wizard ── */
+    .wiz-list { display: flex; flex-direction: column; gap: 7px; }
+    .wiz-step { display: flex; align-items: center; gap: 11px; padding: 10px 12px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; font-size: 13px; transition: all 0.3s; }
+    .wiz-step.done { background: rgba(34,197,94,0.04); border-color: rgba(34,197,94,0.18); }
+    .wiz-step.act  { background: rgba(242,96,78,0.07); border-color: rgba(242,96,78,0.28); }
+    .wiz-n { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; background: rgba(255,255,255,0.07); color: var(--muted); }
+    .wiz-step.done .wiz-n { background: rgba(34,197,94,0.18); color: #22c55e; }
+    .wiz-step.act  .wiz-n { background: var(--accent-dim); color: var(--accent); }
+    .wiz-lbl { flex: 1; font-weight: 600; }
+    .wiz-step.done .wiz-lbl { color: var(--muted); text-decoration: line-through; }
+    .wiz-ck { color: #22c55e; }
+    .wiz-ing { font-size: 11px; color: var(--accent); }
+    .wiz-timer { margin-top: 14px; }
+    .wiz-timer-lbl { font-size: 11px; color: var(--muted); margin-bottom: 6px; text-align: center; }
+    .wiz-bar-wrap { height: 4px; background: rgba(255,255,255,0.07); border-radius: 2px; overflow: hidden; }
+    .wiz-bar-fill { height: 100%; background: linear-gradient(90deg, #22c55e, var(--accent)); border-radius: 2px; animation: wizFill 5s linear infinite; }
+    @keyframes wizFill { from{width:0%;} to{width:100%;} }
+
+    /* ── DEMO 8: Dark Mode ── */
+    .dm-wrap { border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+    .dm-toolbar { background: rgba(255,255,255,0.03); padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .dm-toolbar span { font-size: 12px; font-weight: 600; }
+    .toggle-row { display: flex; align-items: center; gap: 7px; font-size: 13px; }
+    .toggle { width: 44px; height: 24px; background: var(--accent); border-radius: 12px; position: relative; cursor: pointer; }
+    .toggle-knob { position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; background: #fff; border-radius: 50%; animation: toggleCyc 5s ease-in-out infinite; }
+    @keyframes toggleCyc { 0%,40%{transform:translateX(0);} 50%,90%{transform:translateX(-20px);} 100%{transform:translateX(0);} }
+    .dm-screen { padding: 16px; animation: dmBg 5s ease-in-out infinite; }
+    @keyframes dmBg { 0%,40%{background:#0a0b10;} 50%,90%{background:#f0f0eb;} 100%{background:#0a0b10;} }
+    .dm-card { border-radius: 10px; padding: 12px; margin-bottom: 8px; animation: dmCard 5s ease-in-out infinite; }
+    @keyframes dmCard { 0%,40%{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);} 50%,90%{background:rgba(0,0,0,0.05);border:1px solid rgba(0,0,0,0.1);} 100%{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);} }
+    .dm-txt { font-size: 12px; margin-bottom: 3px; animation: dmTxt 5s ease-in-out infinite; }
+    .dm-txt.bold { font-weight: 700; margin-bottom: 6px; }
+    @keyframes dmTxt { 0%,40%{color:rgba(255,255,255,0.7);} 50%,90%{color:rgba(0,0,0,0.7);} 100%{color:rgba(255,255,255,0.7);} }
+
+    /* ── DEMO 9: Auto Schedule (Blog 5) ── */
+    .auto-demo { }
+    .auto-members { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+    .auto-member { display: flex; align-items: center; gap: 9px; padding: 8px 10px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; font-size: 12px; }
+    .am-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .am-name { flex: 1; font-weight: 600; }
+    .am-slots { font-size: 10px; color: var(--muted); }
+    .auto-btn {
+      width: 100%; padding: 11px; background: var(--accent); color: #fff; border: none;
+      border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer;
+      font-family: inherit; animation: autoGlow 3s ease-in-out infinite;
+    }
+    @keyframes autoGlow { 0%,100%{box-shadow:0 4px 16px rgba(242,96,78,0.25);} 50%{box-shadow:0 6px 28px rgba(242,96,78,0.5);} }
+    .auto-result { margin-top: 12px; }
+    .auto-result-row { display: flex; gap: 4px; margin-bottom: 4px; }
+    .auto-cell { flex: 1; padding: 5px 4px; border-radius: 5px; font-size: 10px; text-align: center; font-weight: 600; }
+    .ac-empty { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); color: var(--dim); }
+    .ac-a { background: rgba(242,96,78,0.15); border: 1px solid rgba(242,96,78,0.3); color: var(--accent); animation: cellFill 4s ease-in-out 0.2s infinite; }
+    .ac-b { background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3); color: #818cf8; animation: cellFill 4s ease-in-out 0.6s infinite; }
+    .ac-c { background: rgba(34,197,94,0.13); border: 1px solid rgba(34,197,94,0.28); color: #22c55e; animation: cellFill 4s ease-in-out 1s infinite; }
+    @keyframes cellFill { 0%,20%{opacity:0;transform:scale(0.85);} 35%,100%{opacity:1;transform:scale(1);} }
+
+    /* ── DEMO 10: Mode (Blog 1) ── */
+    .mode-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+    .mode-tab { flex: 1; padding: 8px 6px; border-radius: 8px; font-size: 11px; font-weight: 600; text-align: center; background: var(--card); border: 1px solid var(--border); color: var(--muted); cursor: pointer; transition: all 0.2s; }
+    .mode-tab.active { background: var(--accent-dim); border-color: rgba(242,96,78,0.3); color: var(--accent); }
+    .mode-preview { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+    .mode-row { display: flex; gap: 4px; margin-bottom: 4px; }
+    .mode-cell { flex: 1; height: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
+    .mc-hdr { background: rgba(255,255,255,0.05); color: var(--muted); font-size: 10px; }
+    .mc-on { background: rgba(242,96,78,0.15); border: 1px solid rgba(242,96,78,0.3); color: var(--accent); }
+    .mc-off { background: var(--card); border: 1px solid rgba(255,255,255,0.05); color: transparent; }
+    .mode-desc { font-size: 11px; color: var(--muted); margin-top: 10px; text-align: center; }
+
+    /* ── PRICING ── */
+    .pricing { padding: 100px 24px; max-width: 960px; margin: 0 auto; text-align: center; }
+    .price-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 48px; }
+    .price-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 20px; padding: 32px 24px; text-align: left;
+      position: relative; transition: all 0.3s;
+    }
+    .price-card:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.14); }
+    .price-card.pop { border-color: var(--accent); background: rgba(242,96,78,0.04); }
+    .pop-badge {
+      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+      background: var(--accent); color: #fff; font-size: 11px; font-weight: 700;
+      padding: 3px 14px; border-radius: 10px; white-space: nowrap;
+    }
+    .price-tier { font-size: 13px; font-weight: 700; color: var(--muted); margin-bottom: 6px; }
+    .price-amt { font-size: 30px; font-weight: 800; letter-spacing: -1px; }
+    .price-unit { font-size: 13px; color: var(--muted); margin-bottom: 22px; }
+    .price-feats { list-style: none; }
+    .price-feats li { font-size: 13px; color: rgba(255,255,255,0.6); padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.04); display: flex; align-items: center; gap: 8px; }
+    .price-feats li:last-child { border-bottom: none; }
+    .pfc { color: #22c55e; flex-shrink: 0; }
+    .pfx { color: rgba(255,255,255,0.18); flex-shrink: 0; }
+    .price-btn { width: 100%; margin-top: 22px; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; border: 0; transition: all 0.2s; }
+    .pb-free { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.65); }
+    .pb-pro { background: var(--accent); color: #fff; box-shadow: 0 4px 20px var(--accent-glow); }
+    .pb-pro:hover { box-shadow: 0 8px 32px var(--accent-glow); transform: translateY(-1px); }
+
+    /* ── INDUSTRIES ── */
+    .industries { padding: 60px 24px; text-align: center; }
+    .ind-label { font-size: 13px; color: var(--dim); margin-bottom: 16px; }
+    .ind-tags { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    .ind-tag {
+      background: var(--card); border: 1px solid var(--border); border-radius: 20px;
+      padding: 6px 14px; font-size: 13px; color: rgba(255,255,255,0.55);
+      transition: all 0.2s; cursor: default;
+    }
+    .ind-tag:hover { background: rgba(255,255,255,0.07); color: #fff; border-color: rgba(255,255,255,0.14); }
+
+    /* ── FOOTER CTA ── */
+    .footer-cta {
+      padding: 100px 24px; text-align: center; position: relative; overflow: hidden;
+    }
+    .footer-cta::before {
+      content: ''; position: absolute; bottom: -80px; left: 50%; transform: translateX(-50%);
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(242,96,78,0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .footer-cta h2 { font-size: clamp(28px, 5vw, 52px); font-weight: 800; letter-spacing: -1.5px; line-height: 1.15; margin-bottom: 14px; }
+    .footer-cta p { font-size: 15px; color: var(--muted); margin-bottom: 36px; }
+    .footer-note { margin-top: 16px; font-size: 12px; color: var(--dim); }
+    footer { border-top: 1px solid var(--border); padding: 24px; text-align: center; font-size: 12px; color: var(--dim); }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.7s ease, transform 0.7s ease; }
+    .reveal.d1 { transition-delay: 0.1s; }
+    .reveal.d2 { transition-delay: 0.2s; }
+    .reveal.d3 { transition-delay: 0.3s; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    @media(max-width:600px) {
+      .nav { padding: 12px 16px; }
+      .feats { padding: 0 16px; }
+      .feat { padding: 52px 0; gap: 28px; }
+      .rt-grid { grid-template-columns: 1fr; }
+      .feat-center .feat-num,
+      .feat-center .feat-title,
+      .feat-center .feat-desc { text-align: center; }
+      .feat-center .feat-badge { display: block; text-align: center; }
+      .feat-center .feat-points li { justify-content: center; }
+      .feat-center .blog-ref { align-self: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav" id="nav">
+  <span class="nav-logo">LESSON:ON</span>
+  <div class="nav-actions">
+    <a href="#" class="btn-ghost">로그인</a>
+    <a href="#" class="btn-accent">무료로 시작하기</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">◆ 레슨·수강권 관리 앱</div>
+  <h1>강사가 가르치는 데만<br><em>집중하도록</em></h1>
+  <p class="hero-sub">수강권 소진·D-1 알림·반복 스케줄—<br>번거로운 잡일을 LESSON:ON이 대신합니다.</p>
+  <div class="hero-cta">
+    <button class="btn-hero">지금 무료로 시작하기 →</button>
+    <button class="btn-outline">데모 살펴보기 ↓</button>
+  </div>
+  <p class="hero-note">신용카드 불필요 · 10명까지 영구 무료 · 30초 가입</p>
+
+  <!-- floating cards -->
+  <div class="hero-cards">
+    <div class="hcard float1">
+      <div class="hcard-label">☐ 수강권 현황</div>
+      <div class="hcard-val">12 <span>/ 20회</span></div>
+      <div class="hcard-bar"><div class="hcard-bar-fill" style="width:60%;animation:pkgCount 3s ease-in-out infinite;"></div></div>
+      <div class="hcard-sub">만료 D-12</div>
+    </div>
+    <div class="hcard float2">
+      <div class="hcard-label">◎ D-1 알림</div>
+      <div class="hcard-msg">내일 수업 안내</div>
+      <div class="hcard-body">김민지님, 내일 오전 10시 필라테스 수업이 있습니다.</div>
+      <div class="hcard-ok">✓ 발송 완료 · 3명</div>
+    </div>
+    <div class="hcard float3">
+      <div class="hcard-label">☐ 이번 주</div>
+      <div class="hcard-week">
+        <div class="hcard-day"><div class="hcard-dayname">월</div><div class="hcard-slot off"></div></div>
+        <div class="hcard-day"><div class="hcard-dayname">화</div><div class="hcard-slot on">●</div></div>
+        <div class="hcard-day"><div class="hcard-dayname">수</div><div class="hcard-slot off"></div></div>
+        <div class="hcard-day"><div class="hcard-dayname">목</div><div class="hcard-slot on">●</div></div>
+        <div class="hcard-day"><div class="hcard-dayname">금</div><div class="hcard-slot off"></div></div>
+      </div>
+    </div>
+    <div class="hcard float4">
+      <div class="hcard-label">○ 회원 현황</div>
+      <div class="hcard-stat">8 <span style="font-size:13px;font-weight:400;color:var(--muted);">명</span></div>
+      <div class="hcard-trend">↑ 이번 달 +3명</div>
+      <div class="hcard-sub" style="margin-top:4px;">출석률 82%</div>
+    </div>
+  </div>
+
+  <div class="scroll-ind">
+    스크롤해서 기능 살펴보기
+    <div class="scroll-mouse"><div class="scroll-dot"></div></div>
+  </div>
+</section>
+
+<div class="wave"></div>
+
+<!-- PAIN -->
+<section class="pain">
+  <p class="sec-eyebrow">현실</p>
+  <h2 class="sec-title">지금도 이렇게 하고 계신가요?</h2>
+  <p class="sec-sub">레슨 강사가 수업 외에 쏟는 시간, 생각보다 훨씬 많습니다.</p>
+
+  <div class="pain-grid">
+    <div class="pain-card reveal">
+      <div class="pain-icon">≡</div>
+      <div class="pain-ttl">수기 수강권 관리</div>
+      <div class="pain-desc">노트나 엑셀에 직접 횟수를 표시하다 실수로 소진 횟수를 틀리거나, 잔여 횟수를 모르는 상태로 수업을 진행합니다.</div>
+    </div>
+    <div class="pain-card reveal d1">
+      <div class="pain-icon">☎</div>
+      <div class="pain-ttl">직접 연락해서 수업 알림</div>
+      <div class="pain-desc">수업 하루 전 카톡이나 문자를 회원 한 명 한 명에게 직접 보냅니다. 바빠서 깜빡하면 노쇼가 생깁니다.</div>
+    </div>
+    <div class="pain-card reveal d2">
+      <div class="pain-icon">☐</div>
+      <div class="pain-ttl">반복 예약 관리 복잡</div>
+      <div class="pain-desc">매주 같은 시간이지만 공휴일·특별 운영일이 끼면 어떻게 처리해야 할지 매번 머리가 아픕니다.</div>
+    </div>
+  </div>
+
+  <div class="bridge">LESSON:ON이 이 모든 걸 자동으로 처리합니다 →</div>
+</section>
+
+<div class="wave"></div>
+
+<!-- FEATURES -->
+<div class="feats">
+
+  <!-- F1: 수강권 관리 (Blog 12) -->
+  <div class="feat reveal">
+    <div>
+      <span class="feat-badge">Blog 12 · Lesson Package</span>
+      <div class="feat-num">기능 01</div>
+      <h2 class="feat-title">수강권을<br>앱에서 관리</h2>
+      <p class="feat-desc">횟수제·기간제·복합권 모두 지원합니다. 출석할 때마다 자동 소진되고, 만료 임박 회원은 한눈에 확인할 수 있습니다.</p>
+      <ul class="feat-points">
+        <li>출석 체크 시 자동 소진 — 강사가 기록할 필요 없음</li>
+        <li>만료 임박·소진 임박 회원 자동 표시</li>
+        <li>수강권 이력 전체 추적 가능</li>
+        <li>회원별 출석률·소진 추이 통계</li>
+      </ul>
+      <div class="blog-ref">✏ 블로그 12편 · 레슨권을 앱에서 관리</div>
+    </div>
+    <div class="demo">
+      <div class="demo-bar"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div><span class="demo-label">수강권 관리</span></div>
+      <div class="demo-body">
+        <div class="pkg">
+          <div class="pkg-top"><span class="pkg-name">필라테스 20회권</span><span class="pkg-type t-count">횟수제</span></div>
+          <div class="pkg-who">○ 김민지</div>
+          <div class="pkg-bar-wrap"><div class="pkg-bar" style="width:60%;background:var(--accent);animation:pkgCount 3s ease-in-out infinite;"></div></div>
+          <div class="pkg-row"><span>잔여 <strong>12회</strong></span><span>총 20회</span></div>
+          <div class="pkg-exp">☐ 만료 2026.09.30 · D-59</div>
+        </div>
+        <div class="pkg">
+          <div class="pkg-top"><span class="pkg-name">PT 10회권</span><span class="pkg-type t-warn">만료 임박</span></div>
+          <div class="pkg-who">○ 이준혁</div>
+          <div class="pkg-bar-wrap"><div class="pkg-bar" style="width:20%;background:#f59e0b;"></div></div>
+          <div class="pkg-row"><span>잔여 <strong style="color:#f59e0b;">2회</strong></span><span>총 10회</span></div>
+          <div class="pkg-exp warn">△ 만료 2026.08.10 · D-8</div>
+        </div>
+        <div class="pkg">
+          <div class="pkg-top"><span class="pkg-name">요가 월정액</span><span class="pkg-type t-period">기간제</span></div>
+          <div class="pkg-who">○ 박서연</div>
+          <div class="pkg-bar-wrap"><div class="pkg-bar" style="width:45%;background:#818cf8;"></div></div>
+          <div class="pkg-row"><span>15일 <strong>경과</strong></span><span>30일 기간</span></div>
+          <div class="pkg-exp">☐ 만료 2026.08.31 · D-29</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- F2: D-1 알림 (Blog 10) -->
+  <div class="feat rev reveal">
+    <div class="feat-center">
+      <span class="feat-badge">Blog 10 · D-1 알림</span>
+      <div class="feat-num">기능 02</div>
+      <h2 class="feat-title">노쇼를 줄이는<br>D-1 자동 알림</h2>
+      <p class="feat-desc">수업 하루 전, 회원 이름·시간이 담긴 알림을 자동으로 발송합니다. 인앱 알림 패널에서 누가 읽었는지까지 추적됩니다.</p>
+      <ul class="feat-points">
+        <li>수업 D-1 자동 알림 발송</li>
+        <li>회원별 읽음 / 안읽음 실시간 추적</li>
+        <li>발송 내역 히스토리 관리</li>
+        <li>수동 즉시 발송 버튼 제공</li>
+      </ul>
+      <div class="blog-ref">✏ 블로그 10편 · D-1 알림 & 발송 내역</div>
+    </div>
+    <div class="demo">
+      <div class="demo-bar"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div><span class="demo-label">알림 & 발송 내역</span></div>
+      <div class="demo-body">
+        <div class="phone">
+          <div class="phone-top"><span>9:41 AM</span><span>● 수신</span></div>
+          <div class="notif">
+            <div class="notif-ico">☐</div>
+            <div>
+              <div class="notif-app">LESSON:ON</div>
+              <div class="notif-ttl">내일 수업 안내</div>
+              <div class="notif-body">김민지님, 내일(8/3) 오전 10:00 필라테스 수업이 있습니다. 잊지 마세요!</div>
+            </div>
+          </div>
+        </div>
+        <div class="sms-list">
+          <div class="sms-head"><span>☐ 발송 내역 — 오늘 3명</span><span>직접 발송</span></div>
+          <div class="sms-row">
+            <div class="sms-av" style="background:linear-gradient(135deg,var(--accent),#ff9a6c);">민</div>
+            <div class="sms-name">김민지</div>
+            <div class="sms-time">10:00 필라테스</div>
+            <span class="badge-read">읽음</span>
+          </div>
+          <div class="sms-row">
+            <div class="sms-av" style="background:linear-gradient(135deg,#818cf8,#a78bfa);">준</div>
+            <div class="sms-name">이준혁</div>
+            <div class="sms-time">14:00 PT</div>
+            <span class="badge-read">읽음</span>
+          </div>
+          <div class="sms-row">
+            <div class="sms-av" style="background:linear-gradient(135deg,#22c55e,#4ade80);">서</div>
+            <div class="sms-name">박서연</div>
+            <div class="sms-time">16:00 요가</div>
+            <span class="badge-unread">미확인</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- F3: 반복규칙 & 날짜예외 (Blog 2) -->
+  <div class="feat reveal">
+    <div class="feat-center">
+      <span class="feat-badge">Blog 2 · 반복 규칙 & 날짜 예외</span>
+      <div class="feat-num">기능 03</div>
+      <h2 class="feat-title">반복 스케줄에<br>예외를 더하다</h2>
+      <p class="feat-desc">매주 같은 요일·시간으로 반복하는 스케줄에, 공휴일 휴관이나 특별 운영일을 날짜별로 예외 처리할 수 있습니다.</p>
+      <ul class="feat-points">
+        <li>요일·시간 기반 반복 규칙 설정</li>
+        <li>공휴일·휴관일 날짜별 예외 처리</li>
+        <li>특별 운영일 개별 추가</li>
+        <li>월간 캘린더에서 한눈에 확인</li>
+      </ul>
+      <div class="blog-ref">✏ 블로그 2편 · 반복 규칙과 날짜 예외</div>
+    </div>
+    <div class="demo">
+      <div class="demo-bar"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div><span class="demo-label">2026년 8월</span></div>
+      <div class="demo-body">
+        <div class="mini-cal">
+          <div class="cal-hdr"><span style="cursor:pointer;color:var(--muted);">◀</span><span>2026년 8월</span><span style="cursor:pointer;color:var(--muted);">▶</span></div>
+          <div class="cal-g">
+            <div class="cal-dn">일</div><div class="cal-dn">월</div><div class="cal-dn">화</div><div class="cal-dn">수</div><div class="cal-dn">목</div><div class="cal-dn">금</div><div class="cal-dn" style="color:#818cf8;">토</div>
+            <!-- W1 -->
+            <div class="cal-c"></div>
+            <div class="cal-c slot"><div class="cal-d">4</div></div>
+            <div class="cal-c slot"><div class="cal-d">5</div></div>
+            <div class="cal-c slot"><div class="cal-d">6</div></div>
+            <div class="cal-c slot"><div class="cal-d">7</div></div>
+            <div class="cal-c slot"><div class="cal-d">8</div></div>
+            <div class="cal-c"><div class="cal-d" style="color:#818cf8;">9</div></div>
+            <!-- W2 -->
+            <div class="cal-c"><div class="cal-d" style="color:var(--dim);">10</div></div>
+            <div class="cal-c slot"><div class="cal-d">11</div></div>
+            <div class="cal-c slot"><div class="cal-d">12</div></div>
+            <div class="cal-c slot"><div class="cal-d">13</div></div>
+            <div class="cal-c slot"><div class="cal-d">14</div></div>
+            <div class="cal-c hol"><div class="cal-d">15</div><div class="cal-b">●</div></div>
+            <div class="cal-c"><div class="cal-d" style="color:#818cf8;">16</div></div>
+            <!-- W3 -->
+            <div class="cal-c"><div class="cal-d" style="color:var(--dim);">17</div></div>
+            <div class="cal-c slot"><div class="cal-d">18</div></div>
+            <div class="cal-c slot"><div class="cal-d">19</div></div>
+            <div class="cal-c spc"><div class="cal-d">20</div><div class="cal-b">○</div></div>
+            <div class="cal-c slot"><div class="cal-d">21</div></div>
+            <div class="cal-c slot"><div class="cal-d">22</div></div>
+            <div class="cal-c"><div class="cal-d" style="color:#818cf8;">23</div></div>
+            <!-- W4 -->
+            <div class="cal-c"><div class="cal-d" style="color:var(--dim);">24</div></div>
+            <div class="cal-c slot"><div class="cal-d">25</div></div>
+            <div class="cal-c slot"><div class="cal-d">26</div></div>
+            <div class="cal-c today"><div class="cal-d">27</div></div>
+            <div class="cal-c slot"><div class="cal-d">28</div></div>
+            <div class="cal-c slot"><div class="cal-d">29</div></div>
+            <div class="cal-c"><div class="cal-d" style="color:#818cf8;">30</div></div>
+            <div class="cal-c"><div class="cal-d" style="color:var(--dim);">31</div></div>
+          </div>
+          <div class="cal-legend">
+            <div class="cal-li"><div class="cal-dot" style="background:rgba(239,68,68,0.5);"></div>광복절 휴관</div>
+            <div class="cal-li"><div class="cal-dot" style="background:rgba(34,197,94,0.5);"></div>특별 운영일</div>
+            <div class="cal-li"><div class="cal-dot" style="background:var(--accent);border-radius:50%;"></div>오늘</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- F4: 실시간 (Blog 7) -->
+  <div class="feat rev reveal">
+    <div>
+      <span class="feat-badge">Blog 7 · Realtime</span>
+      <div class="feat-num">기능 04</div>
+      <h2 class="feat-title">새로고침 없이<br>즉시 반영</h2>
+      <p class="feat-desc">강사가 배정을 추가하면 회원 화면에 즉시 반영됩니다. Supabase Realtime으로 배정·취소가 실시간 동기화됩니다.</p>
+      <ul class="feat-points">
+        <li>배정 추가·취소 즉시 반영</li>
+        <li>강사·회원 화면 동시 업데이트</li>
+        <li>내 조직 데이터만 수신 (tenant_id 필터)</li>
+        <li>연결 끊김 시 자동 재연결</li>
+      </ul>
+      <div class="blog-ref">✏ 블로그 7편 · Realtime 새로고침 없이 반영</div>
+    </div>
+    <div class="demo">
+      <div class="demo-bar"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div><span class="demo-label">실시간 동기화</span></div>
+      <div class="demo-body">
+        <div class="rt-grid">
+          <div class="rt-pane">
+            <div class="rt-head"><div class="rt-led"></div>강사 화면</div>
+            <div class="rt-slot"><span>09:00</span><span style="color:var(--accent);font-weight:600;">김민지</span></div>
+            <div class="rt-slot"><span>10:00</span><span style="color:var(--dim);">빈 슬롯</span></div>
+            <div class="rt-slot live"><span>11:00</span><span style="color:var(--accent);font-weight:600;">이준혁 ✦</span></div>
+            <div class="rt-slot"><span>14:00</span><span style="color:var(--accent);font-weight:600;">박서연</span></div>
+          </div>
+          <div class="rt-pane">
+            <div class="rt-head"><div class="rt-led" style="animation-delay:0.5s;"></div>회원 화면</div>
+            <div class="rt-slot"><span>09:00</span><span style="color:var(--muted);">배정됨</span></div>
+            <div class="rt-slot"><span>10:00</span><span style="color:var(--dim);">—</span></div>
+            <div class="rt-slot live" style="animation-delay:0.3s;"><span>11:00</span><span class="rt-new">✦ 새 배정!</span></div>
+            <div class="rt-slot"><span>14:00</span><span style="color:var(--muted);">배정됨</span></div>
+          </div>
+        </div>
+        <div class="rt-badge"><span style="animation:ledPulse 1s ease-in-out infinite;">●</span> postgres_changes 구독 중 · tenant_id 필터 적용</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- F5: 자동배정 (Blog 5) -->
+  <div class="feat reveal">
+    <div>
+      <span class="feat-badge">Blog 5 · 자동배정 알고리즘</span>
+      <div class="feat-num">기능 05</div>
+      <h2 class="feat-title">설정부터<br>확정까지 자동</h2>
+      <p class="feat-desc">회원별 선호 시간·역할 비율을 설정하면 알고리즘이 빈 슬롯을 자동으로 채웁니다. 충돌 없이 최적 배치합니다.</p>
+      <ul class="feat-points">
+        <li>역할 비율 기반 자동 배정</li>
+        <li>회원 선호 슬롯 우선 고려</li>
+        <li>배정 전 미리보기 → 확정</li>
+        <li>충돌·초과 자동 감지</li>
+      </ul>
+      <div class="blog-ref">✏ 블로그 5편 · 자동배정 알고리즘</div>
+    </div>
+    <div class="demo">
+      <div class="demo-bar"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div><span class="demo-label">자동배정</span></div>
+      <div class="demo-body">
+        <div class="auto-members">
+          <div class="auto-member"><div class="am-dot" style="background:var(--accent);"></div><div class="am-name">김민지</div><div class="am-slots">화·목 선호</div></div>
+          <div class="auto-member"><div class="am-dot" style="background:#818cf8;"></div><div class="am-name">이준혁</div><div class="am-slots">월·수·금 선호</div></div>
+          <div class="auto-member"><div class="am-dot" style="background:#22c55e;"></div><div class="am-name">박서연</div><div class="am-slots">상시 가능</div></div>
+        </div>
+        <button class="auto-btn">★ 자동배정 실행</button>
+        <div class="auto-result">
+          <div style="font-size:10px;color:var(--dim);margin-bottom:6px;">배정 결과 미리보기</div>
+          <div class="auto-result-row">
+            <div class="auto-cell mc-hdr">월</div>
+            <div class="auto-cell mc-hdr">화</div>
+            <div class="auto-cell mc-hdr">수</div>
+            <div class="auto-cell mc-hdr">목</div>
+            <div class="auto-cell mc-hdr">금</div>
+          </div>
+          <div class="auto-result-row">
+            <div class="auto-cell ac-b">이</div>
+            <div class="auto-cell ac-a">김</div>
+            <div class="auto-cell ac-b">이</div>
+            <div class="auto-cell ac-a">김</div>
+            <div class="auto-cell ac-c">박</div>
+          </div>
+          <div class="auto-result-row">
+            <div class="auto-cell ac-c">박</div>
+            <div class="auto-cell ac-empty">—</div>
+            <div class="auto-cell ac-c">박</div>
+            <div class="auto-cell ac-empty">—</div>
+            <div class="auto-cell ac-b">이</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- F6: 엑셀 내보내기 (Blog 8) -->
+  <div class="feat rev reveal">
+    <div>
+      <span class="feat-badge">Blog 8 · Excel Mode</span>
+      <div class="feat-num">기능 06</div>
+      <h2 class="feat-title">엑셀처럼<br>복사·내보내기</h2>
+      <p class="feat-desc">셀 범위를 드래그해 Ctrl+C로 복사하고, 다음 주에 Ctrl+V로 붙여넣기. 완성된 스케줄은 4가지 형식으로 즉시 내보낼 수 있습니다.</p>
+      <ul class="feat-points">
+        <li>드래그 범위 선택 → Ctrl+C</li>
+        <li>다음 주에 Ctrl+V로 그대로 복제</li>
+        <li>XLSX·CSV·DOCX·PDF 4종 내보내기</li>
+        <li>게시판 출력용 PDF, 분석용 엑셀 즉시 출력</li>
+      </ul>
+      <div class="blog-ref">✏ 블로그 8편 · 엑셀처럼 드래그·복사</div>
+    </div>
+    <div class="demo">
+      <div class="demo-bar"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div><span class="demo-label">내보내기</span></div>
+      <div class="demo-body">
+        <div class="export-g">
+          <div class="export-c"><div class="export-ico">≡</div><div class="export-name">XLSX</div><div class="export-desc">엑셀 재가공용</div></div>
+          <div class="export-c"><div class="export-ico">□</div><div class="export-name">PDF</div><div class="export-desc">게시판 출력용</div></div>
+          <div class="export-c"><div class="export-ico">✏</div><div class="export-name">DOCX</div><div class="export-desc">워드 편집용</div></div>
+          <div class="export-c"><div class="export-ico">□</div><div class="export-name">CSV</div><div class="export-desc">데이터 분석용</div></div>
+        </div>
+        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:12px;">
+          <div style="font-size:10px;color:var(--dim);margin-bottom:8px;">Ctrl+C → Ctrl+V 범위 복사</div>
+          <div class="copy-row">
+            <div class="copy-box copy-from">이번 주 선택</div>
+            <div class="copy-arr">→</div>
+            <div class="copy-box copy-to">다음 주 붙여넣기</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- F7: 카카오 로그인 (Blog 9) -->
+  <div class="feat reveal">
+    <div>
+      <span class="feat-badge">Blog 9 · Social Login</span>
+      <div class="feat-num">기능 07</div>
+      <h2 class="feat-title">카카오 버튼<br>하나로 가입</h2>
+      <p class="feat-desc">이메일·비밀번호 없이 카카오 버튼 하나로 가입 완료. 조직 선택 후 관리자 승인을 받으면 바로 달력으로 입장합니다.</p>
+      <ul class="feat-points">
+        <li>카카오 1-click 소셜 로그인</li>
+        <li>조직 선택 위자드 가이드</li>
+        <li>관리자 승인 후 즉시 입장</li>
+        <li>승인 대기 중 실시간 상태 안내</li>
+      </ul>
+      <div class="blog-ref">✏ 블로그 9편 · 카카오 버튼 하나로 가입</div>
+    </div>
+    <div class="demo">
+      <div class="demo-bar"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div><span class="demo-label">로그인</span></div>
+      <div class="demo-body">
+        <div class="login-box">
+          <div class="login-logo">LESSON:ON</div>
+          <div class="login-tagline">레슨·수강권 관리 앱</div>
+          <button class="kakao-btn">카카오로 시작하기</button>
+          <div class="login-flow">
+            <div class="flow-step">카카오 로그인</div>
+            <div class="flow-arr">→</div>
+            <div class="flow-step">조직 선택</div>
+            <div class="flow-arr">→</div>
+            <div class="flow-step">승인 후 입장</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- F8: 5분 셋업 (Blog 4) -->
+  <div class="feat rev reveal">
+    <div>
+      <span class="feat-badge">Blog 4 · Setup Wizard</span>
+      <div class="feat-num">기능 08</div>
+      <h2 class="feat-title">5분 만에<br>조직 완성</h2>
+      <p class="feat-desc">질문 7개로 스케줄 달력이 완전히 세팅됩니다. 운영 모드·역할 설정·커스텀 필드까지 설정 메뉴를 헤매지 않아도 됩니다.</p>
+      <ul class="feat-points">
+        <li>7단계 셋업 위자드 가이드</li>
+        <li>운영 모드 선택 (시간별 / 일자별)</li>
+        <li>커스텀 필드로 회원 정보 확장</li>
+        <li>완료 즉시 달력 사용 가능</li>
+      </ul>
+      <div class="blog-ref">✏ 블로그 4편 · 셋업 위자드와 커스텀 필드</div>
+    </div>
+    <div class="demo">
+      <div class="demo-bar"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div><span class="demo-label">조직 셋업 위자드</span></div>
+      <div class="demo-body">
+        <div class="wiz-list">
+          <div class="wiz-step done"><div class="wiz-n">✓</div><div class="wiz-lbl">Step 1 · 조직 이름</div><div class="wiz-ck">✓</div></div>
+          <div class="wiz-step done"><div class="wiz-n">✓</div><div class="wiz-lbl">Step 2 · 운영 모드</div><div class="wiz-ck">✓</div></div>
+          <div class="wiz-step done"><div class="wiz-n">✓</div><div class="wiz-lbl">Step 3 · 역할 설정</div><div class="wiz-ck">✓</div></div>
+          <div class="wiz-step act"><div class="wiz-n">4</div><div class="wiz-lbl">Step 4 · 슬롯 규칙</div><div class="wiz-ing">진행 중</div></div>
+          <div class="wiz-step"><div class="wiz-n">5</div><div class="wiz-lbl">Step 5 · 운영 시간</div></div>
+          <div class="wiz-step"><div class="wiz-n">6</div><div class="wiz-lbl">Step 6 · 테마 색상</div></div>
+          <div class="wiz-step"><div class="wiz-n">7</div><div class="wiz-lbl">Step 7 · 커스텀 필드</div></div>
+        </div>
+        <div class="wiz-timer">
+          <div class="wiz-timer-lbl">예상 소요 시간 · 약 5분</div>
+          <div class="wiz-bar-wrap"><div class="wiz-bar-fill"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- F9: 3가지 운영 모드 (Blog 1) -->
+  <div class="feat reveal">
+    <div>
+      <span class="feat-badge">Blog 1 · 3가지 운영 모드</span>
+      <div class="feat-num">기능 09</div>
+      <h2 class="feat-title">우리 센터에 맞는<br>3가지 운영 모드</h2>
+      <p class="feat-desc">회원공유·회원개별·비회원 — 센터 특성에 맞는 모드를 선택하면 달력 구조가 자동으로 세팅됩니다.</p>
+      <ul class="feat-points">
+        <li>회원공유: 모든 회원이 같은 달력을 함께 봄</li>
+        <li>회원개별: 회원마다 본인 배정 슬롯만 표시</li>
+        <li>비회원: 회원 등록 없이 수업 시간만 표시</li>
+        <li>모드 변경은 관리자 설정에서 언제든 가능</li>
+      </ul>
+      <div class="blog-ref">✏ 블로그 1편 · 3가지 운영 모드</div>
+    </div>
+    <div class="demo">
+      <div class="demo-bar"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div><span class="demo-label">운영 모드</span></div>
+      <div class="demo-body">
+        <div class="mode-tabs">
+          <div class="mode-tab active" onclick="switchMode(0)">회원공유</div>
+          <div class="mode-tab" onclick="switchMode(1)">회원개별</div>
+          <div class="mode-tab" onclick="switchMode(2)">비회원</div>
+        </div>
+        <!-- 회원공유: 모든 회원이 같은 달력 -->
+        <div id="mode-preview-0" class="mode-preview">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:8px;text-align:center;">모든 회원이 같은 달력을 공유합니다</div>
+          <div class="mode-row">
+            <div class="mode-cell mc-hdr" style="max-width:36px;font-size:9px;">시간</div>
+            <div class="mode-cell mc-hdr">월</div><div class="mode-cell mc-hdr">화</div>
+            <div class="mode-cell mc-hdr">수</div><div class="mode-cell mc-hdr">목</div>
+          </div>
+          <div class="mode-row">
+            <div class="mode-cell mc-hdr" style="max-width:36px;font-size:9px;">09-10</div>
+            <div class="mode-cell mc-on" style="font-size:9px;">김·이·박</div>
+            <div class="mode-cell mc-off"></div>
+            <div class="mode-cell mc-on" style="font-size:9px;">이·박</div>
+            <div class="mode-cell mc-off"></div>
+          </div>
+          <div class="mode-row">
+            <div class="mode-cell mc-hdr" style="max-width:36px;font-size:9px;">10-11</div>
+            <div class="mode-cell mc-off"></div>
+            <div class="mode-cell mc-on" style="font-size:9px;">김·최</div>
+            <div class="mode-cell mc-off"></div>
+            <div class="mode-cell mc-on" style="font-size:9px;">김·이</div>
+          </div>
+          <div class="mode-row">
+            <div class="mode-cell mc-hdr" style="max-width:36px;font-size:9px;">14-15</div>
+            <div class="mode-cell mc-on" style="font-size:9px;">최·박</div>
+            <div class="mode-cell mc-on" style="font-size:9px;">이</div>
+            <div class="mode-cell mc-on" style="font-size:9px;">3명</div>
+            <div class="mode-cell mc-off"></div>
+          </div>
+          <div class="mode-desc">그룹 레슨·강습반 — 같은 시간표를 모두 함께</div>
+        </div>
+        <!-- 회원개별: 회원마다 개인 슬롯 -->
+        <div id="mode-preview-1" class="mode-preview" style="display:none;">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:8px;text-align:center;">회원마다 본인 배정 슬롯만 표시됩니다</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <div style="padding:8px 10px;background:rgba(242,96,78,0.1);border:1px solid rgba(242,96,78,0.25);border-radius:7px;font-size:11px;display:flex;align-items:center;gap:8px;">
+              <span style="color:var(--accent);">○</span><span style="font-weight:600;">김민지</span><span style="color:var(--muted);margin-left:auto;">화·목 09:00</span>
+            </div>
+            <div style="padding:8px 10px;background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);border-radius:7px;font-size:11px;display:flex;align-items:center;gap:8px;">
+              <span style="color:#818cf8;">○</span><span style="font-weight:600;">이준혁</span><span style="color:var(--muted);margin-left:auto;">월·수·금 14:00</span>
+            </div>
+            <div style="padding:8px 10px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.18);border-radius:7px;font-size:11px;display:flex;align-items:center;gap:8px;">
+              <span style="color:#22c55e;">○</span><span style="font-weight:600;">박서연</span><span style="color:var(--muted);margin-left:auto;">토 10:00</span>
+            </div>
+          </div>
+          <div class="mode-desc">1:1 레슨·PT — 회원별 개인 스케줄 관리에 최적</div>
+        </div>
+        <!-- 비회원: 수업 시간만 표시 -->
+        <div id="mode-preview-2" class="mode-preview" style="display:none;">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:8px;text-align:center;">회원 구분 없이 수업 시간만 표시됩니다</div>
+          <div class="mode-row">
+            <div class="mode-cell mc-hdr" style="max-width:36px;font-size:9px;">시간</div>
+            <div class="mode-cell mc-hdr">월</div><div class="mode-cell mc-hdr">화</div>
+            <div class="mode-cell mc-hdr">수</div><div class="mode-cell mc-hdr">목</div>
+          </div>
+          <div class="mode-row">
+            <div class="mode-cell mc-hdr" style="max-width:36px;font-size:9px;">09-10</div>
+            <div class="mode-cell mc-on" style="font-size:9px;">수업</div>
+            <div class="mode-cell mc-off"></div>
+            <div class="mode-cell mc-on" style="font-size:9px;">수업</div>
+            <div class="mode-cell mc-off"></div>
+          </div>
+          <div class="mode-row">
+            <div class="mode-cell mc-hdr" style="max-width:36px;font-size:9px;">10-11</div>
+            <div class="mode-cell mc-off"></div>
+            <div class="mode-cell mc-on" style="font-size:9px;">수업</div>
+            <div class="mode-cell mc-off"></div>
+            <div class="mode-cell mc-on" style="font-size:9px;">수업</div>
+          </div>
+          <div class="mode-row">
+            <div class="mode-cell mc-hdr" style="max-width:36px;font-size:9px;">14-15</div>
+            <div class="mode-cell mc-on" style="font-size:9px;">수업</div>
+            <div class="mode-cell mc-on" style="font-size:9px;">수업</div>
+            <div class="mode-cell mc-off"></div>
+            <div class="mode-cell mc-on" style="font-size:9px;">수업</div>
+          </div>
+          <div class="mode-desc">공개 클래스·공지 달력 — 회원 등록 없이 운영</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- F10: 다크모드 (Blog 11) -->
+  <div class="feat rev reveal">
+    <div>
+      <span class="feat-badge">Blog 11 · Dark Mode</span>
+      <div class="feat-num">기능 10</div>
+      <h2 class="feat-title">새벽에도<br>편한 다크모드</h2>
+      <p class="feat-desc">어두운 차 안에서도 눈부시지 않습니다. 버튼 하나로 전환되고, CSS 변수 기반으로 모든 화면이 한 번에 바뀝니다.</p>
+      <ul class="feat-points">
+        <li>헤더 버튼 한 번으로 즉시 전환</li>
+        <li>CSS 변수 기반 — 모든 컴포넌트 일괄 적용</li>
+        <li>기기 시스템 설정과 연동 가능</li>
+        <li>각 회원·강사가 개인 설정 유지</li>
+      </ul>
+      <div class="blog-ref">✏ 블로그 11편 · 다크모드 구현</div>
+    </div>
+    <div class="demo">
+      <div class="demo-bar"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div><span class="demo-label">다크 / 라이트 모드</span></div>
+      <div class="demo-body">
+        <div class="dm-wrap">
+          <div class="dm-toolbar">
+            <span>테마 설정</span>
+            <div class="toggle-row">
+              <span>☀</span>
+              <div class="toggle"><div class="toggle-knob"></div></div>
+              <span>☽</span>
+            </div>
+          </div>
+          <div class="dm-screen">
+            <div class="dm-card">
+              <div class="dm-txt bold">오늘 스케줄</div>
+              <div class="dm-txt">10:00 · 김민지 · 필라테스</div>
+              <div class="dm-txt">14:00 · 이준혁 · PT</div>
+            </div>
+            <div class="dm-card">
+              <div class="dm-txt bold">내일 예고</div>
+              <div class="dm-txt">09:00 · 박서연 · 요가</div>
+              <div class="dm-txt">11:00 · 최다혜 · 발레</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /feats -->
+
+<div class="wave"></div>
+
+<!-- INDUSTRIES -->
+<section class="industries">
+  <div class="ind-label">이런 곳에서 쓰고 있어요</div>
+  <div class="ind-tags">
+    <div class="ind-tag">▪ PT · 헬스</div>
+    <div class="ind-tag">▪ 요가</div>
+    <div class="ind-tag">▪ 필라테스</div>
+    <div class="ind-tag">▪ 골프 레슨</div>
+    <div class="ind-tag">▪ 무술 · 격투기</div>
+    <div class="ind-tag">▪ 수영</div>
+    <div class="ind-tag">▪ 발레</div>
+    <div class="ind-tag">▪ 댄스</div>
+    <div class="ind-tag">▪ 음악 · 악기</div>
+    <div class="ind-tag">▪ 미술</div>
+    <div class="ind-tag">▪ 과외 · 튜터링</div>
+    <div class="ind-tag">▪ 반려동물 훈련</div>
+  </div>
+</section>
+
+<div class="wave"></div>
+
+<!-- PRICING -->
+<section class="pricing">
+  <p class="sec-eyebrow">요금제</p>
+  <h2 class="sec-title">무료로 시작하세요</h2>
+  <p class="sec-sub">회원 10명까지 영구 무료. 성장하면 그때 업그레이드.</p>
+
+  <div class="price-grid">
+    <div class="price-card reveal">
+      <div class="price-tier">무료</div>
+      <div class="price-amt">₩0</div>
+      <div class="price-unit">영구 무료</div>
+      <ul class="price-feats">
+        <li><span class="pfc">✓</span>회원 10명</li>
+        <li><span class="pfc">✓</span>수강권 관리</li>
+        <li><span class="pfc">✓</span>스케줄 달력</li>
+        <li><span class="pfc">✓</span>기본 알림</li>
+        <li><span class="pfx">—</span>SMS 알림</li>
+        <li><span class="pfx">—</span>통계 & 내보내기</li>
+        <li><span class="pfx">—</span>광고 없음</li>
+      </ul>
+      <button class="price-btn pb-free">무료로 시작하기</button>
+    </div>
+    <div class="price-card pop reveal d1">
+      <div class="pop-badge">가장 인기</div>
+      <div class="price-tier">Pro</div>
+      <div class="price-amt">₩29,000</div>
+      <div class="price-unit">/ 월</div>
+      <ul class="price-feats">
+        <li><span class="pfc">✓</span>회원 50명</li>
+        <li><span class="pfc">✓</span>수강권 관리</li>
+        <li><span class="pfc">✓</span>스케줄 달력</li>
+        <li><span class="pfc">✓</span>D-1 SMS 알림 100건/월</li>
+        <li><span class="pfc">✓</span>통계 & 4종 내보내기</li>
+        <li><span class="pfc">✓</span>광고 없음</li>
+        <li><span class="pfc">✓</span>우선 고객 지원</li>
+      </ul>
+      <button class="price-btn pb-pro">Pro 시작하기</button>
+    </div>
+    <div class="price-card reveal d2">
+      <div class="price-tier">Business</div>
+      <div class="price-amt">₩79,000</div>
+      <div class="price-unit">/ 월</div>
+      <ul class="price-feats">
+        <li><span class="pfc">✓</span>회원 무제한</li>
+        <li><span class="pfc">✓</span>수강권 관리</li>
+        <li><span class="pfc">✓</span>스케줄 달력</li>
+        <li><span class="pfc">✓</span>SMS 알림 500건/월</li>
+        <li><span class="pfc">✓</span>통계 & 4종 내보내기</li>
+        <li><span class="pfc">✓</span>다중 강사 관리</li>
+        <li><span class="pfc">✓</span>전용 지원 채널</li>
+      </ul>
+      <button class="price-btn pb-free">Business 시작하기</button>
+    </div>
+  </div>
+</section>
+
+<div class="wave"></div>
+
+<!-- FOOTER CTA -->
+<section class="footer-cta">
+  <h2>지금 바로<br><em style="color:var(--accent);font-style:normal;">30초 만에</em> 시작하세요</h2>
+  <p>신용카드 불필요 · 즉시 사용 가능 · 언제든 해지 가능</p>
+  <button class="btn-hero">무료로 시작하기 →</button>
+  <p class="footer-note">10명까지 영구 무료 · 레슨·PT·요가·필라테스 등 모든 레슨에 적합</p>
+</section>
+
+<footer>
+  <div style="margin-bottom:8px;color:rgba(255,255,255,0.45);">
+    <span style="font-size:14px;font-weight:800;color:var(--accent);">LESSON:ON</span>
+    &nbsp;·&nbsp; Powered by Dynamic Team Schedule
+  </div>
+  © 2026 DTS. All rights reserved.
+</footer>
+
+<script>
+  // Scroll reveal
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // Nav opacity on scroll
+  window.addEventListener('scroll', () => {
+    document.getElementById('nav').style.background =
+      window.scrollY > 40 ? 'rgba(10,11,16,0.98)' : 'rgba(10,11,16,0.85)';
+  });
+
+  // Mode tab toggle
+  function switchMode(idx) {
+    document.querySelectorAll('.mode-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+    [0, 1, 2].forEach(i => {
+      const el = document.getElementById('mode-preview-' + i);
+      if (el) el.style.display = i === idx ? 'block' : 'none';
+    });
+  }
+</script>
+</body>
+</html>

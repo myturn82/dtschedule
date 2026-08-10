@@ -1,0 +1,247 @@
+/* reel-landing — LESSON:ON 랜딩 소개 릴스 (accent: #F2604E coral) */
+
+html, body, #root { height: 100%; margin: 0; }
+body {
+  background: #0a0b10;
+  display: flex; align-items: center; justify-content: center;
+  padding: clamp(4px, 1vh, 16px) 8px;
+  font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", system-ui, sans-serif;
+}
+.stage { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+
+.reel {
+  position: relative;
+  width: min(96vw, calc((100vh - 32px) * 9 / 16));
+  aspect-ratio: 9 / 16;
+  background: #0a0b10;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px #ffffff14,
+    0 30px 60px -20px #000000c0,
+    0 0 80px -20px #F2604E33;
+  color: #eef0f8;
+  transform: translateZ(0);
+  container-type: inline-size;
+  container-name: reel;
+}
+
+/* ── 배경 ─────────────────────────────────── */
+.boardbg { position: absolute; inset: 0; z-index: 0; transform-origin: 50% 40%; }
+
+.bg-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(242,96,78,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(242,96,78,0.03) 1px, transparent 1px);
+  background-size: 11cqw 11cqw;
+}
+
+.bg-glow {
+  position: absolute; top: -15%; left: 50%; transform: translateX(-50%);
+  width: 90cqw; height: 90cqw;
+  background: radial-gradient(circle, rgba(242,96,78,0.14) 0%, transparent 68%);
+  pointer-events: none;
+}
+
+/* floating hcards 그리드 */
+.bg-cards {
+  position: absolute; inset: 0;
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 3.5cqw; padding: 18cqw 5cqw 12cqw;
+  align-content: center;
+}
+
+.bg-hcard {
+  background: #12141c;
+  border: 1px solid rgba(242,96,78,0.13);
+  border-radius: 3.5cqw;
+  padding: 3.5cqw;
+}
+
+.bg-label { font-size: 2.2cqw; color: rgba(238,240,248,0.28); margin-bottom: 1.8cqw; }
+.bg-val   { font-size: 5.8cqw; font-weight: 800; color: #eef0f8; }
+.bg-val span { font-size: 2.4cqw; font-weight: 400; color: rgba(238,240,248,0.38); }
+.bg-bar   { height: 3px; background: rgba(255,255,255,0.07); border-radius: 2px; margin: 2cqw 0; overflow: hidden; }
+.bg-bar-fill { height: 100%; background: #F2604E; border-radius: 2px; }
+.bg-sub   { font-size: 2.1cqw; color: rgba(238,240,248,0.32); }
+.bg-msg   { font-size: 2.7cqw; font-weight: 700; margin-bottom: 1cqw; }
+.bg-body  { font-size: 2.1cqw; color: rgba(238,240,248,0.42); line-height: 1.5; }
+.bg-ok    { margin-top: 1.5cqw; font-size: 1.9cqw; color: rgba(34,197,94,0.65); }
+.bg-trend { font-size: 2.1cqw; color: rgba(34,197,94,0.65); margin: 1cqw 0; }
+
+.bg-week { display: flex; gap: 1.5cqw; margin-top: 1.5cqw; }
+.bg-day  { flex: 1; text-align: center; }
+.bg-dn   { font-size: 1.9cqw; color: rgba(238,240,248,0.28); margin-bottom: 1cqw; }
+.bg-slot {
+  height: 5.5cqw; border-radius: 1.2cqw;
+  display: flex; align-items: center; justify-content: center; font-size: 2.1cqw;
+}
+.bg-slot.on  { background: rgba(242,96,78,0.2); border: 1px solid rgba(242,96,78,0.38); color: #F2604E; }
+.bg-slot.off { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); }
+
+@keyframes floatUp {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-7px); }
+}
+.float1 { animation: floatUp 4.2s ease-in-out infinite; }
+.float2 { animation: floatUp 4.2s ease-in-out 1.0s infinite; }
+.float3 { animation: floatUp 4.2s ease-in-out 2.1s infinite; }
+.float4 { animation: floatUp 4.2s ease-in-out 3.1s infinite; }
+
+/* ── 카드 오버레이 ─────────────────────────── */
+.card-overlay {
+  position: absolute; z-index: 15; pointer-events: none;
+  left: 4cqw; right: 4cqw; top: 12%;
+  background: rgba(11, 12, 18, 0.93);
+  border: 1px solid rgba(242,96,78,0.2);
+  border-radius: 4cqw;
+  padding: 3cqw 3.5cqw;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.card-hdr { display: flex; align-items: center; gap: 1.8cqw; margin-bottom: 2.5cqw; }
+.card-ico { font-size: 3.2cqw; }
+.card-ttl { font-size: 3cqw; font-weight: 700; color: #F2604E; }
+
+/* ── Pain rows ── */
+.pain-row {
+  display: flex; align-items: flex-start; gap: 2.5cqw;
+  padding: 2.2cqw 0;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.pain-ico  { font-size: 3.6cqw; width: 7cqw; text-align: center; flex-shrink: 0; color: rgba(238,240,248,0.45); margin-top: 0.2cqw; }
+.pain-ttl  { font-size: 2.5cqw; font-weight: 700; color: #eef0f8; margin-bottom: 0.8cqw; }
+.pain-x    { color: #ef4444; margin-left: 1.5cqw; }
+.pain-desc { font-size: 2.1cqw; color: rgba(238,240,248,0.48); line-height: 1.5; }
+.pain-bridge {
+  margin-top: 2.5cqw; text-align: center;
+  font-size: 2.4cqw; font-weight: 700; color: #F2604E;
+  background: rgba(242,96,78,0.09);
+  border: 1px solid rgba(242,96,78,0.22);
+  border-radius: 2cqw; padding: 2cqw;
+}
+
+/* ── Package rows ── */
+.pkg-row { padding: 2.2cqw 0; border-top: 1px solid rgba(255,255,255,0.06); }
+.pkg-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.8cqw; }
+.pkg-name   { font-size: 2.5cqw; font-weight: 700; color: #eef0f8; }
+.pkg-member { font-size: 2cqw; color: rgba(238,240,248,0.42); margin-top: 0.5cqw; }
+.pkg-badge  { font-size: 1.8cqw; font-weight: 700; padding: 0.6cqw 2cqw; border-radius: 999px; white-space: nowrap; }
+.pkg-badge.brand  { background: rgba(242,96,78,0.14); color: #F2604E; }
+.pkg-badge.warn   { background: rgba(245,158,11,0.14); color: #f59e0b; }
+.pkg-badge.period { background: rgba(129,140,248,0.14); color: #818cf8; }
+.pkg-bar-bg  { height: 4px; background: rgba(255,255,255,0.08); border-radius: 999px; overflow: hidden; margin-bottom: 1.4cqw; }
+.pkg-bar-fill { height: 100%; border-radius: 999px; }
+.pkg-meta { display: flex; justify-content: space-between; font-size: 2cqw; color: rgba(238,240,248,0.42); }
+
+/* ── Notify ── */
+.phone-wrap {
+  background: #1a1b26;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 2.5cqw; padding: 2.5cqw;
+  margin-bottom: 2.5cqw;
+}
+.phone-top { display: flex; justify-content: space-between; font-size: 1.9cqw; color: rgba(238,240,248,0.28); margin-bottom: 2cqw; }
+.notif-card {
+  background: rgba(255,255,255,0.11); border-radius: 2.5cqw;
+  padding: 2cqw 2.2cqw;
+  display: flex; align-items: flex-start; gap: 2.2cqw;
+}
+.notif-ico  { font-size: 5cqw; flex-shrink: 0; }
+.notif-app  { font-size: 1.9cqw; color: rgba(238,240,248,0.42); margin-bottom: 0.6cqw; }
+.notif-ttl  { font-size: 2.4cqw; font-weight: 700; margin-bottom: 0.6cqw; }
+.notif-body { font-size: 2.1cqw; color: rgba(238,240,248,0.6); line-height: 1.45; }
+
+.sent-hdr { display: flex; justify-content: space-between; align-items: center; font-size: 2cqw; color: rgba(238,240,248,0.38); margin-bottom: 1.8cqw; }
+.sent-action { color: #F2604E; font-weight: 600; }
+.sent-row {
+  display: flex; align-items: center; gap: 2cqw;
+  padding: 1.8cqw 2.2cqw;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 2cqw; margin-bottom: 1.5cqw;
+}
+.sent-row:last-child { margin-bottom: 0; }
+.sent-av {
+  width: 7cqw; height: 7cqw; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.5cqw; font-weight: 700; flex-shrink: 0;
+}
+.sent-name { flex: 1; font-weight: 600; font-size: 2.3cqw; }
+.sent-time { font-size: 1.9cqw; color: rgba(238,240,248,0.42); }
+.b-read   { font-size: 1.8cqw; padding: 0.5cqw 1.6cqw; border-radius: 5px; background: rgba(34,197,94,0.13); color: #22c55e; white-space: nowrap; }
+.b-unread { font-size: 1.8cqw; padding: 0.5cqw 1.6cqw; border-radius: 5px; background: rgba(255,255,255,0.07); color: rgba(238,240,248,0.45); white-space: nowrap; }
+
+/* ── 스크림·브랜드·캡션 ── */
+.scrim {
+  position: absolute; inset: 0; z-index: 5; pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(10,11,16,0)    0%,
+    rgba(10,11,16,0)    38%,
+    rgba(10,11,16,0.52) 60%,
+    rgba(10,11,16,0.94) 100%
+  );
+}
+.scrimtop {
+  position: absolute; inset: 0; z-index: 5; pointer-events: none;
+  background: linear-gradient(to bottom, rgba(8,9,14,0.52) 0%, rgba(8,9,14,0) 24%);
+}
+
+.brandmark {
+  position: absolute; top: 7.81%; left: 3.5cqw; z-index: 30;
+  font-size: 3cqw; font-weight: 300; letter-spacing: -0.2px;
+  white-space: nowrap; color: #eef0f8;
+  font-family: "Pretendard Variable", Pretendard, system-ui, sans-serif;
+}
+.brandmark-team { color: oklch(0.66 0.16 28); }
+
+.content {
+  position: absolute; left: 0; right: 0;
+  top: 7.81%; bottom: 23.44%;
+  z-index: 20; padding: 0 4.5cqw;
+  display: flex; flex-direction: column; justify-content: flex-end;
+}
+.captionblock { display: flex; flex-direction: column; }
+.kicker {
+  font-size: 2.8cqw; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: #F2604E; margin: 0 0 1.4cqw;
+}
+.headline {
+  margin: 0; font-size: 6cqw; font-weight: 800;
+  line-height: 1.26; letter-spacing: -0.01em;
+  color: #eef0f8; text-shadow: 0 2px 18px rgba(0,0,0,0.45);
+}
+.sub {
+  margin: 1.5cqw 0 0; font-size: 3.1cqw;
+  line-height: 1.55; color: #c3c6d4; max-width: 34ch;
+}
+
+.outrowrap { display: flex; flex-direction: column; }
+.wordmark  { font-size: 9cqw; font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; color: #eef0f8; }
+.wordmark em { font-style: normal; color: #F2604E; }
+.tagline { margin: 2.5cqw 0 4.5cqw; color: #c3c6d4; font-size: 3.1cqw; }
+.cta {
+  display: inline-flex; align-items: center;
+  background: #F2604E; color: #fff;
+  font-weight: 800; font-size: 3.2cqw;
+  padding: 2.8cqw 5cqw; border-radius: 999px; width: fit-content;
+  box-shadow: 0 4px 24px rgba(242,96,78,0.42);
+}
+.cta-note { margin-top: 2cqw; font-size: 2.1cqw; color: rgba(238,240,248,0.28); }
+
+/* ── record 모드 ── */
+body:has(.record) { padding: 0; width: 100vw; height: 100vh; }
+.record { gap: 0; width: 100vw; height: 100vh; justify-content: center; }
+.record .reel {
+  width: min(100vw, calc(100vh * 9 / 16));
+  border-radius: 0; box-shadow: none;
+}
+
+/* ── hint ── */
+.hint { color: #7a8098; font-size: 12px; text-align: center; max-width: 340px; line-height: 1.6; }
+.hint b { color: #eef0f8; }
+.hint code { background: #1e2030; color: #F2604E; padding: 1px 5px; border-radius: 4px; font-size: 11px; }
