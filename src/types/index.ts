@@ -92,6 +92,7 @@ export interface TenantSettings {
   setup_completed_at?: string;
   hidden_days?: number[];              // 숨길 요일 (0=일, 1=월, ..., 6=토)
   feature_flags?: FeatureFlags;
+  contact_phone?: string;              // 서비스 연락처
 }
 
 export type LegendColor = 'amber' | 'pink' | 'slate' | 'yellow' | 'blue' | 'green' | 'purple' | 'red' | 'indigo' | 'black'

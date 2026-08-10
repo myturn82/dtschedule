@@ -25,6 +25,7 @@ import { StepDone } from '../components/setup/steps/StepDone'
 import type { Tenant, TenantMode, CustomFieldDef } from '../types'
 import { getPresetFromParam } from '../lib/verticalPresets'
 import type { VerticalPreset } from '../lib/verticalPresets'
+import { isValidPhone } from '../lib/phone'
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
 const MODE_LABEL: Record<string, string> = {
@@ -97,6 +98,7 @@ export function SetupWizardPage() {
   // Step drafts — pre-filled from tenant once loaded
   const [name, setName] = useState('')
   const [title, setTitle] = useState('')
+  const [phone, setPhone] = useState('')
   const [mode, setMode] = useState<TenantMode>('회원공유')
   const [slots, setSlots] = useState<string[]>([])
   const [industry, setIndustry] = useState('')
@@ -137,6 +139,7 @@ export function SetupWizardPage() {
     if (!tenant) return
     setName(tenant.name ?? '')
     setTitle(tenant.settings?.title ?? tenant.name ?? '')
+    setPhone(tenant.settings?.contact_phone ?? '')
     setMode(displayMode(tenant.settings?.tenant_mode))
     setSlots(tenant.settings?.time_slots ?? [])
     setIndustry(tenant.business_type ?? '')
@@ -163,9 +166,10 @@ export function SetupWizardPage() {
     if (!name.trim()) { setError('조직명을 입력해주세요'); return false }
     if (!industry) { setError('업종을 선택해주세요'); return false }
     if (!isIndustryComplete(industry)) { setError('세부 업종을 선택해주세요'); return false }
+    if (phone.trim() && !isValidPhone(phone.trim())) { setError('서비스 연락처 형식이 올바르지 않습니다 (예: 010-1234-5678)'); return false }
     setSaving(true); setError('')
     const nameErr = await updateTenantName(orgId, name.trim())
-    const settingsErr = await updateTenantSettings(orgId, { title: title.trim() || name.trim() })
+    const settingsErr = await updateTenantSettings(orgId, { title: title.trim() || name.trim(), contact_phone: phone.trim() || undefined })
     const { error: bizErr } = await supabase.from('tenants').update({ business_type: industry }).eq('id', orgId)
     if (nameErr || settingsErr || bizErr) { setError(nameErr ?? settingsErr ?? bizErr?.message ?? '저장 실패'); setSaving(false); return false }
     setSaving(false); return true
@@ -367,8 +371,9 @@ export function SetupWizardPage() {
                 onApplySchedule={handleAiSchedule}
               />
               <Step1OrgName
-                name={name} title={title} industry={industry} error={error}
+                name={name} title={title} industry={industry} phone={phone} error={error}
                 onChange={(n, t, ind) => { setName(n); setTitle(t); setIndustry(ind) }}
+                onPhoneChange={setPhone}
               />
             </>
           )}

@@ -276,7 +276,7 @@ export function AuthPage() {
       // tenant 바로 생성 → CustomerAdminPage 경유 없이 /setup으로 직행
       const DEFAULT_SLOTS = ['09-10','10-11','11-12','12-13','13-14','14-15','15-16','16-17','17-18']
       const tenantName = orgName.trim()
-      const tenantSettings = { title: tenantName, time_slots: DEFAULT_SLOTS, open_from: '09:00', open_to: '22:00', slot_interval_minutes: 60, timezone: 'Asia/Seoul', locale: 'ko-KR', tenant_mode: '회원공유' }
+      const tenantSettings = { title: tenantName, time_slots: DEFAULT_SLOTS, open_from: '09:00', open_to: '22:00', slot_interval_minutes: 60, timezone: 'Asia/Seoul', locale: 'ko-KR', tenant_mode: '회원공유', contact_phone: orgPhone.trim() }
       const base = tenantName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-+|-+$/g, '')
       let tenantId: string | null = null
       let tenantSlug = ''
@@ -769,7 +769,7 @@ export function AuthPage() {
                     </div>
                   </div>
                   <div className="af-field">
-                    <label className="af-label">전화번호</label>
+                    <label className="af-label">서비스 연락처 <span style={{ color: 'var(--ink-500)', fontWeight: 400, fontSize: 11 }}>* 필수</span></label>
                     <div className="af-input-wrap">
                       <span className="af-input-ic"><IPlus /></span>
                       <input id="signup-org-phone" name="tel" className="af-input" type="tel" required value={orgPhone} onChange={e => setOrgPhone(formatPhone(e.target.value))}
