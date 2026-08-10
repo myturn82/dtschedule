@@ -645,17 +645,18 @@ export function AuthPage() {
               {/* phone */}
               {joinStep === 'phone' && (
                 <>
-                  <h3 className="af-title sm">연락처를 입력하세요</h3>
-                  <p className="af-sub">관리자가 연락할 때 사용해요. (선택)</p>
+                  <h3 className="af-title sm">서비스 연락처를 입력하세요</h3>
+                  <p className="af-sub">서비스 운영에 사용할 연락처입니다. (필수)</p>
                   <div className="af-field">
-                    <label className="af-label">전화번호</label>
+                    <label className="af-label">전화번호 *</label>
                     <div className="af-input-wrap">
                       <input id="signup-phone" name="tel" className="af-input" type="tel" value={joinPhone}
                         onChange={e => setJoinPhone(formatPhone(e.target.value))}
                         placeholder="예: 010-1234-5678" autoComplete="tel" autoFocus
                         onKeyDown={e => {
                           if (e.key === 'Enter') {
-                            if (joinPhone && !isValidPhone(joinPhone)) { setError('올바른 전화번호를 입력해 주세요. (예: 010-1234-5678)'); return }
+                            if (!joinPhone.trim()) { setError('전화번호를 입력해 주세요.'); return }
+                            if (!isValidPhone(joinPhone)) { setError('올바른 전화번호를 입력해 주세요. (예: 010-1234-5678)'); return }
                             setError(null); setJoinStep('choice')
                           }
                         }} />
@@ -663,7 +664,8 @@ export function AuthPage() {
                   </div>
                   {error && <div className="af-err">{error}</div>}
                   <button className="af-btn af-btn-primary" style={{ marginTop: 6 }} onClick={() => {
-                    if (joinPhone && !isValidPhone(joinPhone)) { setError('올바른 전화번호를 입력해 주세요. (예: 010-1234-5678)'); return }
+                    if (!joinPhone.trim()) { setError('전화번호를 입력해 주세요.'); return }
+                    if (!isValidPhone(joinPhone)) { setError('올바른 전화번호를 입력해 주세요. (예: 010-1234-5678)'); return }
                     setError(null); setJoinStep('choice')
                   }}>계속하기 <IArrow /></button>
                   <button className="af-back-link" onClick={() => { setJoinStep('confirm'); setError(null) }}><IBack /> 뒤로</button>
@@ -698,7 +700,7 @@ export function AuthPage() {
                     disabled={loading}
                     onClick={() => {
                       if (kakaoWizMode && wizChoice === 'service') { handleKakaoOAuth(); return }
-                      if (wizChoice === 'service') { setJoinStep('org-name'); setError(null) }
+                      if (wizChoice === 'service') { if (!orgPhone && joinPhone) setOrgPhone(joinPhone); setJoinStep('org-name'); setError(null) }
                       else { setJoinStep('org-select'); setError(null); loadOrgList() }
                     }}>
                     {loading ? '처리 중...' : kakaoWizMode && wizChoice === 'service' ? <>카카오로 계속하기 <IArrow /></> : <>계속하기 <IArrow /></>}
