@@ -843,7 +843,7 @@ export function SlotEditModal({
 
         <div className="px-5 py-4 flex flex-col gap-3 overflow-y-auto overflow-x-hidden flex-1">
           {/* Existing assignments */}
-          {displayedAssignments.length > 0 && !(editingId && !isAdmin) && (
+          {displayedAssignments.length > 0 && !editingId && (
             <section className="rounded-2xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)] p-2.5 flex flex-col gap-2">
               <div className="flex items-center gap-1.5 px-1 pt-0.5">
                 <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="var(--color-text-muted)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M7 5h9M7 10h9M7 15h9"/><circle cx="3.5" cy="5" r="0.5"/><circle cx="3.5" cy="10" r="0.5"/><circle cx="3.5" cy="15" r="0.5"/></svg>
