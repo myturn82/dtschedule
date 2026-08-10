@@ -13,6 +13,8 @@ import { getOptionUnit } from '../types'
 import type { CustomFieldDef, CustomFieldOption, DashboardWidgetConfig } from '../types'
 import { DashboardWidgetModal } from '../components/modals/DashboardWidgetModal'
 import type { AssignmentSummary } from '../hooks/useDashboard'
+import { LessonStatsPanel } from '../components/dashboard/LessonStatsPanel'
+import { getFF } from '../lib/featureFlags'
 
 const WIDGET_COLORS = ['#4f46e5','#06b6d4','#f59e0b','#10b981','#f43f5e','#8b5cf6','#ec4899','#14b8a6','#f97316','#64748b']
 
@@ -523,6 +525,11 @@ export function DashboardPage() {
   }, [selectedRoleId, assignments, members, isFreeform])
 
   const activeMemberCount = useMemo(() => userStats.filter(m => m.count > 0).length, [userStats])
+
+  const memberNameMap = useMemo(
+    () => new Map(members.map(m => [m.user_id, m.profile?.name ?? m.user_id])),
+    [members]
+  )
   const totalAssignments = assignments.length
 
   const effectiveCap = useMemo(() => {
@@ -1352,6 +1359,16 @@ export function DashboardPage() {
                   >
                     + 통계 위젯 추가
                   </button>
+                )}
+
+                {/* ── 레슨권 통계 ── */}
+                {getFF(tenant?.settings?.feature_flags, 'lesson_packages') && (
+                  <LessonStatsPanel
+                    tenantId={tenant?.id ?? ''}
+                    viewYear={viewYear}
+                    viewMonth={viewMonth}
+                    memberNameMap={memberNameMap}
+                  />
                 )}
 
                 {currentMembership && currentMembership.withdrawal_status === 'none' && (
