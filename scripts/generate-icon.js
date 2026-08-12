@@ -23,7 +23,7 @@ const VERTICAL_ICONS = {
 }
 
 function buildSvg(conf, size, maskable = false) {
-  const rx = maskable ? 0 : 14
+  const rx = 0  // OS가 자체 마스킹(둥근 모서리)을 적용하므로 항상 fullbleed
   if (conf.type === 'dts') {
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 64 64">
   <rect width="64" height="64" rx="${rx}" fill="${conf.fill}"/>
