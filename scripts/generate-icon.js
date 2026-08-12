@@ -3,22 +3,62 @@
  * 사용법: node scripts/generate-icon.js <vertical>
  * 예시:   node scripts/generate-icon.js lesson-on
  *
- * 출력: assets/icon-only.png (1024x1024) — @capacitor/assets 입력용
+ * 출력:
+ *   assets/icon-only.png             — @capacitor/assets Android 생성용 (1024×1024)
+ *   public/icons/<vertical>/*.png    — PWA 홈화면 아이콘 5종
  */
 import { chromium } from 'playwright'
 import { writeFileSync, mkdirSync } from 'fs'
+import { dirname } from 'path'
 
 const VERTICAL_ICONS = {
-  'lesson-on': { bgColor: '#F2604E', text: 'L:ON' },
-  'shift-on':  { bgColor: '#2E7D32', text: 'S:ON' },
-  'serve-on':  { bgColor: '#5B8A5B', text: 'SV:ON' },
-  'class-on':  { bgColor: '#1A237E', text: 'C:ON' },
-  'work-on':   { bgColor: '#0D1B2A', text: 'W:ON' },
-  'salon-on':  { bgColor: '#7B5EA7', text: 'SL:ON' },
-  'care-on':   { bgColor: '#2E7B5B', text: 'CA:ON' },
+  'dts':        { type: 'dts',  fill: '#E05A3A' },
+  'lesson-on':  { fill: 'oklch(0.64 0.19 39)',  text: 'LESSON', cells: [{ x: 0,  y: 16 }, { x: 48, y: 32 }] },
+  'shift-on':   { fill: 'oklch(0.64 0.19 250)', text: 'SHIFT',  cells: [{ x: 16, y: 16 }, { x: 0,  y: 48 }] },
+  'serve-on':   { fill: 'oklch(0.64 0.19 145)', text: 'SERVE',  cells: [{ x: 48, y: 16 }, { x: 32, y: 48 }] },
+  'class-on':   { fill: 'oklch(0.64 0.19 270)', text: 'CLASS',  cells: [{ x: 32, y: 16 }, { x: 16, y: 48 }] },
+  'work-on':    { fill: 'oklch(0.64 0.19 200)', text: 'WORK',   cells: [{ x: 0,  y: 32 }, { x: 48, y: 48 }] },
+  'salon-on':   { fill: 'oklch(0.64 0.19 310)', text: 'SALON',  cells: [{ x: 16, y: 32 }, { x: 32, y: 48 }] },
+  'care-on':    { fill: 'oklch(0.64 0.19 160)', text: 'CARE',   cells: [{ x: 48, y: 16 }, { x: 0,  y: 32 }] },
 }
 
-async function generateIcon(vertical = 'lesson-on', size = 1024) {
+function buildSvg(conf, size, maskable = false) {
+  const rx = maskable ? 0 : 14
+  if (conf.type === 'dts') {
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="${rx}" fill="${conf.fill}"/>
+  <text x="32" y="40" font-family="-apple-system,Arial" font-weight="800" font-size="22" letter-spacing="-0.5" fill="white" text-anchor="middle">DTS<tspan fill="rgba(255,255,255,0.55)">.</tspan></text>
+</svg>`
+  }
+  const { fill, text, cells } = conf
+  const cellsHtml = cells
+    .map(({ x, y }) => `<rect x="${x}" y="${y}" width="16" height="16" fill="white" fill-opacity="0.09"/>`)
+    .join('\n  ')
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="${rx}" fill="${fill}"/>
+  <rect x="14" y="0" width="4" height="10" rx="2" fill="white" fill-opacity="0.35"/>
+  <rect x="46" y="0" width="4" height="10" rx="2" fill="white" fill-opacity="0.35"/>
+  <line x1="0" y1="16" x2="64" y2="16" stroke="white" stroke-opacity="0.22" stroke-width="1.2"/>
+  <g stroke="white" stroke-opacity="0.1" stroke-width="1">
+    <line x1="0" y1="32" x2="64" y2="32"/><line x1="0" y1="48" x2="64" y2="48"/>
+    <line x1="16" y1="16" x2="16" y2="64"/><line x1="32" y1="16" x2="32" y2="64"/><line x1="48" y1="16" x2="48" y2="64"/>
+  </g>
+  ${cellsHtml}
+  <text x="32" y="37" font-family="-apple-system,Arial" font-weight="700" font-size="14.5" letter-spacing="0.1" fill="white" text-anchor="middle">${text}</text>
+  <text x="32" y="50" font-family="-apple-system,Arial" font-weight="700" font-size="14.5" letter-spacing="0.6" fill="white" fill-opacity="0.7" text-anchor="middle">ON</text>
+</svg>`
+}
+
+async function renderToFile(page, svg, size, outputPath) {
+  mkdirSync(dirname(outputPath), { recursive: true })
+  await page.setViewportSize({ width: size, height: size })
+  await page.setContent(`<!DOCTYPE html><html><body style="margin:0;padding:0;overflow:hidden">${svg}</body></html>`)
+  const buf = await page.screenshot({ clip: { x: 0, y: 0, width: size, height: size } })
+  writeFileSync(outputPath, buf)
+  console.log(`   → ${outputPath} (${size}×${size})`)
+}
+
+async function generateIcon(vertical = 'lesson-on') {
   const conf = VERTICAL_ICONS[vertical]
   if (!conf) {
     console.error(`❌ Unknown vertical: ${vertical}`)
@@ -26,57 +66,37 @@ async function generateIcon(vertical = 'lesson-on', size = 1024) {
     process.exit(1)
   }
 
-  const { bgColor, text } = conf
-  const outputPath = 'assets/icon-only.png'
-
   const browser = await chromium.launch()
   const page = await browser.newPage()
-  await page.setViewportSize({ width: size, height: size })
 
-  await page.setContent(`<!DOCTYPE html>
-<html><body style="margin:0;padding:0;overflow:hidden">
-<canvas id="c" width="${size}" height="${size}"></canvas>
-<script>
-  const c = document.getElementById('c')
-  const ctx = c.getContext('2d')
-  const s = ${size}
-  const r = s * 0.22
+  // Capacitor용 1024px (Android 빌드 입력)
+  await renderToFile(page, buildSvg(conf, 1024), 1024, 'assets/icon-only.png')
 
-  // 둥근 사각형 배경
-  ctx.beginPath()
-  ctx.moveTo(r, 0)
-  ctx.lineTo(s - r, 0)
-  ctx.arcTo(s, 0, s, r, r)
-  ctx.lineTo(s, s - r)
-  ctx.arcTo(s, s, s - r, s, r)
-  ctx.lineTo(r, s)
-  ctx.arcTo(0, s, 0, s - r, r)
-  ctx.lineTo(0, r)
-  ctx.arcTo(0, 0, r, 0, r)
-  ctx.closePath()
-  ctx.fillStyle = '${bgColor}'
-  ctx.fill()
+  // PWA 아이콘 → public/icons/<vertical>/
+  const pwaDest = `public/icons/${vertical}`
+  await renderToFile(page, buildSvg(conf, 512),       512, `${pwaDest}/icon-512.png`)
+  await renderToFile(page, buildSvg(conf, 192),       192, `${pwaDest}/icon-192.png`)
+  await renderToFile(page, buildSvg(conf, 180),       180, `${pwaDest}/apple-touch-icon.png`)
+  await renderToFile(page, buildSvg(conf, 512, true), 512, `${pwaDest}/icon-maskable-512.png`)
+  await renderToFile(page, buildSvg(conf, 192, true), 192, `${pwaDest}/icon-maskable-192.png`)
 
-  // 텍스트
-  const fontSize = Math.floor(s * (${text.length} <= 4 ? 0.26 : 0.20))
-  ctx.fillStyle = 'white'
-  ctx.font = 'bold ' + fontSize + 'px "Arial Black", "Arial", sans-serif'
-  ctx.textAlign = 'center'
-  ctx.textBaseline = 'middle'
-  ctx.fillText('${text}', s / 2, s / 2)
-</script>
-</body></html>`)
+  // dts는 public/icons/ 기본 위치에도 복사 (dev 서버·manifest.json 참조 대상)
+  if (vertical === 'dts') {
+    const defaultDest = 'public/icons'
+    await renderToFile(page, buildSvg(conf, 512),       512, `${defaultDest}/icon-512.png`)
+    await renderToFile(page, buildSvg(conf, 192),       192, `${defaultDest}/icon-192.png`)
+    await renderToFile(page, buildSvg(conf, 180),       180, `${defaultDest}/apple-touch-icon.png`)
+    await renderToFile(page, buildSvg(conf, 512, true), 512, `${defaultDest}/icon-maskable-512.png`)
+    await renderToFile(page, buildSvg(conf, 192, true), 192, `${defaultDest}/icon-maskable-192.png`)
+    console.log(`   기본 위치: ${defaultDest}/`)
+  }
 
-  const dataUrl = await page.evaluate(() => document.getElementById('c').toDataURL('image/png'))
-  const buf = Buffer.from(dataUrl.split(',')[1], 'base64')
-
-  mkdirSync('assets', { recursive: true })
-  writeFileSync(outputPath, buf)
   await browser.close()
 
-  console.log(`✅ ${vertical} 아이콘 생성 완료: ${outputPath} (${size}x${size})`)
-  console.log(`   색상: ${bgColor} / 텍스트: ${text}`)
-  console.log(`\n다음 단계: npx @capacitor/assets generate --android`)
+  console.log(`\n✅ ${vertical} 아이콘 생성 완료`)
+  if (vertical !== 'dts') {
+    console.log(`\n다음 단계: npx @capacitor/assets generate --android`)
+  }
 }
 
 generateIcon(process.argv[2])

@@ -16,9 +16,10 @@
     "build:shift-on": "dotenv -e .env.shift-on -- vite build",
     "build:serve-on": "dotenv -e .env.serve-on -- vite build",
     "reel:landing": "vite build --config vite.promo-landing.config.ts && node scripts/record-reel-landing.js",
+    "icon:dts": "node scripts/generate-icon.js dts",
     "icon:lesson-on": "node scripts/generate-icon.js lesson-on && npx @capacitor/assets generate --android",
-    "icon:shift-on": "node scripts/generate-icon.js shift-on && npx @capacitor/assets generate --android",
-    "icon:serve-on": "node scripts/generate-icon.js serve-on && npx @capacitor/assets generate --android",
+    "icon:shift-on": "node scripts/generate-icon.js shift-on",
+    "icon:serve-on": "node scripts/generate-icon.js serve-on",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest"

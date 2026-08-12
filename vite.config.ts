@@ -14,15 +14,26 @@ const VERTICAL_TO_FAVICON: Record<string, string> = {
   'medical-care':        'care-on',
 }
 
+const vertical   = process.env.VITE_VERTICAL
+const faviconKey = vertical ? VERTICAL_TO_FAVICON[vertical] : null
+const iconKey    = faviconKey ?? 'dts'
+const iconDir    = `/icons/${iconKey}`
+const brandName  = (process.env.VITE_BRAND_NAME    ?? '다이나믹팀스케줄').replace(/^["']|["']$/g, '')
+const shortName  = faviconKey ? brandName : 'DT스케줄'
+const brandColor = (process.env.VITE_BRAND_COLOR   ?? '#14171C').replace(/^["']|["']$/g, '')
+const tagline    = (process.env.VITE_BRAND_TAGLINE  ?? '다이나믹팀스케줄 - 멀티테넌트 스케줄 관리 플랫폼').replace(/^["']|["']$/g, '')
+
 const verticalFaviconPlugin = {
   name: 'vertical-favicon',
   transformIndexHtml(html: string) {
-    const vertical = process.env.VITE_VERTICAL
-    const faviconKey = vertical ? VERTICAL_TO_FAVICON[vertical] : null
-    if (faviconKey) {
-      return html.replace('href="/favicon.svg"', `href="/favicons/${faviconKey}.svg"`)
-    }
+    if (!faviconKey) return html
     return html
+      .replace('href="/favicon.svg"', `href="/favicons/${faviconKey}.svg"`)
+      .replace(/<title>[^<]*<\/title>/, `<title>${brandName}</title>`)
+      .replace(/(<meta name="theme-color" content=")[^"]*(")/,             `$1${brandColor}$2`)
+      .replace(/(<meta name="apple-mobile-web-app-title" content=")[^"]*(")/,  `$1${brandName}$2`)
+      .replace(/(<meta name="description" content=")[^"]*(")/,             `$1${tagline}$2`)
+      .replace('href="/icons/apple-touch-icon.png"', `href="${iconDir}/apple-touch-icon.png"`)
   },
 }
 
@@ -40,41 +51,22 @@ export default defineConfig(({ command }) => ({
     // 개발 서버에서는 SW를 완전히 비활성화 (HMR 오프라인 방지)
     command === 'build' && VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'icons/*.png'],
+      includeAssets: ['favicon.svg', 'favicons/*.svg', `icons/${iconKey}/*.png`],
       manifest: {
-        name:        process.env.VITE_BRAND_NAME  ?? '다이나믹팀스케줄',
-        short_name:  process.env.VITE_BRAND_NAME  ?? 'DT스케줄',
-        description: '다이나믹팀스케줄 - 멀티테넌트 시간대별 인원 배정 플랫폼',
-        theme_color: process.env.VITE_BRAND_COLOR ?? '#14171C',
+        name:             brandName,
+        short_name:       shortName,
+        description:      tagline,
+        theme_color:      brandColor,
         background_color: '#0a0b10',
-        display: 'standalone',
-        start_url: '/',
-        scope: '/',
+        display:          'standalone',
+        start_url:        '/',
+        scope:            '/',
         icons: [
-          {
-            src: '/icons/icon-192.png',
-            sizes: '192x192',
-            type: 'image/png',
-            purpose: 'any',
-          },
-          {
-            src: '/icons/icon-512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any',
-          },
-          {
-            src: '/icons/icon-maskable-192.png',
-            sizes: '192x192',
-            type: 'image/png',
-            purpose: 'maskable',
-          },
-          {
-            src: '/icons/icon-maskable-512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'maskable',
-          },
+          { src: `${iconDir}/icon-192.png`,          sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: `${iconDir}/icon-512.png`,          sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: `${iconDir}/apple-touch-icon.png`,  sizes: '180x180', type: 'image/png', purpose: 'any' },
+          { src: `${iconDir}/icon-maskable-192.png`, sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+          { src: `${iconDir}/icon-maskable-512.png`, sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
       workbox: {
