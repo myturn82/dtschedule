@@ -18,13 +18,13 @@ import { dirname } from 'path'
 
 const VERTICAL_ICONS = {
   'dts':        { type: 'dts',  fill: '#E05A3A' },
-  'lesson-on':  { fill: 'oklch(0.64 0.19 39)',  text: 'LESSON', cells: [{ x: 0,  y: 16 }, { x: 48, y: 32 }] },
-  'shift-on':   { fill: 'oklch(0.64 0.19 250)', text: 'SHIFT',  cells: [{ x: 16, y: 16 }, { x: 0,  y: 48 }] },
-  'serve-on':   { fill: 'oklch(0.64 0.19 145)', text: 'SERVE',  cells: [{ x: 48, y: 16 }, { x: 32, y: 48 }] },
-  'class-on':   { fill: 'oklch(0.64 0.19 270)', text: 'CLASS',  cells: [{ x: 32, y: 16 }, { x: 16, y: 48 }] },
-  'work-on':    { fill: 'oklch(0.64 0.19 200)', text: 'WORK',   cells: [{ x: 0,  y: 32 }, { x: 48, y: 48 }] },
-  'salon-on':   { fill: 'oklch(0.64 0.19 310)', text: 'SALON',  cells: [{ x: 16, y: 32 }, { x: 32, y: 48 }] },
-  'care-on':    { fill: 'oklch(0.64 0.19 160)', text: 'CARE',   cells: [{ x: 48, y: 16 }, { x: 0,  y: 32 }] },
+  'lesson-on':  { fill: '#D95E3E', text: 'LESSON', cells: [{ x: 0,  y: 16 }, { x: 48, y: 32 }] },
+  'shift-on':   { fill: '#3E78D4', text: 'SHIFT',  cells: [{ x: 16, y: 16 }, { x: 0,  y: 48 }] },
+  'serve-on':   { fill: '#279E5E', text: 'SERVE',  cells: [{ x: 48, y: 16 }, { x: 32, y: 48 }] },
+  'class-on':   { fill: '#7148CC', text: 'CLASS',  cells: [{ x: 32, y: 16 }, { x: 16, y: 48 }] },
+  'work-on':    { fill: '#1795A8', text: 'WORK',   cells: [{ x: 0,  y: 32 }, { x: 48, y: 48 }] },
+  'salon-on':   { fill: '#BD4BA8', text: 'SALON',  cells: [{ x: 16, y: 32 }, { x: 32, y: 48 }] },
+  'care-on':    { fill: '#1EA893', text: 'CARE',   cells: [{ x: 48, y: 16 }, { x: 0,  y: 32 }] },
 }
 
 function buildSvg(conf, size, maskable = false) {
