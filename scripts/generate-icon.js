@@ -44,16 +44,16 @@ function buildSvg(conf, size, maskable = false) {
     <line x1="16" y1="16" x2="16" y2="64"/><line x1="32" y1="16" x2="32" y2="64"/><line x1="48" y1="16" x2="48" y2="64"/>
   </g>
   ${cellsHtml}
-  <text x="32" y="37" font-family="-apple-system,Arial" font-weight="700" font-size="14.5" letter-spacing="0.1" fill="white" text-anchor="middle">${text}</text>
-  <text x="32" y="50" font-family="-apple-system,Arial" font-weight="700" font-size="14.5" letter-spacing="0.6" fill="white" fill-opacity="0.7" text-anchor="middle">ON</text>
+  <text x="32" y="37" font-family="-apple-system,Arial" font-weight="700" font-size="13" letter-spacing="0" fill="white" text-anchor="middle">${text}</text>
+  <text x="32" y="50" font-family="-apple-system,Arial" font-weight="700" font-size="13" letter-spacing="0.5" fill="white" fill-opacity="0.7" text-anchor="middle">ON</text>
 </svg>`
 }
 
-async function renderToFile(page, svg, size, outputPath) {
+async function renderToFile(page, svg, size, outputPath, transparent = false) {
   mkdirSync(dirname(outputPath), { recursive: true })
   await page.setViewportSize({ width: size, height: size })
-  await page.setContent(`<!DOCTYPE html><html><body style="margin:0;padding:0;overflow:hidden">${svg}</body></html>`)
-  const buf = await page.screenshot({ clip: { x: 0, y: 0, width: size, height: size } })
+  await page.setContent(`<!DOCTYPE html><html><body style="margin:0;padding:0;overflow:hidden;background:transparent">${svg}</body></html>`)
+  const buf = await page.screenshot({ clip: { x: 0, y: 0, width: size, height: size }, omitBackground: transparent })
   writeFileSync(outputPath, buf)
   console.log(`   → ${outputPath} (${size}×${size})`)
 }
@@ -74,20 +74,20 @@ async function generateIcon(vertical = 'lesson-on') {
 
   // PWA 아이콘 → public/icons/<vertical>/
   const pwaDest = `public/icons/${vertical}`
-  await renderToFile(page, buildSvg(conf, 512),       512, `${pwaDest}/icon-512.png`)
-  await renderToFile(page, buildSvg(conf, 192),       192, `${pwaDest}/icon-192.png`)
-  await renderToFile(page, buildSvg(conf, 180),       180, `${pwaDest}/apple-touch-icon.png`)
-  await renderToFile(page, buildSvg(conf, 512, true), 512, `${pwaDest}/icon-maskable-512.png`)
-  await renderToFile(page, buildSvg(conf, 192, true), 192, `${pwaDest}/icon-maskable-192.png`)
+  await renderToFile(page, buildSvg(conf, 512),       512, `${pwaDest}/icon-512.png`,          true)
+  await renderToFile(page, buildSvg(conf, 192),       192, `${pwaDest}/icon-192.png`,          true)
+  await renderToFile(page, buildSvg(conf, 180),       180, `${pwaDest}/apple-touch-icon.png`,  true)
+  await renderToFile(page, buildSvg(conf, 512, true), 512, `${pwaDest}/icon-maskable-512.png`, false)
+  await renderToFile(page, buildSvg(conf, 192, true), 192, `${pwaDest}/icon-maskable-192.png`, false)
 
-  // dts는 public/icons/ 기본 위치에도 복사 (dev 서버·manifest.json 참조 대상)
+  // dts는 public/icons/ 기본 위치에도 복사 (dev 서버 참조 대상)
   if (vertical === 'dts') {
     const defaultDest = 'public/icons'
-    await renderToFile(page, buildSvg(conf, 512),       512, `${defaultDest}/icon-512.png`)
-    await renderToFile(page, buildSvg(conf, 192),       192, `${defaultDest}/icon-192.png`)
-    await renderToFile(page, buildSvg(conf, 180),       180, `${defaultDest}/apple-touch-icon.png`)
-    await renderToFile(page, buildSvg(conf, 512, true), 512, `${defaultDest}/icon-maskable-512.png`)
-    await renderToFile(page, buildSvg(conf, 192, true), 192, `${defaultDest}/icon-maskable-192.png`)
+    await renderToFile(page, buildSvg(conf, 512),       512, `${defaultDest}/icon-512.png`,          true)
+    await renderToFile(page, buildSvg(conf, 192),       192, `${defaultDest}/icon-192.png`,          true)
+    await renderToFile(page, buildSvg(conf, 180),       180, `${defaultDest}/apple-touch-icon.png`,  true)
+    await renderToFile(page, buildSvg(conf, 512, true), 512, `${defaultDest}/icon-maskable-512.png`, false)
+    await renderToFile(page, buildSvg(conf, 192, true), 192, `${defaultDest}/icon-maskable-192.png`, false)
     console.log(`   기본 위치: ${defaultDest}/`)
   }
 
