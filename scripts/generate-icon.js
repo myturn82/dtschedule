@@ -8,9 +8,8 @@
  *   public/icons/<vertical>/*.png    — PWA 홈화면 아이콘 5종
  *
  * 모서리 처리 원칙:
- *   - 일반 아이콘: 브랜드색 fullbleed → 검정 오버레이 → 둥근 rect(브랜드색) 순서로 쌓음
- *     → 모서리는 약간 어두운 브랜드색, 투명 픽셀 없음, 어떤 배경에도 흰 여백 없음
- *   - 마스커블 아이콘: 완전 fullbleed (OS가 마스킹 적용)
+ *   - 모든 아이콘: fullbleed solid 브랜드색 (투명 픽셀 없음)
+ *   - OS/브라우저가 플랫폼별 rounding을 자체 적용 → 흰 여백 없음
  */
 import { chromium } from 'playwright'
 import { writeFileSync, mkdirSync } from 'fs'
@@ -27,15 +26,10 @@ const VERTICAL_ICONS = {
   'care-on':    { fill: '#1EA893', text: 'CARE',   cells: [{ x: 48, y: 16 }, { x: 0,  y: 32 }] },
 }
 
-function buildSvg(conf, size, maskable = false) {
-  // 마스커블: fullbleed, 일반: 브랜드색 base + 검정 오버레이 + 둥근 rect 순서
-  const cornerLayers = maskable ? '' : `
-  <rect width="64" height="64" fill="rgba(0,0,0,0.18)"/>
-  <rect width="64" height="64" rx="14" fill="${conf.type === 'dts' ? conf.fill : conf.fill}"/>`
-
+function buildSvg(conf, size) {
   if (conf.type === 'dts') {
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 64 64">
-  <rect width="64" height="64" fill="${conf.fill}"/>${cornerLayers}
+  <rect width="64" height="64" fill="${conf.fill}"/>
   <text x="32" y="40" font-family="-apple-system,Arial" font-weight="800" font-size="22" letter-spacing="-0.5" fill="white" text-anchor="middle">DTS<tspan fill="rgba(255,255,255,0.55)">.</tspan></text>
 </svg>`
   }
@@ -45,7 +39,7 @@ function buildSvg(conf, size, maskable = false) {
     .map(({ x, y }) => `<rect x="${x}" y="${y}" width="16" height="16" fill="white" fill-opacity="0.09"/>`)
     .join('\n  ')
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 64 64">
-  <rect width="64" height="64" fill="${fill}"/>${cornerLayers}
+  <rect width="64" height="64" fill="${fill}"/>
   <rect x="14" y="0" width="4" height="10" rx="2" fill="white" fill-opacity="0.35"/>
   <rect x="46" y="0" width="4" height="10" rx="2" fill="white" fill-opacity="0.35"/>
   <line x1="0" y1="16" x2="64" y2="16" stroke="white" stroke-opacity="0.22" stroke-width="1.2"/>
@@ -84,20 +78,23 @@ async function generateIcon(vertical = 'lesson-on') {
 
   // PWA 아이콘 → public/icons/<vertical>/
   const pwaDest = `public/icons/${vertical}`
-  await renderToFile(page, buildSvg(conf, 512),       512, `${pwaDest}/icon-512.png`)
-  await renderToFile(page, buildSvg(conf, 192),       192, `${pwaDest}/icon-192.png`)
-  await renderToFile(page, buildSvg(conf, 180),       180, `${pwaDest}/apple-touch-icon.png`)
-  await renderToFile(page, buildSvg(conf, 512, true), 512, `${pwaDest}/icon-maskable-512.png`)
-  await renderToFile(page, buildSvg(conf, 192, true), 192, `${pwaDest}/icon-maskable-192.png`)
+  const svg512 = buildSvg(conf, 512)
+  const svg192 = buildSvg(conf, 192)
+  const svg180 = buildSvg(conf, 180)
+  await renderToFile(page, svg512, 512, `${pwaDest}/icon-512.png`)
+  await renderToFile(page, svg192, 192, `${pwaDest}/icon-192.png`)
+  await renderToFile(page, svg180, 180, `${pwaDest}/apple-touch-icon.png`)
+  await renderToFile(page, svg512, 512, `${pwaDest}/icon-maskable-512.png`)
+  await renderToFile(page, svg192, 192, `${pwaDest}/icon-maskable-192.png`)
 
   // dts는 public/icons/ 기본 위치에도 복사 (dev 서버 참조 대상)
   if (vertical === 'dts') {
     const defaultDest = 'public/icons'
-    await renderToFile(page, buildSvg(conf, 512),       512, `${defaultDest}/icon-512.png`)
-    await renderToFile(page, buildSvg(conf, 192),       192, `${defaultDest}/icon-192.png`)
-    await renderToFile(page, buildSvg(conf, 180),       180, `${defaultDest}/apple-touch-icon.png`)
-    await renderToFile(page, buildSvg(conf, 512, true), 512, `${defaultDest}/icon-maskable-512.png`)
-    await renderToFile(page, buildSvg(conf, 192, true), 192, `${defaultDest}/icon-maskable-192.png`)
+    await renderToFile(page, svg512, 512, `${defaultDest}/icon-512.png`)
+    await renderToFile(page, svg192, 192, `${defaultDest}/icon-192.png`)
+    await renderToFile(page, svg180, 180, `${defaultDest}/apple-touch-icon.png`)
+    await renderToFile(page, svg512, 512, `${defaultDest}/icon-maskable-512.png`)
+    await renderToFile(page, svg192, 192, `${defaultDest}/icon-maskable-192.png`)
     console.log(`   기본 위치: ${defaultDest}/`)
   }
 
