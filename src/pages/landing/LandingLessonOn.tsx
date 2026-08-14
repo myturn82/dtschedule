@@ -64,7 +64,6 @@ export function LandingLessonOn() {
           .lo-feat-visual { max-width:none !important; justify-self:stretch !important; order:2 !important; }
           .lo-feat-text { order:1 !important; text-align:center !important; }
           .lo-sect-01 { padding-bottom: 160px !important; }
-          .lo-sect-01-p { margin-top: 10px !important; }
         }
       `}</style>
 
@@ -94,10 +93,10 @@ export function LandingLessonOn() {
         <section className="lo-sect-01" style={{ padding: '100px 24px', maxWidth: 720, margin: '0 auto', textAlign: 'center' }}>
           <Anim>
             <div style={{ fontSize: 13, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 16 }}>01 — 강사의 하루</div>
-            <h2 style={{ fontSize: 'clamp(24px,4vw,36px)', fontWeight: 800, lineHeight: 1.5, letterSpacing: '-0.5px' }}>
+            <h2 style={{ fontSize: 'clamp(24px,4vw,36px)', fontWeight: 800, lineHeight: 1.5, letterSpacing: '-0.5px', marginBottom: 16 }}>
               "이 회원님 남은 횟수가 몇 번이더라..."<br />"오늘 그분 오시는 날 맞나?"
             </h2>
-            <p className="lo-sect-01-p" style={{ fontSize: 16, color: 'rgba(255,255,255,0.45)', lineHeight: 1.8, marginTop: 24 }}>
+            <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.45)', lineHeight: 1.8 }}>
               수기 장부, 카톡 캡처, 엑셀 시트를 오가며<br />수업 준비보다 관리에 더 많은 시간을 씁니다.
             </p>
           </Anim>
