@@ -110,8 +110,8 @@ export function LandingLessonOn() {
               <h2 style={{ fontSize: 'clamp(24px,3.5vw,34px)', fontWeight: 800, letterSpacing: '-0.5px', marginBottom: 16 }}>등록해두면, 수업마다<br />알아서 차감됩니다</h2>
               <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', lineHeight: 1.8 }}>코치가 회원과 사전 조율한 횟수제 레슨권(그룹 4회, 개인 8회 등)을 등록해두면, 수업이 진행될 때마다 결제 기록에서 잔여 횟수가 자동으로 소진됩니다.</p>
             </Anim>
-            <Anim delay={120}>
-              <div className="lo-feat-visual" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 28 }}>
+            <Anim delay={120} className="lo-feat-visual">
+              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 28 }}>
                 <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 16 }}>결제 기록 · 회원별 소진 현황</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.1fr 0.6fr 0.7fr', fontSize: 11, color: 'rgba(255,255,255,0.35)', padding: '0 16px 8px', textAlign: 'center' }}>
                   <span>회원</span><span>레슨종류</span><span>소진</span><span>상태</span>
@@ -138,8 +138,8 @@ export function LandingLessonOn() {
         {/* 03 — 재등록 유도 */}
         <section style={{ padding: '80px 24px' }}>
           <div className="lo-feat-grid" style={{ maxWidth: 960, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, alignItems: 'center' }}>
-            <Anim delay={120}>
-              <div className="lo-feat-visual" style={{ order: 2, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 28, maxWidth: 340, justifySelf: 'center' }}>
+            <Anim delay={120} className="lo-feat-visual">
+              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 28, maxWidth: 340, justifySelf: 'center' }}>
                 <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 12 }}>만료 임박 알림</div>
                 <div style={{ background: 'rgba(242,96,78,0.1)', border: '1px solid rgba(242,96,78,0.25)', borderRadius: 14, padding: '16px 18px' }}>
                   <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>⏰ 만료 임박 레슨권 미소진 회원 1명</div>
