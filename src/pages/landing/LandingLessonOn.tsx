@@ -87,7 +87,7 @@ export function LandingLessonOn() {
           <h1 className="lo-h1" style={{ fontSize: 'clamp(32px,6vw,56px)', fontWeight: 800, lineHeight: 1.25, letterSpacing: '-1.2px', margin: '0 auto 24px', maxWidth: 720 }}>
             수업 일정부터 수강권 관리까지.<br /><span style={{ color: ACCENT }}>Lesson On</span> 하나면<br />운영이 더 쉬워집니다.
           </h1>
-          <p className="lo-sub" style={{ fontSize: 17, color: 'rgba(255,255,255,0.5)', maxWidth: 480, margin: '0 auto 40px', lineHeight: 1.7 }}>지금 바로 무료로 시작하세요.</p>
+          <p className="lo-sub" style={{ fontSize: 17, color: 'rgba(255,255,255,0.5)', maxWidth: 480, margin: '0 auto 40px', lineHeight: 1.7 }}>설치 없이 브라우저에서 무료로 시작할 수 있습니다.</p>
           <button className="lo-cta" onClick={goStart} style={{ background: ACCENT, color: '#fff', border: 0, borderRadius: 12, padding: '16px 36px', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>무료로 시작하기 →</button>
         </section>
 
@@ -198,7 +198,7 @@ export function LandingLessonOn() {
                 <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 12 }}>만료 임박 알림</div>
                 <div style={{ background: 'rgba(242,96,78,0.1)', border: '1px solid rgba(242,96,78,0.25)', borderRadius: 14, padding: '16px 18px' }}>
                   <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>⏰ 만료 임박 레슨권 미소진 회원 1명</div>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, marginBottom: 14 }}>선택한 기간 내 만료가 도래하지만 아직 다 사용하지 않은 회원입니다. 문자로 소진을 독려해 보세요.</div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, marginBottom: 14 }}>선택한 기간 내 만료가 도래하지만 아직 미소진 상태인 회원입니다. 문자로 소진을 독려하십시오.</div>
                   <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
                     <span style={{ background: ACCENT, color: '#fff', fontSize: 11, fontWeight: 700, padding: '5px 10px', borderRadius: 8 }}>1주일 전</span>
                     <span style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)', fontSize: 11, padding: '5px 10px', borderRadius: 8 }}>2주일 전</span>
@@ -211,8 +211,8 @@ export function LandingLessonOn() {
             <Anim style={{ order: 1 }}>
               <div className="lo-feat-text">
                 <div style={{ fontSize: 13, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 16 }}>03 — 재등록 유도</div>
-                <h2 style={{ fontSize: 'clamp(24px,3.5vw,34px)', fontWeight: 800, letterSpacing: '-0.5px', marginBottom: 16 }}>만료 임박 회원에게,<br />자동으로 알려드려요</h2>
-                <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', lineHeight: 1.8 }}>레슨권 만료일이 가까운데 아직 다 쓰지 않은 회원을 자동으로 모아 보여줍니다. 기준(1주일 전, 2주일 전 등)을 정하면 한 번에 단체 문자를 발송해 소진과 재등록을 독려할 수 있습니다.</p>
+                <h2 style={{ fontSize: 'clamp(24px,3.5vw,34px)', fontWeight: 800, letterSpacing: '-0.5px', marginBottom: 16 }}>만료 임박 회원에게<br />자동으로 알립니다</h2>
+                <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', lineHeight: 1.8 }}>레슨권 만료일이 임박했으나 미소진 회원을 자동으로 추출하여 표시합니다. 기준(1주일 전, 2주일 전 등)을 설정하면 단체 문자를 일괄 발송하여 소진과 재등록을 독려할 수 있습니다.</p>
               </div>
             </Anim>
           </div>
@@ -222,8 +222,8 @@ export function LandingLessonOn() {
         <section style={{ padding: '80px 24px', background: 'linear-gradient(180deg, transparent, rgba(242,96,78,0.05), transparent)' }}>
           <Anim style={{ maxWidth: 760, margin: '0 auto', textAlign: 'center', marginBottom: 48 }}>
             <div style={{ fontSize: 13, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 16 }}>04 — 데이터로 관리</div>
-            <h2 style={{ fontSize: 'clamp(24px,3.5vw,34px)', fontWeight: 800, letterSpacing: '-0.5px', marginBottom: 16 }}>대시보드에서, 레슨권 통계를<br />바로 조회하세요</h2>
-            <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', lineHeight: 1.8 }}>회원별 레슨권 소진 추이를 자동 집계합니다. 아래 통계 데이터를 대시보드에서 바로 확인할 수 있어요.</p>
+            <h2 style={{ fontSize: 'clamp(24px,3.5vw,34px)', fontWeight: 800, letterSpacing: '-0.5px', marginBottom: 16 }}>대시보드에서 레슨권 통계를<br />한눈에 조회합니다</h2>
+            <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', lineHeight: 1.8 }}>회원별 레슨권 소진 추이를 자동 집계합니다. 아래 통계 항목을 대시보드에서 바로 확인할 수 있습니다.</p>
           </Anim>
           <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
             {[
@@ -253,7 +253,7 @@ export function LandingLessonOn() {
         {/* 업종 배지 */}
         <section style={{ textAlign: 'center', padding: '80px 24px' }}>
           <Anim>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 16 }}>이런 곳에서 쓰고 있어요</div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 16 }}>주요 활용 업종</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', maxWidth: 600, margin: '0 auto' }}>
               {['PT·헬스', '요가', '필라테스', '골프 레슨', '무술·격투기', '수영', '발레', '댄스'].map((tag, i) => (
                 <span key={tag} className="lo-tag-btn" style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 20, padding: '6px 14px', fontSize: 13, opacity: 0, animation: `fadeUp 0.4s ease ${i * 50}ms forwards` }}>{tag}</span>
@@ -268,7 +268,7 @@ export function LandingLessonOn() {
             <Anim style={{ textAlign: 'center', marginBottom: 56 }}>
               <div style={{ fontSize: 13, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 16 }}>엔진</div>
               <h2 style={{ fontSize: 'clamp(24px,3.5vw,34px)', fontWeight: 800, letterSpacing: '-0.5px', marginBottom: 12 }}>레슨권 뒤에서 움직이는 스케줄 엔진</h2>
-              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.45)', maxWidth: 520, margin: '0 auto', lineHeight: 1.7 }}>LESSON:ON은 단일 서비스가 아니라, 여러 업종에 쓰이는 스케줄 엔진 위에 만들어졌습니다. 그래서 아래 기본 기능들을 사용할 수 있습니다.</p>
+              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.45)', maxWidth: 520, margin: '0 auto', lineHeight: 1.7 }}>LESSON:ON은 다양한 업종에 적용 가능한 스케줄 엔진을 기반으로 합니다. 아래 기능을 기본 제공합니다.</p>
             </Anim>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
 
@@ -308,7 +308,7 @@ export function LandingLessonOn() {
                     </div>
                   ),
                   title: '보기 방식 자유 전환',
-                  desc: '월간·주간·일간, 일자별·시간별 보기를 조직과 사용자의 상황에 따라 마음껏 전환할 수 있습니다.',
+                  desc: '월간·주간·일간, 일자별·시간별 보기를 조직과 사용자의 상황에 따라 자유롭게 전환할 수 있습니다.',
                 },
                 {
                   visual: (
@@ -406,7 +406,7 @@ export function LandingLessonOn() {
                     </div>
                   ),
                   title: '입력항목 설정',
-                  desc: '부상 이력, 보유 레슨권 종류 등 우리 스튜디오만의 항목을 코드 수정 없이 추가합니다.',
+                  desc: '부상 이력, 보유 레슨권 종류 등 스튜디오 고유 항목을 코드 수정 없이 추가합니다.',
                 },
                 {
                   visual: (
@@ -419,7 +419,7 @@ export function LandingLessonOn() {
                     </div>
                   ),
                   title: '사진 첨부',
-                  desc: '회원 자세 교정 사진 등을 배정에 첨부. 브라우저에서 자동 압축돼 용량 걱정이 없습니다.',
+                  desc: '회원 자세 교정 사진 등을 배정에 첨부합니다. 브라우저에서 자동 압축되어 저장 효율을 높입니다.',
                 },
                 {
                   visual: (
@@ -467,7 +467,7 @@ export function LandingLessonOn() {
         {/* Footer CTA */}
         <Anim>
           <section style={{ textAlign: 'center', padding: '60px 24px 100px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-            <h2 style={{ fontSize: 26, fontWeight: 800, marginBottom: 24 }}>직접 쓰던 번거로움, 오늘로 끝내세요.<br />이제 Lesson On으로 전환하세요.</h2>
+            <h2 style={{ fontSize: 26, fontWeight: 800, marginBottom: 24 }}>수기 관리의 번거로움을 해소하십시오.<br />Lesson On이 대신합니다.</h2>
             <button className="lo-cta" onClick={goStart} style={{ background: ACCENT, color: '#fff', border: 0, borderRadius: 12, padding: '16px 36px', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>지금 무료로 시작하기 →</button>
           </section>
         </Anim>
