@@ -20,6 +20,10 @@ import { BRAND } from './lib/brandConfig'
 import { LandingLessonOn } from './pages/landing/LandingLessonOn'
 import { LandingShiftOn  } from './pages/landing/LandingShiftOn'
 import { LandingServeOn  } from './pages/landing/LandingServeOn'
+import { LandingClassOn  } from './pages/landing/LandingClassOn'
+import { LandingWorkOn   } from './pages/landing/LandingWorkOn'
+import { LandingSalonOn  } from './pages/landing/LandingSalonOn'
+import { LandingCareOn   } from './pages/landing/LandingCareOn'
 import { ConsentPage }  from './pages/ConsentPage'
 import { AuthPage }     from './pages/AuthPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
@@ -32,9 +36,13 @@ import { DevFileLabelDisplay } from './components/DevFileLabel'
 function LandingRouter() {
   const [params] = useSearchParams()
   const vertical = params.get('vertical') ?? BRAND.vertical
-  if (vertical === 'lesson-sports')  return <LandingLessonOn />
-  if (vertical === 'food-retail')    return <LandingShiftOn  />
-  if (vertical === 'public-welfare') return <LandingServeOn  />
+  if (vertical === 'lesson-sports')      return <LandingLessonOn />
+  if (vertical === 'food-retail')        return <LandingShiftOn  />
+  if (vertical === 'public-welfare')     return <LandingServeOn  />
+  if (vertical === 'education-academy')  return <LandingClassOn  />
+  if (vertical === 'professional-office')return <LandingWorkOn   />
+  if (vertical === 'beauty-salon')       return <LandingSalonOn  />
+  if (vertical === 'medical-care')       return <LandingCareOn   />
   return <LandingPage />
 }
 
