@@ -48,6 +48,8 @@ export function LandingLessonOn() {
         @keyframes ctaPulse  { 0%,100% { box-shadow:0 8px 32px rgba(242,96,78,0.35);} 50% { box-shadow:0 8px 52px rgba(242,96,78,0.6);} }
         @keyframes badgePop  { 0% { opacity:0; transform:scale(0.85) translateY(10px);} 100% { opacity:1; transform:scale(1) translateY(0);} }
         @keyframes navFade   { from { opacity:0; transform:translateY(-8px);} to { opacity:1; transform:translateY(0);} }
+        @keyframes qPulse    { 0%,100% { opacity:0.25; } 50% { opacity:0.65; } }
+        .lo-qmark { animation: qPulse 2s ease-in-out infinite; }
         body { margin:0; background:#0a0b10; }
         .lo-nav   { animation: navFade 0.5s ease both; }
         .lo-badge { animation: badgePop 0.6s cubic-bezier(.34,1.56,.64,1) 0.1s both; }
@@ -90,8 +92,8 @@ export function LandingLessonOn() {
         </section>
 
         {/* 01 — 강사의 하루 */}
-        <section className="lo-sect-01" style={{ padding: '100px 24px', maxWidth: 720, margin: '0 auto', textAlign: 'center' }}>
-          <Anim>
+        <section className="lo-sect-01" style={{ padding: '100px 24px', maxWidth: 840, margin: '0 auto', textAlign: 'center' }}>
+          <Anim style={{ marginBottom: 48 }}>
             <div style={{ fontSize: 13, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 16 }}>01 — 강사의 하루</div>
             <h2 style={{ fontSize: 'clamp(24px,4vw,36px)', fontWeight: 800, lineHeight: 1.5, letterSpacing: '-0.5px', marginBottom: 16 }}>
               "이 회원님 남은 횟수가 몇 번이더라..."<br />"오늘 그분 오시는 날 맞나?"
@@ -99,6 +101,59 @@ export function LandingLessonOn() {
             <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.45)', lineHeight: 1.8 }}>
               수기 장부, 카톡 캡처, 엑셀 시트를 오가며<br />수업 준비보다 관리에 더 많은 시간을 씁니다.
             </p>
+          </Anim>
+          <Anim delay={150}>
+            {(() => {
+              const DAYS = ['월', '화', '수', '목', '금', '토']
+              const ROWS = [
+                { time: '10:00', cells: ['조은수', null, '윤소이', '박진희', null, '성시호'] },
+                { time: '11:00', cells: [null, '이하나', null, null, '김민지', null] },
+                { time: '13:00', cells: ['박진희', '윤소이', null, '조은수', '이하나', null] },
+                { time: '14:00', cells: [null, null, '성시호', null, null, '박진희'] },
+              ] as { time: string; cells: (string | null)[] }[]
+              let cellIdx = 0
+              return (
+                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: '20px 16px', overflowX: 'auto' }}>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginBottom: 12, textAlign: 'left' }}>이번 주 수업 일정</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '44px repeat(6, 1fr)', gap: 5, minWidth: 420 }}>
+                    {/* Header */}
+                    <div />
+                    {DAYS.map(d => (
+                      <div key={d} style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textAlign: 'center', paddingBottom: 6 }}>{d}</div>
+                    ))}
+                    {/* Rows */}
+                    {ROWS.map((row, ri) => (
+                      <>
+                        <div key={row.time} style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', paddingRight: 4, whiteSpace: 'nowrap' }}>{row.time}</div>
+                        {row.cells.map((name, ci) => {
+                          const delay = 300 + (ri * 6 + ci) * 50
+                          const isConfused = ri === 0 && ci === 1
+                          cellIdx++
+                          if (name) {
+                            return (
+                              <div key={ci} style={{ background: 'rgba(242,96,78,0.1)', border: '1px solid rgba(242,96,78,0.2)', borderRadius: 8, padding: '6px 4px', textAlign: 'center', fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.85)', opacity: 0, animation: `fadeUp 0.4s ease ${delay}ms both` }}>
+                                {name}
+                              </div>
+                            )
+                          }
+                          return (
+                            <div key={ci} style={{ position: 'relative', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '6px 4px', textAlign: 'center', opacity: 0, animation: `fadeUp 0.4s ease ${delay}ms both` }}>
+                              <span className="lo-qmark" style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', display: 'block' }}>?</span>
+                              {isConfused && (
+                                <div style={{ position: 'absolute', bottom: '110%', left: '50%', transform: 'translateX(-50%)', background: 'rgba(242,96,78,0.9)', color: '#fff', fontSize: 10, fontWeight: 700, borderRadius: 6, padding: '4px 8px', whiteSpace: 'nowrap', pointerEvents: 'none', zIndex: 10 }}>
+                                  몇 번 남았더라...
+                                  <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '4px solid transparent', borderRight: '4px solid transparent', borderTop: '4px solid rgba(242,96,78,0.9)' }} />
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </>
+                    ))}
+                  </div>
+                </div>
+              )
+            })()}
           </Anim>
         </section>
 
