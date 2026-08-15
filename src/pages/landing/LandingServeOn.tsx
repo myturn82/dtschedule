@@ -116,7 +116,7 @@ export function LandingServeOn() {
             {/* 카드2: 참석 알림 */}
             <div className="sv-hero-card2" style={{ position: 'absolute', top: '12%', right: '4%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 14, padding: '14px 16px', textAlign: 'left', maxWidth: 210 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                <span style={{ fontSize: 14 }}>🔔</span>
+                <span style={{ fontSize: 14 }}>◆</span>
                 <span style={{ fontSize: 10, color: ACCENT, fontWeight: 700 }}>참석 알림</span>
               </div>
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', lineHeight: 1.6 }}>내일 오전 9시<br />급식 봉사가 있습니다.</div>
@@ -164,9 +164,9 @@ export function LandingServeOn() {
           </Anim>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
             {[
-              { icon: '📋', title: '엑셀 + 카톡 그룹방', desc: '봉사자 명단을 엑셀로 관리하고 카톡 그룹방으로 공지하느라 정보가 분산됩니다.' },
-              { icon: '📞', title: '일일이 전화·문자', desc: '참석 여부를 한 명씩 확인하느라 봉사 준비보다 연락에 더 많은 시간을 씁니다.' },
-              { icon: '📝', title: '봉사 시간 수기 계산', desc: '활동 시간을 개별로 집계하고 인증서 자료를 수작업으로 정리합니다.' },
+              { icon: '·', title: '엑셀 + 카톡 그룹방', desc: '봉사자 명단을 엑셀로 관리하고 카톡 그룹방으로 공지하느라 정보가 분산됩니다.' },
+              { icon: '·', title: '일일이 전화·문자', desc: '참석 여부를 한 명씩 확인하느라 봉사 준비보다 연락에 더 많은 시간을 씁니다.' },
+              { icon: '·', title: '봉사 시간 수기 계산', desc: '활동 시간을 개별로 집계하고 인증서 자료를 수작업으로 정리합니다.' },
             ].map((item, i) => (
               <Anim key={item.title} delay={i * 80}>
                 <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '28px 20px', textAlign: 'left' }}>
@@ -235,7 +235,7 @@ export function LandingServeOn() {
                 </div>
                 {/* 활동 카드 */}
                 <div style={{ background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 12, padding: '14px 16px', marginBottom: 14 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 6 }}>🍚 급식 봉사</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 6 }}>급식 봉사</div>
                   <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 10 }}>8월 15일 오전 9시 · 경로식당</div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
                     {[
@@ -304,7 +304,7 @@ export function LandingServeOn() {
                     </div>
                   ))}
                 </div>
-                <div style={{ marginTop: 14, padding: '8px 12px', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.18)', borderRadius: 8, fontSize: 11, color: ACCENT, textAlign: 'center', fontWeight: 700 }}>📄 인증서 자료 내보내기</div>
+                <div style={{ marginTop: 14, padding: '8px 12px', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.18)', borderRadius: 8, fontSize: 11, color: ACCENT, textAlign: 'center', fontWeight: 700 }}>인증서 자료 내보내기</div>
               </div>
             </Anim>
           </div>
@@ -324,7 +324,7 @@ export function LandingServeOn() {
                 <div style={{ background: '#111827', border: '2px solid rgba(255,255,255,0.1)', borderRadius: 18, padding: '16px 14px', marginBottom: 16 }}>
                   <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', marginBottom: 8, textAlign: 'center' }}>SERVE:ON 알림</div>
                   <div style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', borderRadius: 12, padding: '12px 14px' }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 4 }}>🔔 내일 봉사 안내</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 4 }}>◆ 내일 봉사 안내</div>
                     <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>내일 오전 9시 급식 봉사가<br />있습니다. 시간에 맞춰<br />참석하십시오.</div>
                   </div>
                 </div>
@@ -610,7 +610,7 @@ export function LandingServeOn() {
                       </div>
                       <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginBottom: 8 }}>첨부 사진</div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10 }}>
-                        <div style={{ width: 46, height: 46, borderRadius: 8, background: 'rgba(255,255,255,0.08)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, border: '1px solid rgba(255,255,255,0.1)' }}>🖼</div>
+                        <div style={{ width: 46, height: 46, borderRadius: 8, background: 'rgba(255,255,255,0.08)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, border: '1px solid rgba(255,255,255,0.1)' }}>□</div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 10, fontWeight: 600, marginBottom: 5, color: 'rgba(255,255,255,0.7)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>활동현장_급식봉사_0804.webp</div>
                           <div style={{ height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden', marginBottom: 4 }}>
@@ -701,44 +701,6 @@ export function LandingServeOn() {
                 </Anim>
               ))}
             </div>
-          </div>
-        </section>
-
-        {/* Pricing */}
-        <section style={{ padding: '100px 24px', background: 'linear-gradient(180deg, transparent, rgba(16,185,129,0.04), transparent)' }}>
-          <Anim style={{ textAlign: 'center', marginBottom: 48 }}>
-            <div style={{ fontSize: 13, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 16 }}>요금제</div>
-            <h2 style={{ fontSize: 'clamp(24px,3.5vw,34px)', fontWeight: 800, letterSpacing: '-0.5px', marginBottom: 12 }}>단체 규모에 맞게 선택하십시오</h2>
-            <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.4)' }}>모든 요금제에 핵심 기능이 포함됩니다.</p>
-          </Anim>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, maxWidth: 860, margin: '0 auto' }}>
-            {[
-              { name: '무료', price: '₩0', period: '영구 무료', highlight: false, badge: null as string | null, features: ['봉사자 10명', '기본 배정 관리', '봉사 시간 집계', '모바일 접근'] },
-              { name: 'Pro', price: '₩29,000', period: '/ 월', highlight: true, badge: '인기' as string | null, features: ['봉사자 50명', '자동 알림 (SMS 100건)', '인증서 자료 내보내기', '커스텀 필드 무제한', 'XLSX 내보내기'] },
-              { name: 'Business', price: '₩79,000', period: '/ 월', highlight: false, badge: null as string | null, features: ['봉사자 무제한', 'SMS 무제한', '다중 기관 관리', '전용 온보딩', '우선 지원'] },
-            ].map((plan, i) => (
-              <Anim key={plan.name} delay={i * 80}>
-                <div style={{ background: plan.highlight ? 'rgba(16,185,129,0.08)' : 'rgba(255,255,255,0.03)', border: `1px solid ${plan.highlight ? 'rgba(16,185,129,0.35)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 20, padding: '28px 24px', position: 'relative', height: '100%' }}>
-                  {plan.badge && (
-                    <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: ACCENT, color: '#fff', fontSize: 11, fontWeight: 700, padding: '3px 12px', borderRadius: 20 }}>{plan.badge}</div>
-                  )}
-                  <div style={{ fontSize: 14, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 10 }}>{plan.name}</div>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 6 }}>
-                    <span style={{ fontSize: 32, fontWeight: 800, color: plan.highlight ? ACCENT : '#fff' }}>{plan.price}</span>
-                    <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>{plan.period}</span>
-                  </div>
-                  <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', margin: '16px 0' }} />
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
-                    {plan.features.map(f => (
-                      <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'rgba(255,255,255,0.65)' }}>
-                        <span style={{ color: ACCENT, fontWeight: 700, flexShrink: 0 }}>✓</span>{f}
-                      </div>
-                    ))}
-                  </div>
-                  <button onClick={goStart} style={{ width: '100%', background: plan.highlight ? ACCENT : 'rgba(255,255,255,0.08)', color: plan.highlight ? '#fff' : 'rgba(255,255,255,0.7)', border: 0, borderRadius: 10, padding: '11px 0', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>시작하기</button>
-                </div>
-              </Anim>
-            ))}
           </div>
         </section>
 

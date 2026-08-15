@@ -130,7 +130,7 @@ export function LandingCareOn() {
             <div className="co-hero-card" style={{ background: 'rgba(20,21,32,0.9)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: 16, padding: '18px 16px', textAlign: 'left', backdropFilter: 'blur(8px)' }}>
               <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>근무 알림</div>
               <div style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: 10, padding: '10px 12px', marginBottom: 10 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 4, color: 'rgba(255,255,255,0.85)' }}>📲 내일 야간 근무</div>
+                <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 4, color: 'rgba(255,255,255,0.85)' }}>◆ 내일 야간 근무</div>
                 <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>야간 근무가 있습니다.<br />출근 시간을 확인하십시오.</div>
               </div>
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>발송 완료 <span style={{ color: ACCENT, fontWeight: 700 }}>12명</span></div>
@@ -184,9 +184,9 @@ export function LandingCareOn() {
           </Anim>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {[
-              { icon: '📋', text: '교대표를 엑셀로 작성하고 수정을 반복합니다.' },
-              { icon: '📞', text: '공백이 생겨도 파악이 늦어 긴급 연락에 나섭니다.' },
-              { icon: '⚠️', text: '담당자 전달이 누락되어 당일 혼선이 발생합니다.' },
+              { icon: '·', text: '교대표를 엑셀로 작성하고 수정을 반복합니다.' },
+              { icon: '·', text: '공백이 생겨도 파악이 늦어 긴급 연락에 나섭니다.' },
+              { icon: '·', text: '담당자 전달이 누락되어 당일 혼선이 발생합니다.' },
             ].map((item, i) => (
               <Anim key={item.text} delay={i * 80}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '18px 22px', textAlign: 'left' }}>
@@ -262,7 +262,6 @@ export function LandingCareOn() {
                   {/* 공백 감지 카드 */}
                   <div className="co-alert" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 12, padding: '14px 16px', marginBottom: 14 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                      <span style={{ fontSize: 16 }}>🚨</span>
                       <div>
                         <div style={{ fontSize: 13, fontWeight: 700, color: '#f87171' }}>빈 슬롯 감지됨</div>
                         <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>2건 · 즉시 확인이 필요합니다</div>
@@ -310,7 +309,7 @@ export function LandingCareOn() {
                 <div style={{ padding: '16px' }}>
                   {/* 폰 목업 */}
                   <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '12px 14px', marginBottom: 12 }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: ACCENT, marginBottom: 6 }}>📲 CARE:ON 알림</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: ACCENT, marginBottom: 6 }}>CARE:ON 알림</div>
                     <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', lineHeight: 1.6 }}>
                       내일 <span style={{ color: ACCENT, fontWeight: 700 }}>야간 근무</span>가 있습니다.<br />출근 시간: 22:00
                     </div>
@@ -609,7 +608,7 @@ export function LandingCareOn() {
                       </div>
                       <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginBottom: 8 }}>첨부 파일</div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10 }}>
-                        <div style={{ width: 46, height: 46, borderRadius: 8, background: 'rgba(255,255,255,0.08)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, border: '1px solid rgba(255,255,255,0.1)' }}>📄</div>
+                        <div style={{ width: 46, height: 46, borderRadius: 8, background: 'rgba(255,255,255,0.08)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, border: '1px solid rgba(255,255,255,0.1)' }}>□</div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 10, fontWeight: 600, marginBottom: 5, color: 'rgba(255,255,255,0.7)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>인수인계_0815.pdf</div>
                           <div style={{ height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden', marginBottom: 4 }}>
@@ -688,39 +687,6 @@ export function LandingCareOn() {
                 </Anim>
               ))}
             </div>
-          </div>
-        </section>
-
-        {/* Wave Divider */}
-        <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08) 30%, rgba(255,255,255,0.08) 70%, transparent)', margin: '0 28px' }} />
-
-        {/* Pricing */}
-        <section style={{ padding: '100px 24px', textAlign: 'center' }}>
-          <Anim style={{ marginBottom: 48 }}>
-            <div style={{ fontSize: 13, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 16 }}>요금제</div>
-            <h2 style={{ fontSize: 'clamp(24px,3.5vw,34px)', fontWeight: 800, letterSpacing: '-0.5px' }}>규모에 맞게 선택하십시오</h2>
-          </Anim>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, maxWidth: 760, margin: '0 auto' }}>
-            {[
-              { name: '무료', price: '₩0', sub: '10명까지 영구 무료', features: ['의료진 최대 3명', '기본 교대표 관리', '공백 감지', '전일 알림'], highlight: false },
-              { name: 'Pro', price: '₩29,000', sub: '/월 · 50명 + SMS', features: ['의료진 최대 20명', '자동 배정', '면허·자격 관리', '데이터 내보내기'], highlight: true },
-              { name: 'Business', price: '₩79,000', sub: '/월 · 무제한', features: ['의료진 무제한', '멀티 병동 지원', '전용 도메인', '우선 지원'], highlight: false },
-            ].map((plan, i) => (
-              <Anim key={plan.name} delay={i * 80}>
-                <div style={{ background: plan.highlight ? 'rgba(52,211,153,0.08)' : 'rgba(255,255,255,0.03)', border: `1px solid ${plan.highlight ? ACCENT : 'rgba(255,255,255,0.08)'}`, borderRadius: 18, padding: '28px 22px', textAlign: 'left', height: '100%' }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: plan.highlight ? ACCENT : 'rgba(255,255,255,0.6)', marginBottom: 8 }}>{plan.name}</div>
-                  <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-1px', marginBottom: 4 }}>{plan.price}</div>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 20 }}>{plan.sub}</div>
-                  {plan.features.map(f => (
-                    <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'rgba(255,255,255,0.65)', marginBottom: 8 }}>
-                      <span style={{ color: plan.highlight ? ACCENT : '#22c55e', flexShrink: 0 }}>✓</span>
-                      {f}
-                    </div>
-                  ))}
-                  <button onClick={goStart} style={{ marginTop: 20, width: '100%', background: plan.highlight ? ACCENT : 'rgba(255,255,255,0.07)', color: plan.highlight ? '#0a0b10' : 'rgba(255,255,255,0.7)', border: 0, borderRadius: 10, padding: '10px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>시작하기</button>
-                </div>
-              </Anim>
-            ))}
           </div>
         </section>
 

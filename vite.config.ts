@@ -14,26 +14,34 @@ const VERTICAL_TO_FAVICON: Record<string, string> = {
   'medical-care':        'care-on',
 }
 
-const vertical   = process.env.VITE_VERTICAL
-const faviconKey = vertical ? VERTICAL_TO_FAVICON[vertical] : null
-const iconKey    = faviconKey ?? 'dts'
-const iconDir    = `/icons/${iconKey}`
-const brandName  = (process.env.VITE_BRAND_NAME    ?? '다이나믹팀스케줄').replace(/^["']|["']$/g, '')
-const shortName  = faviconKey ? brandName : 'DT스케줄'
-const brandColor = (process.env.VITE_BRAND_COLOR   ?? '#14171C').replace(/^["']|["']$/g, '')
-const tagline    = (process.env.VITE_BRAND_TAGLINE  ?? '다이나믹팀스케줄 - 멀티테넌트 스케줄 관리 플랫폼').replace(/^["']|["']$/g, '')
+const vertical     = process.env.VITE_VERTICAL
+const brandNameRaw = process.env.VITE_BRAND_NAME
+// VITE_ICON_KEY 우선, 없으면 VITE_VERTICAL로 폴백
+const faviconKey   = process.env.VITE_ICON_KEY
+                  ?? (vertical ? VERTICAL_TO_FAVICON[vertical] : null)
+const iconKey      = faviconKey ?? 'dts'
+const iconDir      = `/icons/${iconKey}`
+const brandName    = (brandNameRaw ?? '다이나믹팀스케줄').replace(/^["']|["']$/g, '')
+// VITE_BRAND_NAME이 명시되면 brandName을 short_name으로 사용 (faviconKey 유무 무관)
+const shortName    = brandNameRaw ? brandName : 'DT스케줄'
+const brandColor   = (process.env.VITE_BRAND_COLOR   ?? '#14171C').replace(/^["']|["']$/g, '')
+const tagline      = (process.env.VITE_BRAND_TAGLINE  ?? '다이나믹팀스케줄 - 멀티테넌트 스케줄 관리 플랫폼').replace(/^["']|["']$/g, '')
 
 const verticalFaviconPlugin = {
   name: 'vertical-favicon',
   transformIndexHtml(html: string) {
-    if (!faviconKey) return html
-    return html
-      .replace('href="/favicon.svg"', `href="/favicons/${faviconKey}.svg"`)
+    if (!faviconKey && !brandNameRaw) return html
+    let result = html
+    if (faviconKey) {
+      result = result
+        .replace('href="/favicon.svg"', `href="/favicons/${faviconKey}.svg"`)
+        .replace('href="/icons/apple-touch-icon.png"', `href="${iconDir}/apple-touch-icon.png"`)
+    }
+    return result
       .replace(/<title>[^<]*<\/title>/, `<title>${brandName}</title>`)
-      .replace(/(<meta name="theme-color" content=")[^"]*(")/,             `$1${brandColor}$2`)
+      .replace(/(<meta name="theme-color" content=")[^"]*(")/,                `$1${brandColor}$2`)
       .replace(/(<meta name="apple-mobile-web-app-title" content=")[^"]*(")/,  `$1${brandName}$2`)
-      .replace(/(<meta name="description" content=")[^"]*(")/,             `$1${tagline}$2`)
-      .replace('href="/icons/apple-touch-icon.png"', `href="${iconDir}/apple-touch-icon.png"`)
+      .replace(/(<meta name="description" content=")[^"]*(")/,                `$1${tagline}$2`)
   },
 }
 

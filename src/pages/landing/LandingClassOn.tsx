@@ -167,9 +167,9 @@ export function LandingClassOn() {
           </Anim>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {[
-              { icon: '📒', text: '수강권 횟수를 노트에 직접 표시하다 실수가 잦습니다.' },
-              { icon: '✏️', text: '출석 체크 후 남은 횟수를 매번 직접 계산합니다.' },
-              { icon: '📱', text: '만료 임박 학생에게 일일이 전화나 문자로 연락합니다.' },
+              { icon: '·', text: '수강권 횟수를 노트에 직접 표시하다 실수가 잦습니다.' },
+              { icon: '·', text: '출석 체크 후 남은 횟수를 매번 직접 계산합니다.' },
+              { icon: '·', text: '만료 임박 학생에게 일일이 전화나 문자로 연락합니다.' },
             ].map((item, i) => (
               <Anim key={i} delay={i * 80}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '18px 20px', textAlign: 'left' }}>
@@ -295,7 +295,7 @@ export function LandingClassOn() {
                 <div style={{ padding: '20px 18px' }}>
                   <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 12 }}>만료 임박 알림</div>
                   <div style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.25)', borderRadius: 14, padding: '16px 18px' }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>⏰ 만료 D-7 이내 학생 3명</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>만료 D-7 이내 학생 3명</div>
                     <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, marginBottom: 14 }}>선택한 기간 내 수강권 만료가 임박한 학생입니다. 문자로 재등록을 안내하십시오.</div>
                     <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
                       {['D-7', 'D-14', '직접입력'].map((label, i) => (
@@ -305,7 +305,7 @@ export function LandingClassOn() {
                     {['이민준 (영어 20회권 · D-3)', '최예린 (수학 10회권 · D-5)', '김지수 (미술 월정액 · D-7)'].map((name, i) => (
                       <div key={i} style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', padding: '6px 0', borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.06)' : undefined }}>{name}</div>
                     ))}
-                    <div style={{ marginTop: 14, background: ACCENT, color: '#fff', fontSize: 13, fontWeight: 700, textAlign: 'center', borderRadius: 10, padding: 10, cursor: 'pointer' }}>📩 문자 일괄 발송</div>
+                    <div style={{ marginTop: 14, background: ACCENT, color: '#fff', fontSize: 13, fontWeight: 700, textAlign: 'center', borderRadius: 10, padding: 10, cursor: 'pointer' }}>✉ 문자 일괄 발송</div>
                   </div>
                 </div>
               </div>
@@ -633,7 +633,7 @@ export function LandingClassOn() {
                       </div>
                       <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginBottom: 8 }}>첨부 파일</div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10 }}>
-                        <div style={{ width: 46, height: 46, borderRadius: 8, background: 'rgba(255,255,255,0.08)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, border: '1px solid rgba(255,255,255,0.1)' }}>📄</div>
+                        <div style={{ width: 46, height: 46, borderRadius: 8, background: 'rgba(255,255,255,0.08)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, border: '1px solid rgba(255,255,255,0.1)' }}>□</div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 10, fontWeight: 600, marginBottom: 5, color: 'rgba(255,255,255,0.7)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>시험지_영어_0814.jpg</div>
                           <div style={{ height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden', marginBottom: 4 }}>
@@ -719,59 +719,6 @@ export function LandingClassOn() {
                     {card.visual}
                     <div style={{ fontWeight: 700, marginBottom: 8, paddingLeft: 2 }}>{card.title}</div>
                     <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, paddingLeft: 2 }}>{card.desc}</div>
-                  </div>
-                </Anim>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <div className="wave" />
-
-        {/* Pricing */}
-        <section style={{ padding: '100px 24px' }}>
-          <div style={{ maxWidth: 900, margin: '0 auto' }}>
-            <Anim style={{ textAlign: 'center', marginBottom: 48 }}>
-              <div style={{ fontSize: 13, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 16 }}>요금제</div>
-              <h2 style={{ fontSize: 'clamp(24px,3.5vw,34px)', fontWeight: 800, letterSpacing: '-0.5px', marginBottom: 12 }}>규모에 맞게 선택하십시오</h2>
-              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.45)', lineHeight: 1.7 }}>10명까지 영구 무료. 성장하면 그때 업그레이드하십시오.</p>
-            </Anim>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20 }}>
-              {[
-                {
-                  name: '무료', price: '₩0', unit: '영구 무료',
-                  features: ['학생 10명', '수강권 무제한', '출석 관리', '기본 통계', '이메일 지원'],
-                  highlight: false, badge: null,
-                },
-                {
-                  name: 'Pro', price: '₩29,000', unit: '/ 월',
-                  features: ['학생 무제한', '수강권 무제한', '만료 임박 알림', '문자 발송', 'XLSX/PDF 내보내기', 'AI 자연어 예약', '우선 지원'],
-                  highlight: true, badge: '가장 인기',
-                },
-                {
-                  name: 'Business', price: '₩69,000', unit: '/ 월',
-                  features: ['Pro 모든 기능', '다중 강사·교실', '학부모 포털', '커스텀 브랜딩', 'API 연동', '전담 매니저'],
-                  highlight: false, badge: null,
-                },
-              ].map((plan, i) => (
-                <Anim key={plan.name} delay={i * 80}>
-                  <div style={{ background: plan.highlight ? `rgba(99,102,241,0.12)` : 'rgba(255,255,255,0.03)', border: `1px solid ${plan.highlight ? 'rgba(99,102,241,0.4)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 20, padding: '28px 24px', position: 'relative', height: '100%' }}>
-                    {plan.badge && (
-                      <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: ACCENT, color: '#fff', fontSize: 11, fontWeight: 700, padding: '4px 14px', borderRadius: 20, whiteSpace: 'nowrap' }}>{plan.badge}</div>
-                    )}
-                    <div style={{ fontSize: 14, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 8 }}>{plan.name}</div>
-                    <div style={{ fontSize: 30, fontWeight: 800, marginBottom: 4 }}>{plan.price}</div>
-                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 24 }}>{plan.unit}</div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 28 }}>
-                      {plan.features.map(f => (
-                        <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>
-                          <span style={{ color: plan.highlight ? ACCENT : GREEN, fontWeight: 700 }}>✓</span> {f}
-                        </div>
-                      ))}
-                    </div>
-                    <button onClick={goStart} style={{ width: '100%', background: plan.highlight ? ACCENT : 'rgba(255,255,255,0.08)', color: '#fff', border: plan.highlight ? 0 : '1px solid rgba(255,255,255,0.12)', borderRadius: 10, padding: '12px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-                      {plan.name === '무료' ? '무료로 시작하기' : '시작하기'}
-                    </button>
                   </div>
                 </Anim>
               ))}

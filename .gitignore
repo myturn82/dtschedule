@@ -34,6 +34,10 @@ dist-promo
 !.env.lesson-on
 !.env.shift-on
 !.env.serve-on
+!.env.class-on
+!.env.work-on
+!.env.salon-on
+!.env.care-on
 
 # Generated design tokens (built from tokens.json)
 src/styles/tokens.css
@@ -41,6 +45,10 @@ src/styles/tokens.css
 !.env.lesson-on
 !.env.shift-on
 !.env.serve-on
+!.env.class-on
+!.env.work-on
+!.env.salon-on
+!.env.care-on
 
 # Android 서명 키스토어 (절대 커밋 금지)
 android/app/keystore.properties

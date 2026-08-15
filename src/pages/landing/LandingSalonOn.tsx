@@ -129,7 +129,7 @@ export function LandingSalonOn() {
             <div className="so-hero-card" style={{ background: 'rgba(20,21,32,0.9)', border: '1px solid rgba(167,139,250,0.2)', borderRadius: 16, padding: '18px 16px', textAlign: 'left', backdropFilter: 'blur(8px)' }}>
               <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>D-1 알림</div>
               <div style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.25)', borderRadius: 10, padding: '10px 12px', marginBottom: 10 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 4, color: 'rgba(255,255,255,0.85)' }}>📩 내일 오후 2시</div>
+                <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 4, color: 'rgba(255,255,255,0.85)' }}>✉ 내일 오후 2시</div>
                 <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>커트+염색 예약이<br />있습니다</div>
               </div>
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>발송 완료 <span style={{ color: ACCENT, fontWeight: 700 }}>2명</span></div>
@@ -182,9 +182,9 @@ export function LandingSalonOn() {
           </Anim>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {[
-              { icon: '📞', text: '전화·문자로 예약받고 수첩에 기록합니다.' },
-              { icon: '📅', text: '시술사 스케줄을 각자 따로 관리하다 겹침이 발생합니다.' },
-              { icon: '❌', text: '당일 노쇼로 빈 시간이 낭비됩니다.' },
+              { icon: '·', text: '전화·문자로 예약받고 수첩에 기록합니다.' },
+              { icon: '·', text: '시술사 스케줄을 각자 따로 관리하다 겹침이 발생합니다.' },
+              { icon: '·', text: '당일 노쇼로 빈 시간이 낭비됩니다.' },
             ].map((item, i) => (
               <Anim key={item.text} delay={i * 80}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '18px 22px', textAlign: 'left' }}>
@@ -316,7 +316,7 @@ export function LandingSalonOn() {
                 <div style={{ padding: '16px' }}>
                   {/* 폰 목업 */}
                   <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '12px 14px', marginBottom: 12 }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: ACCENT, marginBottom: 6 }}>📲 SALON:ON 알림</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: ACCENT, marginBottom: 6 }}>SALON:ON 알림</div>
                     <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', lineHeight: 1.6 }}>
                       내일 오후 2:00<br />
                       <span style={{ color: ACCENT, fontWeight: 700 }}>디자이너 A</span>님과 커트+염색 예약이 있습니다.
@@ -618,7 +618,7 @@ export function LandingSalonOn() {
                       <div style={{ display: 'flex', gap: 8 }}>
                         {(['시술 전', '시술 후'] as string[]).map((label, i) => (
                           <div key={label} style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '8px', textAlign: 'center' }}>
-                            <div style={{ height: 40, borderRadius: 6, background: i === 1 ? `rgba(167,139,250,0.1)` : 'rgba(255,255,255,0.06)', marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>{i === 0 ? '🖼' : '✨'}</div>
+                            <div style={{ height: 40, borderRadius: 6, background: i === 1 ? `rgba(167,139,250,0.1)` : 'rgba(255,255,255,0.06)', marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>{i === 0 ? '□' : '✦'}</div>
                             <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)' }}>{label}</div>
                           </div>
                         ))}
@@ -694,39 +694,6 @@ export function LandingSalonOn() {
                 </Anim>
               ))}
             </div>
-          </div>
-        </section>
-
-        {/* Wave Divider */}
-        <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08) 30%, rgba(255,255,255,0.08) 70%, transparent)', margin: '0 28px' }} />
-
-        {/* Pricing */}
-        <section style={{ padding: '100px 24px', textAlign: 'center' }}>
-          <Anim style={{ marginBottom: 48 }}>
-            <div style={{ fontSize: 13, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 16 }}>요금제</div>
-            <h2 style={{ fontSize: 'clamp(24px,3.5vw,34px)', fontWeight: 800, letterSpacing: '-0.5px' }}>규모에 맞게 선택하십시오</h2>
-          </Anim>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, maxWidth: 760, margin: '0 auto' }}>
-            {[
-              { name: '무료', price: '₩0', sub: '10명까지 영구 무료', features: ['시술사 최대 3명', '기본 예약 관리', '공개 예약 링크', '고객 카드'], highlight: false },
-              { name: 'Pro', price: '₩29,000', sub: '/월 · 50명 + SMS', features: ['시술사 최대 10명', 'D-1 자동 알림', '시술 이력 관리', '데이터 내보내기'], highlight: true },
-              { name: 'Business', price: '₩79,000', sub: '/월 · 무제한', features: ['시술사 무제한', '멀티 매장 지원', '전용 도메인', '우선 지원'], highlight: false },
-            ].map((plan, i) => (
-              <Anim key={plan.name} delay={i * 80}>
-                <div style={{ background: plan.highlight ? `rgba(167,139,250,0.08)` : 'rgba(255,255,255,0.03)', border: `1px solid ${plan.highlight ? ACCENT : 'rgba(255,255,255,0.08)'}`, borderRadius: 18, padding: '28px 22px', textAlign: 'left', height: '100%' }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: plan.highlight ? ACCENT : 'rgba(255,255,255,0.6)', marginBottom: 8 }}>{plan.name}</div>
-                  <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-1px', marginBottom: 4 }}>{plan.price}</div>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 20 }}>{plan.sub}</div>
-                  {plan.features.map(f => (
-                    <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'rgba(255,255,255,0.65)', marginBottom: 8 }}>
-                      <span style={{ color: plan.highlight ? ACCENT : '#22c55e', flexShrink: 0 }}>✓</span>
-                      {f}
-                    </div>
-                  ))}
-                  <button onClick={goStart} style={{ marginTop: 20, width: '100%', background: plan.highlight ? ACCENT : 'rgba(255,255,255,0.07)', color: plan.highlight ? '#fff' : 'rgba(255,255,255,0.7)', border: 0, borderRadius: 10, padding: '10px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>시작하기</button>
-                </div>
-              </Anim>
-            ))}
           </div>
         </section>
 

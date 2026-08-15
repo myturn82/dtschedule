@@ -170,9 +170,9 @@ export function LandingWorkOn() {
           </Anim>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {[
-              { icon: '💬', text: '카톡·슬랙·이메일·엑셀에 업무가 분산되어 파악이 어렵습니다.' },
-              { icon: '❓', text: '누가 무슨 업무를 맡고 있는지 매번 물어봐야 합니다.' },
-              { icon: '⚡', text: '일정 충돌과 업무 쏠림을 사전에 파악할 수 없습니다.' },
+              { icon: '·', text: '카톡·슬랙·이메일·엑셀에 업무가 분산되어 파악이 어렵습니다.' },
+              { icon: '·', text: '누가 무슨 업무를 맡고 있는지 매번 물어봐야 합니다.' },
+              { icon: '·', text: '일정 충돌과 업무 쏠림을 사전에 파악할 수 없습니다.' },
             ].map((item, i) => (
               <Anim key={i} delay={i * 80}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '18px 20px', textAlign: 'left' }}>
@@ -337,13 +337,12 @@ export function LandingWorkOn() {
                   <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 14 }}>내보내기 · 연동</div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
                     {[
-                      { icon: '📊', label: 'XLSX', desc: '엑셀 스프레드시트', color: '#22c55e' },
-                      { icon: '📄', label: 'PDF', desc: '고정 레이아웃', color: '#EF4444' },
-                      { icon: '📅', label: 'ICS', desc: '구글 캘린더 연동', color: ACCENT },
-                      { icon: '📋', label: 'CSV', desc: '원시 데이터', color: '#F59E0B' },
+                      { label: 'XLSX', desc: '엑셀 스프레드시트', color: '#22c55e' },
+                      { label: 'PDF', desc: '고정 레이아웃', color: '#EF4444' },
+                      { label: 'ICS', desc: '구글 캘린더 연동', color: ACCENT },
+                      { label: 'CSV', desc: '원시 데이터', color: '#F59E0B' },
                     ].map((f, i) => (
                       <div key={f.label} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, cursor: 'pointer', opacity: 0, animation: `fadeUp 0.4s ease ${150 + i * 80}ms forwards` }}>
-                        <span style={{ fontSize: 18 }}>{f.icon}</span>
                         <div>
                           <div style={{ fontSize: 12, fontWeight: 700, color: f.color }}>{f.label}</div>
                           <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>{f.desc}</div>
@@ -643,7 +642,7 @@ export function LandingWorkOn() {
                       </div>
                       <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginBottom: 8 }}>업무 산출물 첨부</div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10 }}>
-                        <div style={{ width: 46, height: 46, borderRadius: 8, background: 'rgba(255,255,255,0.08)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, border: '1px solid rgba(255,255,255,0.1)' }}>📊</div>
+                        <div style={{ width: 46, height: 46, borderRadius: 8, background: 'rgba(255,255,255,0.08)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, border: '1px solid rgba(255,255,255,0.1)' }}>□</div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 10, fontWeight: 600, marginBottom: 5, color: 'rgba(255,255,255,0.7)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>제안서_ABC_0812.pdf</div>
                           <div style={{ height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden', marginBottom: 4 }}>
@@ -734,59 +733,6 @@ export function LandingWorkOn() {
                     {card.visual}
                     <div style={{ fontWeight: 700, marginBottom: 8, paddingLeft: 2 }}>{card.title}</div>
                     <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, paddingLeft: 2 }}>{card.desc}</div>
-                  </div>
-                </Anim>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <div className="wave" />
-
-        {/* Pricing */}
-        <section style={{ padding: '100px 24px' }}>
-          <div style={{ maxWidth: 900, margin: '0 auto' }}>
-            <Anim style={{ textAlign: 'center', marginBottom: 48 }}>
-              <div style={{ fontSize: 13, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 16 }}>요금제</div>
-              <h2 style={{ fontSize: 'clamp(24px,3.5vw,34px)', fontWeight: 800, letterSpacing: '-0.5px', marginBottom: 12 }}>팀 규모에 맞게 선택하십시오</h2>
-              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.45)', lineHeight: 1.7 }}>10명까지 영구 무료. 팀이 성장하면 그때 업그레이드하십시오.</p>
-            </Anim>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20 }}>
-              {[
-                {
-                  name: '무료', price: '₩0', unit: '영구 무료',
-                  features: ['팀원 10명', '업무 배정 무제한', '주간 뷰', '기본 통계', '이메일 지원'],
-                  highlight: false, badge: null,
-                },
-                {
-                  name: 'Pro', price: '₩29,000', unit: '/ 월',
-                  features: ['팀원 무제한', '자동 균등 배정', '실시간 알림', 'XLSX/PDF/ICS 내보내기', 'AI 자연어 예약', '우선 지원'],
-                  highlight: true, badge: '가장 인기',
-                },
-                {
-                  name: 'Business', price: '₩69,000', unit: '/ 월',
-                  features: ['Pro 모든 기능', '다중 팀·부서 관리', '승인 워크플로우', 'API 연동', '감사 로그', '전담 매니저'],
-                  highlight: false, badge: null,
-                },
-              ].map((plan, i) => (
-                <Anim key={plan.name} delay={i * 80}>
-                  <div style={{ background: plan.highlight ? 'rgba(59,130,246,0.12)' : 'rgba(255,255,255,0.03)', border: `1px solid ${plan.highlight ? 'rgba(59,130,246,0.4)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 20, padding: '28px 24px', position: 'relative', height: '100%' }}>
-                    {plan.badge && (
-                      <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: ACCENT, color: '#fff', fontSize: 11, fontWeight: 700, padding: '4px 14px', borderRadius: 20, whiteSpace: 'nowrap' }}>{plan.badge}</div>
-                    )}
-                    <div style={{ fontSize: 14, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 8 }}>{plan.name}</div>
-                    <div style={{ fontSize: 30, fontWeight: 800, marginBottom: 4 }}>{plan.price}</div>
-                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 24 }}>{plan.unit}</div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 28 }}>
-                      {plan.features.map(f => (
-                        <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>
-                          <span style={{ color: plan.highlight ? ACCENT : GREEN, fontWeight: 700 }}>✓</span> {f}
-                        </div>
-                      ))}
-                    </div>
-                    <button onClick={goStart} style={{ width: '100%', background: plan.highlight ? ACCENT : 'rgba(255,255,255,0.08)', color: '#fff', border: plan.highlight ? 0 : '1px solid rgba(255,255,255,0.12)', borderRadius: 10, padding: '12px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-                      {plan.name === '무료' ? '무료로 시작하기' : '시작하기'}
-                    </button>
                   </div>
                 </Anim>
               ))}
