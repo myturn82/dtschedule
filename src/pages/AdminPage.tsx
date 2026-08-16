@@ -196,14 +196,13 @@ function roleDisplayMode(role: TenantRole): RoleDisplayMode {
   return 'none'
 }
 
-type Tab = 'members' | 'pending' | 'roles' | 'rules' | 'dates' | 'settings' | 'autoassign' | 'legend' | 'custom_fields' | 'notifications' | 'lessons' | 'feedback'
+type Tab = 'members' | 'pending' | 'roles' | 'rules' | 'settings' | 'autoassign' | 'legend' | 'custom_fields' | 'notifications' | 'lessons' | 'feedback'
 
 const TAB_LABELS: Record<Tab, string> = {
   members: '회원 관리',
   pending: '승인 대기',
   roles: '역할 관리',
-  rules: '스케줄 규칙',
-  dates: '날짜 설정',
+  rules: '스케줄 설정',
   settings: '조직 설정',
   autoassign: '자동배정',
   legend: '범례 관리',
@@ -1831,11 +1830,11 @@ export function AdminPage() {
                 <header className="mb-5">
                   <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10 px-3 py-[5px] rounded-full">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01"/></svg>
-                    조직 설정 · 스케줄규칙
+                    조직 설정 · 스케줄 설정
                   </span>
-                  <h2 className="mt-3 mb-1.5 text-[clamp(22px,5vw,27px)] font-extrabold tracking-tight text-[var(--color-text-primary)]">스케줄규칙</h2>
+                  <h2 className="mt-3 mb-1.5 text-[clamp(22px,5vw,27px)] font-extrabold tracking-tight text-[var(--color-text-primary)]">스케줄 설정</h2>
                   <p className="text-[14px] font-medium text-[var(--color-text-muted)] leading-relaxed max-w-[52ch]">
-                    요일별·시간대별 운영 여부를 설정합니다. 버튼 클릭 시 즉시 저장됩니다.
+                    요일·시간대별 운영 규칙과 날짜별 예외를 관리합니다. 버튼 클릭 시 즉시 저장됩니다.
                   </p>
                 </header>
 
@@ -2042,85 +2041,73 @@ export function AdminPage() {
                     <p className="mt-2 text-xs text-[var(--color-text-muted)]">요일을 선택하면 해당 요일이 달력에서 숨겨집니다</p>
                   )}
                 </div>
-              </div>
-            )}
 
-            {/* ── 날짜 설정 ── */}
-            {tab === 'dates' && (
-              <div className="max-w-lg space-y-6">
-                {/* 페이지 헤더 */}
-                <header className="mb-5">
-                  <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10 px-3 py-[5px] rounded-full">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><circle cx="9" cy="16" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="16" r="1" fill="currentColor" stroke="none"/></svg>
-                    조직 설정 · 날짜 설정
-                  </span>
-                  <h2 className="mt-3 mb-1.5 text-[clamp(22px,5vw,27px)] font-extrabold tracking-tight text-[var(--color-text-primary)]">날짜 설정</h2>
-                  <p className="text-[14px] font-medium text-[var(--color-text-muted)] leading-relaxed max-w-[52ch]">
-                    휴관일·특별 운영일 등 특정 날짜에 대한 예외 설정을 관리합니다.
+                {/* 날짜별 예외 설정 */}
+                <div className="mt-6 pt-6 border-t border-[var(--color-border)]">
+                  <p className="text-sm font-semibold text-[var(--color-text-secondary)] mb-0.5">
+                    날짜별 예외 설정
+                    <span className="ml-1.5 font-normal text-[var(--color-text-muted)]">특정 날짜를 휴관일·특별 운영일로 지정합니다</span>
                   </p>
-                  <span className="mt-3.5 inline-flex items-center gap-1.5 text-[12.5px] font-bold text-[var(--color-text-secondary)]">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 17l9 5 9-5" opacity="0.5"/></svg>
-                    설정 <b className="text-[var(--color-brand-primary)] font-extrabold">{dateOverrides.length}</b>건
-                  </span>
-                </header>
-
-                {/* 날짜 추가 폼 (점선 카드) */}
-                <form onSubmit={handleDateSubmit}
-                  className="border-[1.5px] border-dashed border-[var(--color-border-strong)] rounded-[18px] bg-[var(--color-surface-secondary)]"
-                  style={{ padding: '13px' }}>
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className="w-9 h-9 rounded-[11px] bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] flex items-center justify-center shrink-0">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-                    </span>
-                    <div>
-                      <p className="m-0 text-[15px] font-extrabold tracking-tight text-[var(--color-text-primary)]">날짜 추가</p>
-                      <p className="m-0 mt-0.5 text-[12.5px] font-medium text-[var(--color-text-muted)]">휴관일 또는 특별 운영일을 등록합니다</p>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-3 items-end">
-                    <div>
-                      <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">날짜</label>
-                      <input type="date" value={dateForm.date} onChange={e => setDateForm(f => ({ ...f, date: e.target.value }))} required className={inputCls + ' block mt-1'} />
-                    </div>
-                    <div>
-                      <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">유형</label>
-                      <select value={dateForm.type} onChange={e => setDateForm(f => ({ ...f, type: e.target.value as 'holiday' | 'special' }))} className={inputCls + ' block mt-1'}>
-                        <option value="holiday">휴관일</option>
-                        <option value="special">특별 운영일</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">레이블 (선택)</label>
-                      <input type="text" value={dateForm.label} onChange={e => setDateForm(f => ({ ...f, label: e.target.value }))} placeholder="예: 추석연휴" maxLength={100} className={inputCls + ' block mt-1 w-36'} />
-                    </div>
-                    <button type="submit" disabled={saving} className="px-4 py-1.5 bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-sm font-semibold rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50">
-                      {saving ? '저장 중...' : '추가'}
-                    </button>
-                  </div>
-                </form>
-
-                {/* 날짜 목록 */}
-                {dateOverrides.length === 0 ? (
-                  <p className="text-sm text-[var(--color-text-muted)]">설정된 날짜가 없습니다.</p>
-                ) : (
-                  <div className="flex flex-col gap-2.5">
-                    {dateOverrides.map(d => (
-                      <div key={d.id} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-sm hover:border-[var(--color-border-strong)] hover:shadow-md transition-all" style={{ padding: '13px' }}>
-                        <div className="flex items-center gap-3">
-                          <span className={`shrink-0 inline-flex px-2.5 py-1 rounded-lg text-xs font-semibold ${d.is_holiday ? 'bg-red-100 text-red-700' : 'bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)]'}`}>
-                            {d.is_holiday ? '휴관일' : '특별운영'}
-                          </span>
-                          <span className="text-[15px] font-bold text-[var(--color-text-primary)]">{d.date}</span>
-                          {d.label && <span className="text-[13px] text-[var(--color-text-muted)] flex-1 truncate">{d.label}</span>}
-                          <button onClick={async () => { const err = await deleteDateOverride(d.id); if (err) msg(err, true) }}
-                            className="ml-auto shrink-0 px-2.5 py-1 text-xs font-semibold text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors">
-                            삭제
-                          </button>
-                        </div>
+                  {dateOverrides.length > 0 && (
+                    <p className="mt-1 text-[12px] font-medium text-[var(--color-text-muted)]">
+                      <b className="text-[var(--color-brand-primary)]">{dateOverrides.length}</b>건 설정됨
+                    </p>
+                  )}
+                  <form onSubmit={handleDateSubmit}
+                    className="mt-3 border-[1.5px] border-dashed border-[var(--color-border-strong)] rounded-[18px] bg-[var(--color-surface-secondary)]"
+                    style={{ padding: '13px' }}>
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="w-9 h-9 rounded-[11px] bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] flex items-center justify-center shrink-0">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                      </span>
+                      <div>
+                        <p className="m-0 text-[15px] font-extrabold tracking-tight text-[var(--color-text-primary)]">날짜 추가</p>
+                        <p className="m-0 mt-0.5 text-[12.5px] font-medium text-[var(--color-text-muted)]">휴관일 또는 특별 운영일을 등록합니다</p>
                       </div>
-                    ))}
-                  </div>
-                )}
+                    </div>
+                    <div className="flex flex-wrap gap-3 items-end">
+                      <div>
+                        <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">날짜</label>
+                        <input type="date" value={dateForm.date} onChange={e => setDateForm(f => ({ ...f, date: e.target.value }))} required className={inputCls + ' block mt-1'} />
+                      </div>
+                      <div>
+                        <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">유형</label>
+                        <select value={dateForm.type} onChange={e => setDateForm(f => ({ ...f, type: e.target.value as 'holiday' | 'special' }))} className={inputCls + ' block mt-1'}>
+                          <option value="holiday">휴관일</option>
+                          <option value="special">특별 운영일</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">레이블 (선택)</label>
+                        <input type="text" value={dateForm.label} onChange={e => setDateForm(f => ({ ...f, label: e.target.value }))} placeholder="예: 추석연휴" maxLength={100} className={inputCls + ' block mt-1 w-36'} />
+                      </div>
+                      <button type="submit" disabled={saving} className="px-4 py-1.5 bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-sm font-semibold rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50">
+                        {saving ? '저장 중...' : '추가'}
+                      </button>
+                    </div>
+                  </form>
+                  {dateOverrides.length === 0 ? (
+                    <p className="mt-3 text-sm text-[var(--color-text-muted)]">설정된 날짜가 없습니다.</p>
+                  ) : (
+                    <div className="mt-3 flex flex-col gap-2.5">
+                      {dateOverrides.map(d => (
+                        <div key={d.id} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-sm hover:border-[var(--color-border-strong)] hover:shadow-md transition-all" style={{ padding: '13px' }}>
+                          <div className="flex items-center gap-3">
+                            <span className={`shrink-0 inline-flex px-2.5 py-1 rounded-lg text-xs font-semibold ${d.is_holiday ? 'bg-red-100 text-red-700' : 'bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)]'}`}>
+                              {d.is_holiday ? '휴관일' : '특별운영'}
+                            </span>
+                            <span className="text-[15px] font-bold text-[var(--color-text-primary)]">{d.date}</span>
+                            {d.label && <span className="text-[13px] text-[var(--color-text-muted)] flex-1 truncate">{d.label}</span>}
+                            <button onClick={async () => { const err = await deleteDateOverride(d.id); if (err) msg(err, true) }}
+                              className="ml-auto shrink-0 px-2.5 py-1 text-xs font-semibold text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors">
+                              삭제
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
