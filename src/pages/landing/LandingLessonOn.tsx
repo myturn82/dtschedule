@@ -43,7 +43,7 @@ function SyncDemo() {
     return () => clearInterval(t)
   }, [])
   const instrName  = phase >= 2 ? '이준혁' : phase === 1 ? '등록 중...' : ''
-  const memberName = phase >= 5 ? '✦ 새 배정!' : ''
+  const memberName = phase >= 5 ? '이준혁' : ''
   const arrowOn    = phase >= 3 && phase <= 4
   const memberPop  = phase === 5
 
@@ -684,11 +684,11 @@ export function LandingLessonOn() {
                           </div>
                         ))}
                       </div>
-                      <div style={{ border: `1px dashed ${ACCENT}`, borderRadius: 8, padding: '7px', textAlign: 'center', fontSize: 11, color: ACCENT, fontWeight: 700 }}>+ 필드 추가</div>
+                      <div style={{ border: `1px dashed ${ACCENT}`, borderRadius: 8, padding: '7px', textAlign: 'center', fontSize: 11, color: ACCENT, fontWeight: 700 }}>+ 입력항목 추가</div>
                     </div>
                   ),
                   title: '입력항목 설정',
-                  desc: '부상 이력, 보유 레슨권 종류 등 스튜디오 고유 항목을 코드 수정 없이 추가합니다.',
+                  desc: '부상 이력, 보유 레슨권 종류 등 조직별 고유 항목을 코드 수정 없이 추가합니다.',
                 },
                 {
                   visual: (
