@@ -36,13 +36,13 @@ import { DevFileLabelDisplay } from './components/DevFileLabel'
 function LandingRouter() {
   const [params] = useSearchParams()
   const vertical = params.get('vertical') ?? BRAND.vertical
-  if (vertical === 'lesson-sports')      return <LandingLessonOn />
-  if (vertical === 'food-retail')        return <LandingShiftOn  />
-  if (vertical === 'public-welfare')     return <LandingServeOn  />
-  if (vertical === 'education-academy')  return <LandingClassOn  />
-  if (vertical === 'professional-office')return <LandingWorkOn   />
-  if (vertical === 'beauty-salon')       return <LandingSalonOn  />
-  if (vertical === 'medical-care')       return <LandingCareOn   />
+  if (vertical === 'lessonon') return <LandingLessonOn />
+  if (vertical === 'shifton')  return <LandingShiftOn  />
+  if (vertical === 'serveon')  return <LandingServeOn  />
+  if (vertical === 'classon')  return <LandingClassOn  />
+  if (vertical === 'workon')   return <LandingWorkOn   />
+  if (vertical === 'salonon')  return <LandingSalonOn  />
+  if (vertical === 'careon')   return <LandingCareOn   />
   return <LandingPage />
 }
 

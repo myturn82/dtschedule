@@ -1,4 +1,4 @@
-// src/pages/landing/LandingServeOn.tsx
+﻿// src/pages/landing/LandingServeOn.tsx
 import { useNavigate } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import { DevFileLabel } from '../../components/DevFileLabel'
@@ -36,7 +36,7 @@ function Anim({ children, delay = 0, style, className }: { children: React.React
 
 export function LandingServeOn() {
   const navigate = useNavigate()
-  const goStart = () => navigate('/consent?vertical=public-welfare')
+  const goStart = () => navigate('/consent?vertical=serveon')
   const goLogin = () => navigate('/auth?tab=login')
 
   return (

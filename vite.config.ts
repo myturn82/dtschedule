@@ -5,13 +5,13 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 const VERTICAL_TO_FAVICON: Record<string, string> = {
-  'lesson-sports':       'lesson-on',
-  'food-retail':         'shift-on',
-  'public-welfare':      'serve-on',
-  'education-academy':   'class-on',
-  'professional-office': 'work-on',
-  'beauty-salon':        'salon-on',
-  'medical-care':        'care-on',
+  'lessonon': 'lesson-on',
+  'shifton':  'shift-on',
+  'serveon':  'serve-on',
+  'classon':  'class-on',
+  'workon':   'work-on',
+  'salonon':  'salon-on',
+  'careon':   'care-on',
 }
 
 const vertical     = process.env.VITE_VERTICAL

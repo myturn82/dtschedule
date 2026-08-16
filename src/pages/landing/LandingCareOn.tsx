@@ -1,4 +1,4 @@
-// src/pages/landing/LandingCareOn.tsx
+﻿// src/pages/landing/LandingCareOn.tsx
 import { useNavigate } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import { DevFileLabel } from '../../components/DevFileLabel'
@@ -36,7 +36,7 @@ function Anim({ children, delay = 0, style, className }: { children: React.React
 
 export function LandingCareOn() {
   const navigate = useNavigate()
-  const goStart = () => navigate('/consent?vertical=medical-care')
+  const goStart = () => navigate('/consent?vertical=careon')
   const goLogin = () => navigate('/auth?tab=login')
 
   return (

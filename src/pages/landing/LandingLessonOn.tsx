@@ -1,4 +1,4 @@
-// src/pages/landing/LandingLessonOn.tsx
+﻿// src/pages/landing/LandingLessonOn.tsx
 import { useNavigate } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import { DevFileLabel } from '../../components/DevFileLabel'
@@ -37,7 +37,7 @@ function Anim({ children, delay = 0, style, className }: { children: React.React
 
 export function LandingLessonOn() {
   const navigate = useNavigate()
-  const goStart = () => navigate('/consent?vertical=lesson-sports')
+  const goStart = () => navigate('/consent?vertical=lessonon')
   const goLogin = () => navigate('/auth?tab=login')
 
   return (

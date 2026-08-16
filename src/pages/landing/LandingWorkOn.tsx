@@ -1,4 +1,4 @@
-// src/pages/landing/LandingWorkOn.tsx
+﻿// src/pages/landing/LandingWorkOn.tsx
 import { useNavigate } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import { DevFileLabel } from '../../components/DevFileLabel'
@@ -37,7 +37,7 @@ function Anim({ children, delay = 0, style, className }: { children: React.React
 
 export function LandingWorkOn() {
   const navigate = useNavigate()
-  const goStart = () => navigate('/consent?vertical=professional-office')
+  const goStart = () => navigate('/consent?vertical=workon')
   const goLogin = () => navigate('/auth?tab=login')
 
   return (

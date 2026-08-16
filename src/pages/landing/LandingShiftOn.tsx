@@ -1,4 +1,4 @@
-// src/pages/landing/LandingShiftOn.tsx
+﻿// src/pages/landing/LandingShiftOn.tsx
 import { useNavigate } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import { DevFileLabel } from '../../components/DevFileLabel'
@@ -36,7 +36,7 @@ function Anim({ children, delay = 0, style, className }: { children: React.React
 
 export function LandingShiftOn() {
   const navigate = useNavigate()
-  const goStart = () => navigate('/consent?vertical=food-retail')
+  const goStart = () => navigate('/consent?vertical=shifton')
   const goLogin = () => navigate('/auth?tab=login')
 
   return (

@@ -40,7 +40,7 @@ export function SetupWizardPage() {
   const verticalParam = params.get('vertical')
   const [activePreset] = useState<VerticalPreset | null>(() => getPresetFromParam(verticalParam))
   const showLessonStep = !!activePreset &&
-    ['lesson-sports', 'education-academy'].includes(activePreset.id)
+    ['lessonon', 'classon'].includes(activePreset.id)
   const TOTAL = WIZARD_STEPS.length + (showLessonStep ? 1 : 0)
   const CUSTOM_FIELDS_STEP = showLessonStep ? 7 : 6
   const navigate = useNavigate()
