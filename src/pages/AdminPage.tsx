@@ -202,7 +202,7 @@ const TAB_LABELS: Record<Tab, string> = {
   members: '회원 관리',
   pending: '승인 대기',
   roles: '역할 관리',
-  rules: '스케줄 설정',
+  rules: '날짜·요일·시간 설정',
   settings: '조직 설정',
   autoassign: '자동배정',
   legend: '범례 관리',
@@ -1830,9 +1830,9 @@ export function AdminPage() {
                 <header className="mb-5">
                   <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10 px-3 py-[5px] rounded-full">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01"/></svg>
-                    조직 설정 · 스케줄 설정
+                    조직 설정 · 날짜·요일·시간 설정
                   </span>
-                  <h2 className="mt-3 mb-1.5 text-[clamp(22px,5vw,27px)] font-extrabold tracking-tight text-[var(--color-text-primary)]">스케줄 설정</h2>
+                  <h2 className="mt-3 mb-1.5 text-[clamp(22px,5vw,27px)] font-extrabold tracking-tight text-[var(--color-text-primary)]">날짜·요일·시간 설정</h2>
                   <p className="text-[14px] font-medium text-[var(--color-text-muted)] leading-relaxed max-w-[52ch]">
                     요일·시간대별 운영 규칙과 날짜별 예외를 관리합니다. 버튼 클릭 시 즉시 저장됩니다.
                   </p>
