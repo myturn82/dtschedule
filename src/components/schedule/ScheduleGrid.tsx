@@ -26,6 +26,8 @@ interface Props {
   hiddenRoleIds?: Set<string>
   slotLabels?: Record<string, string>
   onCellClick: (target: ModalTarget) => void
+  onCellMouseDown?: (target: ModalTarget) => void
+  onCellMouseEnter?: (target: ModalTarget) => void
   onHolidayCellClick?: (day: number, startHour: number, endHour: number) => void
   displayAssignmentFilter?: (a: Assignment) => boolean
   withdrawnUserIds?: Set<string>
@@ -175,7 +177,7 @@ function buildColMap(
 
 export function ScheduleGrid({
   year, month, timeSlots, assignments, slotSettings, scheduleRules, dateOverrides,
-  highlightName, profile, tenantRole, memberRoleId, teamLeaderUserIds, splitRoles = [], indicatorBarRoles = [], isSplitMode = false, hiddenRoleIds = EMPTY_SET, slotLabels = {}, onCellClick, onHolidayCellClick, displayAssignmentFilter, withdrawnUserIds, highlightedSlots,
+  highlightName, profile, tenantRole, memberRoleId, teamLeaderUserIds, splitRoles = [], indicatorBarRoles = [], isSplitMode = false, hiddenRoleIds = EMPTY_SET, slotLabels = {}, onCellClick, onCellMouseDown, onCellMouseEnter, onHolidayCellClick, displayAssignmentFilter, withdrawnUserIds, highlightedSlots,
   selectionRange, copyRange, canAdd = true, hiddenDays = [],
 }: Props) {
   const pad2 = (n: number) => String(n).padStart(2, '0')
@@ -424,6 +426,8 @@ export function ScheduleGrid({
                                 rowSpan={merge.rowspan > 1 ? merge.rowspan : undefined}
                                 className="border border-[var(--color-border-table)] p-0 relative"
                                 style={{ height: '1px' }}
+                                onMouseDown={() => onCellMouseDown?.({ year, month, day, timeSlot: slot, memberType: 'member', roleId: role.id })}
+                                onMouseEnter={() => onCellMouseEnter?.({ year, month, day, timeSlot: slot, memberType: 'member', roleId: role.id })}
                               >
                                 {selectionRange && day && inRange(day, slotIdx, roleIdx, selectionRange) && (
                                   <div className="absolute inset-0 bg-blue-400/20 pointer-events-none z-10" />
@@ -480,6 +484,8 @@ export function ScheduleGrid({
                               rowSpan={volMerge.rowspan > 1 ? volMerge.rowspan : undefined}
                               className="border border-[var(--color-border-table)] p-0 relative"
                               style={{ height: '1px' }}
+                              onMouseDown={() => onCellMouseDown?.({ year, month, day, timeSlot: slot, memberType: 'member' })}
+                              onMouseEnter={() => onCellMouseEnter?.({ year, month, day, timeSlot: slot, memberType: 'member' })}
                             >
                               {selectionRange && inRange(day, slotIdx, 0, selectionRange) && (
                                 <div className="absolute inset-0 bg-blue-400/20 pointer-events-none z-10" />
@@ -508,6 +514,8 @@ export function ScheduleGrid({
                               rowSpan={plusMerge.rowspan > 1 ? plusMerge.rowspan : undefined}
                               className="border border-[var(--color-border-table)] p-0 relative"
                               style={{ height: '1px' }}
+                              onMouseDown={() => onCellMouseDown?.({ year, month, day, timeSlot: slot, memberType: '50plus' })}
+                              onMouseEnter={() => onCellMouseEnter?.({ year, month, day, timeSlot: slot, memberType: '50plus' })}
                             >
                               {selectionRange && inRange(day, slotIdx, 1, selectionRange) && (
                                 <div className="absolute inset-0 bg-blue-400/20 pointer-events-none z-10" />

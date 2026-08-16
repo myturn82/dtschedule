@@ -71,6 +71,8 @@ export function SchedulePage() {
 
   // ── 셀 선택 / 복사 붙여넣기 ─────────────────────────────────────────────────
   const isShiftRef = useRef(false)
+  const isDraggingRef = useRef(false)
+  const dragMovedRef  = useRef(false)
   type CopiedCell = {
     dayOffset: number; slotOffset: number; colOffset: number
     sourceTimeSlot: string
@@ -402,6 +404,12 @@ export function SchedulePage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [excelMode, cellSel, selRange, copyBuf, pasteHistory, isPrivileged, isSplitMode, splitRoles, timeSlots, year, month, scheduleRules, slotSettings, dateOverrides, assignments, addAssignmentWithId, deleteAssignment, tenant])
 
+  useEffect(() => {
+    function onMouseUp() { isDraggingRef.current = false }
+    window.addEventListener('mouseup', onMouseUp)
+    return () => window.removeEventListener('mouseup', onMouseUp)
+  }, [])
+
   const swipeTouchStartX = useRef<number | null>(null)
   const swipeTouchStartY = useRef<number | null>(null)
   const swipeScrollableEl = useRef<HTMLElement | null>(null)
@@ -562,6 +570,11 @@ export function SchedulePage() {
 
     // 엑셀 모드: 선택만 하고 팝업 열지 않음
     if (excelMode) {
+      // 드래그로 이미 범위가 설정된 경우 click은 무시
+      if (dragMovedRef.current) {
+        dragMovedRef.current = false
+        return
+      }
       const pos: CellPos = { day: target.day, slotIdx, colIdx: colIdxOf(target) }
       const isTouch = isCoarsePointerDevice()
       setCellSel(prev => isTouch
@@ -625,6 +638,23 @@ export function SchedulePage() {
     if (tenantMode === '비회원' && !isPrivileged) return
 
     setModalTarget(target)
+  }
+
+  function handleCellMouseDown(target: ModalTarget) {
+    if (!excelMode) return
+    isDraggingRef.current = true
+    dragMovedRef.current  = false
+    const slotIdx = timeSlots.indexOf(target.timeSlot)
+    const pos: CellPos = { day: target.day, slotIdx, colIdx: colIdxOf(target) }
+    setCellSel({ anchor: pos, cursor: pos })
+  }
+
+  function handleCellMouseEnter(target: ModalTarget) {
+    if (!excelMode || !isDraggingRef.current) return
+    dragMovedRef.current = true
+    const slotIdx = timeSlots.indexOf(target.timeSlot)
+    const pos: CellPos = { day: target.day, slotIdx, colIdx: colIdxOf(target) }
+    setCellSel(prev => prev ? { anchor: prev.anchor, cursor: pos } : { anchor: pos, cursor: pos })
   }
 
   const selectedCellState = modalTarget
@@ -867,7 +897,7 @@ export function SchedulePage() {
           {excelMode && (
             <div className="framed:mx-3 mt-2 mb-0 flex items-center gap-2 px-3 py-2 framed:rounded-xl bg-[color-mix(in_srgb,var(--color-brand-primary)_10%,transparent)] border border-[var(--color-brand-primary)]/30 text-sm text-[var(--color-brand-primary)]">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
-              <span className="flex-1 font-semibold text-xs">엑셀 모드 — 클릭으로 셀 선택, Shift+클릭으로 범위, Ctrl+C/V 복사·붙여넣기</span>
+              <span className="flex-1 font-semibold text-xs">엑셀 모드 — 드래그 또는 Shift+클릭으로 범위 선택, Ctrl+C/V 복사·붙여넣기</span>
               {copyBuf && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]">복사됨</span>}
               <button
                 onClick={() => { setExcelMode(false); setCellSel(null); setCopyBuf(null); setPasteHistory([]) }}
@@ -924,6 +954,8 @@ export function SchedulePage() {
                   canAdd={canAdd}
                   hiddenDays={hiddenDays}
                   onCellClick={handleCellClick}
+                  onCellMouseDown={handleCellMouseDown}
+                  onCellMouseEnter={handleCellMouseEnter}
                   onHolidayCellClick={profile && isPrivileged
                     ? (d, startHour, endHour) => setHolidayTarget({ day: d, startHour, endHour })
                     : undefined}
@@ -977,6 +1009,8 @@ export function SchedulePage() {
                   }}
                   canAdd={canAdd}
                   onCellClick={handleCellClick}
+                  onCellMouseDown={handleCellMouseDown}
+                  onCellMouseEnter={handleCellMouseEnter}
                   displayAssignmentFilter={displayAssignmentFilter}
                   withdrawnUserIds={withdrawnUserIds}
                   highlightedSlots={highlightedSlots}

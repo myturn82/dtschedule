@@ -52,6 +52,8 @@ interface Props {
   selectedDay?: Date | null
   onDateHeaderClick?: (date: Date) => void
   onCellClick: (target: ModalTarget) => void
+  onCellMouseDown?: (target: ModalTarget) => void
+  onCellMouseEnter?: (target: ModalTarget) => void
   memberRoleId?: string | null
   tenantRole?: TenantAccessRole | null
   teamLeaderUserIds?: Set<string>
@@ -67,7 +69,7 @@ interface Props {
 export function WeekGrid({
   weekDays, timeSlots, assignments, slotSettings, scheduleRules, dateOverrides,
   highlightName, splitRoles = [], indicatorBarRoles = [], isSplitMode = false, hiddenRoleIds = EMPTY_SET, slotLabels = {},
-  selectedDay, onDateHeaderClick, onCellClick,
+  selectedDay, onDateHeaderClick, onCellClick, onCellMouseDown, onCellMouseEnter,
   memberRoleId, teamLeaderUserIds, isPrivileged = false, displayAssignmentFilter, withdrawnUserIds, highlightedSlots, canAdd = true,
   selectionRange, copyRange,
 }: Props) {
@@ -260,6 +262,8 @@ export function WeekGrid({
                               if (!canClick) return
                               onCellClick({ year: y, month: m, day, timeSlot: slot, memberType: 'member', roleId: role.id })
                             }}
+                            onMouseDown={() => onCellMouseDown?.({ year: y, month: m, day, timeSlot: slot, memberType: 'member', roleId: role.id })}
+                            onMouseEnter={() => onCellMouseEnter?.({ year: y, month: m, day, timeSlot: slot, memberType: 'member', roleId: role.id })}
                             className={`relative flex flex-col items-center justify-center gap-0.5 p-0.5 sm:p-1 transition-colors ${
                               ri > 0 ? 'border-l border-dashed border-[var(--color-border-strong)]' : ''
                             } ${canClick ? (roleAssigns.length > 0 ? 'group hover:brightness-95' : 'group hover:bg-[var(--color-surface-hover)]') : 'cursor-default'}`}
@@ -328,6 +332,8 @@ export function WeekGrid({
                   <button
                     key={di}
                     onClick={() => onCellClick({ year: y, month: m, day, timeSlot: slot, memberType: 'member' })}
+                    onMouseDown={() => onCellMouseDown?.({ year: y, month: m, day, timeSlot: slot, memberType: 'member' })}
+                    onMouseEnter={() => onCellMouseEnter?.({ year: y, month: m, day, timeSlot: slot, memberType: 'member' })}
                     className={`relative border-l border-[var(--color-border)] flex flex-col items-center justify-center gap-0.5 p-1 group transition-colors ${visibleAssigns.length > 0 ? 'hover:brightness-95' : 'hover:bg-[var(--color-surface-hover)]'}`}
                     style={{
                       background: visibleAssigns.length > 0 ? cellTint.bg : undefined,
