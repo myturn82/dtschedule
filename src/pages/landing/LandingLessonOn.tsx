@@ -724,9 +724,14 @@ export function LandingLessonOn() {
                 {
                   visual: (
                     <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
+                      <div style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '4px 8px', marginBottom: 8, fontSize: 8, color: 'rgba(255,255,255,0.55)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <span style={{ color: ACCENT, fontWeight: 700 }}>엑셀 모드 ON</span>
+                        <span style={{ color: 'rgba(255,255,255,0.25)' }}>—</span>
+                        드래그 또는 Shift+클릭으로 범위 선택, Ctrl+C/V 복사·붙여넣기
+                      </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                         <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)' }}>이번 주 스케줄</div>
-                        <span style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)', fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 5 }}>드래그 선택</span>
+                        <span style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)', fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 5 }}>드래그 선택 중</span>
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: '28px repeat(5, 1fr)', gap: 3, marginBottom: 10 }}>
                         <div />
@@ -762,7 +767,7 @@ export function LandingLessonOn() {
                     </div>
                   ),
                   title: '엑셀모드 + 내보내기',
-                  desc: '셀을 드래그해 복사·붙여넣기. 한 달 스케줄을 엑셀·CSV·워드·PDF로 내보냅니다.',
+                  desc: '셀을 드래그하거나 Shift+클릭으로 범위를 선택한 뒤 Ctrl+C/V로 복사·붙여넣기합니다. 한 달 스케줄을 엑셀·CSV·워드·PDF로 내보냅니다.',
                 },
                 {
                   visual: (
