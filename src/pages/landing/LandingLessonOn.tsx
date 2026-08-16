@@ -1,4 +1,4 @@
-﻿// src/pages/landing/LandingLessonOn.tsx
+// src/pages/landing/LandingLessonOn.tsx
 import { useNavigate } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import { DevFileLabel } from '../../components/DevFileLabel'
@@ -35,6 +35,196 @@ function Anim({ children, delay = 0, style, className }: { children: React.React
   )
 }
 
+// 실시간 동기화 애니메이션
+function SyncDemo() {
+  const [phase, setPhase] = useState(0)
+  useEffect(() => {
+    const t = setInterval(() => setPhase(p => (p + 1) % 8), 750)
+    return () => clearInterval(t)
+  }, [])
+  const instrName  = phase >= 2 ? '이준혁' : phase === 1 ? '등록 중...' : ''
+  const memberName = phase >= 5 ? '✦ 새 배정!' : ''
+  const arrowOn    = phase >= 3 && phase <= 4
+  const memberPop  = phase === 5
+
+  const Panel = ({ label, rows }: { label: string; rows: { time: string; name: string; pop?: boolean }[] }) => (
+    <div style={{ background: '#0e0f18', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: 8 }}>
+      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+        <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', display: 'inline-block', animation: 'ledPulse 1s ease-in-out infinite' }} />
+        {label}
+      </div>
+      {rows.map(row => (
+        <div key={row.time} style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          padding: '4px 6px', borderRadius: 5, marginBottom: 3, fontSize: 10,
+          background: row.pop ? 'rgba(242,96,78,0.14)' : 'rgba(255,255,255,0.04)',
+          border: `1px solid ${row.pop ? 'rgba(242,96,78,0.45)' : 'rgba(255,255,255,0.07)'}`,
+          transition: 'background 0.35s, border-color 0.35s',
+        }}>
+          <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 9 }}>{row.time}</span>
+          <span style={{ color: row.pop ? ACCENT : row.name ? 'rgba(255,255,255,0.72)' : 'rgba(255,255,255,0.18)', fontWeight: row.pop ? 700 : undefined, transition: 'color 0.35s' }}>
+            {row.name || '—'}
+          </span>
+        </div>
+      ))}
+    </div>
+  )
+
+  return (
+    <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 8, alignItems: 'center' }}>
+        <Panel label="강사 화면" rows={[
+          { time: '09:00', name: '김민지' },
+          { time: '11:00', name: instrName },
+          { time: '14:00', name: '박서연' },
+        ]} />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+          <span style={{ fontSize: 16, color: arrowOn ? ACCENT : 'rgba(255,255,255,0.18)', transition: 'color 0.3s', animation: arrowOn ? 'ledPulse 0.5s ease-in-out infinite' : undefined }}>↔</span>
+          <span style={{ fontSize: 8, color: arrowOn ? ACCENT : 'transparent', fontWeight: 700, transition: 'color 0.3s', whiteSpace: 'nowrap' }}>동기화</span>
+        </div>
+        <Panel label="회원 화면" rows={[
+          { time: '09:00', name: '배정됨' },
+          { time: '11:00', name: memberName, pop: memberPop },
+          { time: '14:00', name: '배정됨' },
+        ]} />
+      </div>
+    </div>
+  )
+}
+
+// 보기방식 자유전환 애니메이션
+function ViewCycleDemo() {
+  const VIEWS = ['월간', '주간', '일간', '일자별', '시간별'] as const
+  type V = typeof VIEWS[number]
+  const [idx, setIdx] = useState(0)
+  const [show, setShow] = useState(true)
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setShow(false)
+      setTimeout(() => { setIdx(i => (i + 1) % VIEWS.length); setShow(true) }, 270)
+    }, 2100)
+    return () => clearInterval(t)
+  }, [])
+
+  const view = VIEWS[idx]
+
+  const content: Record<V, React.ReactNode> = {
+    '월간': (
+      <div>
+        <div style={{ fontSize: 10, fontWeight: 700, textAlign: 'center', marginBottom: 5, color: 'rgba(255,255,255,0.6)' }}>2026년 8월</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2 }}>
+          {['일','월','화','수','목','금','토'].map(d => (
+            <div key={d} style={{ textAlign: 'center', fontSize: 8, color: 'rgba(255,255,255,0.25)', paddingBottom: 2 }}>{d}</div>
+          ))}
+          {Array.from({ length: 5 }, (_, i) => <div key={`e${i}`} />)}
+          {Array.from({ length: 27 }, (_, i) => {
+            const d = i + 1; const hasSlot = [2,4,6,9,11,13,16,18,20,23,25].includes(d)
+            return (
+              <div key={d} style={{ aspectRatio: '1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: 3, background: d === 12 ? ACCENT : 'transparent', position: 'relative' }}>
+                <span style={{ fontSize: 8, color: d === 12 ? '#fff' : 'rgba(255,255,255,0.5)' }}>{d}</span>
+                {hasSlot && d !== 12 && <span style={{ position: 'absolute', bottom: 0, width: 3, height: 3, borderRadius: '50%', background: ACCENT }} />}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    ),
+    '주간': (
+      <div style={{ display: 'grid', gridTemplateColumns: '28px repeat(5, 1fr)', gap: 3 }}>
+        <div />
+        {['월','화','수','목','금'].map(d => <div key={d} style={{ textAlign: 'center', fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.3)', paddingBottom: 3 }}>{d}</div>)}
+        {[
+          { time: '10:00', cells: ['조은수', null, '윤소이', null, '성시호'] },
+          { time: '13:00', cells: [null, '이하나', null, '박진희', null] },
+          { time: '14:00', cells: ['박진희', null, '성시호', null, '이하나'] },
+        ].map(row => [
+          <div key={`t-${row.time}`} style={{ fontSize: 8, color: 'rgba(255,255,255,0.28)', display: 'flex', alignItems: 'center' }}>{row.time}</div>,
+          ...row.cells.map((n, ci) => (
+            <div key={`${row.time}-${ci}`} style={{ height: 20, borderRadius: 3, background: n ? 'rgba(242,96,78,0.13)' : 'rgba(255,255,255,0.04)', border: `1px solid ${n ? 'rgba(242,96,78,0.26)' : 'rgba(255,255,255,0.07)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, color: 'rgba(255,255,255,0.75)' }}>
+              {n ? n.slice(0,2) : ''}
+            </div>
+          )),
+        ])}
+      </div>
+    ),
+    '일간': (
+      <div>
+        <div style={{ fontSize: 10, fontWeight: 700, textAlign: 'center', marginBottom: 5, color: 'rgba(255,255,255,0.6)' }}>8월 12일 (화)</div>
+        {[
+          { time: '09:00', name: null },
+          { time: '10:00', name: '조은수' },
+          { time: '11:00', name: '이하나' },
+          { time: '12:00', name: null },
+          { time: '13:00', name: '윤소이' },
+          { time: '14:00', name: '박진희' },
+        ].map(s => (
+          <div key={s.time} style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 3 }}>
+            <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.28)', width: 28, flexShrink: 0 }}>{s.time}</span>
+            <div style={{ flex: 1, height: 18, borderRadius: 3, background: s.name ? 'rgba(242,96,78,0.11)' : 'rgba(255,255,255,0.03)', border: `1px solid ${s.name ? 'rgba(242,96,78,0.24)' : 'rgba(255,255,255,0.06)'}`, display: 'flex', alignItems: 'center', paddingLeft: s.name ? 6 : 0, fontSize: 9, color: 'rgba(255,255,255,0.7)' }}>
+              {s.name}
+            </div>
+          </div>
+        ))}
+      </div>
+    ),
+    '일자별': (
+      <div>
+        <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: 5 }}>날짜별 목록</div>
+        {[
+          { date: '8/11 월', names: ['조은수', '박진희'] },
+          { date: '8/12 화', names: ['이하나', '윤소이', '성시호'] },
+          { date: '8/13 수', names: ['박진희'] },
+          { date: '8/14 목', names: ['조은수', '이하나'] },
+        ].map(row => (
+          <div key={row.date} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 6px', background: 'rgba(255,255,255,0.04)', borderRadius: 5, marginBottom: 3 }}>
+            <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)', width: 38, flexShrink: 0 }}>{row.date}</span>
+            <div style={{ display: 'flex', gap: 3, flex: 1, flexWrap: 'wrap' }}>
+              {row.names.map(n => (
+                <span key={n} style={{ fontSize: 8, background: 'rgba(242,96,78,0.1)', border: '1px solid rgba(242,96,78,0.2)', borderRadius: 3, padding: '1px 4px', color: 'rgba(255,255,255,0.7)' }}>{n}</span>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    ),
+    '시간별': (
+      <div>
+        <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: 5 }}>시간대별 예약 현황</div>
+        {[
+          { time: '09:00', cnt: 1, pct: 20 },
+          { time: '10:00', cnt: 4, pct: 80 },
+          { time: '11:00', cnt: 3, pct: 60 },
+          { time: '13:00', cnt: 5, pct: 100 },
+          { time: '14:00', cnt: 4, pct: 75 },
+          { time: '15:00', cnt: 2, pct: 40 },
+        ].map(row => (
+          <div key={row.time} style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 4 }}>
+            <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.3)', width: 28, flexShrink: 0 }}>{row.time}</span>
+            <div style={{ flex: 1, height: 13, background: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${row.pct}%`, background: `linear-gradient(90deg, rgba(242,96,78,0.6), ${ACCENT})`, borderRadius: 3 }} />
+            </div>
+            <span style={{ fontSize: 8, color: ACCENT, width: 20, textAlign: 'right' }}>{row.cnt}명</span>
+          </div>
+        ))}
+      </div>
+    ),
+  }
+
+  return (
+    <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
+      <div style={{ display: 'flex', gap: 3, marginBottom: 10 }}>
+        {VIEWS.map(v => (
+          <span key={v} style={{ flex: 1, textAlign: 'center', background: v === view ? ACCENT : 'rgba(255,255,255,0.07)', color: v === view ? '#fff' : 'rgba(255,255,255,0.4)', fontSize: 9, fontWeight: v === view ? 700 : undefined, padding: '3px 0', borderRadius: 5, transition: 'background 0.25s, color 0.25s', whiteSpace: 'nowrap' }}>{v}</span>
+        ))}
+      </div>
+      <div style={{ minHeight: 120, opacity: show ? 1 : 0, transition: 'opacity 0.25s ease' }}>
+        {content[view]}
+      </div>
+    </div>
+  )
+}
+
 export function LandingLessonOn() {
   const navigate = useNavigate()
   const goStart = () => navigate('/consent?vertical=lessonon')
@@ -55,6 +245,7 @@ export function LandingLessonOn() {
         @keyframes autoGlow  { 0%,100%{ box-shadow:0 4px 16px rgba(242,96,78,0.3); } 50%{ box-shadow:0 6px 28px rgba(242,96,78,0.6); } }
         @keyframes typeCursor{ 0%,100%{ opacity:1; } 50%{ opacity:0; } }
         @keyframes wizFill   { from{ width:0%; } to{ width:100%; } }
+        @keyframes dragSel   { 0%,8%{ background:rgba(255,255,255,0.04); box-shadow:none; } 32%,68%{ background:rgba(242,96,78,0.18); box-shadow:inset 0 0 0 2px rgba(242,96,78,0.6); } 88%,100%{ background:rgba(255,255,255,0.04); box-shadow:none; } }
         .lo-qmark { animation: qPulse 2s ease-in-out infinite; }
         body { margin:0; background:#0a0b10; }
         .lo-nav   { animation: navFade 0.5s ease both; }
@@ -97,10 +288,10 @@ export function LandingLessonOn() {
           <button className="lo-cta" onClick={goStart} style={{ background: ACCENT, color: '#fff', border: 0, borderRadius: 12, padding: '16px 36px', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>무료로 시작하기 →</button>
         </section>
 
-        {/* 01 — 강사의 하루 */}
+        {/* 01 — 수강권/결제 누락 및 잔여 횟수 혼선 */}
         <section className="lo-sect-01" style={{ padding: '100px 24px', maxWidth: 840, margin: '0 auto', textAlign: 'center' }}>
           <Anim style={{ marginBottom: 48 }}>
-            <div style={{ fontSize: 13, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 16 }}>01 — 강사의 하루</div>
+            <div style={{ fontSize: 13, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 16 }}>01 — 수강권/결제 누락 및 잔여 횟수 혼선</div>
             <h2 style={{ fontSize: 'clamp(24px,4vw,36px)', fontWeight: 800, lineHeight: 1.5, letterSpacing: '-0.5px', marginBottom: 16 }}>
               "이 회원님 남은 횟수가 몇 번이더라..."<br />"오늘 그분 오시는 날 맞나?"
             </h2>
@@ -122,12 +313,10 @@ export function LandingLessonOn() {
                 <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: '20px 16px', overflowX: 'auto' }}>
                   <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginBottom: 12, textAlign: 'left' }}>이번 주 수업 일정</div>
                   <div style={{ display: 'grid', gridTemplateColumns: '44px repeat(6, 1fr)', gap: 5, minWidth: 420 }}>
-                    {/* Header */}
                     <div />
                     {DAYS.map(d => (
                       <div key={d} style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textAlign: 'center', paddingBottom: 6 }}>{d}</div>
                     ))}
-                    {/* Rows */}
                     {ROWS.map((row, ri) => (
                       <>
                         <div key={row.time} style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', paddingRight: 4, whiteSpace: 'nowrap' }}>{row.time}</div>
@@ -284,13 +473,13 @@ export function LandingLessonOn() {
                     <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 12 }}>
                         {([
-                          { n: '1', label: '조직 이름 · 업종', done: true },
+                          { n: '1', label: '조직이름 · 업종선택', done: true },
                           { n: '2', label: '운영 모드 선택', done: true },
-                          { n: '3', label: '역할 설정', done: true },
-                          { n: '4', label: '슬롯 규칙', active: true },
-                          { n: '5', label: '운영 시간', done: false },
-                          { n: '6', label: '커스텀 필드', done: false },
-                          { n: '7', label: '테마 색상', done: false },
+                          { n: '3', label: '슬롯 시간 설정', done: true },
+                          { n: '4', label: '역할(강사/회원) 설정', active: true },
+                          { n: '5', label: '운영 요일/시간 설정', done: false },
+                          { n: '6', label: '레슨종류 등록', done: false },
+                          { n: '7', label: '입력항목 설정', done: false },
                         ] as { n: string; label: string; done?: boolean; active?: boolean }[]).map(step => (
                           <div key={step.n} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: step.done ? 'rgba(34,197,94,0.04)' : step.active ? 'rgba(242,96,78,0.08)' : 'rgba(255,255,255,0.03)', border: `1px solid ${step.done ? 'rgba(34,197,94,0.18)' : step.active ? 'rgba(242,96,78,0.28)' : 'rgba(255,255,255,0.07)'}`, borderRadius: 7, fontSize: 11 }}>
                             <div style={{ width: 19, height: 19, borderRadius: '50%', background: step.done ? 'rgba(34,197,94,0.18)' : step.active ? 'rgba(242,96,78,0.15)' : 'rgba(255,255,255,0.07)', color: step.done ? '#22c55e' : step.active ? ACCENT : 'rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, flexShrink: 0 }}>
@@ -312,71 +501,12 @@ export function LandingLessonOn() {
                   desc: '운영 모드·시간 단위·요일 규칙을 7단계 질문으로 안내받아 바로 시작합니다.',
                 },
                 {
-                  visual: (
-                    <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
-                      <div style={{ display: 'flex', gap: 5, marginBottom: 10 }}>
-                        {([['월간', true], ['주간', false], ['일간', false]] as [string, boolean][]).map(([label, active]) => (
-                          <span key={label} style={{ flex: 1, textAlign: 'center', background: active ? ACCENT : 'rgba(255,255,255,0.07)', color: active ? '#fff' : 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: active ? 700 : undefined, padding: '4px 0', borderRadius: 6 }}>{label}</span>
-                        ))}
-                      </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '30px repeat(5, 1fr)', gap: 3 }}>
-                        <div />
-                        {['월', '화', '수', '목', '금'].map(d => (
-                          <div key={d} style={{ textAlign: 'center', fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.3)', paddingBottom: 4 }}>{d}</div>
-                        ))}
-                        {([
-                          { time: '10:00', cells: ['조은수', null, '윤소이', null, '성시호'] },
-                          { time: '13:00', cells: [null, '이하나', null, '박진희', null] },
-                          { time: '14:00', cells: ['박진희', null, '성시호', null, '이하나'] },
-                        ] as { time: string; cells: (string | null)[] }[]).map(row => (
-                          [
-                            <div key={`t-${row.time}`} style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center' }}>{row.time}</div>,
-                            ...row.cells.map((name, ci) => (
-                              <div key={`${row.time}-${ci}`} style={{ height: 22, borderRadius: 4, background: name ? 'rgba(242,96,78,0.14)' : 'rgba(255,255,255,0.04)', border: `1px solid ${name ? 'rgba(242,96,78,0.28)' : 'rgba(255,255,255,0.07)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: name ? 600 : undefined, color: name ? 'rgba(255,255,255,0.8)' : 'transparent' }}>
-                                {name ? name.slice(0, 2) : '·'}
-                              </div>
-                            )),
-                          ]
-                        ))}
-                      </div>
-                      <div style={{ display: 'flex', gap: 5, marginTop: 8 }}>
-                        {(['일자별', '시간별'] as string[]).map((label, i) => (
-                          <span key={label} style={{ background: i === 1 ? 'rgba(242,96,78,0.15)' : 'rgba(255,255,255,0.07)', color: i === 1 ? ACCENT : 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: i === 1 ? 700 : undefined, padding: '3px 10px', borderRadius: 6 }}>{label}</span>
-                        ))}
-                      </div>
-                    </div>
-                  ),
+                  visual: <ViewCycleDemo />,
                   title: '보기 방식 자유 전환',
                   desc: '월간·주간·일간, 일자별·시간별 보기를 조직과 사용자의 상황에 따라 자유롭게 전환할 수 있습니다.',
                 },
                 {
-                  visual: (
-                    <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
-                        {([
-                          { label: '강사 화면', slots: [{ time: '09:00', name: '김민지', live: false }, { time: '11:00', name: '이준혁', live: true }, { time: '14:00', name: '박서연', live: false }] },
-                          { label: '회원 화면', slots: [{ time: '09:00', name: '배정됨', live: false }, { time: '11:00', name: '✦ 새 배정!', live: true, isNew: true }, { time: '14:00', name: '배정됨', live: false }] },
-                        ] as { label: string; slots: { time: string; name: string; live: boolean; isNew?: boolean }[] }[]).map(pane => (
-                          <div key={pane.label} style={{ background: '#0e0f18', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: 10 }}>
-                            <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginBottom: 7, display: 'flex', alignItems: 'center', gap: 4 }}>
-                              <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', display: 'inline-block', animation: 'ledPulse 1s ease-in-out infinite' }} />
-                              {pane.label}
-                            </div>
-                            {pane.slots.map(slot => (
-                              <div key={slot.time} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 7px', background: 'rgba(255,255,255,0.04)', border: `1px solid rgba(255,255,255,0.07)`, borderRadius: 5, marginBottom: 4, fontSize: 10, animation: slot.live ? 'liveSlot 3s ease-in-out infinite' : undefined }}>
-                                <span style={{ color: 'rgba(255,255,255,0.4)' }}>{slot.time}</span>
-                                <span style={{ color: slot.isNew ? ACCENT : 'rgba(255,255,255,0.7)', fontWeight: slot.live ? 700 : undefined }}>{slot.name}</span>
-                              </div>
-                            ))}
-                          </div>
-                        ))}
-                      </div>
-                      <div style={{ padding: '6px 10px', background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.14)', borderRadius: 7, fontSize: 9, color: 'rgba(34,197,94,0.8)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                        <span style={{ animation: 'ledPulse 1s ease-in-out infinite' }}>●</span>
-                        postgres_changes 구독 중 · tenant_id 필터 적용
-                      </div>
-                    </div>
-                  ),
+                  visual: <SyncDemo />,
                   title: '실시간 동기화',
                   desc: '강사와 회원이 동시에 캘린더를 봐도 새로고침 없이 즉시 반영되어 중복 예약을 막습니다.',
                 },
@@ -459,10 +589,9 @@ export function LandingLessonOn() {
                 },
                 {
                   visual: (() => {
-                    // Aug 2026: 1st = Saturday (index 6 in Sun=0 week)
                     const days = Array.from({ length: 31 }, (_, i) => {
                       const d = i + 1
-                      const dow = (6 + i) % 7 // 0=Sun..6=Sat
+                      const dow = (6 + i) % 7
                       const isSlot = dow === 1 || dow === 3 || dow === 5
                       const isHol = d === 15
                       const isSpc = d === 20
@@ -539,7 +668,15 @@ export function LandingLessonOn() {
                       </div>
                       <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginBottom: 8 }}>첨부 사진</div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10 }}>
-                        <div style={{ width: 46, height: 46, borderRadius: 8, background: 'rgba(255,255,255,0.08)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, border: '1px solid rgba(255,255,255,0.1)' }}>□</div>
+                        <div style={{ width: 46, height: 46, borderRadius: 8, background: 'rgba(255,255,255,0.06)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.1)' }}>
+                          <svg width="28" height="26" viewBox="0 0 28 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="1" y="4" width="26" height="20" rx="3" stroke="rgba(255,255,255,0.45)" strokeWidth="1.4"/>
+                            <path d="M1 16 L8 10 L13 15 L19 8 L27 16" stroke="rgba(255,255,255,0.38)" strokeWidth="1.3" strokeLinejoin="round"/>
+                            <circle cx="8.5" cy="10" r="2.5" stroke="rgba(255,255,255,0.4)" strokeWidth="1.2"/>
+                            <rect x="18" y="1" width="8" height="6" rx="2" fill="rgba(255,255,255,0.18)" stroke="rgba(255,255,255,0.3)" strokeWidth="1"/>
+                            <circle cx="22" cy="4" r="1.2" fill="rgba(255,255,255,0.55)"/>
+                          </svg>
+                        </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 10, fontWeight: 600, marginBottom: 5, color: 'rgba(255,255,255,0.7)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>자세교정_0804.webp</div>
                           <div style={{ height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden', marginBottom: 4 }}>
@@ -558,7 +695,7 @@ export function LandingLessonOn() {
                     <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                         <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)' }}>이번 주 스케줄</div>
-                        <span style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)', fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 5 }}>Ctrl+C</span>
+                        <span style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)', fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 5 }}>드래그 선택</span>
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: '28px repeat(5, 1fr)', gap: 3, marginBottom: 10 }}>
                         <div />
@@ -566,13 +703,18 @@ export function LandingLessonOn() {
                           <div key={d} style={{ textAlign: 'center', fontSize: 9, color: 'rgba(255,255,255,0.3)', paddingBottom: 2 }}>{d}</div>
                         ))}
                         {([
-                          { time: '10:00', sel: [false, true, true, false, false] },
-                          { time: '13:00', sel: [false, true, true, false, false] },
-                          { time: '14:00', sel: [false, false, false, false, false] },
-                        ] as { time: string; sel: boolean[] }[]).map(row => ([
+                          { time: '10:00', delays: [null, 0, 350, null, null] },
+                          { time: '13:00', delays: [null, 700, 1050, null, null] },
+                          { time: '14:00', delays: [null, null, null, null, null] },
+                        ] as { time: string; delays: (number | null)[] }[]).map(row => ([
                           <div key={`t-${row.time}`} style={{ fontSize: 8, color: 'rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center' }}>{row.time}</div>,
-                          ...row.sel.map((selected, ci) => (
-                            <div key={`${row.time}-${ci}`} style={{ height: 18, borderRadius: 3, background: selected ? 'rgba(242,96,78,0.18)' : 'rgba(255,255,255,0.04)', border: `${selected ? 2 : 1}px solid ${selected ? ACCENT : 'rgba(255,255,255,0.07)'}` }} />
+                          ...row.delays.map((delay, ci) => (
+                            <div key={`${row.time}-${ci}`} style={{
+                              height: 18, borderRadius: 3,
+                              background: 'rgba(255,255,255,0.04)',
+                              border: '1px solid rgba(255,255,255,0.07)',
+                              ...(delay !== null ? { animation: `dragSel 3.6s ease ${delay}ms infinite` } : {}),
+                            }} />
                           )),
                         ]))}
                       </div>
