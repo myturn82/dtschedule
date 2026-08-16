@@ -170,41 +170,72 @@ function ViewCycleDemo() {
     ),
     '일자별': (
       <div>
-        <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: 5 }}>날짜별 목록</div>
-        {[
-          { date: '8/11 월', names: ['조은수', '박진희'] },
-          { date: '8/12 화', names: ['이하나', '윤소이', '성시호'] },
-          { date: '8/13 수', names: ['박진희'] },
-          { date: '8/14 목', names: ['조은수', '이하나'] },
-        ].map(row => (
-          <div key={row.date} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 6px', background: 'rgba(255,255,255,0.04)', borderRadius: 5, marginBottom: 3 }}>
-            <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.35)', width: 38, flexShrink: 0 }}>{row.date}</span>
-            <div style={{ display: 'flex', gap: 3, flex: 1, flexWrap: 'wrap' }}>
-              {row.names.map(n => (
-                <span key={n} style={{ fontSize: 8, background: 'rgba(242,96,78,0.1)', border: '1px solid rgba(242,96,78,0.2)', borderRadius: 3, padding: '1px 4px', color: 'rgba(255,255,255,0.7)' }}>{n}</span>
+        <div style={{ fontSize: 9, fontWeight: 700, textAlign: 'center', marginBottom: 4, color: 'rgba(255,255,255,0.5)' }}>2026년 8월</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 1.5 }}>
+          {(['월','화','수','목','금','토','일'] as string[]).map((d, i) => (
+            <div key={d} style={{ textAlign: 'center', fontSize: 7, color: i===5?'#60a5fa':i===6?'#f87171':'rgba(255,255,255,0.28)', paddingBottom: 2 }}>{d}</div>
+          ))}
+          {[null,null,null,null,null,'1','2'].map((d, i) => (
+            <div key={`h${i}`} style={{ fontSize: 7, textAlign: 'center', color: i===5?'#60a5fa':i===6?'#f87171':'rgba(255,255,255,0.4)', padding: '1px 0' }}>{d ?? ''}</div>
+          ))}
+          {([
+            { d:3,  ents:['10시 이연화','11시 조은수'], more:5 },
+            { d:4,  ents:['10시 이연화','13시 조은수'], more:6 },
+            { d:5,  ents:['11시 조은수'], more:4 },
+            { d:6,  ents:['10시 이연화'], more:7 },
+            { d:7,  ents:['10시 이연화'], more:3 },
+            { d:8,  ents:[], more:0 },
+            { d:9,  ents:[], more:0 },
+            { d:10, ents:['10시 이은진','11시 이은진'], more:5 },
+            { d:11, ents:['10시 이연화'], more:5 },
+            { d:12, ents:['10시 이은진'], more:4 },
+            { d:13, ents:['10시 이연화'], more:7 },
+            { d:14, ents:['10시 이연화'], more:5 },
+            { d:15, ents:[], more:0 },
+            { d:16, ents:[], more:0 },
+          ] as { d:number; ents:string[]; more:number }[]).map(({ d, ents, more }, i) => (
+            <div key={d} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 2, padding: 2, minHeight: 28 }}>
+              <div style={{ fontSize: 7, color: (i%7)>=5?(i%7)===5?'#60a5fa':'#f87171':'rgba(255,255,255,0.45)', marginBottom: 1 }}>{d}</div>
+              {ents.map(e => (
+                <div key={e} style={{ fontSize: 6, background: 'rgba(61,220,132,0.13)', borderLeft: '1.5px solid rgba(61,220,132,0.45)', paddingLeft: 2, color: 'rgba(255,255,255,0.72)', marginBottom: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e}</div>
               ))}
+              {more > 0 && <div style={{ fontSize: 6, color: 'rgba(255,255,255,0.35)' }}>+{more}건 더</div>}
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     ),
     '시간별': (
       <div>
-        <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: 5 }}>시간대별 예약 현황</div>
-        {[
-          { time: '09:00', cnt: 1, pct: 20 },
-          { time: '10:00', cnt: 4, pct: 80 },
-          { time: '11:00', cnt: 3, pct: 60 },
-          { time: '13:00', cnt: 5, pct: 100 },
-          { time: '14:00', cnt: 4, pct: 75 },
-          { time: '15:00', cnt: 2, pct: 40 },
-        ].map(row => (
-          <div key={row.time} style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 4 }}>
-            <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.3)', width: 28, flexShrink: 0 }}>{row.time}</span>
-            <div style={{ flex: 1, height: 13, background: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${row.pct}%`, background: `linear-gradient(90deg, rgba(242,96,78,0.6), ${ACCENT})`, borderRadius: 3 }} />
+        <div style={{ display: 'grid', gridTemplateColumns: '30px repeat(5, 1fr)', gap: 2, marginBottom: 3 }}>
+          <div />
+          {(['월','화','수','목','금'] as string[]).map((d, i) => (
+            <div key={d} style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.28)' }}>{d}</div>
+              <div style={{ fontSize: 8, fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>{i + 3}</div>
             </div>
-            <span style={{ fontSize: 8, color: ACCENT, width: 20, textAlign: 'right' }}>{row.cnt}명</span>
+          ))}
+        </div>
+        {([
+          { time: '10:00', cells: ['이연화', '이연화', null,   '이연화', '이연화'] },
+          { time: '11:00', cells: ['이연화', null,     null,   '김아영', '김아영'] },
+          { time: '13:00', cells: ['이연화', null,     '이연화','김아영', null    ] },
+          { time: '14:00', cells: ['최민화', '최민화', '이연화','김아영', '최민화'] },
+          { time: '15:00', cells: ['최민화', '최민화', null,   null,    '최민화'] },
+        ] as { time: string; cells: (string|null)[] }[]).map(row => (
+          <div key={row.time} style={{ display: 'grid', gridTemplateColumns: '30px repeat(5, 1fr)', gap: 2, marginBottom: 2 }}>
+            <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.28)', display: 'flex', alignItems: 'center' }}>{row.time}</div>
+            {row.cells.map((name, ci) => (
+              <div key={ci} style={{
+                height: 14, borderRadius: 2,
+                background: name ? 'rgba(61,220,132,0.18)' : 'rgba(255,255,255,0.03)',
+                border: `1px solid ${name ? 'rgba(61,220,132,0.32)' : 'rgba(255,255,255,0.06)'}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 6.5, color: 'rgba(255,255,255,0.78)', overflow: 'hidden',
+              }}>
+                {name ? name.slice(0, 3) : ''}
+              </div>
+            ))}
           </div>
         ))}
       </div>
