@@ -2050,7 +2050,7 @@ export function AdminPage() {
                 <div className="mb-4 bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow-sm p-4 space-y-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="text-sm font-semibold text-[var(--color-text-secondary)]">타임슬롯 설정</p>
+                      <p className="text-sm font-semibold text-[var(--color-text-secondary)]">시간 설정</p>
                       <p className="text-xs text-[var(--color-text-muted)] mt-0.5">스케줄에 표시할 시간 단위를 구성합니다. 변경 후 저장 버튼을 누르세요.</p>
                     </div>
                     <button
@@ -2133,7 +2133,7 @@ export function AdminPage() {
                     className="w-full flex items-center justify-between gap-2 px-4 py-3 text-sm font-semibold text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
                     onClick={() => setShowMatrix(v => !v)}
                   >
-                    <span>시간대별 직접 설정 <span className="font-normal text-[var(--color-text-muted)] text-xs ml-1">요일×슬롯 단위로 운영/미운영 토글</span></span>
+                    <span>시간대별 운영/미운영 설정 <span className="font-normal text-[var(--color-text-muted)] text-xs ml-1">요일×슬롯 단위로 토글</span></span>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
                       style={{ transform: showMatrix ? 'rotate(180deg)' : 'none', transition: 'transform .15s', flexShrink: 0 }}>
                       <path d="m6 9 6 6 6-6"/>
