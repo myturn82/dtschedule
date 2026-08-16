@@ -276,6 +276,140 @@ function ViewCycleDemo() {
   )
 }
 
+// 스케줄규칙 + 예외날짜설정 인터랙티브 데모
+function ScheduleRuleDemo() {
+  const TEMPLATES = [
+    { label: '평일만',  openDays: [1, 2, 3, 4, 5] },
+    { label: '평일+토', openDays: [1, 2, 3, 4, 5, 6] },
+    { label: '연중무휴', openDays: [0, 1, 2, 3, 4, 5, 6] },
+    { label: '주말만',  openDays: [0, 6] },
+    { label: '월·수·금', openDays: [1, 3, 5] },
+    { label: '화·목',  openDays: [2, 4] },
+  ]
+  const SLOTS = ['09', '10', '11', '14', '15']
+  const OPEN_SLOTS = [0, 1, 3]
+  const [sel, setSel] = useState(0)
+  const [calKey, setCalKey] = useState(0)
+  const openDays = TEMPLATES[sel].openDays
+  const hiddenDays = [0, 1, 2, 3, 4, 5, 6].filter(d => !openDays.includes(d))
+  const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
+  // 2026-08-01 = 토요일(6) → 첫 셀 오프셋 6
+  const days = Array.from({ length: 31 }, (_, i) => {
+    const d = i + 1
+    const dow = (6 + i) % 7
+    return { d, dow, isOpen: openDays.includes(dow), isHol: d === 15, isSpc: d === 20 }
+  })
+
+  return (
+    <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
+      {/* 빠른선택 */}
+      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginBottom: 5 }}>빠른 선택</div>
+      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 10 }}>
+        {TEMPLATES.map((t, i) => (
+          <button
+            key={t.label}
+            onClick={() => { if (sel !== i) { setSel(i); setCalKey(k => k + 1) } }}
+            style={{
+              background: i === sel ? ACCENT : 'rgba(255,255,255,0.07)',
+              color: i === sel ? '#fff' : 'rgba(255,255,255,0.4)',
+              fontSize: 9, fontWeight: i === sel ? 700 : undefined,
+              padding: '3px 8px', borderRadius: 6,
+              border: `1px solid ${i === sel ? ACCENT : 'rgba(255,255,255,0.1)'}`,
+              cursor: 'pointer',
+              transition: 'background 0.2s, color 0.2s, border-color 0.2s',
+            }}
+          >{t.label}</button>
+        ))}
+      </div>
+
+      {/* 달력 — 빠른선택 변경 시 fadeUp 애니메이션 */}
+      <div key={calKey} style={{ animation: 'fadeUp 0.25s ease forwards' }}>
+        <div style={{ fontSize: 10, fontWeight: 700, textAlign: 'center', marginBottom: 6, color: 'rgba(255,255,255,0.8)' }}>2026년 8월</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, marginBottom: 5 }}>
+          {DAY_LABELS.map((d, i) => (
+            <div key={d} style={{
+              textAlign: 'center', fontSize: 8,
+              color: hiddenDays.includes(i) ? 'rgba(255,255,255,0.1)'
+                : i === 0 ? 'rgba(239,68,68,0.5)' : i === 6 ? 'rgba(96,165,250,0.5)' : 'rgba(255,255,255,0.25)',
+              paddingBottom: 2,
+            }}>{d}</div>
+          ))}
+          {Array.from({ length: 6 }, (_, i) => <div key={`e${i}`} />)}
+          {days.map(({ d, dow, isOpen, isHol, isSpc }) => (
+            <div key={d} style={{
+              aspectRatio: '1', display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center', borderRadius: 3,
+              background: isHol ? 'rgba(239,68,68,0.18)' : isSpc ? 'rgba(34,197,94,0.15)' : 'transparent',
+              opacity: hiddenDays.includes(dow) ? 0.12 : 1,
+              position: 'relative',
+            }}>
+              <span style={{
+                fontSize: 8, lineHeight: 1,
+                color: isHol ? '#ef4444' : isSpc ? '#22c55e' : isOpen ? 'rgba(255,255,255,0.72)' : 'rgba(255,255,255,0.2)',
+              }}>{d}</span>
+              {isOpen && !isHol && !isSpc && (
+                <span style={{ position: 'absolute', bottom: 1, width: 2.5, height: 2.5, borderRadius: '50%', background: ACCENT }} />
+              )}
+            </div>
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+          {([
+            { dot: true,  color: ACCENT,                   label: '운영일' },
+            { dot: false, bg: 'rgba(239,68,68,0.5)',        label: '휴관일' },
+            { dot: false, bg: 'rgba(34,197,94,0.5)',        label: '특별운영' },
+          ] as { dot: boolean; color?: string; bg?: string; label: string }[]).map(li => (
+            <div key={li.label} style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 8, color: 'rgba(255,255,255,0.4)' }}>
+              {li.dot
+                ? <span style={{ width: 5, height: 5, borderRadius: '50%', background: li.color }} />
+                : <span style={{ width: 5, height: 5, borderRadius: 1.5, background: li.bg }} />}
+              {li.label}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 시간대별 운영 */}
+      <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 8, marginBottom: 6 }}>
+        <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>시간대별 운영</div>
+        <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+          {SLOTS.map((s, i) => (
+            <span key={s} style={{
+              background: OPEN_SLOTS.includes(i) ? 'rgba(242,96,78,0.14)' : 'rgba(255,255,255,0.04)',
+              color: OPEN_SLOTS.includes(i) ? ACCENT : 'rgba(255,255,255,0.18)',
+              fontSize: 8, fontWeight: OPEN_SLOTS.includes(i) ? 700 : undefined,
+              padding: '2px 5px', borderRadius: 3,
+              border: `1px solid ${OPEN_SLOTS.includes(i) ? 'rgba(242,96,78,0.28)' : 'rgba(255,255,255,0.07)'}`,
+            }}>{s}:00</span>
+          ))}
+        </div>
+      </div>
+
+      {/* 요일 숨김 */}
+      <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 8 }}>
+        <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>요일 숨김</div>
+        <div style={{ display: 'flex', gap: 3 }}>
+          {DAY_LABELS.map((d, i) => {
+            const isHidden = hiddenDays.includes(i)
+            return (
+              <span key={d} style={{
+                width: 18, height: 18, borderRadius: 4,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 7, fontWeight: 600,
+                background: isHidden ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.08)',
+                color: isHidden ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.55)',
+                border: `1px solid ${isHidden ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.14)'}`,
+                textDecoration: isHidden ? 'line-through' : 'none',
+                transition: 'all 0.25s',
+              }}>{d}</span>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // 5분 셋업 위자드 단계별 애니메이션
 function WizardStepDemo() {
   const [step, setStep] = useState(0)
@@ -777,52 +911,9 @@ export function LandingLessonOn() {
                   desc: '역할별로 대표·회원 비율을, 회원별로 가능 요일과 월 최대 횟수를 설정하면 빈 슬롯을 규칙에 맞춰 자동으로 채웁니다.',
                 },
                 {
-                  visual: (() => {
-                    const days = Array.from({ length: 31 }, (_, i) => {
-                      const d = i + 1
-                      const dow = (6 + i) % 7
-                      const isSlot = dow === 1 || dow === 3 || dow === 5
-                      const isHol = d === 15
-                      const isSpc = d === 20
-                      const isToday = d === 27
-                      return { d, isSlot, isHol, isSpc, isToday }
-                    })
-                    return (
-                      <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
-                        <div style={{ fontSize: 11, fontWeight: 700, textAlign: 'center', marginBottom: 8, color: 'rgba(255,255,255,0.8)' }}>2026년 8월</div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, marginBottom: 8 }}>
-                          {['일','월','화','수','목','금','토'].map(d => (
-                            <div key={d} style={{ textAlign: 'center', fontSize: 9, color: 'rgba(255,255,255,0.28)', paddingBottom: 3 }}>{d}</div>
-                          ))}
-                          {Array.from({ length: 6 }, (_, i) => <div key={`e${i}`} />)}
-                          {days.map(({ d, isSlot, isHol, isSpc, isToday }) => (
-                            <div key={d} style={{ aspectRatio: '1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: isToday ? '50%' : 4, background: isToday ? ACCENT : isHol ? 'rgba(239,68,68,0.18)' : isSpc ? 'rgba(34,197,94,0.15)' : 'transparent', position: 'relative' }}>
-                              <span style={{ fontSize: 9, fontWeight: isToday ? 700 : undefined, color: isToday ? '#fff' : isHol ? '#ef4444' : isSpc ? '#22c55e' : isSlot ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.28)' }}>{d}</span>
-                              {isSlot && !isHol && !isSpc && !isToday && (
-                                <span style={{ position: 'absolute', bottom: 1, width: 3, height: 3, borderRadius: '50%', background: ACCENT }} />
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                          {[
-                            { dot: true, color: ACCENT, label: '반복 슬롯' },
-                            { dot: false, bg: 'rgba(239,68,68,0.5)', label: '광복절 휴관' },
-                            { dot: false, bg: 'rgba(34,197,94,0.5)', label: '특별 운영일' },
-                          ].map(li => (
-                            <div key={li.label} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 9, color: 'rgba(255,255,255,0.45)' }}>
-                              {li.dot
-                                ? <span style={{ width: 6, height: 6, borderRadius: '50%', background: li.color }} />
-                                : <span style={{ width: 7, height: 7, borderRadius: 2, background: li.bg }} />}
-                              {li.label}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )
-                  })(),
-                  title: '반복 규칙 + 날짜 예외',
-                  desc: '"월·수·금 운영" 같은 기본 규칙에 휴관일·특별 운영일을 그날만 따로 지정할 수 있습니다.',
+                  visual: <ScheduleRuleDemo />,
+                  title: '스케줄규칙 + 예외날짜설정',
+                  desc: '빠른선택으로 운영 패턴을 정하고, 시간대별·요일별 세부 설정과 날짜 예외(휴관·특별운영)를 한곳에서 관리합니다.',
                 },
                 {
                   visual: (

@@ -1995,6 +1995,53 @@ export function AdminPage() {
                     </table>
                   </div>
                 )}
+
+                {/* 요일 숨김 */}
+                <div className="mt-4 border border-[var(--color-border)] rounded-2xl p-4 bg-[var(--color-surface)]">
+                  <p className="text-sm font-semibold text-[var(--color-text-secondary)] mb-0.5">
+                    요일 숨김
+                    <span className="ml-1.5 font-normal text-[var(--color-text-muted)]">선택한 요일은 월간·주간 뷰에서 숨겨집니다</span>
+                  </p>
+                  <div className="flex gap-1.5 mt-2.5 flex-wrap">
+                    {DAY_LABELS.map((label, dow) => (
+                      <button
+                        key={dow}
+                        type="button"
+                        disabled={saving}
+                        onClick={async () => {
+                          const newDays = settingsHiddenDays.includes(dow)
+                            ? settingsHiddenDays.filter(d => d !== dow)
+                            : [...settingsHiddenDays, dow]
+                          setSettingsHiddenDays(newDays)
+                          setSaving(true)
+                          const err = await updateTenantSettings(adminTenantId!, {
+                            hidden_days: newDays.length > 0 ? newDays : undefined,
+                          })
+                          setSaving(false)
+                          if (err) msg(err, true)
+                        }}
+                        className={`w-9 h-9 rounded-full text-[13px] font-bold transition-colors disabled:opacity-50 select-none ${
+                          settingsHiddenDays.includes(dow)
+                            ? 'bg-[var(--color-text-muted)] text-white'
+                            : dow === 0
+                            ? 'bg-red-50 text-red-500 hover:bg-red-100'
+                            : dow === 6
+                            ? 'bg-blue-50 text-blue-500 hover:bg-blue-100'
+                            : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  {settingsHiddenDays.length > 0 ? (
+                    <p className="mt-2 text-xs text-[var(--color-text-muted)]">
+                      숨김 요일 <b className="text-[var(--color-text-primary)]">{[...settingsHiddenDays].sort((a, b) => a - b).map(d => DAY_LABELS[d]).join('·')}</b>
+                    </p>
+                  ) : (
+                    <p className="mt-2 text-xs text-[var(--color-text-muted)]">요일을 선택하면 해당 요일이 달력에서 숨겨집니다</p>
+                  )}
+                </div>
               </div>
             )}
 
@@ -2231,33 +2278,6 @@ export function AdminPage() {
                       ))}
                     </ul>
                   )}
-                </div>
-
-                <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow-sm p-5">
-                  <p className="text-[12px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">요일 숨김</p>
-                  <p className="text-[12px] text-[var(--color-text-muted)] mb-3">선택한 요일은 월간·주간 뷰에서 숨겨집니다.</p>
-                  <div className="flex gap-2 flex-wrap">
-                    {['일', '월', '화', '수', '목', '금', '토'].map((label, dow) => (
-                      <button
-                        key={dow}
-                        type="button"
-                        onClick={() => setSettingsHiddenDays(prev =>
-                          prev.includes(dow) ? prev.filter(d => d !== dow) : [...prev, dow]
-                        )}
-                        className={`w-10 h-10 rounded-xl text-sm font-semibold border transition-colors ${
-                          settingsHiddenDays.includes(dow)
-                            ? 'bg-[var(--color-text-muted)] text-white border-[var(--color-text-muted)]'
-                            : dow === 0
-                            ? 'border-red-200 text-red-400 hover:bg-red-50'
-                            : dow === 6
-                            ? 'border-blue-200 text-blue-400 hover:bg-blue-50'
-                            : 'border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
-                        }`}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
                 </div>
 
                 {/* Feature Flags — 슈퍼관리자 전용 */}
