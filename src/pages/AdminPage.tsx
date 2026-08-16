@@ -539,6 +539,15 @@ export function AdminPage() {
     }
   }
 
+  function openDaysSummary() {
+    const openDays = [0, 1, 2, 3, 4, 5, 6].filter(d =>
+      adminTimeSlots.some(s => getRule(d, s as TimeSlot)?.is_open)
+    )
+    if (openDays.length === 0) return '없음'
+    if (openDays.length === 7) return '매일'
+    return openDays.map(d => DAY_LABELS[d]).join('·')
+  }
+
   function msg(text: string, isError = false) { setMessage({ text, isError }) }
 
   async function handleAddMember(e: React.FormEvent) {
@@ -1901,9 +1910,16 @@ export function AdminPage() {
                   <div className="flex-1 h-px bg-[var(--color-border)]" />
                 </div>
 
-                {/* 빠른 선택 */}
+                {/* 운영요일 선택 */}
                 <div className="mb-4">
-                  <p className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2">빠른 선택</p>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-semibold text-[var(--color-text-secondary)]">운영요일 선택</p>
+                    {scheduleRules.length > 0 && (
+                      <span className="text-xs text-[var(--color-text-muted)]">
+                        현재 운영 요일 <b className="text-[var(--color-text-primary)]">{openDaysSummary()}</b>
+                      </span>
+                    )}
+                  </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {SCHEDULE_RULE_TEMPLATES.map((t, i) => (
                       <button
