@@ -539,15 +539,6 @@ export function AdminPage() {
     }
   }
 
-  function openDaysSummary() {
-    const openDays = [0, 1, 2, 3, 4, 5, 6].filter(d =>
-      adminTimeSlots.some(s => getRule(d, s as TimeSlot)?.is_open)
-    )
-    if (openDays.length === 0) return '없음'
-    if (openDays.length === 7) return '매일'
-    return openDays.map(d => DAY_LABELS[d]).join('·')
-  }
-
   function msg(text: string, isError = false) { setMessage({ text, isError }) }
 
   async function handleAddMember(e: React.FormEvent) {
@@ -1942,56 +1933,40 @@ export function AdminPage() {
                 <div className="mb-4 border border-[var(--color-border)] rounded-2xl p-4 bg-[var(--color-surface)]">
                   <p className="text-sm font-semibold text-[var(--color-text-secondary)] mb-0.5">
                     정기휴일 직접 지정
-                    <span className="ml-1.5 font-normal text-[var(--color-text-muted)]">선택한 요일 = 휴무</span>
+                    <span className="ml-1.5 font-normal text-[var(--color-text-muted)]">선택한 요일은 휴무일로 즉시 적용됩니다</span>
                   </p>
                   <div className="flex gap-1.5 mt-2.5 flex-wrap">
                     {DAY_LABELS.map((d, idx) => (
                       <button
                         key={idx}
-                        className={`w-9 h-9 rounded-full text-[13px] font-bold transition-colors select-none ${
+                        disabled={applyingHoliday || applyingTemplate !== null}
+                        className={`w-9 h-9 rounded-full text-[13px] font-bold transition-colors select-none disabled:opacity-50 ${
                           closedDays.has(idx)
                             ? idx === 0 ? 'bg-red-500 text-white' : idx === 6 ? 'bg-blue-500 text-white' : 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]'
                             : idx === 0 ? 'bg-red-50 text-red-500 hover:bg-red-100' : idx === 6 ? 'bg-blue-50 text-blue-500 hover:bg-blue-100' : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
                         }`}
-                        onClick={() => setClosedDays(prev => {
-                          const next = new Set(prev)
+                        onClick={async () => {
+                          const next = new Set(closedDays)
                           if (next.has(idx)) next.delete(idx); else next.add(idx)
-                          return next
-                        })}
+                          setClosedDays(next)
+                          setApplyingHoliday(true)
+                          const openDays = [0, 1, 2, 3, 4, 5, 6].filter(d => !next.has(d))
+                          await applyRuleTemplate(openDays)
+                          setApplyingHoliday(false)
+                        }}
                       >
                         {d}
                       </button>
                     ))}
                   </div>
                   {closedDays.size > 0 ? (
-                    <div className="flex items-center gap-3 mt-3">
-                      <span className="text-sm text-[var(--color-text-secondary)]">
-                        휴무일 <b className="text-[var(--color-text-primary)]">{[...closedDays].sort((a, b) => a - b).map(d => DAY_LABELS[d]).join('·')}</b>
-                      </span>
-                      <button
-                        disabled={applyingHoliday || applyingTemplate !== null}
-                        onClick={async () => {
-                          setApplyingHoliday(true)
-                          const openDays = [0, 1, 2, 3, 4, 5, 6].filter(d => !closedDays.has(d))
-                          await applyRuleTemplate(openDays)
-                          setApplyingHoliday(false)
-                        }}
-                        className="px-3 py-1.5 text-xs font-semibold bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity"
-                      >
-                        {applyingHoliday ? '적용 중...' : '적용'}
-                      </button>
-                    </div>
+                    <p className="mt-2 text-xs text-[var(--color-text-muted)]">
+                      휴무 요일 <b className="text-[var(--color-text-primary)]">{[...closedDays].sort((a, b) => a - b).map(d => DAY_LABELS[d]).join('·')}</b>
+                    </p>
                   ) : (
                     <p className="mt-2 text-xs text-[var(--color-text-muted)]">요일을 선택하면 해당 요일이 정기휴일로 지정됩니다</p>
                   )}
                 </div>
-
-                {/* 현재 운영 요일 요약 */}
-                {scheduleRules.length > 0 && (
-                  <div className="mb-4 px-4 py-2.5 rounded-xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)] text-sm text-[var(--color-text-secondary)]">
-                    현재 운영 요일 <b className="text-[var(--color-text-primary)]">{openDaysSummary()}</b>
-                  </div>
-                )}
 
                 {/* 요일 숨김 */}
                 <div className="mb-4 border border-[var(--color-border)] rounded-2xl p-4 bg-[var(--color-surface)]">
