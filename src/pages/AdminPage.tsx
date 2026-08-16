@@ -889,6 +889,48 @@ export function AdminPage() {
     setSlotLabels(prev => { const n = { ...prev }; delete n[slot]; return n })
   }
 
+  async function handleSlotSave() {
+    if (!adminTenant) return
+    if (slotList.length === 0) { msg('슬롯을 하나 이상 등록해야 합니다.', true); return }
+    const currentSlots = adminTenant.settings?.time_slots ?? []
+    const removedSlots = currentSlots.filter(s => !slotList.includes(s))
+    if (removedSlots.length > 0) {
+      const { count } = await supabase.from('assignments')
+        .select('*', { count: 'exact', head: true })
+        .eq('tenant_id', adminTenant.id)
+        .in('time_slot', removedSlots)
+      if ((count ?? 0) > 0) {
+        if (!window.confirm(`삭제될 슬롯(${removedSlots.length}개)에 기존 배정 ${count}건이 있습니다.\n해당 배정은 DB에 남지만 스케줄 화면에서 보이지 않게 됩니다.\n계속하시겠습니까?`)) return
+      }
+    }
+    setSaving(true)
+    const hasHalf = slotList.some(s => s.includes('.'))
+    const [settingsErr, rulesErr] = await Promise.all([
+      updateTenantSettings(adminTenant.id, {
+        time_slots: slotList,
+        slot_interval_minutes: hasHalf ? 30 : 60,
+        slot_labels: slotLabels,
+      }),
+      upsertScheduleRulesForSlots(slotList),
+    ])
+    setSaving(false)
+    const err = settingsErr || rulesErr
+    msg(err ?? '타임슬롯이 저장됐습니다.', !!err)
+    if (!err) {
+      const updated = {
+        ...adminTenant,
+        settings: {
+          ...adminTenant.settings,
+          time_slots: slotList,
+          slot_interval_minutes: hasHalf ? 30 : 60,
+          slot_labels: slotLabels,
+        },
+      }
+      setAdminTenant(updated)
+      if (adminTenant.id === tenant?.id) updateCurrentTenant(updated)
+    }
+  }
+
   async function handleRatioSave() {
     const total = Object.values(roleRatios).reduce((s, v) => s + v, 0)
     if (Object.keys(roleRatios).length > 0 && total !== 100) {
@@ -1834,13 +1876,13 @@ export function AdminPage() {
                   </span>
                   <h2 className="mt-3 mb-1.5 text-[clamp(22px,5vw,27px)] font-extrabold tracking-tight text-[var(--color-text-primary)]">날짜·요일·시간 설정</h2>
                   <p className="text-[14px] font-medium text-[var(--color-text-muted)] leading-relaxed max-w-[52ch]">
-                    요일·시간대별 운영 규칙과 날짜별 예외를 관리합니다. 버튼 클릭 시 즉시 저장됩니다.
+                    운영 요일·타임슬롯·날짜별 예외를 설정합니다. 요일·날짜 변경은 즉시 저장됩니다.
                   </p>
                 </header>
 
                 {/* Missing rules banner */}
                 {adminTimeSlots.some(slot => !scheduleRules.some(r => r.time_slot === slot)) && (
-                  <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-2xl flex items-center justify-between gap-3">
+                  <div className="mb-5 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-2xl flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="text-amber-600 shrink-0"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                       <span className="text-sm font-medium text-amber-700 dark:text-amber-300">일부 슬롯에 규칙이 없습니다. 규칙을 생성해 주세요.</span>
@@ -1861,6 +1903,12 @@ export function AdminPage() {
                     </button>
                   </div>
                 )}
+
+                {/* ── 요일 섹션 ── */}
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="text-[11px] font-bold text-[var(--color-text-muted)] bg-[var(--color-surface-secondary)] px-2.5 py-1 rounded-full border border-[var(--color-border)] whitespace-nowrap tracking-wide">요일</span>
+                  <div className="flex-1 h-px bg-[var(--color-border)]" />
+                </div>
 
                 {/* 빠른 선택 */}
                 <div className="mb-4">
@@ -1945,58 +1993,8 @@ export function AdminPage() {
                   </div>
                 )}
 
-                {/* 시간대별 직접 설정 (접기/펼치기) */}
-                <button
-                  className="flex items-center gap-1.5 text-sm font-semibold text-[var(--color-brand-primary)] mb-3"
-                  onClick={() => setShowMatrix(v => !v)}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                    style={{ transform: showMatrix ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }}>
-                    <path d="m6 9 6 6 6-6"/>
-                  </svg>
-                  시간대별 직접 설정
-                </button>
-
-                {showMatrix && adminTimeSlots.length > 0 && (
-                  <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow-sm overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
-                          <th className="text-center px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">시간</th>
-                          {DAY_LABELS.map((d, idx) => (
-                            <th key={d} className={`px-3 py-3 text-xs font-semibold text-center ${idx === 0 ? 'text-red-500' : idx === 6 ? 'text-blue-500' : 'text-[var(--color-text-muted)]'}`}>{d}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[var(--color-border)]">
-                        {adminTimeSlots.map(slot => (
-                          <tr key={slot}>
-                            <td className="px-4 py-2.5 text-center font-medium text-[var(--color-text-secondary)] whitespace-nowrap">{parseSlotLabel(slot)}</td>
-                            {DAY_LABELS.map((_, dayIdx) => {
-                              const rule = getRule(dayIdx, slot)
-                              return (
-                                <td key={dayIdx} className="px-3 py-2.5 text-center">
-                                  {rule ? (
-                                    <button onClick={async () => {
-                                      const err = await toggleScheduleRule(rule.id, rule.is_open)
-                                      if (err) msg(err, true)
-                                    }}
-                                      className={`px-2.5 py-0.5 rounded-lg text-xs font-semibold transition-colors ${rule.is_open ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)]'}`}>
-                                      {rule.is_open ? '운영' : '미운영'}
-                                    </button>
-                                  ) : <span className="text-[var(--color-border-strong)]">—</span>}
-                                </td>
-                              )
-                            })}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-
                 {/* 요일 숨김 */}
-                <div className="mt-4 border border-[var(--color-border)] rounded-2xl p-4 bg-[var(--color-surface)]">
+                <div className="mb-4 border border-[var(--color-border)] rounded-2xl p-4 bg-[var(--color-surface)]">
                   <p className="text-sm font-semibold text-[var(--color-text-secondary)] mb-0.5">
                     요일 숨김
                     <span className="ml-1.5 font-normal text-[var(--color-text-muted)]">선택한 요일은 월간·주간 뷰에서 숨겨집니다</span>
@@ -2042,8 +2040,152 @@ export function AdminPage() {
                   )}
                 </div>
 
+                {/* ── 시간 섹션 ── */}
+                <div className="flex items-center gap-3 mb-4 mt-6">
+                  <span className="text-[11px] font-bold text-[var(--color-text-muted)] bg-[var(--color-surface-secondary)] px-2.5 py-1 rounded-full border border-[var(--color-border)] whitespace-nowrap tracking-wide">시간</span>
+                  <div className="flex-1 h-px bg-[var(--color-border)]" />
+                </div>
+
+                {/* 타임슬롯 설정 */}
+                <div className="mb-4 bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow-sm p-4 space-y-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-[var(--color-text-secondary)]">타임슬롯 설정</p>
+                      <p className="text-xs text-[var(--color-text-muted)] mt-0.5">스케줄에 표시할 시간 단위를 구성합니다. 변경 후 저장 버튼을 누르세요.</p>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={saving}
+                      onClick={handleSlotSave}
+                      className="shrink-0 px-4 py-1.5 bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-xs font-semibold rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50"
+                    >
+                      {saving ? '저장 중...' : '저장'}
+                    </button>
+                  </div>
+
+                  {/* 템플릿 적용 */}
+                  <div>
+                    <p className="text-[12px] font-bold text-[var(--color-text-secondary)] mb-2">템플릿 적용</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {SLOT_TEMPLATES.map(t => (
+                        <button key={t.label} type="button"
+                          onClick={() => setSlotList(t.slots)}
+                          className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:border-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary)] hover:bg-[var(--color-surface-hover)] transition-colors">
+                          {t.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 직접 추가 */}
+                  <div>
+                    <p className="text-[12px] font-bold text-[var(--color-text-secondary)] mb-2">직접 추가</p>
+                    <div className="flex items-end gap-2 flex-wrap">
+                      <div>
+                        <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">시작</label>
+                        <select value={slotStart} onChange={e => setSlotStart(Number(e.target.value))} className={inputCls + ' block mt-1'}>
+                          {START_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">종료</label>
+                        <select value={slotEnd} onChange={e => setSlotEnd(Number(e.target.value))} className={inputCls + ' block mt-1'}>
+                          {END_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        </select>
+                      </div>
+                      <button type="button" onClick={handleAddSlot}
+                        className="px-3 py-px text-xs font-semibold border border-[var(--color-brand-primary)] text-[var(--color-brand-primary)] rounded-lg hover:bg-[var(--color-surface-hover)]">
+                        + 추가
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 슬롯 목록 */}
+                  {slotList.length === 0 ? (
+                    <p className="text-xs text-[var(--color-text-muted)]">등록된 슬롯이 없습니다.</p>
+                  ) : (
+                    <ul className="space-y-1.5">
+                      {slotList.map(slot => (
+                        <li key={slot} className="grid grid-cols-[auto_1fr_auto] items-center gap-2 px-3 py-2 bg-[var(--color-surface-secondary)] rounded-xl border border-[var(--color-border)]">
+                          <span className="text-sm font-semibold text-[var(--color-text-secondary)] whitespace-nowrap shrink-0">{parseSlotLabel(slot)}</span>
+                          <input
+                            type="text"
+                            placeholder="레이블 (예: 점심시간)"
+                            value={slotLabels[slot] ?? ''}
+                            onChange={e => setSlotLabels(prev => {
+                              const next = { ...prev }
+                              if (e.target.value) next[slot] = e.target.value
+                              else delete next[slot]
+                              return next
+                            })}
+                            className="min-w-0 text-sm border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]"
+                          />
+                          <button type="button" onClick={() => handleDeleteSlot(slot)} className="text-xs font-semibold text-red-500 hover:text-red-700 shrink-0">삭제</button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                {/* 시간대별 직접 설정 (접기/펼치기) */}
+                <div className="mb-4 border border-[var(--color-border)] rounded-2xl bg-[var(--color-surface)] overflow-hidden">
+                  <button
+                    className="w-full flex items-center justify-between gap-2 px-4 py-3 text-sm font-semibold text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
+                    onClick={() => setShowMatrix(v => !v)}
+                  >
+                    <span>시간대별 직접 설정 <span className="font-normal text-[var(--color-text-muted)] text-xs ml-1">요일×슬롯 단위로 운영/미운영 토글</span></span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                      style={{ transform: showMatrix ? 'rotate(180deg)' : 'none', transition: 'transform .15s', flexShrink: 0 }}>
+                      <path d="m6 9 6 6 6-6"/>
+                    </svg>
+                  </button>
+                  {showMatrix && adminTimeSlots.length > 0 && (
+                    <div className="border-t border-[var(--color-border)] overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
+                            <th className="text-center px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">시간</th>
+                            {DAY_LABELS.map((d, idx) => (
+                              <th key={d} className={`px-3 py-3 text-xs font-semibold text-center ${idx === 0 ? 'text-red-500' : idx === 6 ? 'text-blue-500' : 'text-[var(--color-text-muted)]'}`}>{d}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[var(--color-border)]">
+                          {adminTimeSlots.map(slot => (
+                            <tr key={slot}>
+                              <td className="px-4 py-2.5 text-center font-medium text-[var(--color-text-secondary)] whitespace-nowrap">{parseSlotLabel(slot)}</td>
+                              {DAY_LABELS.map((_, dayIdx) => {
+                                const rule = getRule(dayIdx, slot)
+                                return (
+                                  <td key={dayIdx} className="px-3 py-2.5 text-center">
+                                    {rule ? (
+                                      <button onClick={async () => {
+                                        const err = await toggleScheduleRule(rule.id, rule.is_open)
+                                        if (err) msg(err, true)
+                                      }}
+                                        className={`px-2.5 py-0.5 rounded-lg text-xs font-semibold transition-colors ${rule.is_open ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)]'}`}>
+                                        {rule.is_open ? '운영' : '미운영'}
+                                      </button>
+                                    ) : <span className="text-[var(--color-border-strong)]">—</span>}
+                                  </td>
+                                )
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+                {/* ── 날짜 섹션 ── */}
+                <div className="flex items-center gap-3 mb-4 mt-6">
+                  <span className="text-[11px] font-bold text-[var(--color-text-muted)] bg-[var(--color-surface-secondary)] px-2.5 py-1 rounded-full border border-[var(--color-border)] whitespace-nowrap tracking-wide">날짜</span>
+                  <div className="flex-1 h-px bg-[var(--color-border)]" />
+                </div>
+
                 {/* 날짜별 예외 설정 */}
-                <div className="mt-6 pt-6 border-t border-[var(--color-border)]">
+                <div>
                   <p className="text-sm font-semibold text-[var(--color-text-secondary)] mb-0.5">
                     날짜별 예외 설정
                     <span className="ml-1.5 font-normal text-[var(--color-text-muted)]">특정 날짜를 휴관일·특별 운영일로 지정합니다</span>
@@ -2122,7 +2264,7 @@ export function AdminPage() {
                   </span>
                   <h2 className="mt-3 mb-1.5 text-[clamp(22px,5vw,27px)] font-extrabold tracking-tight text-[var(--color-text-primary)]">조직 설정</h2>
                   <p className="text-[14px] font-medium text-[var(--color-text-muted)] leading-relaxed max-w-[52ch]">
-                    조직 이름·타이틀·포인트 컬러·타임슬롯·역할 비율을 설정합니다.
+                    조직 이름·타이틀·포인트 컬러를 설정합니다.
                   </p>
                   <button type="submit" disabled={saving}
                     className="mt-4 px-5 py-2 bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-sm font-semibold rounded-xl hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50">
@@ -2199,72 +2341,6 @@ export function AdminPage() {
                       </div>
                     )}
                   </div>
-                </div>
-
-                <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow-sm p-5 space-y-4">
-                  <p className="text-[12px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">타임슬롯</p>
-
-                  {/* Templates */}
-                  <div>
-                    <p className="text-[12px] font-bold text-[var(--color-text-secondary)] mb-2">템플릿 적용</p>
-                    <div className="flex gap-2 flex-wrap">
-                      {SLOT_TEMPLATES.map(t => (
-                        <button key={t.label} type="button"
-                          onClick={() => setSlotList(t.slots)}
-                          className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:border-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary)] hover:bg-[var(--color-surface-hover)] transition-colors">
-                          {t.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Manual add */}
-                  <div>
-                    <p className="text-[12px] font-bold text-[var(--color-text-secondary)] mb-2">직접 추가</p>
-                    <div className="flex items-end gap-2 flex-wrap">
-                      <div>
-                        <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">시작</label>
-                        <select value={slotStart} onChange={e => setSlotStart(Number(e.target.value))} className={inputCls + ' block mt-1'}>
-                          {START_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">종료</label>
-                        <select value={slotEnd} onChange={e => setSlotEnd(Number(e.target.value))} className={inputCls + ' block mt-1'}>
-                          {END_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                        </select>
-                      </div>
-                      <button type="button" onClick={handleAddSlot}
-                        className="px-3 py-px text-xs font-semibold border border-[var(--color-brand-primary)] text-[var(--color-brand-primary)] rounded-lg hover:bg-[var(--color-surface-hover)]">
-                        + 추가
-                      </button>
-                    </div>
-                  </div>
-
-                  {slotList.length === 0 ? (
-                    <p className="text-xs text-[var(--color-text-muted)]">등록된 슬롯이 없습니다.</p>
-                  ) : (
-                    <ul className="space-y-1.5">
-                      {slotList.map(slot => (
-                        <li key={slot} className="grid grid-cols-[auto_1fr_auto] items-center gap-2 px-3 py-2 bg-[var(--color-surface-secondary)] rounded-xl border border-[var(--color-border)]">
-                          <span className="text-sm font-semibold text-[var(--color-text-secondary)] whitespace-nowrap shrink-0">{parseSlotLabel(slot)}</span>
-                          <input
-                            type="text"
-                            placeholder="레이블 (예: 점심시간)"
-                            value={slotLabels[slot] ?? ''}
-                            onChange={e => setSlotLabels(prev => {
-                              const next = { ...prev }
-                              if (e.target.value) next[slot] = e.target.value
-                              else delete next[slot]
-                              return next
-                            })}
-                            className="min-w-0 text-sm border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]"
-                          />
-                          <button type="button" onClick={() => handleDeleteSlot(slot)} className="text-xs font-semibold text-red-500 hover:text-red-700 shrink-0">삭제</button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
                 </div>
 
                 {/* Feature Flags — 슈퍼관리자 전용 */}
