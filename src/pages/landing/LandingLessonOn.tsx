@@ -2,6 +2,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import { DevFileLabel } from '../../components/DevFileLabel'
+import { WizardIcon } from '../../components/setup/WizardIcons'
 
 const ACCENT = '#F2604E'
 const GREEN = '#3DDC84'
@@ -98,13 +99,32 @@ function ViewCycleDemo() {
   type V = typeof VIEWS[number]
   const [idx, setIdx] = useState(0)
   const [show, setShow] = useState(true)
+  const idxRef = useRef(0)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  function startTimer() {
+    if (timerRef.current) clearInterval(timerRef.current)
+    timerRef.current = setInterval(() => {
+      setShow(false)
+      setTimeout(() => {
+        const next = (idxRef.current + 1) % VIEWS.length
+        idxRef.current = next
+        setIdx(next)
+        setShow(true)
+      }, 270)
+    }, 2100)
+  }
+
+  function jump(newIdx: number) {
+    if (newIdx === idxRef.current) return
+    setShow(false)
+    setTimeout(() => { idxRef.current = newIdx; setIdx(newIdx); setShow(true) }, 270)
+    startTimer()
+  }
 
   useEffect(() => {
-    const t = setInterval(() => {
-      setShow(false)
-      setTimeout(() => { setIdx(i => (i + 1) % VIEWS.length); setShow(true) }, 270)
-    }, 2100)
-    return () => clearInterval(t)
+    startTimer()
+    return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [])
 
   const view = VIEWS[idx]
@@ -197,7 +217,7 @@ function ViewCycleDemo() {
             <div key={d} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 2, padding: 2, minHeight: 28 }}>
               <div style={{ fontSize: 7, color: (i%7)>=5?(i%7)===5?'#60a5fa':'#f87171':'rgba(255,255,255,0.45)', marginBottom: 1 }}>{d}</div>
               {ents.map(e => (
-                <div key={e} style={{ fontSize: 6, background: 'rgba(61,220,132,0.13)', borderLeft: '1.5px solid rgba(61,220,132,0.45)', paddingLeft: 2, color: 'rgba(255,255,255,0.72)', marginBottom: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e}</div>
+                <div key={e} style={{ fontSize: 6, background: 'rgba(242,96,78,0.1)', borderLeft: '1.5px solid rgba(242,96,78,0.4)', paddingLeft: 2, color: 'rgba(255,255,255,0.72)', marginBottom: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e}</div>
               ))}
               {more > 0 && <div style={{ fontSize: 6, color: 'rgba(255,255,255,0.35)' }}>+{more}건 더</div>}
             </div>
@@ -228,8 +248,8 @@ function ViewCycleDemo() {
             {row.cells.map((name, ci) => (
               <div key={ci} style={{
                 height: 14, borderRadius: 2,
-                background: name ? 'rgba(61,220,132,0.18)' : 'rgba(255,255,255,0.03)',
-                border: `1px solid ${name ? 'rgba(61,220,132,0.32)' : 'rgba(255,255,255,0.06)'}`,
+                background: name ? 'rgba(242,96,78,0.13)' : 'rgba(255,255,255,0.03)',
+                border: `1px solid ${name ? 'rgba(242,96,78,0.28)' : 'rgba(255,255,255,0.06)'}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 6.5, color: 'rgba(255,255,255,0.78)', overflow: 'hidden',
               }}>
@@ -245,12 +265,177 @@ function ViewCycleDemo() {
   return (
     <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
       <div style={{ display: 'flex', gap: 3, marginBottom: 10 }}>
-        {VIEWS.map(v => (
-          <span key={v} style={{ flex: 1, textAlign: 'center', background: v === view ? ACCENT : 'rgba(255,255,255,0.07)', color: v === view ? '#fff' : 'rgba(255,255,255,0.4)', fontSize: 9, fontWeight: v === view ? 700 : undefined, padding: '3px 0', borderRadius: 5, transition: 'background 0.25s, color 0.25s', whiteSpace: 'nowrap' }}>{v}</span>
+        {VIEWS.map((v, i) => (
+          <span key={v} onClick={() => jump(i)} style={{ flex: 1, textAlign: 'center', background: v === view ? ACCENT : 'rgba(255,255,255,0.07)', color: v === view ? '#fff' : 'rgba(255,255,255,0.4)', fontSize: 9, fontWeight: v === view ? 700 : undefined, padding: '3px 0', borderRadius: 5, transition: 'background 0.25s, color 0.25s', whiteSpace: 'nowrap', cursor: 'pointer' }}>{v}</span>
         ))}
       </div>
       <div style={{ minHeight: 120, opacity: show ? 1 : 0, transition: 'opacity 0.25s ease' }}>
         {content[view]}
+      </div>
+    </div>
+  )
+}
+
+// 5분 셋업 위자드 단계별 애니메이션
+function WizardStepDemo() {
+  const [step, setStep] = useState(0)
+  const [show, setShow] = useState(true)
+  const stepRef = useRef<number>(0)
+
+  function go(next: number) {
+    setShow(false)
+    setTimeout(() => { setStep(next); stepRef.current = next; setShow(true) }, 180)
+  }
+
+  useEffect(() => {
+    const t = setInterval(() => go((stepRef.current + 1) % 7), 3000)
+    return () => clearInterval(t)
+  }, [])
+
+  const STEP_LABELS = ['조직 소개', '운영 모드', '시간 단위', '역할 설정', '운영 요일', '레슨 종류', '입력 항목']
+
+  const cell = (n: string | null, accent: string) => (
+    <div style={{ height: 15, borderRadius: 3, background: n ? `rgba(${accent},0.1)` : 'rgba(255,255,255,0.03)', border: `1px solid ${n ? `rgba(${accent},0.25)` : 'rgba(255,255,255,0.06)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, color: 'rgba(255,255,255,0.65)' }}>{n}</div>
+  )
+
+  const previews: React.ReactNode[] = [
+    // 0: 조직 소개
+    <div>
+      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginBottom: 3 }}>업종</div>
+      <div style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 5, padding: '4px 7px', fontSize: 10, color: 'rgba(255,255,255,0.65)', marginBottom: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><WizardIcon.user size={10} sw={1.6} style={{ color: 'rgba(255,255,255,0.45)' }} />PT·헬스</span><span style={{ color: 'rgba(255,255,255,0.25)' }}>▾</span>
+      </div>
+      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginBottom: 3 }}>조직명</div>
+      <div style={{ background: 'rgba(255,255,255,0.07)', border: `1px solid ${ACCENT}55`, borderRadius: 5, padding: '4px 7px', fontSize: 10, color: 'rgba(255,255,255,0.85)' }}>
+        서울 PT 스튜디오<span style={{ animation: 'typeCursor 1s step-end infinite', borderLeft: `1.5px solid ${ACCENT}`, marginLeft: 1 }}>&thinsp;</span>
+      </div>
+    </div>,
+
+    // 1: 운영 모드
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      {([
+        { Icon: WizardIcon.users, label: '회원 공유' },
+        { Icon: WizardIcon.lock,  label: '회원 개별', sel: true },
+        { Icon: WizardIcon.walk,  label: '비회원' },
+      ] as { Icon: typeof WizardIcon.users; label: string; sel?: boolean }[]).map(m => (
+        <div key={m.label} style={{ padding: '4px 7px', borderRadius: 5, background: m.sel ? 'rgba(242,96,78,0.1)' : 'rgba(255,255,255,0.04)', border: `1px solid ${m.sel ? ACCENT : 'rgba(255,255,255,0.1)'}`, display: 'flex', alignItems: 'center', gap: 5 }}>
+          <m.Icon size={11} sw={1.6} style={{ color: m.sel ? ACCENT : 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
+          <span style={{ fontSize: 10, fontWeight: m.sel ? 700 : undefined, color: m.sel ? '#fff' : 'rgba(255,255,255,0.5)', flex: 1 }}>{m.label}</span>
+          {m.sel && <span style={{ fontSize: 8, color: ACCENT }}>✓</span>}
+        </div>
+      ))}
+    </div>,
+
+    // 2: 시간 단위
+    <div>
+      <div style={{ display: 'flex', gap: 3, marginBottom: 7 }}>
+        {(['30분', '1시간', '2시간'] as string[]).map((t, i) => (
+          <span key={t} style={{ flex: 1, textAlign: 'center', fontSize: 9, padding: '3px 0', borderRadius: 4, background: i === 1 ? ACCENT : 'rgba(255,255,255,0.07)', color: i === 1 ? '#fff' : 'rgba(255,255,255,0.4)', fontWeight: i === 1 ? 700 : undefined }}>{t}</span>
+        ))}
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+        {(['09:00–10:00', '10:00–11:00', '11:00–12:00', '13:00–14:00'] as string[]).map((s, i) => (
+          <span key={s} style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.22)', borderRadius: 4, padding: '2px 5px', fontSize: 9, color: 'rgba(255,255,255,0.6)', opacity: 0, animation: `fadeUp 0.3s ease ${i * 90}ms forwards` }}>{s}</span>
+        ))}
+      </div>
+    </div>,
+
+    // 3: 역할 설정
+    <div>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 7 }}>
+        {([{ name: '강사', badge: '칸분리', clr: ACCENT }, { name: '회원', badge: '없음', clr: 'rgba(255,255,255,0.3)' }] as { name: string; badge: string; clr: string }[]).map(r => (
+          <div key={r.name} style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 5, padding: '4px 6px' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.8)' }}>{r.name}</div>
+            <div style={{ fontSize: 8, color: r.clr, marginTop: 1 }}>{r.badge}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '22px 1fr 1fr', gap: 2 }}>
+        {([
+          { t: '10:00', a: '이하나', b: '조은수' },
+          { t: '11:00', a: '이하나', b: '김민지' },
+          { t: '14:00', a: '성시호', b: '' },
+        ] as { t: string; a: string; b: string }[]).map(row => [
+          <div key={`t${row.t}`} style={{ fontSize: 7, color: 'rgba(255,255,255,0.28)', display: 'flex', alignItems: 'center' }}>{row.t}</div>,
+          cell(row.a, '242,96,78'),
+          cell(row.b || null, '61,220,132'),
+        ])}
+      </div>
+    </div>,
+
+    // 4: 운영 요일
+    <div>
+      <div style={{ display: 'flex', gap: 2, marginBottom: 6 }}>
+        {(['일', '월', '화', '수', '목', '금', '토'] as string[]).map((d, i) => {
+          const on = i >= 1 && i <= 5
+          return <div key={d} style={{ flex: 1, height: 20, borderRadius: 4, fontSize: 9, fontWeight: on ? 700 : undefined, background: on ? 'rgba(242,96,78,0.13)' : 'rgba(255,255,255,0.04)', border: `1px solid ${on ? 'rgba(242,96,78,0.35)' : 'rgba(255,255,255,0.08)'}`, color: on ? ACCENT : 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{d}</div>
+        })}
+      </div>
+      <div style={{ display: 'flex', gap: 3, marginBottom: 6 }}>
+        {(['평일', '주5일', '매일'] as string[]).map((t, i) => (
+          <span key={t} style={{ flex: 1, textAlign: 'center', fontSize: 9, padding: '3px 0', borderRadius: 4, background: i === 0 ? 'rgba(242,96,78,0.12)' : 'rgba(255,255,255,0.06)', color: i === 0 ? ACCENT : 'rgba(255,255,255,0.35)', border: `1px solid ${i === 0 ? 'rgba(242,96,78,0.28)' : 'rgba(255,255,255,0.08)'}` }}>{t}</span>
+        ))}
+      </div>
+      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', textAlign: 'center' }}>09:00 ~ 19:00</div>
+    </div>,
+
+    // 5: 레슨 종류
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      {(['1:1 레슨 10회', '그룹 수업 20회', '체험 레슨 3회'] as string[]).map((name, i) => (
+        <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 5, padding: '4px 7px', opacity: 0, animation: `fadeUp 0.3s ease ${i * 110}ms forwards` }}>
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.72)', flex: 1 }}>{name}</span>
+          <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.2)' }}>✕</span>
+        </div>
+      ))}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 3, border: '1px dashed rgba(255,255,255,0.12)', borderRadius: 5, fontSize: 9, color: 'rgba(255,255,255,0.25)' }}>+ 추가</div>
+    </div>,
+
+    // 6: 입력 항목
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+      {([
+        { Icon: WizardIcon.pencil, label: '이름',     type: '텍스트',   on: true },
+        { Icon: WizardIcon.phone,  label: '연락처',   type: '전화번호', on: true },
+        { Icon: WizardIcon.list,   label: '레슨 유형', type: '드롭다운', on: true },
+        { Icon: WizardIcon.text,   label: '메모',     type: '텍스트',   on: false },
+      ] as { Icon: typeof WizardIcon.pencil; label: string; type: string; on: boolean }[]).map((f, i) => (
+        <div key={f.label} style={{ display: 'flex', alignItems: 'center', gap: 4, opacity: 0, animation: `fadeUp 0.3s ease ${i * 80}ms forwards` }}>
+          <f.Icon size={10} sw={1.6} style={{ color: 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
+          <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.65)', flex: 1 }}>{f.label}</span>
+          <span style={{ fontSize: 7, color: 'rgba(255,255,255,0.28)', background: 'rgba(255,255,255,0.05)', padding: '1px 4px', borderRadius: 3 }}>{f.type}</span>
+          <div style={{ width: 22, height: 12, borderRadius: 6, background: f.on ? ACCENT : 'rgba(255,255,255,0.12)', position: 'relative', flexShrink: 0 }}>
+            <div style={{ position: 'absolute', top: 2, width: 8, height: 8, borderRadius: '50%', background: '#fff', left: f.on ? 11 : 2, transition: 'left 0.2s' }} />
+          </div>
+        </div>
+      ))}
+    </div>,
+  ]
+
+  return (
+    <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '42% 1fr', gap: 10, marginBottom: 10 }}>
+        {/* 단계 목록 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {STEP_LABELS.map((label, i) => {
+            const done = i < step
+            const active = i === step
+            return (
+              <div key={i} onClick={() => { if (i !== stepRef.current) go(i) }} style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', padding: '3px 5px', borderRadius: 5, background: active ? 'rgba(242,96,78,0.08)' : 'transparent', border: `1px solid ${active ? 'rgba(242,96,78,0.22)' : 'transparent'}`, transition: 'background 0.25s, border-color 0.25s' }}>
+                <div style={{ width: 15, height: 15, borderRadius: '50%', flexShrink: 0, fontSize: 8, fontWeight: 700, background: done ? 'rgba(34,197,94,0.15)' : active ? 'rgba(242,96,78,0.15)' : 'rgba(255,255,255,0.06)', color: done ? '#22c55e' : active ? ACCENT : 'rgba(255,255,255,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {done ? '✓' : i + 1}
+                </div>
+                <span style={{ fontSize: 10, fontWeight: active ? 700 : undefined, color: done ? 'rgba(255,255,255,0.28)' : active ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.38)', textDecoration: done ? 'line-through' : undefined, transition: 'color 0.2s', whiteSpace: 'nowrap' }}>{label}</span>
+              </div>
+            )
+          })}
+        </div>
+        {/* 단계 미리보기 */}
+        <div style={{ opacity: show ? 1 : 0, transform: show ? 'translateY(0)' : 'translateY(5px)', transition: 'opacity 0.18s ease, transform 0.18s ease', minHeight: 110 }}>
+          {previews[step]}
+        </div>
+      </div>
+      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', textAlign: 'center', marginBottom: 5 }}>예상 소요 시간 · 약 5분</div>
+      <div style={{ height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden' }}>
+        <div style={{ height: '100%', background: `linear-gradient(90deg, #22c55e, ${ACCENT})`, borderRadius: 2, width: `${((step + 1) / 7) * 100}%`, transition: 'width 0.5s ease' }} />
       </div>
     </div>
   )
@@ -500,34 +685,7 @@ export function LandingLessonOn() {
 
               {[
                 {
-                  visual: (
-                    <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 12 }}>
-                        {([
-                          { n: '1', label: '조직이름 · 업종선택', done: true },
-                          { n: '2', label: '운영 모드 선택', done: true },
-                          { n: '3', label: '슬롯 시간 설정', done: true },
-                          { n: '4', label: '역할(강사/회원) 설정', active: true },
-                          { n: '5', label: '운영 요일/시간 설정', done: false },
-                          { n: '6', label: '레슨종류 등록', done: false },
-                          { n: '7', label: '입력항목 설정', done: false },
-                        ] as { n: string; label: string; done?: boolean; active?: boolean }[]).map(step => (
-                          <div key={step.n} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: step.done ? 'rgba(34,197,94,0.04)' : step.active ? 'rgba(242,96,78,0.08)' : 'rgba(255,255,255,0.03)', border: `1px solid ${step.done ? 'rgba(34,197,94,0.18)' : step.active ? 'rgba(242,96,78,0.28)' : 'rgba(255,255,255,0.07)'}`, borderRadius: 7, fontSize: 11 }}>
-                            <div style={{ width: 19, height: 19, borderRadius: '50%', background: step.done ? 'rgba(34,197,94,0.18)' : step.active ? 'rgba(242,96,78,0.15)' : 'rgba(255,255,255,0.07)', color: step.done ? '#22c55e' : step.active ? ACCENT : 'rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, flexShrink: 0 }}>
-                              {step.done ? '✓' : step.n}
-                            </div>
-                            <span style={{ flex: 1, fontWeight: 600, color: step.done ? 'rgba(255,255,255,0.35)' : step.active ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.45)', textDecoration: step.done ? 'line-through' : undefined }}>{step.label}</span>
-                            {step.active && <span style={{ fontSize: 10, color: ACCENT }}>진행 중</span>}
-                            {step.done && <span style={{ color: '#22c55e', fontSize: 11 }}>✓</span>}
-                          </div>
-                        ))}
-                      </div>
-                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', textAlign: 'center', marginBottom: 5 }}>예상 소요 시간 · 약 5분</div>
-                      <div style={{ height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden' }}>
-                        <div style={{ height: '100%', background: `linear-gradient(90deg, #22c55e, ${ACCENT})`, borderRadius: 2, animation: 'wizFill 5s linear infinite' }} />
-                      </div>
-                    </div>
-                  ),
+                  visual: <WizardStepDemo />,
                   title: '5분 셋업 위자드',
                   desc: '운영 모드·시간 단위·요일 규칙을 7단계 질문으로 안내받아 바로 시작합니다.',
                 },
