@@ -83,9 +83,9 @@ function SyncDemo() {
           <span style={{ fontSize: 8, color: arrowOn ? ACCENT : 'transparent', fontWeight: 700, transition: 'color 0.3s', whiteSpace: 'nowrap' }}>동기화</span>
         </div>
         <Panel label="회원 화면" rows={[
-          { time: '09:00', name: '배정됨' },
+          { time: '09:00', name: '김민지' },
           { time: '11:00', name: memberName, pop: memberPop },
-          { time: '14:00', name: '배정됨' },
+          { time: '14:00', name: '박서연' },
         ]} />
       </div>
     </div>
