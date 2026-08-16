@@ -642,6 +642,8 @@ export function SchedulePage() {
 
   function handleCellMouseDown(target: ModalTarget) {
     if (!excelMode) return
+    // Shift+클릭은 onClick(legacyCellSelection)이 처리 — mousedown에서 anchor를 덮지 않음
+    if (isShiftRef.current) return
     isDraggingRef.current = true
     dragMovedRef.current  = false
     const slotIdx = timeSlots.indexOf(target.timeSlot)
