@@ -276,135 +276,168 @@ function ViewCycleDemo() {
   )
 }
 
-// 스케줄규칙 + 예외날짜설정 인터랙티브 데모
+// 스케줄규칙 + 예외날짜설정 인터랙티브 데모 (요일별·시간별·날짜별 탭 자동순환)
 function ScheduleRuleDemo() {
-  const TEMPLATES = [
-    { label: '평일만',  openDays: [1, 2, 3, 4, 5] },
-    { label: '평일+토', openDays: [1, 2, 3, 4, 5, 6] },
-    { label: '연중무휴', openDays: [0, 1, 2, 3, 4, 5, 6] },
-    { label: '주말만',  openDays: [0, 6] },
-    { label: '월·수·금', openDays: [1, 3, 5] },
-    { label: '화·목',  openDays: [2, 4] },
+  const TABS = ['요일별', '시간별', '날짜별'] as const
+  type T = typeof TABS[number]
+  const PATTERNS = [
+    { label: '평일만',  open: [1, 2, 3, 4, 5] },
+    { label: '월·수·금', open: [1, 3, 5] },
+    { label: '연중무휴', open: [0, 1, 2, 3, 4, 5, 6] },
   ]
-  const SLOTS = ['09', '10', '11', '14', '15']
-  const OPEN_SLOTS = [0, 1, 3]
-  const [sel, setSel] = useState(0)
-  const [calKey, setCalKey] = useState(0)
-  const openDays = TEMPLATES[sel].openDays
-  const hiddenDays = [0, 1, 2, 3, 4, 5, 6].filter(d => !openDays.includes(d))
+  const SLOTS = [
+    { t: '09:00', on: true }, { t: '10:00', on: true },
+    { t: '11:00', on: false }, { t: '14:00', on: true },
+    { t: '15:00', on: true },  { t: '16:00', on: false },
+  ]
+  const [tabIdx, setTabIdx] = useState(0)
+  const [patIdx, setPatIdx] = useState(0)
+  const [animKey, setAnimKey] = useState(0)
   const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
+  const openDays = PATTERNS[patIdx].open
+  const hiddenDays = [0, 1, 2, 3, 4, 5, 6].filter(d => !openDays.includes(d))
   // 2026-08-01 = 토요일(6) → 첫 셀 오프셋 6
   const days = Array.from({ length: 31 }, (_, i) => {
-    const d = i + 1
-    const dow = (6 + i) % 7
+    const d = i + 1; const dow = (6 + i) % 7
     return { d, dow, isOpen: openDays.includes(dow), isHol: d === 15, isSpc: d === 20 }
   })
 
+  useEffect(() => {
+    const id = setInterval(() => {
+      setTabIdx(t => (t + 1) % 3)
+      setPatIdx(p => (p + 1) % 3)
+      setAnimKey(k => k + 1)
+    }, 2400)
+    return () => clearInterval(id)
+  }, [])
+
+  function selectTab(i: number) {
+    setTabIdx(i); setAnimKey(k => k + 1)
+  }
+
+  const tab: T = TABS[tabIdx]
+
   return (
-    <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
-      {/* 빠른선택 */}
-      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginBottom: 5 }}>빠른 선택</div>
-      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 10 }}>
-        {TEMPLATES.map((t, i) => (
-          <button
-            key={t.label}
-            onClick={() => { if (sel !== i) { setSel(i); setCalKey(k => k + 1) } }}
-            style={{
-              background: i === sel ? ACCENT : 'rgba(255,255,255,0.07)',
-              color: i === sel ? '#fff' : 'rgba(255,255,255,0.4)',
-              fontSize: 9, fontWeight: i === sel ? 700 : undefined,
-              padding: '3px 8px', borderRadius: 6,
-              border: `1px solid ${i === sel ? ACCENT : 'rgba(255,255,255,0.1)'}`,
-              cursor: 'pointer',
-              transition: 'background 0.2s, color 0.2s, border-color 0.2s',
-            }}
-          >{t.label}</button>
+    <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: '10px 12px', marginBottom: 16 }}>
+      {/* 탭 선택 */}
+      <div style={{ display: 'flex', gap: 3, marginBottom: 8 }}>
+        {TABS.map((t, i) => (
+          <button key={t} onClick={() => selectTab(i)} style={{
+            flex: 1, textAlign: 'center', padding: '3px 0', borderRadius: 5, cursor: 'pointer',
+            background: i === tabIdx ? ACCENT : 'rgba(255,255,255,0.06)',
+            color: i === tabIdx ? '#fff' : 'rgba(255,255,255,0.4)',
+            fontSize: 9, fontWeight: i === tabIdx ? 700 : undefined,
+            border: `1px solid ${i === tabIdx ? ACCENT : 'rgba(255,255,255,0.09)'}`,
+            transition: 'background 0.3s, color 0.3s, border-color 0.3s',
+          }}>{t}</button>
         ))}
       </div>
 
-      {/* 달력 — 빠른선택 변경 시 fadeUp 애니메이션 */}
-      <div key={calKey} style={{ animation: 'fadeUp 0.25s ease forwards' }}>
-        <div style={{ fontSize: 10, fontWeight: 700, textAlign: 'center', marginBottom: 6, color: 'rgba(255,255,255,0.8)' }}>2026년 8월</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, marginBottom: 5 }}>
-          {DAY_LABELS.map((d, i) => (
-            <div key={d} style={{
-              textAlign: 'center', fontSize: 8,
-              color: hiddenDays.includes(i) ? 'rgba(255,255,255,0.1)'
-                : i === 0 ? 'rgba(239,68,68,0.5)' : i === 6 ? 'rgba(96,165,250,0.5)' : 'rgba(255,255,255,0.25)',
-              paddingBottom: 2,
-            }}>{d}</div>
-          ))}
-          {Array.from({ length: 6 }, (_, i) => <div key={`e${i}`} />)}
-          {days.map(({ d, dow, isOpen, isHol, isSpc }) => (
-            <div key={d} style={{
-              aspectRatio: '1', display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center', borderRadius: 3,
-              background: isHol ? 'rgba(239,68,68,0.18)' : isSpc ? 'rgba(34,197,94,0.15)' : 'transparent',
-              opacity: hiddenDays.includes(dow) ? 0.12 : 1,
-              position: 'relative',
-            }}>
-              <span style={{
-                fontSize: 8, lineHeight: 1,
-                color: isHol ? '#ef4444' : isSpc ? '#22c55e' : isOpen ? 'rgba(255,255,255,0.72)' : 'rgba(255,255,255,0.2)',
-              }}>{d}</span>
-              {isOpen && !isHol && !isSpc && (
-                <span style={{ position: 'absolute', bottom: 1, width: 2.5, height: 2.5, borderRadius: '50%', background: ACCENT }} />
+      {/* 콘텐츠 — 탭 전환 시 fadeUp */}
+      <div key={animKey} style={{ animation: 'fadeUp 0.22s ease forwards', minHeight: 72 }}>
+
+        {tab === '요일별' && (
+          <div>
+            <div style={{ display: 'flex', gap: 3, marginBottom: 6 }}>
+              {PATTERNS.map((p, i) => (
+                <button key={p.label} onClick={() => setPatIdx(i)} style={{
+                  background: i === patIdx ? 'rgba(242,96,78,0.18)' : 'rgba(255,255,255,0.05)',
+                  color: i === patIdx ? ACCENT : 'rgba(255,255,255,0.35)',
+                  fontSize: 8, fontWeight: i === patIdx ? 700 : undefined,
+                  padding: '2px 7px', borderRadius: 4, cursor: 'pointer',
+                  border: `1px solid ${i === patIdx ? 'rgba(242,96,78,0.3)' : 'rgba(255,255,255,0.07)'}`,
+                  transition: 'all 0.2s',
+                }}>{p.label}</button>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 3 }}>
+              {DAY_LABELS.map((d, i) => {
+                const on = openDays.includes(i)
+                return (
+                  <div key={d} style={{
+                    flex: 1, textAlign: 'center', padding: '4px 0', borderRadius: 5,
+                    background: on ? 'rgba(242,96,78,0.14)' : 'rgba(255,255,255,0.03)',
+                    border: `1px solid ${on ? 'rgba(242,96,78,0.28)' : 'rgba(255,255,255,0.07)'}`,
+                    opacity: on ? 1 : 0.35, transition: 'all 0.3s',
+                  }}>
+                    <div style={{ fontSize: 8, color: on ? ACCENT : 'rgba(255,255,255,0.4)', fontWeight: on ? 700 : undefined }}>{d}</div>
+                    <div style={{ fontSize: 7, color: on ? ACCENT : 'rgba(255,255,255,0.2)', marginTop: 1 }}>{on ? '✓' : '—'}</div>
+                  </div>
+                )
+              })}
+            </div>
+            <div style={{ display: 'flex', gap: 4, marginTop: 6 }}>
+              {DAY_LABELS.map((d, i) => {
+                const isHidden = hiddenDays.includes(i)
+                return (
+                  <span key={d} style={{
+                    flex: 1, textAlign: 'center', fontSize: 7, padding: '2px 0', borderRadius: 3,
+                    background: isHidden ? 'rgba(255,255,255,0.03)' : 'transparent',
+                    color: isHidden ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.0)',
+                    textDecoration: isHidden ? 'line-through' : 'none',
+                    transition: 'all 0.3s',
+                  }}>{isHidden ? d : ''}</span>
+                )
+              })}
+              {hiddenDays.length > 0 && (
+                <span style={{ fontSize: 7, color: 'rgba(255,255,255,0.25)', whiteSpace: 'nowrap', alignSelf: 'center' }}>숨김</span>
               )}
             </div>
-          ))}
-        </div>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-          {([
-            { dot: true,  color: ACCENT,                   label: '운영일' },
-            { dot: false, bg: 'rgba(239,68,68,0.5)',        label: '휴관일' },
-            { dot: false, bg: 'rgba(34,197,94,0.5)',        label: '특별운영' },
-          ] as { dot: boolean; color?: string; bg?: string; label: string }[]).map(li => (
-            <div key={li.label} style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 8, color: 'rgba(255,255,255,0.4)' }}>
-              {li.dot
-                ? <span style={{ width: 5, height: 5, borderRadius: '50%', background: li.color }} />
-                : <span style={{ width: 5, height: 5, borderRadius: 1.5, background: li.bg }} />}
-              {li.label}
+          </div>
+        )}
+
+        {tab === '시간별' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 4 }}>
+            {SLOTS.map(({ t, on }) => (
+              <div key={t} style={{
+                padding: '5px 6px', borderRadius: 6, textAlign: 'center',
+                background: on ? 'rgba(242,96,78,0.11)' : 'rgba(255,255,255,0.04)',
+                border: `1px solid ${on ? 'rgba(242,96,78,0.22)' : 'rgba(255,255,255,0.07)'}`,
+              }}>
+                <div style={{ fontSize: 9, fontWeight: on ? 700 : undefined, color: on ? ACCENT : 'rgba(255,255,255,0.25)' }}>{t}</div>
+                <div style={{ fontSize: 7, color: on ? 'rgba(242,96,78,0.75)' : 'rgba(255,255,255,0.18)', marginTop: 2 }}>{on ? '운영' : '미운영'}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {tab === '날짜별' && (
+          <div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 1.5, marginBottom: 5 }}>
+              {DAY_LABELS.map(d => (
+                <div key={d} style={{ textAlign: 'center', fontSize: 7, color: 'rgba(255,255,255,0.22)', paddingBottom: 2 }}>{d}</div>
+              ))}
+              {Array.from({ length: 6 }, (_, i) => <div key={`e${i}`} />)}
+              {days.map(({ d, dow, isOpen, isHol, isSpc }) => (
+                <div key={d} style={{
+                  aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  borderRadius: 2, position: 'relative',
+                  background: isHol ? 'rgba(239,68,68,0.2)' : isSpc ? 'rgba(34,197,94,0.16)' : 'transparent',
+                  opacity: hiddenDays.includes(dow) && !isHol && !isSpc ? 0.15 : 1,
+                }}>
+                  <span style={{ fontSize: 7, lineHeight: 1,
+                    color: isHol ? '#ef4444' : isSpc ? '#22c55e' : isOpen ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.15)',
+                  }}>{d}</span>
+                  {isOpen && !isHol && !isSpc && (
+                    <span style={{ position: 'absolute', bottom: 0, width: 2, height: 2, borderRadius: '50%', background: ACCENT }} />
+                  )}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {[
+                { bg: 'rgba(239,68,68,0.45)', label: '8/15 광복절 휴관' },
+                { bg: 'rgba(34,197,94,0.45)', label: '8/20 특별운영' },
+              ].map(li => (
+                <div key={li.label} style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 8, color: 'rgba(255,255,255,0.4)' }}>
+                  <span style={{ width: 5, height: 5, borderRadius: 1.5, background: li.bg, flexShrink: 0 }} />
+                  {li.label}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-      {/* 시간대별 운영 */}
-      <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 8, marginBottom: 6 }}>
-        <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>시간대별 운영</div>
-        <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-          {SLOTS.map((s, i) => (
-            <span key={s} style={{
-              background: OPEN_SLOTS.includes(i) ? 'rgba(242,96,78,0.14)' : 'rgba(255,255,255,0.04)',
-              color: OPEN_SLOTS.includes(i) ? ACCENT : 'rgba(255,255,255,0.18)',
-              fontSize: 8, fontWeight: OPEN_SLOTS.includes(i) ? 700 : undefined,
-              padding: '2px 5px', borderRadius: 3,
-              border: `1px solid ${OPEN_SLOTS.includes(i) ? 'rgba(242,96,78,0.28)' : 'rgba(255,255,255,0.07)'}`,
-            }}>{s}:00</span>
-          ))}
-        </div>
-      </div>
-
-      {/* 요일 숨김 */}
-      <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 8 }}>
-        <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>요일 숨김</div>
-        <div style={{ display: 'flex', gap: 3 }}>
-          {DAY_LABELS.map((d, i) => {
-            const isHidden = hiddenDays.includes(i)
-            return (
-              <span key={d} style={{
-                width: 18, height: 18, borderRadius: 4,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 7, fontWeight: 600,
-                background: isHidden ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.08)',
-                color: isHidden ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.55)',
-                border: `1px solid ${isHidden ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.14)'}`,
-                textDecoration: isHidden ? 'line-through' : 'none',
-                transition: 'all 0.25s',
-              }}>{d}</span>
-            )
-          })}
-        </div>
       </div>
     </div>
   )
@@ -913,7 +946,7 @@ export function LandingLessonOn() {
                 {
                   visual: <ScheduleRuleDemo />,
                   title: '스케줄규칙 + 예외날짜설정',
-                  desc: '빠른선택으로 운영 패턴을 정하고, 시간대별·요일별 세부 설정과 날짜 예외(휴관·특별운영)를 한곳에서 관리합니다.',
+                  desc: '요일별·시간별·날짜별로 독립 설정이 가능해 조직마다 100% 커스터마이징을 실현합니다. 기본 운영 패턴 위에 휴관일·특별운영을 날짜마다 따로 지정할 수 있습니다.',
                 },
                 {
                   visual: (
