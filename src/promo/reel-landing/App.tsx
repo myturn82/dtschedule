@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+﻿import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PACKAGES, SENT_LIST } from './mockData'
 
@@ -37,8 +37,8 @@ const CAPTION: Partial<Record<Phase, { kicker: string; headline: string; sub: st
   },
   package: {
     kicker: '수강권 자동 관리',
-    headline: '소진 현황\n한눈에',
-    sub: '출석 시 자동 소진 · 만료 임박 회원 자동 강조',
+    headline: '차감 현황\n한눈에',
+    sub: '출석 시 자동 차감 · 만료 임박 회원 자동 강조',
   },
   notify: {
     kicker: 'D-1 자동 알림',
@@ -141,7 +141,7 @@ export default function App() {
                 <span className="card-ttl">지금의 현실</span>
               </div>
               {[
-                { icon: '≡', title: '수기 수강권 관리', desc: '노트·엑셀에 직접 횟수 표시 — 소진 실수가 잦습니다' },
+                { icon: '≡', title: '수기 수강권 관리', desc: '노트·엑셀에 직접 횟수 표시 — 차감 누락가 잦습니다' },
                 { icon: '☎', title: '직접 연락해서 알림', desc: '하루 전 카톡을 한 명씩 보내다 깜빡하면 노쇼' },
                 { icon: '☐', title: '반복 예약 관리 복잡', desc: '공휴일·특별 운영일이 끼면 매번 머리가 아픕니다' },
               ].map((item, i) => (

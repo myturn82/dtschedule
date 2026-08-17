@@ -1,4 +1,4 @@
-// src/pages/landing/LandingLessonOn.tsx
+﻿// src/pages/landing/LandingLessonOn.tsx
 import { useNavigate } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import { DevFileLabel } from '../../components/DevFileLabel'
@@ -939,7 +939,7 @@ export function LandingLessonOn() {
           </Anim>
         </section>
 
-        {/* 02 — 자동 소진 */}
+        {/* 02 — 자동 차감 */}
         <section style={{ padding: '80px 24px', background: 'linear-gradient(180deg, transparent, rgba(242,96,78,0.05), transparent)' }}>
           <div className="lo-feat-grid" style={{ maxWidth: 960, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, alignItems: 'center' }}>
             <Anim style={{}} className="lo-feat-text">
@@ -952,9 +952,9 @@ export function LandingLessonOn() {
             </Anim>
             <Anim delay={120} className="lo-feat-visual">
               <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 28 }}>
-                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 16 }}>결제 기록 · 회원별 소진 현황</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 16 }}>결제 기록 · 회원별 차감 현황</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.1fr 0.6fr 0.7fr', fontSize: 11, color: 'rgba(255,255,255,0.35)', padding: '0 16px 8px', textAlign: 'center' }}>
-                  <span>회원</span><span>레슨종류</span><span>소진</span><span>상태</span>
+                  <span>회원</span><span>레슨종류</span><span>차감</span><span>상태</span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {[
@@ -982,8 +982,8 @@ export function LandingLessonOn() {
               <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 28, maxWidth: 340, justifySelf: 'center' }}>
                 <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 12 }}>만료 임박 알림</div>
                 <div style={{ background: 'rgba(242,96,78,0.1)', border: '1px solid rgba(242,96,78,0.25)', borderRadius: 14, padding: '16px 18px' }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>만료 임박 레슨권 미소진 회원 1명</div>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, marginBottom: 14 }}>선택한 기간 내 만료가 도래하지만 아직 미소진 상태인 회원입니다. 문자로 소진을 독려하십시오.</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>만료 임박 레슨권 미사용 회원 1명</div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, marginBottom: 14 }}>선택한 기간 내 만료가 도래하지만 아직 미사용 상태인 회원입니다. 문자로 이용을 독려하십시오.</div>
                   <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
                     <span style={{ background: ACCENT, color: '#fff', fontSize: 11, fontWeight: 700, padding: '5px 10px', borderRadius: 8 }}>1주일 전</span>
                     <span style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)', fontSize: 11, padding: '5px 10px', borderRadius: 8 }}>2주일 전</span>
@@ -997,7 +997,7 @@ export function LandingLessonOn() {
               <div className="lo-feat-text">
                 <div style={{ fontSize: 13, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 16 }}>03 — 재등록 유도</div>
                 <h2 style={{ fontSize: 'clamp(24px,3.5vw,34px)', fontWeight: 800, letterSpacing: '-0.5px', marginBottom: 16 }}>만료 임박 회원에게<br />자동으로 알립니다</h2>
-                <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', lineHeight: 1.8 }}>레슨권 만료일이 임박했으나 미소진 회원을 자동으로 추출하여 표시합니다. 기준(1주일 전, 2주일 전 등)을 설정하면 단체 문자를 일괄 발송하여 소진과 재등록을 독려할 수 있습니다.</p>
+                <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', lineHeight: 1.8 }}>레슨권 만료일이 임박했으나 미사용 회원을 자동으로 추출하여 표시합니다. 기준(1주일 전, 2주일 전 등)을 설정하면 단체 문자를 일괄 발송하여 이용과 재등록을 독려할 수 있습니다.</p>
               </div>
             </Anim>
           </div>
@@ -1008,17 +1008,17 @@ export function LandingLessonOn() {
           <Anim style={{ maxWidth: 760, margin: '0 auto', textAlign: 'center', marginBottom: 48 }}>
             <div style={{ fontSize: 13, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 16 }}>04 — 데이터로 관리</div>
             <h2 style={{ fontSize: 'clamp(24px,3.5vw,34px)', fontWeight: 800, letterSpacing: '-0.5px', marginBottom: 16 }}>대시보드에서 레슨권 통계를<br />한눈에 조회합니다</h2>
-            <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', lineHeight: 1.8 }}>회원별 레슨권 소진 추이를 자동 집계합니다. 아래 통계 항목을 대시보드에서 바로 확인할 수 있습니다.</p>
+            <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', lineHeight: 1.8 }}>회원별 레슨권 차감 추이를 자동 집계합니다. 아래 통계 항목을 대시보드에서 바로 확인할 수 있습니다.</p>
           </Anim>
           <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
             {[
               { tag: '누적', title: '현재 유효 레슨권 보유 인원', desc: '인원 수 + 회원별 잔여·만료일 목록' },
               { tag: '누적', title: '레슨권 종류별 판매 건수', desc: '건수 + 점유율 테이블' },
-              { tag: '누적', title: '소진율 현황', desc: '진행중 / 소진완료 / 만료 3칸 카드' },
+              { tag: '누적', title: '차감률 현황', desc: '진행중 / 사용완료 / 만료 3칸 카드' },
               { tag: '누적', title: '만료 시 평균 잔여 회차', desc: '평균 회차 + 만료 목록' },
               { tag: '누적', title: '재구매 회원 현황', desc: '인원 수 + 구매횟수·첫/최근 구매일' },
               { tag: '월별', title: '해당 월 신규 결제 건수', desc: '건수 + 회원·레슨권·결제일 목록' },
-              { tag: '월별', title: '해당 월 결제 레슨권 소진율', desc: '평균 소진% + 상태별 목록' },
+              { tag: '월별', title: '해당 월 결제 레슨권 차감률', desc: '평균 차감% + 상태별 목록' },
             ].map((item, i) => (
               <Anim key={item.title} delay={i * 60}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '16px 18px', transition: 'background 0.2s, border-color 0.2s' }}

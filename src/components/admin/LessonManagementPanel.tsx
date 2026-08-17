@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { useLessonPackages } from '../../hooks/useLessonPackages'
 import { MemberSearchSelect } from '../shared/MemberSearchSelect'
 import { ExpiringPackageSmsModal } from '../modals/ExpiringPackageSmsModal'
@@ -25,7 +25,7 @@ const STATUS_LABEL: Record<ReturnType<typeof pkgStatus>, string> = {
   active: '진행중',
   warn: '만료임박',
   expired: '만료',
-  done: '소진완료',
+  done: '사용완료',
 }
 const STATUS_CLS: Record<ReturnType<typeof pkgStatus>, string> = {
   active:  'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400',
@@ -173,7 +173,7 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
     ? Math.max(1, parseInt(customDays) || 0)
     : parseInt(thresholdPreset)
 
-  // 선택한 기간 내 만료가 도래하지만 아직 소진되지 않은 레슨권 보유 회원 (소진 독려 문자 대상)
+  // 선택한 기간 내 만료가 도래하지만 아직 사용하지 않은 레슨권 보유 회원 (이용 독려 문자 대상)
   const expiringUnusedRecipients = packages
     .filter(p => {
       if (p.used_sessions >= p.total_sessions) return false
@@ -200,8 +200,8 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
       <section className="rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-4 py-3.5">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="min-w-0">
-            <p className="text-sm font-bold text-amber-800 dark:text-amber-400">⏰ 만료 임박 레슨권 미소진 회원 {expiringUnusedRecipients.length}명</p>
-            <p className="text-xs text-amber-700/80 dark:text-amber-400/70 mt-0.5">선택한 기간 내 만료가 도래하지만 아직 다 사용하지 않은 회원입니다. 문자로 소진을 독려해 보세요.</p>
+            <p className="text-sm font-bold text-amber-800 dark:text-amber-400">⏰ 만료 임박 레슨권 미사용 회원 {expiringUnusedRecipients.length}명</p>
+            <p className="text-xs text-amber-700/80 dark:text-amber-400/70 mt-0.5">선택한 기간 내 만료가 도래하지만 아직 다 사용하지 않은 회원입니다. 문자로 이용을 독려해 보세요.</p>
           </div>
           <button
             onClick={() => setShowExpirySms(true)}
@@ -261,7 +261,7 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
           <p className="font-semibold text-amber-900 dark:text-amber-200 mb-1">유효 기간 계산 방법</p>
           <p className="text-amber-700 dark:text-amber-400 leading-relaxed">
             결제일을 기준으로 만료일이 자동 계산돼요.
-            예: 결제일 1/1 + 12주 → 3/27 만료 · 비워두면 회차 소진 시까지 무기한
+            예: 결제일 1/1 + 12주 → 3/27 만료 · 비워두면 차감 완료 시까지 무기한
           </p>
         </div>
 
@@ -427,7 +427,7 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
               </button>
             )}
           </div>
-          <p className="text-[13px] text-[var(--color-text-muted)] mt-1">회원별 레슨권 구매 이력과 소진 현황을 관리합니다.</p>
+          <p className="text-[13px] text-[var(--color-text-muted)] mt-1">회원별 레슨권 구매 이력과 차감 현황을 관리합니다.</p>
         </div>
 
         {loading ? (
@@ -447,7 +447,7 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
                     <div className="sm:hidden">만료일</div>
                   </th>
                   <th className="text-center px-2 sm:px-3 py-2.5 text-xs font-semibold text-[var(--color-text-muted)] hidden sm:table-cell whitespace-nowrap">만료일</th>
-                  <th className="text-center px-2 sm:px-3 py-2.5 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">소진</th>
+                  <th className="text-center px-2 sm:px-3 py-2.5 text-xs font-semibold text-[var(--color-text-muted)] whitespace-nowrap">차감</th>
                   <th className="text-center px-2 sm:px-3 py-2.5 text-xs font-semibold text-[var(--color-text-muted)] hidden md:table-cell whitespace-nowrap">상태</th>
                   <th className="px-2 sm:px-3 py-2.5" />
                 </tr>

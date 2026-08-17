@@ -1,4 +1,4 @@
-import { useState, useCallback, forwardRef, useImperativeHandle } from 'react'
+﻿import { useState, useCallback, forwardRef, useImperativeHandle } from 'react'
 import { useLessonPackages } from '../../../hooks/useLessonPackages'
 import { StepHeader, LESSON_STEP_META } from '../StepHeader'
 import { WizardIcon } from '../WizardIcons'
@@ -72,7 +72,7 @@ export const Step6LessonTypes = forwardRef<Step6LessonTypesRef, Props>(function 
         <p className="text-amber-700 dark:text-amber-400 mb-3 leading-relaxed">
           결제일을 기준으로 만료일이 자동 계산돼요.<br />
           예: 결제일 1/1 + 12주 → 3/27 만료<br />
-          비워두면 회차를 모두 소진할 때까지 무기한 사용 가능해요.
+          비워두면 모든 횟수가 차감될 때까지 무기한 사용 가능해요.
         </p>
         <p className="font-medium text-amber-800 dark:text-amber-300 mb-1.5">빠른 예시 — 눌러서 바로 채워보세요</p>
         <div className="flex flex-wrap gap-1.5">

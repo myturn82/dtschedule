@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+﻿import { useState, useMemo } from 'react'
 import { useLessonPackages } from '../../hooks/useLessonPackages'
 import { fmtNumber } from '../../lib/format'
 
@@ -14,11 +14,11 @@ type StatKey =
 const STAT_OPTIONS: { key: StatKey; label: string; badge: '누적' | '월별' }[] = [
   { key: 'active_holders',      label: '현재 유효 레슨권 보유 인원', badge: '누적' },
   { key: 'type_sales_ranking',  label: '레슨권 종류별 판매 건수',    badge: '누적' },
-  { key: 'consumption_rate',    label: '소진율 현황',                badge: '누적' },
+  { key: 'consumption_rate',    label: '차감률 현황',                badge: '누적' },
   { key: 'expired_remaining',   label: '만료 시 평균 잔여 회차',      badge: '누적' },
   { key: 'repurchase',          label: '재구매 회원 현황',            badge: '누적' },
   { key: 'monthly_new',         label: '해당 월 신규 결제 건수',      badge: '월별' },
-  { key: 'monthly_consumption', label: '해당 월 결제 레슨권 소진율',  badge: '월별' },
+  { key: 'monthly_consumption', label: '해당 월 결제 레슨권 차감률',  badge: '월별' },
 ]
 
 interface Props {
@@ -129,7 +129,7 @@ export function LessonStatsPanel({ tenantId, viewYear, viewMonth, memberNameMap 
       const pct       = Math.min(100, Math.round(p.used_sessions / p.total_sessions * 100))
       const isDone    = p.used_sessions >= p.total_sessions
       const isExpired = !!p.expires_at && p.expires_at < today
-      const status    = isDone ? '소진완료' : isExpired ? '만료' : '진행중'
+      const status    = isDone ? '사용완료' : isExpired ? '만료' : '진행중'
       return {
         name: memberNameMap.get(p.user_id ?? '') ?? '알 수 없음',
         packageName: p.package_name,
@@ -227,7 +227,7 @@ export function LessonStatsPanel({ tenantId, viewYear, viewMonth, memberNameMap 
             <div className="grid grid-cols-3 gap-3">
               {([
                 { label: '진행중',  value: consumptionRate.active,  cls: 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400' },
-                { label: '소진완료', value: consumptionRate.done,   cls: 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)]' },
+                { label: '사용완료', value: consumptionRate.done,   cls: 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)]' },
                 { label: '만료',    value: consumptionRate.expired, cls: 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400' },
               ] as const).map(item => (
                 <div key={item.label} className={`rounded-xl border border-[var(--color-border)] px-3 py-3 text-center ${item.cls}`}>
@@ -339,7 +339,7 @@ export function LessonStatsPanel({ tenantId, viewYear, viewMonth, memberNameMap 
           <div>
             <div className="flex items-baseline gap-1.5 mb-4">
               <span className="text-[32px] font-bold tabular-nums text-[var(--color-text-primary)]">{monthlyConsumption.avgPct}</span>
-              <span className="text-[15px] font-semibold text-[var(--color-text-muted)]">% 평균 소진율</span>
+              <span className="text-[15px] font-semibold text-[var(--color-text-muted)]">% 평균 차감률</span>
             </div>
             {monthlyConsumption.rows.length === 0
               ? <p className="text-sm text-[var(--color-text-muted)] text-center py-4">이 달 결제 기록이 없습니다.</p>
@@ -347,7 +347,7 @@ export function LessonStatsPanel({ tenantId, viewYear, viewMonth, memberNameMap 
                   <table className="w-full text-sm">
                     <thead><tr className="bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
                       <th className={thCls}>회원</th><th className={thCls}>레슨권</th>
-                      <th className={thCls}>소진</th><th className={thCls}>상태</th>
+                      <th className={thCls}>차감</th><th className={thCls}>상태</th>
                     </tr></thead>
                     <tbody className="divide-y divide-[var(--color-border)]">
                       {monthlyConsumption.rows.map((r, i) => (
@@ -357,7 +357,7 @@ export function LessonStatsPanel({ tenantId, viewYear, viewMonth, memberNameMap 
                           <td className={`${tdCls} tabular-nums text-[var(--color-text-primary)]`}>{r.used}/{r.total}회</td>
                           <td className={tdCls}>
                             <span className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-full ${
-                              r.status === '소진완료' ? 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)]'
+                              r.status === '사용완료' ? 'bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)]'
                               : r.status === '만료' ? 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400'
                               : 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400'
                             }`}>{r.status}</span>

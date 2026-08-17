@@ -102,7 +102,7 @@ export function LandingClassOn() {
           <h1 className="co-h1" style={{ fontSize: 'clamp(32px,6vw,52px)', fontWeight: 800, lineHeight: 1.25, letterSpacing: '-1.2px', margin: '0 auto 24px', maxWidth: 680 }}>
             수강권 횟수 관리,<br /><span style={{ color: ACCENT }}>이제 앱이 대신합니다.</span>
           </h1>
-          <p className="co-sub" style={{ fontSize: 17, color: 'rgba(255,255,255,0.5)', maxWidth: 480, margin: '0 auto 20px', lineHeight: 1.7 }}>출석 체크 한 번으로 자동 소진. 만료 임박 학생은 즉시 알림.</p>
+          <p className="co-sub" style={{ fontSize: 17, color: 'rgba(255,255,255,0.5)', maxWidth: 480, margin: '0 auto 20px', lineHeight: 1.7 }}>출석 체크 한 번으로 자동 차감. 만료 임박 학생은 즉시 알림.</p>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', marginBottom: 36 }}>신용카드 불필요 · 10명까지 영구 무료 · 30초 가입</p>
           <button className="co-cta" onClick={goStart} style={{ background: ACCENT, color: '#fff', border: 0, borderRadius: 12, padding: '16px 36px', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 72 }}>무료로 시작하기 →</button>
 
@@ -183,15 +183,15 @@ export function LandingClassOn() {
 
         <div className="wave" />
 
-        {/* F01 — 수강권 자동 소진 */}
+        {/* F01 — 수강권 자동 차감 */}
         <section style={{ padding: '100px 24px', background: 'linear-gradient(180deg, transparent, rgba(99,102,241,0.05), transparent)' }}>
           <div className="co-feat-grid" style={{ maxWidth: 960, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 48, alignItems: 'center' }}>
             <Anim className="co-feat-text">
-              <div style={{ fontSize: 13, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 16 }}>01 — 수강권 자동 소진</div>
-              <h2 style={{ fontSize: 'clamp(22px,3.5vw,32px)', fontWeight: 800, letterSpacing: '-0.5px', marginBottom: 16 }}>출석 체크 한 번,<br />수강권이 자동 소진됩니다</h2>
-              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', lineHeight: 1.8, marginBottom: 20 }}>횟수제·기간제·복합권 모두 지원합니다. 출석 체크 시 수강권이 자동으로 소진되며, 잔여 횟수를 실시간으로 확인할 수 있습니다.</p>
+              <div style={{ fontSize: 13, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 16 }}>01 — 수강권 자동 차감</div>
+              <h2 style={{ fontSize: 'clamp(22px,3.5vw,32px)', fontWeight: 800, letterSpacing: '-0.5px', marginBottom: 16 }}>출석 체크 한 번,<br />수강권이 자동 차감됩니다</h2>
+              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', lineHeight: 1.8, marginBottom: 20 }}>횟수제·기간제·복합권 모두 지원합니다. 출석 체크 시 수강권이 자동으로 차감되며, 잔여 횟수를 실시간으로 확인할 수 있습니다.</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {['출석 시 자동 소진', '만료 임박 자동 표시', '소진 이력 전체 추적'].map(pt => (
+                {['출석 시 자동 차감', '만료 임박 자동 표시', '차감 이력 전체 추적'].map(pt => (
                   <div key={pt} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'rgba(255,255,255,0.65)' }}>
                     <span style={{ color: ACCENT, fontWeight: 700 }}>✓</span> {pt}
                   </div>

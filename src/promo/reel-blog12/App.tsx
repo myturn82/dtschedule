@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+﻿import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PACKAGE_TYPES, PACKAGES, EXPIRY_RECIPIENTS } from './mockData'
 
@@ -37,17 +37,17 @@ const CAPTION: Partial<Record<Phase, { kicker: string; headline: string; sub: st
   },
   records: {
     kicker: '결제 기록',
-    headline: '소진 현황을\n한눈에',
+    headline: '차감 현황을\n한눈에',
     sub: '회원별 레슨 진행률을 프로그레스바로 — 만료 임박 회원은 자동 강조',
   },
   expiry: {
     kicker: '만료 임박 알림',
     headline: '놓치는 회원\n없이',
-    sub: '소진을 독려하는 문자를 원클릭으로 발송 — D-6, D-8처럼 긴박감 전달',
+    sub: '이용을 독려하는 문자를 원클릭으로 발송 — D-6, D-8처럼 긴박감 전달',
   },
 }
 
-const STATUS_LABEL = { active: '진행중', warn: '만료임박', done: '소진완료' } as const
+const STATUS_LABEL = { active: '진행중', warn: '만료임박', done: '사용완료' } as const
 const BAR_CLS = { active: 'bar-brand', warn: 'bar-warn', done: 'bar-muted' } as const
 
 const cardVariants = {
@@ -127,7 +127,7 @@ export default function App() {
                 <span className="card-title">결제 기록</span>
               </div>
               <div className="card-thead records-thead">
-                <span>회원</span><span>레슨권</span><span className="tc">소진 현황</span><span className="tc">상태</span>
+                <span>회원</span><span>레슨권</span><span className="tc">차감 현황</span><span className="tc">상태</span>
               </div>
               {PACKAGES.map((p, i) => {
                 const pct = Math.round(p.used / p.total * 100)
@@ -163,8 +163,8 @@ export default function App() {
               <div className="expiry-banner">
                 <div className="expiry-top">
                   <div className="expiry-text">
-                    <p className="expiry-title">⏰ 만료 임박 미소진 회원 <strong>2명</strong></p>
-                    <p className="expiry-sub">소진을 독려하는 문자를 지금 바로 보내세요</p>
+                    <p className="expiry-title">⏰ 만료 임박 미사용 회원 <strong>2명</strong></p>
+                    <p className="expiry-sub">이용을 독려하는 문자를 지금 바로 보내세요</p>
                   </div>
                   <motion.div
                     className="sms-btn"

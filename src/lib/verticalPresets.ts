@@ -1,4 +1,4 @@
-import type { TenantMode } from '../types'
+﻿import type { TenantMode } from '../types'
 import type { FeatureFlags } from './featureFlags'
 
 export type VerticalId =
@@ -35,7 +35,7 @@ export const VERTICAL_PRESETS: Record<VerticalId, VerticalPreset> = {
   'classon': {
     id:           'classon',
     appName:      'CLASS:ON',
-    tagline:      '수강권 소진부터 출석까지, 학원 원장님의 잔업을 줄여드립니다',
+    tagline:      '수강권 차감부터 출석까지, 학원 원장님의 잔업을 줄여드립니다',
     tenant_mode:  '회원개별',
     feature_flags: { lesson_packages: true, autoassign: true, attendance: true },
     default_roles: ['강사', '학생'],

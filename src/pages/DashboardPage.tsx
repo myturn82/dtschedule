@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react'
+﻿import { useMemo, useState, useEffect } from 'react'
 import { DevFileLabel } from '../components/DevFileLabel'
 import { fmtNumber } from '../lib/format'
 import { useNavigate } from 'react-router-dom'
@@ -1143,7 +1143,7 @@ export function DashboardPage() {
                                                 const isDone = pkg.used_sessions >= pkg.total_sessions
                                                 const isWarn = !isExpired && !isDone && !!pkg.expires_at && Math.ceil((new Date(pkg.expires_at).getTime() - Date.now()) / 86400000) <= 7
                                                 const barCls = isDone || isExpired ? 'bg-[var(--color-text-muted)]' : isWarn ? 'bg-amber-500' : 'bg-[var(--color-brand-primary)]'
-                                                const statusLabel = isDone ? '소진완료' : isExpired ? '만료' : isWarn ? '만료임박' : null
+                                                const statusLabel = isDone ? '사용완료' : isExpired ? '만료' : isWarn ? '만료임박' : null
                                                 return (
                                                   <div key={pkg.id} className="rounded-[10px] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2.5">
                                                     <div className="flex items-center justify-between mb-1.5">
