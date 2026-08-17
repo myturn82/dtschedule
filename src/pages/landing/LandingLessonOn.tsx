@@ -878,6 +878,7 @@ export function LandingLessonOn() {
         @keyframes liveSlot  { 0%,100%{ background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.07); } 40%,60%{ background:rgba(242,96,78,0.1); border-color:rgba(242,96,78,0.3); } }
         @keyframes cellFill  { 0%,20%{ opacity:0; transform:scale(0.8); } 40%,100%{ opacity:1; transform:scale(1); } }
         @keyframes autoGlow  { 0%,100%{ box-shadow:0 4px 16px rgba(242,96,78,0.3); } 50%{ box-shadow:0 6px 28px rgba(242,96,78,0.6); } }
+        @keyframes barFill   { from { transform:scaleX(0); } to { transform:scaleX(1); } }
         @keyframes typeCursor{ 0%,100%{ opacity:1; } 50%{ opacity:0; } }
         @keyframes wizFill   { from{ width:0%; } to{ width:100%; } }
         @keyframes dragSel   { 0%,8%{ background:rgba(255,255,255,0.04); box-shadow:none; } 32%,68%{ background:rgba(242,96,78,0.18); box-shadow:inset 0 0 0 2px rgba(242,96,78,0.6); } 88%,100%{ background:rgba(255,255,255,0.04); box-shadow:none; } }
@@ -1111,36 +1112,55 @@ export function LandingLessonOn() {
                 {
                   visual: (
                     <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 10 }}>
+                      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginBottom: 5 }}>인원 설정</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 10 }}>
                         {([
-                          { name: '김민지', color: ACCENT, slots: '화·목 선호' },
-                          { name: '이준혁', color: '#818cf8', slots: '월·수·금 선호' },
-                          { name: '박서연', color: '#22c55e', slots: '상시 가능' },
-                        ] as { name: string; color: string; slots: string }[]).map(m => (
-                          <div key={m.name} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, fontSize: 11 }}>
+                          { name: '김민지', color: ACCENT, days: '화·목', max: 16, delay: 0 },
+                          { name: '이준혁', color: '#818cf8', days: '월·수·금', max: 12, delay: 80 },
+                          { name: '박서연', color: '#22c55e', days: '상시', max: 8, delay: 160 },
+                        ] as { name: string; color: string; days: string; max: number; delay: number }[]).map(m => (
+                          <div key={m.name} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '5px 9px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 7, fontSize: 11, opacity: 0, animation: `fadeUp 0.4s ease ${m.delay}ms forwards` }}>
                             <span style={{ width: 7, height: 7, borderRadius: '50%', background: m.color, flexShrink: 0 }} />
                             <span style={{ flex: 1, fontWeight: 600 }}>{m.name}</span>
-                            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)' }}>{m.slots}</span>
+                            <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.38)' }}>{m.days} 선호</span>
+                            <span style={{ fontSize: 9, fontWeight: 700, color: m.color, background: `${m.color}1a`, padding: '2px 5px', borderRadius: 4 }}>최대 {m.max}회/월</span>
                           </div>
                         ))}
                       </div>
-                      <div style={{ textAlign: 'center', background: ACCENT, color: '#fff', fontSize: 12, fontWeight: 700, padding: '8px', borderRadius: 9, marginBottom: 10, animation: 'autoGlow 3s ease-in-out infinite' }}>★ 자동배정 실행</div>
+                      <div style={{ marginBottom: 10 }}>
+                        <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginBottom: 6 }}>역할별 배정 비율</div>
+                        {([
+                          { label: '개인레슨', pct: 50, count: '2명', color: ACCENT, delay: 260 },
+                          { label: '그룹레슨', pct: 30, count: '1명', color: '#818cf8', delay: 360 },
+                          { label: '보조지도', pct: 20, count: '1명', color: '#22c55e', delay: 460 },
+                        ] as { label: string; pct: number; count: string; color: string; delay: number }[]).map(r => (
+                          <div key={r.label} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5, opacity: 0, animation: `fadeUp 0.4s ease ${r.delay}ms forwards` }}>
+                            <span style={{ fontSize: 9, color: r.color, fontWeight: 700, width: 42, flexShrink: 0 }}>{r.label}</span>
+                            <div style={{ flex: 1, height: 5, borderRadius: 3, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+                              <div style={{ height: '100%', borderRadius: 3, background: r.color, width: `${r.pct}%`, transformOrigin: 'left', animation: `barFill 0.6s ease ${r.delay + 150}ms both` }} />
+                            </div>
+                            <span style={{ fontSize: 9, color: r.color, fontWeight: 700, width: 22, flexShrink: 0, textAlign: 'right' }}>{r.pct}%</span>
+                            <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.38)', width: 18, flexShrink: 0, textAlign: 'right' }}>{r.count}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ textAlign: 'center', background: ACCENT, color: '#fff', fontSize: 12, fontWeight: 700, padding: '8px', borderRadius: 9, marginBottom: 10, animation: 'autoGlow 3s ease-in-out infinite' }}>자동배정 실행</div>
                       <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginBottom: 6 }}>배정 결과 미리보기</div>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 4 }}>
                         {(['월', '화', '수', '목', '금'] as string[]).map(d => (
                           <div key={d} style={{ textAlign: 'center', fontSize: 9, color: 'rgba(255,255,255,0.35)', paddingBottom: 3 }}>{d}</div>
                         ))}
                         {([
-                          { init: '이', bg: 'rgba(99,102,241,0.15)', border: 'rgba(99,102,241,0.3)', color: '#818cf8', delay: 200 },
-                          { init: '김', bg: 'rgba(242,96,78,0.15)',  border: 'rgba(242,96,78,0.3)',  color: ACCENT,   delay: 400 },
                           { init: '이', bg: 'rgba(99,102,241,0.15)', border: 'rgba(99,102,241,0.3)', color: '#818cf8', delay: 600 },
-                          { init: '김', bg: 'rgba(242,96,78,0.15)',  border: 'rgba(242,96,78,0.3)',  color: ACCENT,   delay: 800 },
-                          { init: '박', bg: 'rgba(34,197,94,0.13)',  border: 'rgba(34,197,94,0.28)', color: '#22c55e', delay: 1000 },
+                          { init: '김', bg: 'rgba(242,96,78,0.15)',  border: 'rgba(242,96,78,0.3)',  color: ACCENT,   delay: 750 },
+                          { init: '이', bg: 'rgba(99,102,241,0.15)', border: 'rgba(99,102,241,0.3)', color: '#818cf8', delay: 900 },
+                          { init: '김', bg: 'rgba(242,96,78,0.15)',  border: 'rgba(242,96,78,0.3)',  color: ACCENT,   delay: 1050 },
                           { init: '박', bg: 'rgba(34,197,94,0.13)',  border: 'rgba(34,197,94,0.28)', color: '#22c55e', delay: 1200 },
-                          { init: '—',  bg: 'rgba(255,255,255,0.04)',border: 'rgba(255,255,255,0.08)',color: 'rgba(255,255,255,0.2)', delay: 1400 },
-                          { init: '박', bg: 'rgba(34,197,94,0.13)',  border: 'rgba(34,197,94,0.28)', color: '#22c55e', delay: 1600 },
+                          { init: '박', bg: 'rgba(34,197,94,0.13)',  border: 'rgba(34,197,94,0.28)', color: '#22c55e', delay: 1350 },
+                          { init: '—',  bg: 'rgba(255,255,255,0.04)',border: 'rgba(255,255,255,0.08)',color: 'rgba(255,255,255,0.2)', delay: 1500 },
+                          { init: '박', bg: 'rgba(34,197,94,0.13)',  border: 'rgba(34,197,94,0.28)', color: '#22c55e', delay: 1650 },
                           { init: '—',  bg: 'rgba(255,255,255,0.04)',border: 'rgba(255,255,255,0.08)',color: 'rgba(255,255,255,0.2)', delay: 1800 },
-                          { init: '이', bg: 'rgba(99,102,241,0.15)', border: 'rgba(99,102,241,0.3)', color: '#818cf8', delay: 2000 },
+                          { init: '이', bg: 'rgba(99,102,241,0.15)', border: 'rgba(99,102,241,0.3)', color: '#818cf8', delay: 1950 },
                         ] as { init: string; bg: string; border: string; color: string; delay: number }[]).map((cell, i) => (
                           <div key={i} style={{ padding: '5px 0', textAlign: 'center', borderRadius: 5, background: cell.bg, border: `1px solid ${cell.border}`, fontSize: 10, fontWeight: 700, color: cell.color, opacity: 0, animation: `cellFill 0.4s ease ${cell.delay}ms forwards` }}>{cell.init}</div>
                         ))}
@@ -1148,7 +1168,7 @@ export function LandingLessonOn() {
                     </div>
                   ),
                   title: '자동 배정',
-                  desc: '역할별로 대표·회원 비율을, 회원별로 가능 요일과 월 최대 횟수를 설정하면 빈 슬롯을 규칙에 맞춰 자동으로 채웁니다.',
+                  desc: '역할별 배정 비율과 월별 최대 횟수를 설정하면, 가능 요일에 맞춰 빈 슬롯을 자동으로 채웁니다.',
                 },
                 {
                   visual: <ScheduleRuleDemo />,

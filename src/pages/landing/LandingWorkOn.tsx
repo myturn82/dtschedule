@@ -53,6 +53,7 @@ export function LandingWorkOn() {
         @keyframes liveSlot  { 0%,100%{ background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.07); } 40%,60%{ background:rgba(59,130,246,0.1); border-color:rgba(59,130,246,0.3); } }
         @keyframes cellFill  { 0%,20%{ opacity:0; transform:scale(0.8); } 40%,100%{ opacity:1; transform:scale(1); } }
         @keyframes autoGlow  { 0%,100%{ box-shadow:0 4px 16px rgba(59,130,246,0.3); } 50%{ box-shadow:0 6px 28px rgba(59,130,246,0.6); } }
+        @keyframes barFill   { from { transform:scaleX(0); } to { transform:scaleX(1); } }
         @keyframes typeCursor{ 0%,100%{ opacity:1; } 50%{ opacity:0; } }
         @keyframes wizFill   { from{ width:0%; } to{ width:100%; } }
         @keyframes float1    { 0%,100%{ transform:translateY(0px); } 50%{ transform:translateY(-7px); } }
@@ -265,7 +266,7 @@ export function LandingWorkOn() {
                       </div>
                     </div>
                   ))}
-                  <div style={{ textAlign: 'center', background: ACCENT, color: '#fff', fontSize: 12, fontWeight: 700, padding: '10px', borderRadius: 9, marginTop: 14, animation: 'autoGlow 3s ease-in-out infinite', cursor: 'pointer' }}>★ 자동 균등 배정 실행</div>
+                  <div style={{ textAlign: 'center', background: ACCENT, color: '#fff', fontSize: 12, fontWeight: 700, padding: '10px', borderRadius: 9, marginTop: 14, animation: 'autoGlow 3s ease-in-out infinite', cursor: 'pointer' }}>자동 균등 배정 실행</div>
                   <div style={{ marginTop: 10, fontSize: 11, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>→ 배정 후: 전원 9~10건으로 균등 분배</div>
                 </div>
               </div>
@@ -522,44 +523,61 @@ export function LandingWorkOn() {
                 {
                   visual: (
                     <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 10 }}>
-                        {[
-                          { name: '김지현', color: ACCENT, load: '14건 (과부하)' },
-                          { name: '박민수', color: '#8B5CF6', load: '6건 (여유)' },
-                          { name: '이수연', color: GREEN, load: '12건 (적정)' },
-                          { name: '최준혁', color: '#F59E0B', load: '4건 (여유)' },
-                        ].map(m => (
-                          <div key={m.name} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, fontSize: 11 }}>
+                      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginBottom: 5 }}>인원 설정</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 10 }}>
+                        {([
+                          { name: '김지현', color: ACCENT, load: '14건', max: 10, delay: 0 },
+                          { name: '박민수', color: '#8B5CF6', load: '6건', max: 10, delay: 80 },
+                          { name: '이수연', color: GREEN, load: '12건', max: 10, delay: 160 },
+                          { name: '최준혁', color: '#F59E0B', load: '4건', max: 10, delay: 240 },
+                        ] as { name: string; color: string; load: string; max: number; delay: number }[]).map(m => (
+                          <div key={m.name} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '5px 9px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 7, fontSize: 11, opacity: 0, animation: `fadeUp 0.4s ease ${m.delay}ms forwards` }}>
                             <span style={{ width: 7, height: 7, borderRadius: '50%', background: m.color, flexShrink: 0 }} />
                             <span style={{ flex: 1, fontWeight: 600 }}>{m.name}</span>
-                            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)' }}>{m.load}</span>
+                            <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.38)' }}>현재 {m.load}</span>
+                            <span style={{ fontSize: 9, fontWeight: 700, color: m.color, background: `${m.color}1a`, padding: '2px 5px', borderRadius: 4 }}>최대 {m.max}회/월</span>
                           </div>
                         ))}
                       </div>
-                      <div style={{ textAlign: 'center', background: ACCENT, color: '#fff', fontSize: 12, fontWeight: 700, padding: '8px', borderRadius: 9, marginBottom: 10, animation: 'autoGlow 3s ease-in-out infinite' }}>★ 자동 균등 배정 실행</div>
+                      <div style={{ marginBottom: 10 }}>
+                        <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginBottom: 6 }}>균등 배정 기준</div>
+                        {([
+                          { label: '목표 균등도', pct: 90, unit: '90%', color: ACCENT, delay: 340 },
+                          { label: '허용 편차', pct: 20, unit: '±2건', color: '#8B5CF6', delay: 440 },
+                        ] as { label: string; pct: number; unit: string; color: string; delay: number }[]).map(r => (
+                          <div key={r.label} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5, opacity: 0, animation: `fadeUp 0.4s ease ${r.delay}ms forwards` }}>
+                            <span style={{ fontSize: 9, color: r.color, fontWeight: 700, width: 48, flexShrink: 0 }}>{r.label}</span>
+                            <div style={{ flex: 1, height: 5, borderRadius: 3, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+                              <div style={{ height: '100%', borderRadius: 3, background: r.color, width: `${r.pct}%`, transformOrigin: 'left', animation: `barFill 0.6s ease ${r.delay + 150}ms both` }} />
+                            </div>
+                            <span style={{ fontSize: 9, color: r.color, fontWeight: 700, width: 26, flexShrink: 0, textAlign: 'right' }}>{r.unit}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ textAlign: 'center', background: ACCENT, color: '#fff', fontSize: 12, fontWeight: 700, padding: '8px', borderRadius: 9, marginBottom: 10, animation: 'autoGlow 3s ease-in-out infinite' }}>자동 균등 배정 실행</div>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 4 }}>
                         {['월', '화', '수', '목', '금'].map(d => (
                           <div key={d} style={{ textAlign: 'center', fontSize: 9, color: 'rgba(255,255,255,0.35)', paddingBottom: 3 }}>{d}</div>
                         ))}
-                        {[
-                          { init: '박', bg: 'rgba(139,92,246,0.13)', border: 'rgba(139,92,246,0.28)', color: '#8B5CF6', delay: 200 },
-                          { init: '김', bg: 'rgba(59,130,246,0.15)', border: 'rgba(59,130,246,0.3)', color: ACCENT, delay: 400 },
-                          { init: '최', bg: 'rgba(245,158,11,0.13)', border: 'rgba(245,158,11,0.28)', color: '#F59E0B', delay: 600 },
-                          { init: '이', bg: 'rgba(34,197,94,0.13)', border: 'rgba(34,197,94,0.28)', color: GREEN, delay: 800 },
-                          { init: '박', bg: 'rgba(139,92,246,0.13)', border: 'rgba(139,92,246,0.28)', color: '#8B5CF6', delay: 1000 },
-                          { init: '최', bg: 'rgba(245,158,11,0.13)', border: 'rgba(245,158,11,0.28)', color: '#F59E0B', delay: 1200 },
-                          { init: '김', bg: 'rgba(59,130,246,0.15)', border: 'rgba(59,130,246,0.3)', color: ACCENT, delay: 1400 },
-                          { init: '이', bg: 'rgba(34,197,94,0.13)', border: 'rgba(34,197,94,0.28)', color: GREEN, delay: 1600 },
+                        {([
+                          { init: '박', bg: 'rgba(139,92,246,0.13)', border: 'rgba(139,92,246,0.28)', color: '#8B5CF6', delay: 600 },
+                          { init: '김', bg: 'rgba(59,130,246,0.15)', border: 'rgba(59,130,246,0.3)', color: ACCENT, delay: 750 },
+                          { init: '최', bg: 'rgba(245,158,11,0.13)', border: 'rgba(245,158,11,0.28)', color: '#F59E0B', delay: 900 },
+                          { init: '이', bg: 'rgba(34,197,94,0.13)', border: 'rgba(34,197,94,0.28)', color: GREEN, delay: 1050 },
+                          { init: '박', bg: 'rgba(139,92,246,0.13)', border: 'rgba(139,92,246,0.28)', color: '#8B5CF6', delay: 1200 },
+                          { init: '최', bg: 'rgba(245,158,11,0.13)', border: 'rgba(245,158,11,0.28)', color: '#F59E0B', delay: 1350 },
+                          { init: '김', bg: 'rgba(59,130,246,0.15)', border: 'rgba(59,130,246,0.3)', color: ACCENT, delay: 1500 },
+                          { init: '이', bg: 'rgba(34,197,94,0.13)', border: 'rgba(34,197,94,0.28)', color: GREEN, delay: 1650 },
                           { init: '—', bg: 'rgba(255,255,255,0.04)', border: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.2)', delay: 1800 },
-                          { init: '박', bg: 'rgba(139,92,246,0.13)', border: 'rgba(139,92,246,0.28)', color: '#8B5CF6', delay: 2000 },
-                        ].map((cell, i) => (
+                          { init: '박', bg: 'rgba(139,92,246,0.13)', border: 'rgba(139,92,246,0.28)', color: '#8B5CF6', delay: 1950 },
+                        ] as { init: string; bg: string; border: string; color: string; delay: number }[]).map((cell, i) => (
                           <div key={i} style={{ padding: '5px 0', textAlign: 'center', borderRadius: 5, background: cell.bg, border: `1px solid ${cell.border}`, fontSize: 10, fontWeight: 700, color: cell.color, opacity: 0, animation: `cellFill 0.4s ease ${cell.delay}ms forwards` }}>{cell.init}</div>
                         ))}
                       </div>
                     </div>
                   ),
                   title: '자동 배정 (업무 균등 분배)',
-                  desc: '팀원 가용 시간과 업무 부하를 고려해 빈 슬롯을 규칙에 맞춰 자동으로 채웁니다.',
+                  desc: '월별 최대 횟수와 균등도 목표를 설정하면, 팀원 부하를 고려해 빈 슬롯을 자동으로 채웁니다.',
                 },
                 {
                   visual: (() => {

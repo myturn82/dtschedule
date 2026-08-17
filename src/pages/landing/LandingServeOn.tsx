@@ -52,6 +52,7 @@ export function LandingServeOn() {
         @keyframes liveSlot  { 0%,100%{ background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.07); } 40%,60%{ background:rgba(16,185,129,0.1); border-color:rgba(16,185,129,0.3); } }
         @keyframes cellFill  { 0%,20%{ opacity:0; transform:scale(0.8); } 40%,100%{ opacity:1; transform:scale(1); } }
         @keyframes autoGlow  { 0%,100%{ box-shadow:0 4px 16px rgba(16,185,129,0.3); } 50%{ box-shadow:0 6px 28px rgba(16,185,129,0.6); } }
+        @keyframes barFill   { from { transform:scaleX(0); } to { transform:scaleX(1); } }
         @keyframes typeCursor{ 0%,100%{ opacity:1; } 50%{ opacity:0; } }
         @keyframes wizFill   { from{ width:0%; } to{ width:100%; } }
         @keyframes barGrow   { from{ width:0%; } to{ width:var(--bar-w); } }
@@ -248,7 +249,7 @@ export function LandingServeOn() {
                       </div>
                     ))}
                   </div>
-                  <div style={{ background: ACCENT, color: '#fff', fontSize: 12, fontWeight: 700, textAlign: 'center', borderRadius: 8, padding: '8px', animation: 'autoGlow 3s ease-in-out infinite', cursor: 'default' }}>★ 자동배정 실행</div>
+                  <div style={{ background: ACCENT, color: '#fff', fontSize: 12, fontWeight: 700, textAlign: 'center', borderRadius: 8, padding: '8px', animation: 'autoGlow 3s ease-in-out infinite', cursor: 'default' }}>자동배정 실행</div>
                 </div>
                 {/* 배정 결과 */}
                 <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginBottom: 6 }}>배정 결과</div>
@@ -496,30 +497,49 @@ export function LandingServeOn() {
                 {
                   visual: (
                     <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 10 }}>
+                      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginBottom: 5 }}>인원 설정</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 10 }}>
                         {([
-                          { name: '김영희', color: ACCENT, slots: '월·수·금 가능' },
-                          { name: '박미영', color: '#60A5FA', slots: '전일 가능' },
-                          { name: '이철수', color: '#A78BFA', slots: '화·목 가능' },
-                        ] as { name: string; color: string; slots: string }[]).map(m => (
-                          <div key={m.name} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, fontSize: 11 }}>
+                          { name: '김영희', color: ACCENT, days: '월·수·금', max: 12, delay: 0 },
+                          { name: '박미영', color: '#60A5FA', days: '전일', max: 16, delay: 80 },
+                          { name: '이철수', color: '#A78BFA', days: '화·목', max: 8, delay: 160 },
+                        ] as { name: string; color: string; days: string; max: number; delay: number }[]).map(m => (
+                          <div key={m.name} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '5px 9px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 7, fontSize: 11, opacity: 0, animation: `fadeUp 0.4s ease ${m.delay}ms forwards` }}>
                             <span style={{ width: 7, height: 7, borderRadius: '50%', background: m.color, flexShrink: 0 }} />
                             <span style={{ flex: 1, fontWeight: 600 }}>{m.name}</span>
-                            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)' }}>{m.slots}</span>
+                            <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.38)' }}>{m.days} 가능</span>
+                            <span style={{ fontSize: 9, fontWeight: 700, color: m.color, background: `${m.color}1a`, padding: '2px 5px', borderRadius: 4 }}>최대 {m.max}회/월</span>
                           </div>
                         ))}
                       </div>
-                      <div style={{ textAlign: 'center', background: ACCENT, color: '#fff', fontSize: 12, fontWeight: 700, padding: '8px', borderRadius: 9, marginBottom: 10, animation: 'autoGlow 3s ease-in-out infinite' }}>★ 자동배정 실행</div>
+                      <div style={{ marginBottom: 10 }}>
+                        <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginBottom: 6 }}>역할별 배정 비율</div>
+                        {([
+                          { label: '교육지원', pct: 40, count: '2명', color: ACCENT, delay: 260 },
+                          { label: '생활지원', pct: 35, count: '1명', color: '#60A5FA', delay: 360 },
+                          { label: '행정지원', pct: 25, count: '1명', color: '#A78BFA', delay: 460 },
+                        ] as { label: string; pct: number; count: string; color: string; delay: number }[]).map(r => (
+                          <div key={r.label} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5, opacity: 0, animation: `fadeUp 0.4s ease ${r.delay}ms forwards` }}>
+                            <span style={{ fontSize: 9, color: r.color, fontWeight: 700, width: 42, flexShrink: 0 }}>{r.label}</span>
+                            <div style={{ flex: 1, height: 5, borderRadius: 3, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+                              <div style={{ height: '100%', borderRadius: 3, background: r.color, width: `${r.pct}%`, transformOrigin: 'left', animation: `barFill 0.6s ease ${r.delay + 150}ms both` }} />
+                            </div>
+                            <span style={{ fontSize: 9, color: r.color, fontWeight: 700, width: 22, flexShrink: 0, textAlign: 'right' }}>{r.pct}%</span>
+                            <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.38)', width: 18, flexShrink: 0, textAlign: 'right' }}>{r.count}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ textAlign: 'center', background: ACCENT, color: '#fff', fontSize: 12, fontWeight: 700, padding: '8px', borderRadius: 9, marginBottom: 10, animation: 'autoGlow 3s ease-in-out infinite' }}>자동배정 실행</div>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 4 }}>
                         {['월', '화', '수', '목', '금'].map(d => (
                           <div key={d} style={{ textAlign: 'center', fontSize: 9, color: 'rgba(255,255,255,0.35)', paddingBottom: 3 }}>{d}</div>
                         ))}
                         {([
-                          { init: '영', bg: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.3)', color: ACCENT, delay: 200 },
-                          { init: '이', bg: 'rgba(167,139,250,0.15)', border: 'rgba(167,139,250,0.3)', color: '#A78BFA', delay: 400 },
                           { init: '영', bg: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.3)', color: ACCENT, delay: 600 },
-                          { init: '이', bg: 'rgba(167,139,250,0.15)', border: 'rgba(167,139,250,0.3)', color: '#A78BFA', delay: 800 },
-                          { init: '박', bg: 'rgba(96,165,250,0.15)', border: 'rgba(96,165,250,0.3)', color: '#60A5FA', delay: 1000 },
+                          { init: '이', bg: 'rgba(167,139,250,0.15)', border: 'rgba(167,139,250,0.3)', color: '#A78BFA', delay: 750 },
+                          { init: '영', bg: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.3)', color: ACCENT, delay: 900 },
+                          { init: '이', bg: 'rgba(167,139,250,0.15)', border: 'rgba(167,139,250,0.3)', color: '#A78BFA', delay: 1050 },
+                          { init: '박', bg: 'rgba(96,165,250,0.15)', border: 'rgba(96,165,250,0.3)', color: '#60A5FA', delay: 1200 },
                         ] as { init: string; bg: string; border: string; color: string; delay: number }[]).map((cell, i) => (
                           <div key={i} style={{ padding: '5px 0', textAlign: 'center', borderRadius: 5, background: cell.bg, border: `1px solid ${cell.border}`, fontSize: 10, fontWeight: 700, color: cell.color, opacity: 0, animation: `cellFill 0.4s ease ${cell.delay}ms forwards` }}>{cell.init}</div>
                         ))}
@@ -527,7 +547,7 @@ export function LandingServeOn() {
                     </div>
                   ),
                   title: '자동 배정',
-                  desc: '활동별 필요 역할·인원을 설정하면 가능한 봉사자를 자동으로 배정합니다.',
+                  desc: '역할별 배정 비율과 월별 최대 횟수를 설정하면, 가능한 봉사자를 규칙에 맞춰 자동으로 배정합니다.',
                 },
                 {
                   visual: (() => {
