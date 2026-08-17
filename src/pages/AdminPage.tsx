@@ -324,8 +324,7 @@ export function AdminPage() {
   // Rules tab
   const [showMatrix, setShowMatrix] = useState(false)
   const [closedDays, setClosedDays] = useState<Set<number>>(new Set())
-  const [applyingTemplate, setApplyingTemplate] = useState<number | null>(null)
-  const [applyingHoliday, setApplyingHoliday] = useState(false)
+  const [pendingTemplateIdx, setPendingTemplateIdx] = useState<number | null>(null)
 
   // Dates tab
   const [dateForm, setDateForm] = useState({ date: '', type: 'holiday' as 'holiday' | 'special', label: '' })
@@ -906,6 +905,23 @@ export function AdminPage() {
     }
     setSlotList(prev => prev.filter(s => s !== slot))
     setSlotLabels(prev => { const n = { ...prev }; delete n[slot]; return n })
+  }
+
+  async function handleDaySave() {
+    setSaving(true)
+    const openDays = pendingTemplateIdx !== null
+      ? SCHEDULE_RULE_TEMPLATES[pendingTemplateIdx].openDays.filter(d => !closedDays.has(d))
+      : [0, 1, 2, 3, 4, 5, 6].filter(d => !closedDays.has(d))
+    const includeHolidays = pendingTemplateIdx !== null
+      ? SCHEDULE_RULE_TEMPLATES[pendingTemplateIdx].includeHolidays
+      : undefined
+    await applyRuleTemplate(openDays, includeHolidays)
+    const err = await updateTenantSettings(adminTenantId!, {
+      hidden_days: settingsHiddenDays.length > 0 ? settingsHiddenDays : undefined,
+    })
+    setSaving(false)
+    if (err) msg(err, true)
+    else { msg('저장됐습니다.'); setPendingTemplateIdx(null) }
   }
 
   async function handleSlotSave() {
@@ -1913,7 +1929,7 @@ export function AdminPage() {
                   </span>
                   <h2 className="mt-3 mb-1.5 text-[clamp(22px,5vw,27px)] font-extrabold tracking-tight text-[var(--color-text-primary)]">날짜·요일·시간 설정</h2>
                   <p className="text-[14px] font-medium text-[var(--color-text-muted)] leading-relaxed max-w-[52ch]">
-                    운영 요일·타임슬롯·날짜별 예외를 설정합니다. 요일·날짜 변경은 즉시 저장됩니다.
+                    운영 요일·타임슬롯·날짜별 예외를 설정합니다. 요일 변경 후 저장 버튼을 누르세요.
                   </p>
                 </header>
 
@@ -1961,21 +1977,15 @@ export function AdminPage() {
                     {SCHEDULE_RULE_TEMPLATES.map((t, i) => (
                       <button
                         key={t.label}
-                        disabled={applyingTemplate !== null || applyingHoliday}
-                        onClick={async () => {
-                          setApplyingTemplate(i)
-                          await applyRuleTemplate(t.openDays, t.includeHolidays)
-                          setApplyingTemplate(null)
-                        }}
+                        disabled={saving}
+                        onClick={() => setPendingTemplateIdx(i)}
                         className={`flex flex-col items-start px-3.5 py-3 rounded-2xl border text-left transition-colors disabled:opacity-60 ${
-                          applyingTemplate === i
+                          pendingTemplateIdx === i
                             ? 'border-[var(--color-brand-primary)] bg-[color-mix(in_srgb,var(--color-brand-primary)_8%,transparent)]'
                             : 'border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-brand-primary)] hover:bg-[var(--color-surface-hover)]'
                         }`}
                       >
-                        <span className="text-[13px] font-bold text-[var(--color-text-primary)]">
-                          {applyingTemplate === i ? '적용 중...' : t.label}
-                        </span>
+                        <span className="text-[13px] font-bold text-[var(--color-text-primary)]">{t.label}</span>
                         <span className="text-[11px] font-medium text-[var(--color-text-muted)] mt-0.5">{t.description}</span>
                       </button>
                     ))}
@@ -1992,20 +2002,16 @@ export function AdminPage() {
                     {DAY_LABELS.map((d, idx) => (
                       <button
                         key={idx}
-                        disabled={applyingHoliday || applyingTemplate !== null}
+                        disabled={saving}
                         className={`w-9 h-9 rounded-full text-[13px] font-bold transition-colors select-none disabled:opacity-50 ${
                           closedDays.has(idx)
                             ? idx === 0 ? 'bg-red-500 text-white' : idx === 6 ? 'bg-blue-500 text-white' : 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]'
                             : idx === 0 ? 'bg-red-50 text-red-500 hover:bg-red-100' : idx === 6 ? 'bg-blue-50 text-blue-500 hover:bg-blue-100' : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
                         }`}
-                        onClick={async () => {
+                        onClick={() => {
                           const next = new Set(closedDays)
                           if (next.has(idx)) next.delete(idx); else next.add(idx)
                           setClosedDays(next)
-                          setApplyingHoliday(true)
-                          const openDays = [0, 1, 2, 3, 4, 5, 6].filter(d => !next.has(d))
-                          await applyRuleTemplate(openDays)
-                          setApplyingHoliday(false)
                         }}
                       >
                         {d}
@@ -2033,17 +2039,11 @@ export function AdminPage() {
                         key={dow}
                         type="button"
                         disabled={saving}
-                        onClick={async () => {
+                        onClick={() => {
                           const newDays = settingsHiddenDays.includes(dow)
                             ? settingsHiddenDays.filter(d => d !== dow)
                             : [...settingsHiddenDays, dow]
                           setSettingsHiddenDays(newDays)
-                          setSaving(true)
-                          const err = await updateTenantSettings(adminTenantId!, {
-                            hidden_days: newDays.length > 0 ? newDays : undefined,
-                          })
-                          setSaving(false)
-                          if (err) msg(err, true)
                         }}
                         className={`w-9 h-9 rounded-full text-[13px] font-bold transition-colors disabled:opacity-50 select-none ${
                           settingsHiddenDays.includes(dow)
@@ -2066,6 +2066,18 @@ export function AdminPage() {
                   ) : (
                     <p className="mt-2 text-xs text-[var(--color-text-muted)]">요일을 선택하면 해당 요일이 달력에서 숨겨집니다</p>
                   )}
+                </div>
+
+                {/* 요일 섹션 저장 버튼 */}
+                <div className="flex justify-end mb-2">
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={handleDaySave}
+                    className="px-5 py-2 bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-sm font-semibold rounded-xl hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50 transition-colors"
+                  >
+                    {saving ? '저장 중...' : '저장'}
+                  </button>
                 </div>
 
                 {/* ── 시간 섹션 ── */}
