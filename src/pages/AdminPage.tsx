@@ -12,12 +12,13 @@ import { buildSlot, parseSlotLabel, generateTimeSlots, DEFAULT_TIME_SLOTS, SLOT_
 import { SCHEDULE_RULE_TEMPLATES } from '../utils/scheduleRuleTemplates'
 import { getKoreanHolidaysInYear } from '../utils/koreanHolidays'
 import { CUSTOM_FIELD_TEMPLATES } from '../utils/customFieldTemplates'
-import type { TimeSlot, Tenant, TenantAccessRole, TenantRole, LegendItem, LegendColor, CustomFieldDef, CustomFieldOption, OptionValueType, CustomFieldType } from '../types'
+import type { TimeSlot, Tenant, TenantAccessRole, TenantRole, LegendItem, LegendColor, CustomFieldDef, CustomFieldOption, OptionValueType, CustomFieldType, Assignment } from '../types'
 import { OPTION_VALUE_TYPES, getOptionUnit, FIELD_TYPES_WITH_OPTIONS, FIELD_TYPES_WITH_DASHBOARD } from '../types'
 import { LEGEND_COLOR_STYLES } from '../components/schedule/Legend'
 import { applyThemePreset, THEME_PRESET_LIST, type ThemePresetKey } from '../lib/themePresets'
 import { displayMode } from '../lib/tenantMode'
 import { getFunctionErrorMessage } from '../lib/functionsError'
+import { SmsModal } from '../components/modals/SmsModal'
 import { fmtPhone } from '../lib/format'
 import { formatPhone } from '../lib/phone'
 import { BrandLegendIcon, isBrandLegendIcon } from '../lib/legendIcons'
@@ -101,6 +102,9 @@ const FIELD_TYPE_DEFS: { value: CustomFieldType; label: string; badgeCls: string
   { value: 'checkbox_group',label: '다중선택', badgeCls: 'bg-pink-100 text-pink-700' },
   { value: 'phone',         label: '전화번호', badgeCls: 'bg-teal-100 text-teal-700' },
   { value: 'image_upload',  label: '이미지첨부', badgeCls: 'bg-rose-100 text-rose-700' },
+  { value: 'date',          label: '날짜',      badgeCls: 'bg-violet-100 text-violet-700' },
+  { value: 'datetime',      label: '일시',      badgeCls: 'bg-cyan-100 text-cyan-700' },
+  { value: 'time',          label: '시간',      badgeCls: 'bg-sky-100 text-sky-700' },
 ]
 
 function CfTypeIcon({ type, size = 12 }: { type: CustomFieldType; size?: number }) {
@@ -113,6 +117,9 @@ function CfTypeIcon({ type, size = 12 }: { type: CustomFieldType; size?: number 
   if (type === 'checkbox_group') return <svg {...p}><rect x="2" y="4" width="7" height="7" rx="1.5"/><path d="m3.5 7.5 1.5 1.5 3-3"/><rect x="2" y="13" width="7" height="7" rx="1.5"/><path d="m3.5 16.5 1.5 1.5 3-3"/><path d="M12 7h10M12 17h10"/></svg>
   if (type === 'phone') return <svg {...p}><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-1Z"/></svg>
   if (type === 'image_upload') return <svg {...p}><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+  if (type === 'date') return <svg {...p}><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><path d="M7 13h2v2H7zM11 13h2v2h-2zM15 13h2v2h-2z" fill="currentColor" stroke="none"/></svg>
+  if (type === 'datetime') return <svg {...p}><rect x="2" y="3" width="12" height="10.5" rx="1.5"/><path d="M2 8h12M6 1v4M10 1v4"/><circle cx="18" cy="18" r="5"/><path d="M18 15v3l2 1.5"/></svg>
+  if (type === 'time') return <svg {...p}><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
   return null
 }
 
@@ -170,6 +177,15 @@ function FieldPreview({ field }: { field: CustomFieldDef }) {
           <span className="select-none">📷</span>
           <span>이미지 첨부 (최대 3장, WebP 자동 압축)</span>
         </div>
+      )}
+      {field.type === 'date' && (
+        <input type="date" disabled className={cls} />
+      )}
+      {field.type === 'datetime' && (
+        <input type="datetime-local" disabled className={cls} />
+      )}
+      {field.type === 'time' && (
+        <input type="time" disabled className={cls} />
       )}
     </div>
   )
@@ -362,6 +378,9 @@ export function AdminPage() {
   const [notifSaving, setNotifSaving] = useState(false)
   const [manualSending, setManualSending] = useState(false)
   const [manualSendResult, setManualSendResult] = useState<{ sent: number; failed: number } | null>(null)
+  const [showNotifSms, setShowNotifSms] = useState(false)
+  const [notifSmsAssignments, setNotifSmsAssignments] = useState<Assignment[]>([])
+  const [notifSmsLoading, setNotifSmsLoading] = useState(false)
   const [notifHistory, setNotifHistory] = useState<Array<{
     id: string
     body: string
@@ -1038,6 +1057,24 @@ export function AdminPage() {
     const result = data as { sent: number; failed: number } | null
     setManualSendResult({ sent: result?.sent ?? 0, failed: result?.failed ?? 0 })
     loadNotifHistory()
+  }
+
+  async function openNotifSmsModal() {
+    if (!adminTenant?.id) return
+    setNotifSmsLoading(true)
+    const tomorrow = new Date()
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    const { data } = await supabase
+      .from('assignments')
+      .select('id, tenant_id, year, month, day, time_slot, member_name, note, member_type, time_sub, color, user_id, role_id, customer_name, customer_phone, extra_data, is_locked, account_deleted, created_at')
+      .eq('tenant_id', adminTenant.id)
+      .eq('year', tomorrow.getFullYear())
+      .eq('month', tomorrow.getMonth() + 1)
+      .eq('day', tomorrow.getDate())
+      .eq('account_deleted', false)
+    setNotifSmsLoading(false)
+    setNotifSmsAssignments((data ?? []) as Assignment[])
+    setShowNotifSms(true)
   }
 
   async function saveNotifSettings() {
@@ -3194,7 +3231,7 @@ export function AdminPage() {
                         현재 설정 기준으로 내일 배정된 멤버에게 즉시 발송합니다.
                       </p>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 flex-wrap">
                       <button
                         onClick={sendManualReminder}
                         disabled={manualSending}
@@ -3202,6 +3239,13 @@ export function AdminPage() {
                         style={{ background: 'var(--color-brand-primary)' }}
                       >
                         {manualSending ? '발송 중...' : '지금 발송'}
+                      </button>
+                      <button
+                        onClick={openNotifSmsModal}
+                        disabled={notifSmsLoading}
+                        className="px-4 py-2 rounded-xl text-sm font-semibold border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] disabled:opacity-50 transition-colors"
+                      >
+                        {notifSmsLoading ? '불러오는 중...' : '해당 회원 문자발송'}
                       </button>
                       {manualSendResult && (
                         <span className="text-sm text-[var(--color-text-secondary)]">
@@ -3322,6 +3366,13 @@ export function AdminPage() {
           </>
         )}
       </div>
+      {showNotifSms && (
+        <SmsModal
+          assignments={notifSmsAssignments}
+          tenantId={adminTenant?.id}
+          onClose={() => setShowNotifSms(false)}
+        />
+      )}
       <DevFileLabel file="AdminPage.tsx" />
     </div>
   )

@@ -54,7 +54,10 @@
       "checkbox": "Consent",
       "checkbox_group": "Checkbox",
       "phone": "Phone",
-      "image_upload": "Image Upload"
+      "image_upload": "Image Upload",
+      "date": "Date",
+      "datetime": "Date & Time",
+      "time": "Time"
     },
     "placeholder": "Placeholder",
     "options": "Options",

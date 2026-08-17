@@ -54,7 +54,10 @@
       "checkbox": "동의",
       "checkbox_group": "체크박스",
       "phone": "전화번호",
-      "image_upload": "이미지첨부"
+      "image_upload": "이미지첨부",
+      "date": "날짜",
+      "datetime": "일시",
+      "time": "시간"
     },
     "placeholder": "플레이스홀더",
     "options": "선택지",

@@ -29,6 +29,9 @@ const FIELD_TYPE_DEFS: { value: CustomFieldType; label: string; tone: string; ic
   { value: 'phone',          label: '전화번호', tone: 'teal',   icon: 'phone' },
   { value: 'radio',          label: '라디오',   tone: 'amber',  icon: 'dot' },
   { value: 'image_upload',   label: '이미지첨부', tone: 'rose',   icon: 'image' },
+  { value: 'date',           label: '날짜',       tone: 'violet', icon: 'calendar' },
+  { value: 'datetime',       label: '일시',       tone: 'cyan',   icon: 'calendarClock' },
+  { value: 'time',           label: '시간',       tone: 'teal',   icon: 'clock' },
 ]
 const PLACEHOLDER_TYPES: CustomFieldType[] = ['text', 'number', 'select', 'phone']
 const BLANK_EDIT = (): Omit<CustomFieldDef, 'id'> => ({ label: '', type: 'text', required: true, options: [], placeholder: '', show_in_dashboard: false, min: undefined, max: undefined })
@@ -44,6 +47,15 @@ function FieldPreview({ field }: { field: CustomFieldDef }) {
   }
   if (field.type === 'text' || field.type === 'number' || field.type === 'phone') {
     return <div className="prev-input">{field.placeholder || `${field.label} 입력`}</div>
+  }
+  if (field.type === 'date') {
+    return <div className="prev-input">YYYY-MM-DD</div>
+  }
+  if (field.type === 'datetime') {
+    return <div className="prev-input">YYYY-MM-DD HH:MM</div>
+  }
+  if (field.type === 'time') {
+    return <div className="prev-input">HH:MM</div>
   }
   if (field.type === 'select') {
     return <div className="prev-input prev-select"><span>{field.placeholder || `${field.label} 선택`}</span><WizardIcon.chevron size={15} /></div>
