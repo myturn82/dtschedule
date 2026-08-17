@@ -717,7 +717,7 @@ export function LandingClassOn() {
                       </div>
                     </div>
                   ),
-                  title: '엑셀모드 + 내보내기',
+                  title: '엑셀모드 + 문서다운로드',
                   desc: '셀을 드래그해 복사·붙여넣기. 한 달 수업표를 엑셀·CSV·워드·PDF로 내보냅니다.',
                 },
                 {

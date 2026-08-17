@@ -695,7 +695,7 @@ export function LandingServeOn() {
                       </div>
                     </div>
                   ),
-                  title: '엑셀모드 + 내보내기',
+                  title: '엑셀모드 + 문서다운로드',
                   desc: '봉사 시간 집계 자료를 XLSX·CSV·PDF로 내보내 인증서 발급과 보고서 작성에 활용합니다.',
                 },
                 {

@@ -729,7 +729,7 @@ export function LandingWorkOn() {
                       </div>
                     </div>
                   ),
-                  title: '엑셀모드 + 내보내기',
+                  title: '엑셀모드 + 문서다운로드',
                   desc: '셀을 드래그해 복사·붙여넣기. 주간 업무표를 엑셀·PDF·캘린더·CSV로 내보냅니다.',
                 },
                 {

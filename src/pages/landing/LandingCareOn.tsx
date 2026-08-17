@@ -695,7 +695,7 @@ export function LandingCareOn() {
                       </div>
                     </div>
                   ),
-                  title: '엑셀모드 + 내보내기',
+                  title: '엑셀모드 + 문서다운로드',
                   desc: '셀을 드래그해 복사·붙여넣기. 교대표를 엑셀·CSV·워드·PDF로 내보내고 출력합니다.',
                 },
                 {

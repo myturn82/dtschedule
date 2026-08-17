@@ -1285,7 +1285,7 @@ export function LandingLessonOn() {
                       </div>
                     </div>
                   ),
-                  title: '엑셀모드 + 내보내기',
+                  title: '엑셀모드 + 문서다운로드',
                   desc: '셀을 드래그하거나 Shift+클릭으로 범위를 선택한 뒤 Ctrl+C/V로 복사·붙여넣기합니다. 한 달 스케줄을 엑셀·CSV·워드·PDF로 내보냅니다.',
                 },
                 {

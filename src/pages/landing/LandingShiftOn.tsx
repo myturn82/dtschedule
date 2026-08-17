@@ -719,7 +719,7 @@ export function LandingShiftOn() {
                       </div>
                     </div>
                   ),
-                  title: '엑셀모드 + 내보내기',
+                  title: '엑셀모드 + 문서다운로드',
                   desc: '셀을 드래그해 복사·붙여넣기. 급여 계산용 스케줄을 XLSX·CSV·PDF로 내보냅니다.',
                 },
                 {
