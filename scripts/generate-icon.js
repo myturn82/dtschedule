@@ -18,7 +18,7 @@ import { dirname } from 'path'
 const VERTICAL_ICONS = {
   'dts':        { type: 'dts',  fill: '#E05A3A' },
   'lesson-on':  { fill: '#D95E3E', text: 'LESSON', cells: [{ x: 0,  y: 16 }, { x: 48, y: 32 }] },
-  'shift-on':   { fill: '#3E78D4', text: 'SHIFT',  cells: [{ x: 16, y: 16 }, { x: 0,  y: 48 }] },
+  'shift-on':   { fill: '#22C55E', text: 'SHIFT',  cells: [{ x: 16, y: 16 }, { x: 0,  y: 48 }] },
   'serve-on':   { fill: '#279E5E', text: 'SERVE',  cells: [{ x: 48, y: 16 }, { x: 32, y: 48 }] },
   'class-on':   { fill: '#7148CC', text: 'CLASS',  cells: [{ x: 32, y: 16 }, { x: 16, y: 48 }] },
   'work-on':    { fill: '#1795A8', text: 'WORK',   cells: [{ x: 0,  y: 32 }, { x: 48, y: 48 }] },
