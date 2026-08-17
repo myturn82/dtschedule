@@ -7,4 +7,5 @@ export const BRAND = {
   color:    import.meta.env.VITE_BRAND_COLOR   ?? '#E05A3A',
   vertical: (import.meta.env.VITE_VERTICAL     ?? 'generic') as VerticalId | 'generic',
   appId:    import.meta.env.VITE_APP_ID        ?? 'com.dtschedule.app',
+  iconKey:  import.meta.env.VITE_ICON_KEY      ?? 'dts',
 } as const

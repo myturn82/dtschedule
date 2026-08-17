@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { BRAND } from '../lib/brandConfig'
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>
@@ -48,7 +49,7 @@ export function InstallBanner() {
           to   { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
       `}</style>
-      <img src="/icons/icon-192.png" alt="" width={40} height={40}
+      <img src={`/icons/${BRAND.iconKey}/icon-192.png`} alt="" width={40} height={40}
         style={{ borderRadius: 10, flexShrink: 0 }} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: '#EEF0F4', lineHeight: 1.3 }}>
