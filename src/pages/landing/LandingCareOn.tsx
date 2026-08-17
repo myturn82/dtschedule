@@ -55,6 +55,7 @@ export function LandingCareOn() {
         @keyframes barFill   { from { transform:scaleX(0); } to { transform:scaleX(1); } }
         @keyframes typeCursor{ 0%,100%{ opacity:1; } 50%{ opacity:0; } }
         @keyframes wizFill   { from{ width:0%; } to{ width:100%; } }
+        @keyframes dragSel   { 0%,8%{ background:rgba(255,255,255,0.04); box-shadow:none; } 32%,68%{ background:rgba(52,211,153,0.18); box-shadow:inset 0 0 0 2px rgba(52,211,153,0.6); } 88%,100%{ background:rgba(255,255,255,0.04); box-shadow:none; } }
         @keyframes float     { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-7px); } }
         @keyframes alertPulse { 0%,100% { border-color:rgba(239,68,68,0.3); } 50% { border-color:rgba(239,68,68,0.7); } }
         body { margin:0; background:#0a0b10; }
@@ -551,7 +552,27 @@ export function LandingCareOn() {
                           </div>
                         ))}
                       </div>
-                      <div style={{ textAlign: 'center', background: ACCENT, color: '#0a0b10', fontSize: 12, fontWeight: 700, padding: '8px', borderRadius: 9, animation: 'autoGlow 3s ease-in-out infinite' }}>역할별 인원 기준 자동배정</div>
+                      <div style={{ textAlign: 'center', background: ACCENT, color: '#0a0b10', fontSize: 12, fontWeight: 700, padding: '8px', borderRadius: 9, marginBottom: 10, animation: 'autoGlow 3s ease-in-out infinite' }}>자동배정 실행</div>
+                      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginBottom: 6 }}>배정 결과 미리보기</div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 4 }}>
+                        {(['월', '화', '수', '목', '금'] as string[]).map(d => (
+                          <div key={d} style={{ textAlign: 'center', fontSize: 9, color: 'rgba(255,255,255,0.35)', paddingBottom: 3 }}>{d}</div>
+                        ))}
+                        {([
+                          { init: '이', bg: 'rgba(52,211,153,0.15)', border: 'rgba(52,211,153,0.3)', color: ACCENT, delay: 600 },
+                          { init: '김', bg: 'rgba(96,165,250,0.15)', border: 'rgba(96,165,250,0.3)', color: '#60a5fa', delay: 750 },
+                          { init: '이', bg: 'rgba(52,211,153,0.15)', border: 'rgba(52,211,153,0.3)', color: ACCENT, delay: 900 },
+                          { init: '박', bg: 'rgba(167,139,250,0.15)', border: 'rgba(167,139,250,0.3)', color: '#a78bfa', delay: 1050 },
+                          { init: '김', bg: 'rgba(96,165,250,0.15)', border: 'rgba(96,165,250,0.3)', color: '#60a5fa', delay: 1200 },
+                          { init: '박', bg: 'rgba(167,139,250,0.15)', border: 'rgba(167,139,250,0.3)', color: '#a78bfa', delay: 1350 },
+                          { init: '—',  bg: 'rgba(255,255,255,0.04)', border: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.2)', delay: 1500 },
+                          { init: '박', bg: 'rgba(167,139,250,0.15)', border: 'rgba(167,139,250,0.3)', color: '#a78bfa', delay: 1650 },
+                          { init: '이', bg: 'rgba(52,211,153,0.15)', border: 'rgba(52,211,153,0.3)', color: ACCENT, delay: 1800 },
+                          { init: '—',  bg: 'rgba(255,255,255,0.04)', border: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.2)', delay: 1950 },
+                        ] as { init: string; bg: string; border: string; color: string; delay: number }[]).map((cell, i) => (
+                          <div key={i} style={{ padding: '5px 0', textAlign: 'center', borderRadius: 5, background: cell.bg, border: `1px solid ${cell.border}`, fontSize: 10, fontWeight: 700, color: cell.color, opacity: 0, animation: `cellFill 0.4s ease ${cell.delay}ms forwards` }}>{cell.init}</div>
+                        ))}
+                      </div>
                     </div>
                   ),
                   title: '자동 배정',
@@ -628,7 +649,15 @@ export function LandingCareOn() {
                       </div>
                       <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginBottom: 8 }}>첨부 파일</div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10 }}>
-                        <div style={{ width: 46, height: 46, borderRadius: 8, background: 'rgba(255,255,255,0.08)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, border: '1px solid rgba(255,255,255,0.1)' }}>□</div>
+                        <div style={{ width: 46, height: 46, borderRadius: 8, background: 'rgba(255,255,255,0.06)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.1)' }}>
+                          <svg width="28" height="26" viewBox="0 0 28 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="1" y="4" width="26" height="20" rx="3" stroke="rgba(255,255,255,0.45)" strokeWidth="1.4"/>
+                            <path d="M1 16 L8 10 L13 15 L19 8 L27 16" stroke="rgba(255,255,255,0.38)" strokeWidth="1.3" strokeLinejoin="round"/>
+                            <circle cx="8.5" cy="10" r="2.5" stroke="rgba(255,255,255,0.4)" strokeWidth="1.2"/>
+                            <rect x="18" y="1" width="8" height="6" rx="2" fill="rgba(255,255,255,0.18)" stroke="rgba(255,255,255,0.3)" strokeWidth="1"/>
+                            <circle cx="22" cy="4" r="1.2" fill="rgba(255,255,255,0.55)"/>
+                          </svg>
+                        </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 10, fontWeight: 600, marginBottom: 5, color: 'rgba(255,255,255,0.7)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>인수인계_0815.pdf</div>
                           <div style={{ height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden', marginBottom: 4 }}>
@@ -645,9 +674,14 @@ export function LandingCareOn() {
                 {
                   visual: (
                     <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
+                      <div style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '4px 8px', marginBottom: 8, fontSize: 8, color: 'rgba(255,255,255,0.55)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <span style={{ color: ACCENT, fontWeight: 700 }}>엑셀 모드 ON</span>
+                        <span style={{ color: 'rgba(255,255,255,0.25)' }}>—</span>
+                        드래그 또는 Shift+클릭으로 범위 선택, Ctrl+C/V 복사·붙여넣기
+                      </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                         <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)' }}>이번 주 교대표</div>
-                        <span style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)', fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 5 }}>PDF 출력</span>
+                        <span style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)', fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 5 }}>드래그 선택 중</span>
                       </div>
                       <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
                         {(['XLSX', 'PDF', 'CSV', 'DOCX'] as string[]).map(f => (
@@ -699,10 +733,10 @@ export function LandingCareOn() {
                 },
               ].map((card, i) => (
                 <Anim key={card.title} delay={i * 60}>
-                  <div className="co-card" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: 18, overflow: 'hidden', height: '100%' }}>
-                    {card.visual}
+                  <div className="co-card" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: 18, overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column' }}>
                     <div style={{ fontWeight: 700, marginBottom: 8, paddingLeft: 2 }}>{card.title}</div>
-                    <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, paddingLeft: 2 }}>{card.desc}</div>
+                    <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, paddingLeft: 2, marginBottom: 16 }}>{card.desc}</div>
+                    <div style={{ overflow: 'hidden' }}>{card.visual}</div>
                   </div>
                 </Anim>
               ))}

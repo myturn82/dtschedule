@@ -56,6 +56,7 @@ export function LandingWorkOn() {
         @keyframes barFill   { from { transform:scaleX(0); } to { transform:scaleX(1); } }
         @keyframes typeCursor{ 0%,100%{ opacity:1; } 50%{ opacity:0; } }
         @keyframes wizFill   { from{ width:0%; } to{ width:100%; } }
+        @keyframes dragSel   { 0%,8%{ background:rgba(255,255,255,0.04); box-shadow:none; } 32%,68%{ background:rgba(59,130,246,0.18); box-shadow:inset 0 0 0 2px rgba(59,130,246,0.6); } 88%,100%{ background:rgba(255,255,255,0.04); box-shadow:none; } }
         @keyframes float1    { 0%,100%{ transform:translateY(0px); } 50%{ transform:translateY(-7px); } }
         @keyframes float2    { 0%,100%{ transform:translateY(0px); } 50%{ transform:translateY(-7px); } }
         @keyframes float3    { 0%,100%{ transform:translateY(0px); } 50%{ transform:translateY(-7px); } }
@@ -555,6 +556,7 @@ export function LandingWorkOn() {
                         ))}
                       </div>
                       <div style={{ textAlign: 'center', background: ACCENT, color: '#fff', fontSize: 12, fontWeight: 700, padding: '8px', borderRadius: 9, marginBottom: 10, animation: 'autoGlow 3s ease-in-out infinite' }}>자동 균등 배정 실행</div>
+                      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginBottom: 6 }}>배정 결과 미리보기</div>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 4 }}>
                         {['월', '화', '수', '목', '금'].map(d => (
                           <div key={d} style={{ textAlign: 'center', fontSize: 9, color: 'rgba(255,255,255,0.35)', paddingBottom: 3 }}>{d}</div>
@@ -660,7 +662,15 @@ export function LandingWorkOn() {
                       </div>
                       <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginBottom: 8 }}>업무 산출물 첨부</div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10 }}>
-                        <div style={{ width: 46, height: 46, borderRadius: 8, background: 'rgba(255,255,255,0.08)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, border: '1px solid rgba(255,255,255,0.1)' }}>□</div>
+                        <div style={{ width: 46, height: 46, borderRadius: 8, background: 'rgba(255,255,255,0.06)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.1)' }}>
+                          <svg width="28" height="26" viewBox="0 0 28 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="1" y="4" width="26" height="20" rx="3" stroke="rgba(255,255,255,0.45)" strokeWidth="1.4"/>
+                            <path d="M1 16 L8 10 L13 15 L19 8 L27 16" stroke="rgba(255,255,255,0.38)" strokeWidth="1.3" strokeLinejoin="round"/>
+                            <circle cx="8.5" cy="10" r="2.5" stroke="rgba(255,255,255,0.4)" strokeWidth="1.2"/>
+                            <rect x="18" y="1" width="8" height="6" rx="2" fill="rgba(255,255,255,0.18)" stroke="rgba(255,255,255,0.3)" strokeWidth="1"/>
+                            <circle cx="22" cy="4" r="1.2" fill="rgba(255,255,255,0.55)"/>
+                          </svg>
+                        </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 10, fontWeight: 600, marginBottom: 5, color: 'rgba(255,255,255,0.7)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>제안서_ABC_0812.pdf</div>
                           <div style={{ height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden', marginBottom: 4 }}>
@@ -677,23 +687,33 @@ export function LandingWorkOn() {
                 {
                   visual: (
                     <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
+                      <div style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '4px 8px', marginBottom: 8, fontSize: 8, color: 'rgba(255,255,255,0.55)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <span style={{ color: ACCENT, fontWeight: 700 }}>엑셀 모드 ON</span>
+                        <span style={{ color: 'rgba(255,255,255,0.25)' }}>—</span>
+                        드래그 또는 Shift+클릭으로 범위 선택, Ctrl+C/V 복사·붙여넣기
+                      </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                         <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)' }}>이번 주 업무표</div>
-                        <span style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)', fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 5 }}>Ctrl+C</span>
+                        <span style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)', fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 5 }}>드래그 선택 중</span>
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: '28px repeat(5, 1fr)', gap: 3, marginBottom: 10 }}>
                         <div />
-                        {['월', '화', '수', '목', '금'].map(d => (
+                        {(['월','화','수','목','금'] as string[]).map(d => (
                           <div key={d} style={{ textAlign: 'center', fontSize: 9, color: 'rgba(255,255,255,0.3)', paddingBottom: 2 }}>{d}</div>
                         ))}
-                        {[
-                          { time: '09:00', sel: [false, true, true, false, false] },
-                          { time: '13:00', sel: [false, true, true, false, false] },
-                          { time: '16:00', sel: [false, false, false, false, false] },
-                        ].map(row => ([
+                        {([
+                          { time: '09:00', delays: [null, 0, 350, null, null] },
+                          { time: '13:00', delays: [null, 700, 1050, null, null] },
+                          { time: '16:00', delays: [null, null, null, null, null] },
+                        ] as { time: string; delays: (number | null)[] }[]).map(row => ([
                           <div key={`t-${row.time}`} style={{ fontSize: 8, color: 'rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center' }}>{row.time}</div>,
-                          ...row.sel.map((selected, ci) => (
-                            <div key={`${row.time}-${ci}`} style={{ height: 18, borderRadius: 3, background: selected ? 'rgba(59,130,246,0.18)' : 'rgba(255,255,255,0.04)', border: `${selected ? 2 : 1}px solid ${selected ? ACCENT : 'rgba(255,255,255,0.07)'}` }} />
+                          ...row.delays.map((delay, ci) => (
+                            <div key={`${row.time}-${ci}`} style={{
+                              height: 18, borderRadius: 3,
+                              background: 'rgba(255,255,255,0.04)',
+                              border: '1px solid rgba(255,255,255,0.07)',
+                              ...(delay !== null ? { animation: `dragSel 3.6s ease ${delay}ms infinite` } : {}),
+                            }} />
                           )),
                         ]))}
                       </div>
@@ -747,10 +767,10 @@ export function LandingWorkOn() {
                 },
               ].map((card, i) => (
                 <Anim key={card.title} delay={i * 60}>
-                  <div className="wo-card" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: 18, overflow: 'hidden', height: '100%' }}>
-                    {card.visual}
+                  <div className="wo-card" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: 18, overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column' }}>
                     <div style={{ fontWeight: 700, marginBottom: 8, paddingLeft: 2 }}>{card.title}</div>
-                    <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, paddingLeft: 2 }}>{card.desc}</div>
+                    <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, paddingLeft: 2, marginBottom: 16 }}>{card.desc}</div>
+                    <div style={{ overflow: 'hidden' }}>{card.visual}</div>
                   </div>
                 </Anim>
               ))}
