@@ -790,6 +790,7 @@ function BeforeAfterDemo() {
 
         {/* ── After (월별 시간별 달력) ── */}
         <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ fontSize: 9, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 8 }}>LESSON:ON</div>
           <div style={{ flex: 1, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 7 }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.6)' }}>2026년 8월</div>
