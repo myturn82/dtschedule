@@ -269,7 +269,7 @@ function ViewCycleDemo() {
           <span key={v} onClick={() => jump(i)} style={{ flex: 1, textAlign: 'center', background: v === view ? ACCENT : 'rgba(255,255,255,0.07)', color: v === view ? '#fff' : 'rgba(255,255,255,0.4)', fontSize: 9, fontWeight: v === view ? 700 : undefined, padding: '3px 0', borderRadius: 5, transition: 'background 0.25s, color 0.25s', whiteSpace: 'nowrap', cursor: 'pointer' }}>{v}</span>
         ))}
       </div>
-      <div style={{ minHeight: 120, opacity: show ? 1 : 0, transition: 'opacity 0.25s ease' }}>
+      <div style={{ minHeight: 155, opacity: show ? 1 : 0, transition: 'opacity 0.25s ease' }}>
         {content[view]}
       </div>
     </div>
@@ -396,7 +396,7 @@ function ScheduleRuleDemo() {
           }}>{t}</button>
         ))}
       </div>
-
+      <div style={{ minHeight: 150 }}>
       {/* ── 요일별 ── */}
       {tabIdx === 0 && (
         <div>
@@ -516,18 +516,17 @@ function ScheduleRuleDemo() {
             )}
           </div>
           {calGrid}
-          {dateHols.length > 0 && (
-            <div style={{ display: 'flex', gap: 8, marginTop: 5 }}>
-              {dateHols.map(h => (
-                <div key={h.d} style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 7.5, color: 'rgba(255,255,255,0.4)' }}>
-                  <span style={{ width: 5, height: 5, borderRadius: 1.5, flexShrink: 0, background: h.type === 'hol' ? 'rgba(239,68,68,0.55)' : 'rgba(34,197,94,0.55)' }} />
-                  {h.d === 15 ? '8/15 광복절 휴관' : '8/20 특별운영일'}
-                </div>
-              ))}
-            </div>
-          )}
+          <div style={{ display: 'flex', gap: 8, marginTop: 5, minHeight: 14, visibility: dateHols.length > 0 ? 'visible' : 'hidden' }}>
+            {dateHols.map(h => (
+              <div key={h.d} style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 7.5, color: 'rgba(255,255,255,0.4)' }}>
+                <span style={{ width: 5, height: 5, borderRadius: 1.5, flexShrink: 0, background: h.type === 'hol' ? 'rgba(239,68,68,0.55)' : 'rgba(34,197,94,0.55)' }} />
+                {h.d === 15 ? '8/15 광복절 휴관' : '8/20 특별운영일'}
+              </div>
+            ))}
+          </div>
         </div>
       )}
+      </div>
     </div>
   )
 }
@@ -760,12 +759,12 @@ export function LandingLessonOn() {
           <button className="lo-cta" onClick={goStart} style={{ background: ACCENT, color: '#fff', border: 0, borderRadius: 12, padding: '16px 36px', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>무료로 시작하기 →</button>
         </section>
 
-        {/* 01 — 수강권/결제 누락 및 잔여 횟수 혼선 */}
+        {/* 01 — 클릭 '딸깍', 스케줄 등록 끝! */}
         <section className="lo-sect-01" style={{ padding: '100px 24px', maxWidth: 840, margin: '0 auto', textAlign: 'center' }}>
           <Anim style={{ marginBottom: 48 }}>
-            <div style={{ fontSize: 13, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 16 }}>01 — 수강권/결제 누락 및 잔여 횟수 혼선</div>
+            <div style={{ fontSize: 13, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 16 }}>01 — 클릭 '딸깍', 스케줄 등록 끝!</div>
             <h2 style={{ fontSize: 'clamp(24px,4vw,36px)', fontWeight: 800, lineHeight: 1.5, letterSpacing: '-0.5px', marginBottom: 16 }}>
-              "이 회원님 남은 횟수가 몇 번이더라..."<br />"오늘 그분 오시는 날 맞나?"
+              "이 회원님이 언제 오신다고 했지?"<br />"수업 준비하기도 바쁜데,<br />내가 왜 장부만 들여다보고 있지?"
             </h2>
             <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.45)', lineHeight: 1.8 }}>
               수기 장부, 카톡 캡처, 엑셀 시트를 오가며<br />수업 준비보다 관리에 더 많은 시간을 씁니다.
@@ -828,9 +827,12 @@ export function LandingLessonOn() {
         <section style={{ padding: '80px 24px', background: 'linear-gradient(180deg, transparent, rgba(242,96,78,0.05), transparent)' }}>
           <div className="lo-feat-grid" style={{ maxWidth: 960, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, alignItems: 'center' }}>
             <Anim style={{}} className="lo-feat-text">
-              <div style={{ fontSize: 13, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 16 }}>02 — 자동 소진</div>
+              <div style={{ fontSize: 13, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 16 }}>02 — 잔여 횟수 자동 차감</div>
+              <h2 style={{ fontSize: 'clamp(24px,4vw,36px)', fontWeight: 800, lineHeight: 1.5, letterSpacing: '-0.5px', marginBottom: 16 }}>
+                "이 회원님 남은 횟수가 몇 번이더라..."
+              </h2>
               <h2 style={{ fontSize: 'clamp(24px,3.5vw,34px)', fontWeight: 800, letterSpacing: '-0.5px', marginBottom: 16 }}>등록해두면, 수업마다<br />알아서 차감됩니다</h2>
-              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', lineHeight: 1.8 }}>코치가 회원과 사전 조율한 횟수제 레슨권(그룹 4회, 개인 8회 등)을 등록해두면, 수업이 진행될 때마다 결제 기록에서 잔여 횟수가 자동으로 소진됩니다.</p>
+              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', lineHeight: 1.8 }}>코치가 회원과 사전 조율한 횟수제 레슨권(그룹 4회, 개인 8회 등)을 등록해두면, 수업이 진행될 때마다 결제 기록에서 잔여 횟수가 자동으로 차감됩니다.</p>
             </Anim>
             <Anim delay={120} className="lo-feat-visual">
               <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 28 }}>
@@ -1175,10 +1177,10 @@ export function LandingLessonOn() {
                 },
               ].map((card, i) => (
                 <Anim key={card.title} delay={i * 60}>
-                  <div className="lo-card" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: 18, overflow: 'hidden', height: '100%' }}>
-                    {card.visual}
+                  <div className="lo-card" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: 18, overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column' }}>
                     <div style={{ fontWeight: 700, marginBottom: 8, paddingLeft: 2 }}>{card.title}</div>
-                    <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, paddingLeft: 2 }}>{card.desc}</div>
+                    <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, paddingLeft: 2, marginBottom: 16 }}>{card.desc}</div>
+                    <div style={{ overflow: 'hidden' }}>{card.visual}</div>
                   </div>
                 </Anim>
               ))}
