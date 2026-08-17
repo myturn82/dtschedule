@@ -744,12 +744,14 @@ function BeforeAfterDemo() {
     { date: '8/20 (목)', lines: ['09:00  조은수', '11:00  윤소이, 성시호', '성시호→박진희로?? 확인필요'], type: 'note' },
   ] as { date: string; lines: string[]; type: 'normal' | 'note' | 'uncertain' }[]
 
+  const isMobile = cols === 5
+
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 28px 1fr', gap: 12, textAlign: 'left' }}>
+    <div style={{ display: isMobile ? 'flex' : 'grid', flexDirection: isMobile ? 'column' : undefined, gridTemplateColumns: isMobile ? undefined : '1fr 28px 1fr', gap: 12, textAlign: 'left' }}>
 
         {/* ── Before (메모장) ── */}
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.28)', fontWeight: 700, letterSpacing: 1, marginBottom: 8 }}>BEFORE</div>
+          <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.28)', fontWeight: 700, letterSpacing: 1, marginBottom: 8 }}>현재</div>
           <div style={{ flex: 1, background: '#111218', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 14 }}>
             <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 600, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 5 }}>
               <span>📝</span> 8월 수업 일정.txt
@@ -772,15 +774,22 @@ function BeforeAfterDemo() {
         </div>
 
         {/* ── Arrow ── */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingTop: 28 }}>
-          <div style={{ width: 1, flex: 1, background: 'linear-gradient(to bottom, transparent, rgba(242,96,78,0.4))' }} />
-          <div style={{ fontSize: 15, color: ACCENT, lineHeight: 1, padding: '4px 0' }}>→</div>
-          <div style={{ width: 1, flex: 1, background: 'linear-gradient(to bottom, rgba(242,96,78,0.4), transparent)' }} />
-        </div>
+        {isMobile ? (
+          <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', height: 28 }}>
+            <div style={{ height: 1, flex: 1, background: 'linear-gradient(to right, transparent, rgba(242,96,78,0.4))' }} />
+            <div style={{ fontSize: 15, color: ACCENT, lineHeight: 1, padding: '0 4px' }}>↓</div>
+            <div style={{ height: 1, flex: 1, background: 'linear-gradient(to right, rgba(242,96,78,0.4), transparent)' }} />
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingTop: 28 }}>
+            <div style={{ width: 1, flex: 1, background: 'linear-gradient(to bottom, transparent, rgba(242,96,78,0.4))' }} />
+            <div style={{ fontSize: 15, color: ACCENT, lineHeight: 1, padding: '4px 0' }}>→</div>
+            <div style={{ width: 1, flex: 1, background: 'linear-gradient(to bottom, rgba(242,96,78,0.4), transparent)' }} />
+          </div>
+        )}
 
         {/* ── After (월별 시간별 달력) ── */}
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ fontSize: 9, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 8 }}>AFTER · LESSON:ON</div>
           <div style={{ flex: 1, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 7 }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.6)' }}>2026년 8월</div>
@@ -925,7 +934,7 @@ export function LandingLessonOn() {
         </section>
 
         {/* 01 — 클릭 '딸깍', 스케줄 등록 끝! */}
-        <section className="lo-sect-01" style={{ padding: '100px 24px', maxWidth: 840, margin: '0 auto', textAlign: 'center' }}>
+        <section className="lo-sect-01" style={{ padding: '100px 24px', maxWidth: 960, margin: '0 auto', textAlign: 'center' }}>
           <Anim style={{ marginBottom: 48 }}>
             <div style={{ fontSize: 13, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 16 }}>01 — 클릭 '딸깍', 스케줄 등록 끝!</div>
             <h2 style={{ fontSize: 'clamp(24px,4vw,36px)', fontWeight: 800, lineHeight: 1.5, letterSpacing: '-0.5px', marginBottom: 16 }}>
