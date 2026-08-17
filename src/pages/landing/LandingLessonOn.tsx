@@ -276,7 +276,7 @@ function ViewCycleDemo() {
   )
 }
 
-// 스케줄규칙 + 예외날짜설정 인터랙티브 데모
+// 날짜·요일·시간 설정 인터랙티브 데모
 function ScheduleRuleDemo() {
   const [tick, setTick] = useState(0)
   const [manualTab, setManualTab] = useState<number | null>(null)
@@ -1182,7 +1182,7 @@ export function LandingLessonOn() {
                 },
                 {
                   visual: <ScheduleRuleDemo />,
-                  title: '스케줄규칙 + 예외날짜설정',
+                  title: '날짜·요일·시간 설정',
                   desc: '요일별·시간별·날짜별로 독립 설정이 가능해 조직마다 100% 커스터마이징을 실현합니다. 기본 운영 패턴 위에 휴관일·특별운영을 날짜마다 따로 지정할 수 있습니다.',
                 },
                 {
