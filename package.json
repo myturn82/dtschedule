@@ -25,6 +25,7 @@
     "build:salon-on": "npm run build:tokens && vite build --mode salon-on",
     "build:care-on": "npm run build:tokens && vite build --mode care-on",
     "reel:landing": "vite build --config vite.promo-landing.config.ts && node scripts/record-reel-landing.js",
+    "reel:blog13": "vite build --config vite.promo13.config.ts && node scripts/record-reel-blog13.js",
     "icon:dts": "node scripts/generate-icon.js dts",
     "icon:lesson-on": "node scripts/generate-icon.js lesson-on && npx @capacitor/assets generate --android",
     "icon:shift-on": "node scripts/generate-icon.js shift-on",
