@@ -696,6 +696,170 @@ function WizardStepDemo() {
   )
 }
 
+// 섹션 01 — Before / After 데모
+function BeforeAfterDemo() {
+  const [phase, setPhase] = useState(0)
+  // 0: idle, 1: hover, 2: dropdown, 3: filled
+  const [cols, setCols] = useState(7)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width:640px)')
+    const update = () => setCols(mq.matches ? 5 : 7)
+    update()
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
+  }, [])
+
+  useEffect(() => {
+    const SEQ = [2500, 700, 1300, 3000]
+    let idx = 0
+    let t: ReturnType<typeof setTimeout>
+    function tick() {
+      t = setTimeout(() => {
+        idx = (idx + 1) % SEQ.length
+        setPhase(idx)
+        tick()
+      }, SEQ[idx])
+    }
+    tick()
+    return () => clearTimeout(t)
+  }, [])
+
+  const DAYS  = ['일', '월', '화', '수', '목', '금', '토'] as const
+  const DATES = [16, 17, 18, 19, 20, 21, 22]
+  const TIMES = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00']
+  // weekData[timeIdx][dayIdx] = members[]
+  const weekData: string[][][] = [
+    [[], [], [], [], ['조은수'], [], []],
+    [['조은수', '윤소이'], [], ['이하나', '김민지'], [], [], [], []],
+    [['이하나'], [], [], [], ['윤소이', '성시호'], [], []],
+    [['박진희'], [], [], [], [], [], []],
+    [[], [], [], [], [], [], []],
+    [[], [], ['박진희'], [], [], [], []],
+  ]
+
+  const beforeEntries = [
+    { date: '8/16 (일)', lines: ['10:00  조은수, 윤소이', '11:00  이하나', '12:00  박진희'], type: 'normal' },
+    { date: '8/18 (화)', lines: ['10:00  이하나, 김민지', '14:00  박진희', '※ 김민지 다음주 취소 요청'], type: 'note' },
+    { date: '8/20 (목)', lines: ['09:00  조은수', '11:00  윤소이, 성시호', '성시호→박진희로?? 확인필요'], type: 'note' },
+  ] as { date: string; lines: string[]; type: 'normal' | 'note' | 'uncertain' }[]
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 28px 1fr', gap: 12, textAlign: 'left' }}>
+
+        {/* ── Before (메모장) ── */}
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.28)', fontWeight: 700, letterSpacing: 1, marginBottom: 8 }}>BEFORE</div>
+          <div style={{ flex: 1, background: '#111218', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 14 }}>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 600, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span>📝</span> 8월 수업 일정.txt
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontFamily: '"Courier New", monospace' }}>
+              {beforeEntries.map(({ date, lines, type }) => (
+                <div key={date} style={{ borderLeft: `2px solid ${type === 'uncertain' ? 'rgba(255,255,255,0.1)' : type === 'note' ? 'rgba(255,255,255,0.2)' : 'rgba(242,96,78,0.5)'}`, paddingLeft: 8 }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: type === 'uncertain' ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.7)', marginBottom: 3 }}>{date}</div>
+                  {lines.map((line, i) => {
+                    const isWarn = type === 'note' && i === lines.length - 1
+                    const isUnknown = type === 'uncertain' && line.includes('미정')
+                    return (
+                      <div key={i} style={{ fontSize: 10, marginBottom: 1, color: isWarn ? 'rgba(255,196,0,0.65)' : isUnknown ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.5)' }}>{line}</div>
+                    )
+                  })}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Arrow ── */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingTop: 28 }}>
+          <div style={{ width: 1, flex: 1, background: 'linear-gradient(to bottom, transparent, rgba(242,96,78,0.4))' }} />
+          <div style={{ fontSize: 15, color: ACCENT, lineHeight: 1, padding: '4px 0' }}>→</div>
+          <div style={{ width: 1, flex: 1, background: 'linear-gradient(to bottom, rgba(242,96,78,0.4), transparent)' }} />
+        </div>
+
+        {/* ── After (월별 시간별 달력) ── */}
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ fontSize: 9, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 8 }}>AFTER · LESSON:ON</div>
+          <div style={{ flex: 1, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 7 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.6)' }}>2026년 8월</div>
+              <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.28)', background: 'rgba(255,255,255,0.05)', borderRadius: 4, padding: '2px 6px' }}>주간·시간별</div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: `26px repeat(${cols}, 1fr)`, gap: 2 }}>
+              {/* 요일·날짜 헤더 */}
+              <div />
+              {DAYS.slice(0, cols).map((d, i) => (
+                <div key={d} style={{ textAlign: 'center', paddingBottom: 4 }}>
+                  <div style={{ fontSize: 7, color: i === 0 ? 'rgba(239,68,68,0.6)' : i === 6 ? 'rgba(96,165,250,0.6)' : 'rgba(255,255,255,0.28)' }}>{d}</div>
+                  <div style={{ fontSize: 8, fontWeight: 700, color: i === 0 ? 'rgba(239,68,68,0.75)' : i === 6 ? 'rgba(96,165,250,0.75)' : 'rgba(255,255,255,0.5)' }}>{DATES[i]}</div>
+                </div>
+              ))}
+              {/* 시간×요일 셀 */}
+              {TIMES.map((time, ti) => (
+                <>
+                  <div key={`t${ti}`} style={{ fontSize: 7.5, color: 'rgba(255,255,255,0.22)', paddingTop: 5, textAlign: 'right', paddingRight: 3 }}>{time}</div>
+                  {DATES.slice(0, cols).map((_, di) => {
+                    const isTarget = ti === 4 && di === 4
+                    const isHover  = isTarget && phase === 1
+                    const isOpen   = isTarget && phase === 2
+                    const isFilled = isTarget && phase === 3
+                    const cellMembers = weekData[ti][di]
+                    const hasMembers  = cellMembers.length > 0
+                    return (
+                      <div key={`c${ti}-${di}`} style={{ position: 'relative' }}>
+                        <div style={{
+                          borderRadius: 3, padding: '3px 2px', minHeight: 28,
+                          background: hasMembers ? 'rgba(242,96,78,0.09)' : isHover ? 'rgba(242,96,78,0.05)' : 'rgba(255,255,255,0.02)',
+                          border: `1px solid ${hasMembers ? 'rgba(242,96,78,0.22)' : (isHover || isOpen) ? 'rgba(242,96,78,0.3)' : 'rgba(255,255,255,0.05)'}`,
+                          transition: 'all 0.2s',
+                        }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'center' }}>
+                            {cellMembers.slice(0, 2).map(m => (
+                              <div key={m} style={{ fontSize: 6, background: 'rgba(242,96,78,0.17)', borderRadius: 2, padding: '1px 3px', color: 'rgba(255,255,255,0.82)', lineHeight: 1.4, whiteSpace: 'nowrap' }}>{m}</div>
+                            ))}
+                            {cellMembers.length > 2 && <div style={{ fontSize: 6, color: ACCENT, fontWeight: 700 }}>+{cellMembers.length - 2}</div>}
+                            {isFilled && <div style={{ fontSize: 6, background: 'rgba(242,96,78,0.17)', borderRadius: 2, padding: '1px 3px', color: 'rgba(255,255,255,0.82)', lineHeight: 1.4, animation: 'fadeUp 0.3s ease both' }}>이하나</div>}
+                            {(isHover || isOpen) && !isFilled && <div style={{ fontSize: 10, color: 'rgba(242,96,78,0.5)', lineHeight: 1 }}>+</div>}
+                          </div>
+                        </div>
+                        {isOpen && (
+                          <div style={{
+                            position: 'absolute', bottom: 'calc(100% + 4px)', right: 0,
+                            background: '#181929', border: `1px solid rgba(242,96,78,0.3)`,
+                            borderRadius: 7, padding: 5, zIndex: 20, width: 108,
+                            animation: 'fadeUp 0.18s ease both',
+                            boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+                          }}>
+                            <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.3)', marginBottom: 4, paddingLeft: 2 }}>8/20 13:00 회원 추가</div>
+                            {(['이하나', '조은수', '박진희'] as string[]).map((name, ni) => (
+                              <div key={name} style={{
+                                padding: '4px 6px', borderRadius: 4, fontSize: 9,
+                                color: ni === 0 ? '#fff' : 'rgba(255,255,255,0.38)',
+                                background: ni === 0 ? 'rgba(242,96,78,0.16)' : 'transparent',
+                                fontWeight: ni === 0 ? 700 : undefined,
+                                display: 'flex', alignItems: 'center', gap: 4,
+                              }}>
+                                <div style={{ width: 4, height: 4, borderRadius: '50%', background: ni === 0 ? ACCENT : 'rgba(255,255,255,0.18)', flexShrink: 0 }} />
+                                {name}
+                                {ni === 0 && <span style={{ marginLeft: 'auto', fontSize: 7, color: ACCENT }}>↵</span>}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </>
+              ))}
+            </div>
+          </div>
+        </div>
+
+    </div>
+  )
+}
+
 export function LandingLessonOn() {
   const navigate = useNavigate()
   const goStart = () => navigate('/consent?vertical=lessonon')
@@ -771,55 +935,7 @@ export function LandingLessonOn() {
             </p>
           </Anim>
           <Anim delay={150}>
-            {(() => {
-              const DAYS = ['월', '화', '수', '목', '금', '토']
-              const ROWS = [
-                { time: '10:00', cells: ['조은수', null, '윤소이', '박진희', null, '성시호'] },
-                { time: '11:00', cells: [null, '이하나', null, null, '김민지', null] },
-                { time: '13:00', cells: ['박진희', '윤소이', null, '조은수', '이하나', null] },
-                { time: '14:00', cells: [null, null, '성시호', null, null, '박진희'] },
-              ] as { time: string; cells: (string | null)[] }[]
-              let cellIdx = 0
-              return (
-                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: '20px 16px', overflowX: 'auto' }}>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginBottom: 12, textAlign: 'left' }}>이번 주 수업 일정</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '44px repeat(6, 1fr)', gap: 5, minWidth: 420 }}>
-                    <div />
-                    {DAYS.map(d => (
-                      <div key={d} style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textAlign: 'center', paddingBottom: 6 }}>{d}</div>
-                    ))}
-                    {ROWS.map((row, ri) => (
-                      <>
-                        <div key={row.time} style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', paddingRight: 4, whiteSpace: 'nowrap' }}>{row.time}</div>
-                        {row.cells.map((name, ci) => {
-                          const delay = 300 + (ri * 6 + ci) * 50
-                          const isConfused = ri === 0 && ci === 1
-                          cellIdx++
-                          if (name) {
-                            return (
-                              <div key={ci} style={{ background: 'rgba(242,96,78,0.1)', border: '1px solid rgba(242,96,78,0.2)', borderRadius: 8, padding: '6px 4px', textAlign: 'center', fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.85)', opacity: 0, animation: `fadeUp 0.4s ease ${delay}ms both` }}>
-                                {name}
-                              </div>
-                            )
-                          }
-                          return (
-                            <div key={ci} style={{ position: 'relative', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '6px 4px', textAlign: 'center', opacity: 0, animation: `fadeUp 0.4s ease ${delay}ms both` }}>
-                              <span className="lo-qmark" style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', display: 'block' }}>?</span>
-                              {isConfused && (
-                                <div style={{ position: 'absolute', bottom: '110%', left: '50%', transform: 'translateX(-50%)', background: 'rgba(242,96,78,0.9)', color: '#fff', fontSize: 10, fontWeight: 700, borderRadius: 6, padding: '4px 8px', whiteSpace: 'nowrap', pointerEvents: 'none', zIndex: 10 }}>
-                                  몇 번 남았더라...
-                                  <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '4px solid transparent', borderRight: '4px solid transparent', borderTop: '4px solid rgba(242,96,78,0.9)' }} />
-                                </div>
-                              )}
-                            </div>
-                          )
-                        })}
-                      </>
-                    ))}
-                  </div>
-                </div>
-              )
-            })()}
+            <BeforeAfterDemo />
           </Anim>
         </section>
 
