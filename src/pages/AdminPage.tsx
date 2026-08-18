@@ -310,21 +310,43 @@ export function AdminPage() {
     if (tab !== 'hours' || !adminTenantId) return
     let cancelled = false
     setHoursLoading(true)
+
+    // assignments 테이블은 year/month/day 컬럼을 사용하므로
+    // 날짜 범위에 포함되는 모든 year-month 조합을 OR 필터로 쿼리한다
+    const fromDate = new Date(hoursFrom)
+    const toDate   = new Date(hoursTo)
+    const fromY = fromDate.getFullYear(), fromM = fromDate.getMonth() + 1, fromD = fromDate.getDate()
+    const toY   = toDate.getFullYear(),   toM   = toDate.getMonth() + 1,   toD   = toDate.getDate()
+
+    const yearMonths: { year: number; month: number }[] = []
+    const cur = new Date(fromY, fromM - 1, 1)
+    const endYM = new Date(toY, toM - 1, 1)
+    while (cur <= endYM) {
+      yearMonths.push({ year: cur.getFullYear(), month: cur.getMonth() + 1 })
+      cur.setMonth(cur.getMonth() + 1)
+    }
+    if (yearMonths.length === 0) { setHoursRows([]); setHoursLoading(false); return }
+
+    const orFilter = yearMonths.map(ym => `and(year.eq.${ym.year},month.eq.${ym.month})`).join(',')
+
     supabase
       .from('assignments')
-      .select('user_id, member_name, member_type, time_slot')
+      .select('user_id, member_name, member_type, time_slot, year, month, day')
       .eq('tenant_id', adminTenantId)
-      .gte('date', hoursFrom)
-      .lte('date', hoursTo)
+      .or(orFilter)
       .then(({ data }) => {
         if (cancelled) return
         if (!data) { setHoursLoading(false); return }
         const countMap = new Map<string, number>()
         const hoursMap = new Map<string, number>()
-        const nameMap = new Map<string, string>()
+        const nameMap  = new Map<string, string>()
         const memberNameLookup = new Map(members.map(m => [m.user_id, m.profile?.name ?? '?']))
-        for (const a of data) {
+        for (const a of data as { user_id: string | null; member_name: string; member_type?: string; time_slot: string; year: number; month: number; day: number }[]) {
           if (a.member_type === 'close') continue
+          // 정확한 일(day) 경계 필터 (year-month OR 필터가 과포함할 수 있음)
+          const beforeStart = a.year < fromY || (a.year === fromY && a.month < fromM) || (a.year === fromY && a.month === fromM && a.day < fromD)
+          const afterEnd    = a.year > toY   || (a.year === toY   && a.month > toM)   || (a.year === toY   && a.month === toM   && a.day > toD)
+          if (beforeStart || afterEnd) continue
           const key = a.user_id ?? a.member_name ?? ''
           if (!key) continue
           if (!nameMap.has(key)) {
