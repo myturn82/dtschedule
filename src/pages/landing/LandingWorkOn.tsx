@@ -106,58 +106,7 @@ export function LandingWorkOn() {
             팀 스케줄, 카톡·엑셀·캘린더<br /><span style={{ color: ACCENT }}>더 이상 오가지 마십시오.</span>
           </h1>
           <p className="wo-sub" style={{ fontSize: 17, color: 'rgba(255,255,255,0.5)', maxWidth: 500, margin: '0 auto 20px', lineHeight: 1.7 }}>업무 배정부터 실시간 공유까지. WORK:ON 한 곳에서 관리합니다.</p>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', marginBottom: 36 }}>신용카드 불필요 · 10명까지 영구 무료 · 30초 가입</p>
-          <button className="wo-cta" onClick={goStart} style={{ background: ACCENT, color: '#fff', border: 0, borderRadius: 12, padding: '16px 36px', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 72 }}>무료로 시작하기 →</button>
-
-          {/* Hero floating cards */}
-          <div className="wo-hero-cards" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, maxWidth: 880, margin: '0 auto', position: 'relative', zIndex: 1 }}>
-            {/* Card 1: 이번 주 업무 */}
-            <div className="wo-float1" style={{ background: '#13141c', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '18px 16px', textAlign: 'left' }}>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 10 }}>이번 주 업무</div>
-              {[
-                { name: '김지현', task: '디자인 검토', color: ACCENT },
-                { name: '박민수', task: '클라이언트 미팅', color: '#8B5CF6' },
-                { name: '이수연', task: '기획서 작성', color: GREEN },
-                { name: '최준혁', task: '개발 QA', color: '#F59E0B' },
-              ].map(m => (
-                <div key={m.name} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: m.color, flexShrink: 0 }} />
-                  <span style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.75)' }}>{m.name}</span>
-                  <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.task}</span>
-                </div>
-              ))}
-            </div>
-            {/* Card 2: 업무 알림 */}
-            <div className="wo-float2" style={{ background: '#13141c', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '18px 16px', textAlign: 'left' }}>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 10 }}>업무 알림</div>
-              <div style={{ background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 10, padding: '10px 12px', marginBottom: 8 }}>
-                <div style={{ fontSize: 11, lineHeight: 1.6, color: 'rgba(255,255,255,0.8)' }}>내일 오전 10시 클라이언트 미팅이 있습니다</div>
-              </div>
-              <div style={{ fontSize: 11, color: GREEN, fontWeight: 700 }}>참석자 4명 확인됨</div>
-            </div>
-            {/* Card 3: 팀 캘린더 */}
-            <div className="wo-float3" style={{ background: '#13141c', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '18px 16px', textAlign: 'left' }}>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>팀 캘린더</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 3 }}>
-                {['월', '화', '수', '목', '금'].map(d => (
-                  <div key={d} style={{ textAlign: 'center', fontSize: 9, color: 'rgba(255,255,255,0.3)', paddingBottom: 3 }}>{d}</div>
-                ))}
-                {[
-                  { color: ACCENT, filled: true }, { color: '#8B5CF6', filled: true }, { color: ACCENT, filled: true }, { color: GREEN, filled: true }, { color: '#F59E0B', filled: true },
-                  { color: GREEN, filled: true }, { color: ACCENT, filled: true }, { color: '#8B5CF6', filled: false }, { color: ACCENT, filled: true }, { color: GREEN, filled: false },
-                ].map((cell, i) => (
-                  <div key={i} style={{ height: 22, borderRadius: 4, background: cell.filled ? `${cell.color}22` : 'rgba(255,255,255,0.04)', border: `1px solid ${cell.filled ? `${cell.color}44` : 'rgba(255,255,255,0.07)'}` }} />
-                ))}
-              </div>
-            </div>
-            {/* Card 4: 배정 현황 */}
-            <div className="wo-float4" style={{ background: '#13141c', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '18px 16px', textAlign: 'left' }}>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 10 }}>배정 현황</div>
-              <div style={{ fontSize: 28, fontWeight: 800, color: ACCENT, marginBottom: 4 }}>48건</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>이번 달 총 업무 건</div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>팀원 평균 12건</div>
-            </div>
-          </div>
+          <button className="wo-cta" onClick={goStart} style={{ background: ACCENT, color: '#fff', border: 0, borderRadius: 12, padding: '16px 36px', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>무료로 시작하기 →</button>
         </section>
 
         <div className="wave" />
@@ -782,7 +731,6 @@ export function LandingWorkOn() {
         <Anim>
           <section style={{ textAlign: 'center', padding: '60px 24px 80px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
             <h2 style={{ fontSize: 'clamp(20px,3vw,26px)', fontWeight: 800, marginBottom: 12, lineHeight: 1.5 }}>분산된 업무 채널을 하나로 통합하십시오.<br />WORK:ON이 대신합니다.</h2>
-            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', marginBottom: 32 }}>신용카드 불필요 · 10명까지 영구 무료</p>
             <button className="wo-cta" onClick={goStart} style={{ background: ACCENT, color: '#fff', border: 0, borderRadius: 12, padding: '16px 36px', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>지금 무료로 시작하기 →</button>
           </section>
         </Anim>

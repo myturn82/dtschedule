@@ -42,9 +42,6 @@ export function LandingLayout({ appName, tagline, accentColor, verticalId, child
         <h1 style={{ fontSize: 'clamp(28px, 5vw, 48px)', fontWeight: 800, lineHeight: 1.2, letterSpacing: '-1px', margin: '0 auto 20px', maxWidth: 640 }}>
           {tagline}
         </h1>
-        <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.5)', maxWidth: 480, margin: '0 auto 36px', lineHeight: 1.7 }}>
-          지금 바로 무료로 시작하세요. 신용카드 없이, 30초 안에.
-        </p>
         <button
           onClick={() => navigate(`/consent?vertical=${verticalId}`)}
           style={{ background: accentColor, color: '#fff', border: 0, borderRadius: 12, padding: '14px 32px', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 8px 32px ${accentColor}44` }}

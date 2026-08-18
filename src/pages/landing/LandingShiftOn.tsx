@@ -151,7 +151,6 @@ export function LandingShiftOn() {
           </h1>
           <p className="sh-sub" style={{ fontSize: 17, color: 'rgba(255,255,255,0.5)', maxWidth: 480, margin: '0 auto 40px', lineHeight: 1.7 }}>드래그 배정, 자동 알림, 근무 시간 집계. 매장 운영에만 집중하십시오.</p>
           <button className="sh-cta" onClick={goStart} style={{ background: ACCENT, color: '#fff', border: 0, borderRadius: 12, padding: '16px 36px', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>무료로 시작하기 →</button>
-          <div style={{ marginTop: 16, fontSize: 13, color: 'rgba(255,255,255,0.3)' }}>신용카드 불필요 · 10명까지 영구 무료 · 30초 가입</div>
         </section>
 
         {/* wave divider */}

@@ -104,74 +104,7 @@ export function LandingCareOn() {
           <p className="co-sub" style={{ fontSize: 17, color: 'rgba(255,255,255,0.5)', maxWidth: 560, margin: '0 auto 16px', lineHeight: 1.7 }}>
             역할별 자동 배정, 공백 감지, 담당자 전일 알림. 교대표 작성 시간을 줄이십시오.
           </p>
-          <p className="co-note" style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', marginBottom: 40 }}>신용카드 불필요 · 10명까지 영구 무료 · 30초 가입</p>
-          <button className="co-cta" onClick={goStart} style={{ background: ACCENT, color: '#0a0b10', border: 0, borderRadius: 12, padding: '16px 36px', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 72 }}>무료로 시작하기 →</button>
-
-          {/* Hero 플로팅 카드 4개 */}
-          <div className="co-hero-cards" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, maxWidth: 880, margin: '0 auto', position: 'relative', zIndex: 2 }}>
-            {/* 카드 1: 이번 주 교대표 */}
-            <div className="co-hero-card" style={{ background: 'rgba(20,21,32,0.9)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: 16, padding: '18px 16px', textAlign: 'left', backdropFilter: 'blur(8px)' }}>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>이번 주 교대표</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {[
-                  { role: '의사', count: 2, color: '#60a5fa' },
-                  { role: '간호사', count: 6, color: ACCENT },
-                  { role: '간병인', count: 4, color: '#a78bfa' },
-                ].map(r => (
-                  <div key={r.role} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8 }}>
-                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: r.color, flexShrink: 0 }} />
-                    <span style={{ flex: 1, fontSize: 11, color: 'rgba(255,255,255,0.65)' }}>{r.role}</span>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: r.color }}>{r.count}명</span>
-                  </div>
-                ))}
-              </div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 10 }}>총 12명 배정</div>
-            </div>
-
-            {/* 카드 2: 근무 알림 */}
-            <div className="co-hero-card" style={{ background: 'rgba(20,21,32,0.9)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: 16, padding: '18px 16px', textAlign: 'left', backdropFilter: 'blur(8px)' }}>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>근무 알림</div>
-              <div style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: 10, padding: '10px 12px', marginBottom: 10 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 4, color: 'rgba(255,255,255,0.85)' }}>◆ 내일 야간 근무</div>
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>야간 근무가 있습니다.<br />출근 시간을 확인하십시오.</div>
-              </div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>발송 완료 <span style={{ color: ACCENT, fontWeight: 700 }}>12명</span></div>
-            </div>
-
-            {/* 카드 3: 주간 교대표 */}
-            <div className="co-hero-card" style={{ background: 'rgba(20,21,32,0.9)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: 16, padding: '18px 16px', textAlign: 'left', backdropFilter: 'blur(8px)' }}>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>주간 교대표</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 3, marginBottom: 6 }}>
-                {['의사', '간호', '간병'].map(r => (
-                  <div key={r} style={{ textAlign: 'center', fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.3)', paddingBottom: 3 }}>{r}</div>
-                ))}
-                {[
-                  ['rgba(96,165,250,0.2)', 'rgba(52,211,153,0.2)', 'rgba(167,139,250,0.18)'],
-                  ['rgba(96,165,250,0.2)', 'rgba(52,211,153,0.2)', ''],
-                  ['', 'rgba(52,211,153,0.2)', 'rgba(167,139,250,0.18)'],
-                  ['rgba(96,165,250,0.2)', '', 'rgba(167,139,250,0.18)'],
-                ].map((row, ri) => row.map((bg, ci) => (
-                  <div key={`${ri}-${ci}`} style={{ height: 14, borderRadius: 3, background: bg || 'rgba(255,255,255,0.04)', border: `1px solid ${bg ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)'}` }} />
-                )))}
-              </div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>역할별 슬롯 표시</div>
-            </div>
-
-            {/* 카드 4: 공백 감지 */}
-            <div className="co-hero-card" style={{ background: 'rgba(20,21,32,0.9)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: 16, padding: '18px 16px', textAlign: 'left', backdropFilter: 'blur(8px)' }}>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>공백 감지</div>
-              <div style={{ fontSize: 28, fontWeight: 800, color: ACCENT, letterSpacing: '-1px', marginBottom: 4 }}>0개</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 12 }}>빈 슬롯</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontSize: 12, color: ACCENT, fontWeight: 700 }}>↓ -3개</span>
-                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>지난주 3개 → 0개</span>
-              </div>
-              <div style={{ height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden', marginTop: 10 }}>
-                <div style={{ height: '100%', width: '0%', background: ACCENT, borderRadius: 2 }} />
-              </div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 6 }}>이번 주 기준</div>
-            </div>
-          </div>
+          <button className="co-cta" onClick={goStart} style={{ background: ACCENT, color: '#0a0b10', border: 0, borderRadius: 12, padding: '16px 36px', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>무료로 시작하기 →</button>
         </section>
 
         {/* Wave Divider */}
@@ -748,7 +681,6 @@ export function LandingCareOn() {
         <Anim>
           <section style={{ textAlign: 'center', padding: '60px 24px 100px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
             <h2 style={{ fontSize: 26, fontWeight: 800, marginBottom: 12, lineHeight: 1.5 }}>엑셀 교대표의 번거로움을 해소하십시오.<br />CARE:ON이 대신합니다.</h2>
-            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', marginBottom: 32 }}>신용카드 불필요 · 10명까지 영구 무료 · 30초 가입</p>
             <button className="co-cta" onClick={goStart} style={{ background: ACCENT, color: '#0a0b10', border: 0, borderRadius: 12, padding: '16px 36px', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>지금 무료로 시작하기 →</button>
           </section>
         </Anim>

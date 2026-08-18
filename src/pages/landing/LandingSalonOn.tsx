@@ -102,74 +102,7 @@ export function LandingSalonOn() {
           <p className="so-sub" style={{ fontSize: 17, color: 'rgba(255,255,255,0.5)', maxWidth: 520, margin: '0 auto 16px', lineHeight: 1.7 }}>
             공개 예약 링크 하나로 시술사별 빈 시간을 고객이 직접 선택합니다.
           </p>
-          <p className="so-note" style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', marginBottom: 40 }}>신용카드 불필요 · 10명까지 영구 무료 · 30초 가입</p>
-          <button className="so-cta" onClick={goStart} style={{ background: ACCENT, color: '#fff', border: 0, borderRadius: 12, padding: '16px 36px', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 72 }}>무료로 시작하기 →</button>
-
-          {/* Hero 플로팅 카드 4개 */}
-          <div className="so-hero-cards" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, maxWidth: 880, margin: '0 auto', position: 'relative', zIndex: 2 }}>
-            {/* 카드 1: 오늘 예약 */}
-            <div className="so-hero-card" style={{ background: 'rgba(20,21,32,0.9)', border: '1px solid rgba(167,139,250,0.2)', borderRadius: 16, padding: '18px 16px', textAlign: 'left', backdropFilter: 'blur(8px)' }}>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>오늘 예약</div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', marginBottom: 4 }}>8건</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginBottom: 12 }}>디자이너 3명</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                {[
-                  { name: '디자이너 A', count: 3, color: ACCENT },
-                  { name: '디자이너 B', count: 3, color: '#818cf8' },
-                  { name: '인턴 C', count: 2, color: '#34D399' },
-                ].map(d => (
-                  <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
-                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: d.color, flexShrink: 0 }} />
-                    <span style={{ flex: 1, color: 'rgba(255,255,255,0.6)' }}>{d.name}</span>
-                    <span style={{ fontWeight: 700, color: d.color }}>{d.count}건</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* 카드 2: D-1 알림 */}
-            <div className="so-hero-card" style={{ background: 'rgba(20,21,32,0.9)', border: '1px solid rgba(167,139,250,0.2)', borderRadius: 16, padding: '18px 16px', textAlign: 'left', backdropFilter: 'blur(8px)' }}>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>D-1 알림</div>
-              <div style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.25)', borderRadius: 10, padding: '10px 12px', marginBottom: 10 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 4, color: 'rgba(255,255,255,0.85)' }}>✉ 내일 오후 2시</div>
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>커트+염색 예약이<br />있습니다</div>
-              </div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>발송 완료 <span style={{ color: ACCENT, fontWeight: 700 }}>2명</span></div>
-            </div>
-
-            {/* 카드 3: 이번 주 스케줄 */}
-            <div className="so-hero-card" style={{ background: 'rgba(20,21,32,0.9)', border: '1px solid rgba(167,139,250,0.2)', borderRadius: 16, padding: '18px 16px', textAlign: 'left', backdropFilter: 'blur(8px)' }}>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>이번 주 스케줄</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 3, marginBottom: 6 }}>
-                {['A', 'B', 'C'].map(d => (
-                  <div key={d} style={{ textAlign: 'center', fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.35)', paddingBottom: 3 }}>디자{d}</div>
-                ))}
-                {[
-                  ['rgba(167,139,250,0.2)', 'rgba(129,140,248,0.2)', ''],
-                  ['rgba(167,139,250,0.2)', '', 'rgba(52,211,153,0.18)'],
-                  ['', 'rgba(129,140,248,0.2)', 'rgba(167,139,250,0.2)'],
-                  ['rgba(52,211,153,0.18)', 'rgba(167,139,250,0.2)', ''],
-                ].map((row, ri) => row.map((bg, ci) => (
-                  <div key={`${ri}-${ci}`} style={{ height: 14, borderRadius: 3, background: bg || 'rgba(255,255,255,0.04)', border: `1px solid ${bg ? 'rgba(167,139,250,0.2)' : 'rgba(255,255,255,0.06)'}` }} />
-                )))}
-              </div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>시술사별 슬롯 표시</div>
-            </div>
-
-            {/* 카드 4: 노쇼율 */}
-            <div className="so-hero-card" style={{ background: 'rgba(20,21,32,0.9)', border: '1px solid rgba(167,139,250,0.2)', borderRadius: 16, padding: '18px 16px', textAlign: 'left', backdropFilter: 'blur(8px)' }}>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>노쇼율</div>
-              <div style={{ fontSize: 28, fontWeight: 800, color: '#fff', letterSpacing: '-1px', marginBottom: 4 }}>2.3%</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
-                <span style={{ fontSize: 12, color: '#34D399', fontWeight: 700 }}>↓ -1.8%</span>
-                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>전월 대비</span>
-              </div>
-              <div style={{ height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: '23%', background: ACCENT, borderRadius: 2 }} />
-              </div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 6 }}>이번 달 기준</div>
-            </div>
-          </div>
+          <button className="so-cta" onClick={goStart} style={{ background: ACCENT, color: '#fff', border: 0, borderRadius: 12, padding: '16px 36px', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>무료로 시작하기 →</button>
         </section>
 
         {/* Wave Divider */}
@@ -747,7 +680,6 @@ export function LandingSalonOn() {
         <Anim>
           <section style={{ textAlign: 'center', padding: '60px 24px 100px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
             <h2 style={{ fontSize: 26, fontWeight: 800, marginBottom: 12, lineHeight: 1.5 }}>전화 예약의 번거로움을 해소하십시오.<br />SALON:ON이 대신합니다.</h2>
-            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', marginBottom: 32 }}>신용카드 불필요 · 10명까지 영구 무료 · 30초 가입</p>
             <button className="so-cta" onClick={goStart} style={{ background: ACCENT, color: '#fff', border: 0, borderRadius: 12, padding: '16px 36px', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>지금 무료로 시작하기 →</button>
           </section>
         </Anim>

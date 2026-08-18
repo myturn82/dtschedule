@@ -152,7 +152,6 @@ export function LandingServeOn() {
           </h1>
           <p className="sv-sub" style={{ fontSize: 17, color: 'rgba(255,255,255,0.5)', maxWidth: 520, margin: '0 auto 40px', lineHeight: 1.7 }}>봉사자 명단, 일정 배정, 봉사 시간 집계를 SERVE:ON이 자동으로 처리합니다.</p>
           <button className="sv-cta" onClick={goStart} style={{ background: ACCENT, color: '#fff', border: 0, borderRadius: 12, padding: '16px 36px', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>무료로 시작하기 →</button>
-          <div style={{ marginTop: 16, fontSize: 13, color: 'rgba(255,255,255,0.3)' }}>신용카드 불필요 · 10명까지 영구 무료 · 30초 가입</div>
         </section>
 
         {/* wave divider */}

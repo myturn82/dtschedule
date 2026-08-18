@@ -105,56 +105,7 @@ export function LandingClassOn() {
             수강권 횟수 관리,<br /><span style={{ color: ACCENT }}>이제 앱이 대신합니다.</span>
           </h1>
           <p className="co-sub" style={{ fontSize: 17, color: 'rgba(255,255,255,0.5)', maxWidth: 480, margin: '0 auto 20px', lineHeight: 1.7 }}>출석 체크 한 번으로 자동 차감. 만료 임박 학생은 즉시 알림.</p>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', marginBottom: 36 }}>신용카드 불필요 · 10명까지 영구 무료 · 30초 가입</p>
-          <button className="co-cta" onClick={goStart} style={{ background: ACCENT, color: '#fff', border: 0, borderRadius: 12, padding: '16px 36px', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 72 }}>무료로 시작하기 →</button>
-
-          {/* Hero floating cards */}
-          <div className="co-hero-cards" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, maxWidth: 880, margin: '0 auto', position: 'relative', zIndex: 1 }}>
-            {/* Card 1: 수강권 현황 */}
-            <div className="co-float1" style={{ background: '#13141c', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '18px 16px', textAlign: 'left' }}>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 10 }}>수강권 현황</div>
-              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>영어 20회권</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-                <div style={{ flex: 1, height: 5, background: 'rgba(255,255,255,0.08)', borderRadius: 3, overflow: 'hidden' }}>
-                  <div style={{ width: '40%', height: '100%', background: ACCENT, borderRadius: 3 }} />
-                </div>
-                <span style={{ fontSize: 11, color: ACCENT, fontWeight: 700, whiteSpace: 'nowrap' }}>8/20</span>
-              </div>
-              <div style={{ fontSize: 11, color: '#F59E0B', fontWeight: 700 }}>만료 D-14</div>
-            </div>
-            {/* Card 2: D-1 알림 */}
-            <div className="co-float2" style={{ background: '#13141c', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '18px 16px', textAlign: 'left' }}>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 10 }}>D-1 알림</div>
-              <div style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.25)', borderRadius: 10, padding: '10px 12px', marginBottom: 8 }}>
-                <div style={{ fontSize: 11, lineHeight: 1.6, color: 'rgba(255,255,255,0.8)' }}>내일 오후 4시 수학 수업이 있습니다</div>
-              </div>
-              <div style={{ fontSize: 11, color: GREEN, fontWeight: 700 }}>발송 완료 3명</div>
-            </div>
-            {/* Card 3: 이번 주 수업 */}
-            <div className="co-float3" style={{ background: '#13141c', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '18px 16px', textAlign: 'left' }}>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>이번 주 수업</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 3 }}>
-                {['월', '화', '수', '목', '금'].map(d => (
-                  <div key={d} style={{ textAlign: 'center', fontSize: 9, color: 'rgba(255,255,255,0.3)', paddingBottom: 3 }}>{d}</div>
-                ))}
-                {[
-                  { name: '지수', filled: true }, { name: null, filled: false }, { name: '민준', filled: true }, { name: null, filled: false }, { name: '수아', filled: true },
-                  { name: null, filled: false }, { name: '예린', filled: true }, { name: null, filled: false }, { name: '지수', filled: true }, { name: null, filled: false },
-                ].map((cell, i) => (
-                  <div key={i} style={{ height: 22, borderRadius: 4, background: cell.filled ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.04)', border: `1px solid ${cell.filled ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.07)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: cell.filled ? 600 : undefined, color: cell.filled ? 'rgba(255,255,255,0.8)' : 'transparent' }}>
-                    {cell.name ?? '·'}
-                  </div>
-                ))}
-              </div>
-            </div>
-            {/* Card 4: 출석률 */}
-            <div className="co-float4" style={{ background: '#13141c', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '18px 16px', textAlign: 'left' }}>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 10 }}>출석률</div>
-              <div style={{ fontSize: 28, fontWeight: 800, color: GREEN, marginBottom: 4 }}>87%</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>이번 달 출석률</div>
-              <div style={{ fontSize: 12, color: GREEN, fontWeight: 700 }}>↑ 전월 대비 +5%</div>
-            </div>
-          </div>
+          <button className="co-cta" onClick={goStart} style={{ background: ACCENT, color: '#fff', border: 0, borderRadius: 12, padding: '16px 36px', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>무료로 시작하기 →</button>
         </section>
 
         <div className="wave" />
@@ -770,7 +721,6 @@ export function LandingClassOn() {
         <Anim>
           <section style={{ textAlign: 'center', padding: '60px 24px 80px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
             <h2 style={{ fontSize: 'clamp(20px,3vw,26px)', fontWeight: 800, marginBottom: 12, lineHeight: 1.5 }}>수강권 관리의 번거로움을 해소하십시오.<br />CLASS:ON이 대신합니다.</h2>
-            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', marginBottom: 32 }}>신용카드 불필요 · 10명까지 영구 무료</p>
             <button className="co-cta" onClick={goStart} style={{ background: ACCENT, color: '#fff', border: 0, borderRadius: 12, padding: '16px 36px', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>지금 무료로 시작하기 →</button>
           </section>
         </Anim>
