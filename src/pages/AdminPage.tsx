@@ -601,6 +601,20 @@ export function AdminPage() {
       : generateTimeSlots(s.open_from, s.open_to, s.slot_interval_minutes)
   }, [adminTenant?.id, adminTenant?.settings])
 
+  // 현재 DB 운영요일과 일치하는 템플릿 자동 선택
+  useEffect(() => {
+    if (scheduleRules.length === 0 || adminTimeSlots.length === 0) return
+    const currentOpenDays = [0, 1, 2, 3, 4, 5, 6].filter(d =>
+      adminTimeSlots.some(s => scheduleRules.find(r => r.day_of_week === d && r.time_slot === s)?.is_open)
+    )
+    const matchIdx = SCHEDULE_RULE_TEMPLATES.findIndex(t => {
+      const sorted = [...t.openDays].sort((a, b) => a - b)
+      const currentSorted = [...currentOpenDays].sort((a, b) => a - b)
+      return sorted.length === currentSorted.length && sorted.every((v, i) => v === currentSorted[i])
+    })
+    if (matchIdx !== -1) setPendingTemplateIdx(matchIdx)
+  }, [scheduleRules, adminTimeSlots])
+
   if (authLoading || orgLoading) {
     return <div className="min-h-screen flex items-center justify-center text-[var(--color-text-muted)]">로딩 중...</div>
   }
@@ -2044,6 +2058,14 @@ export function AdminPage() {
                 <div className="flex items-center gap-3 mb-4">
                   <span className="text-[11px] font-bold text-[var(--color-text-muted)] bg-[var(--color-surface-secondary)] px-2.5 py-1 rounded-full border border-[var(--color-border)] whitespace-nowrap tracking-wide">요일</span>
                   <div className="flex-1 h-px bg-[var(--color-border)]" />
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={handleDaySave}
+                    className="shrink-0 px-4 py-1.5 bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-xs font-semibold rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50"
+                  >
+                    {saving ? '저장 중...' : '저장'}
+                  </button>
                 </div>
 
                 {/* 운영요일 선택 */}
@@ -2151,17 +2173,6 @@ export function AdminPage() {
                   )}
                 </div>
 
-                {/* 요일 섹션 저장 버튼 */}
-                <div className="flex justify-end mb-2">
-                  <button
-                    type="button"
-                    disabled={saving}
-                    onClick={handleDaySave}
-                    className="px-5 py-2 bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-sm font-semibold rounded-xl hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50 transition-colors"
-                  >
-                    {saving ? '저장 중...' : '저장'}
-                  </button>
-                </div>
 
                 {/* ── 시간 섹션 ── */}
                 <div className="flex items-center gap-3 mb-4 mt-6">
