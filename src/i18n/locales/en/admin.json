@@ -11,7 +11,8 @@
     "customFields": "Custom Fields",
     "notifications": "Notifications",
     "lessons": "Lessons",
-    "feedback": "Feedback"
+    "feedback": "Feedback",
+    "hours": "Hours"
   },
   "org": {
     "label": "Organization",

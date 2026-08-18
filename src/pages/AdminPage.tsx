@@ -212,7 +212,7 @@ function roleDisplayMode(role: TenantRole): RoleDisplayMode {
   return 'none'
 }
 
-type Tab = 'members' | 'pending' | 'roles' | 'rules' | 'settings' | 'autoassign' | 'legend' | 'custom_fields' | 'notifications' | 'lessons' | 'feedback'
+type Tab = 'members' | 'pending' | 'roles' | 'rules' | 'settings' | 'autoassign' | 'legend' | 'custom_fields' | 'notifications' | 'lessons' | 'feedback' | 'hours'
 
 const TAB_LABELS: Record<Tab, string> = {
   members: '회원 관리',
@@ -226,6 +226,15 @@ const TAB_LABELS: Record<Tab, string> = {
   notifications: '배정알림',
   lessons: '레슨권',
   feedback: '피드백',
+  hours: '시간 집계',
+}
+
+function adminFmtHours(h: number): string {
+  const totalMin = Math.round(h * 60)
+  const hrs = Math.floor(totalMin / 60)
+  const min = totalMin % 60
+  if (min === 0) return `${hrs}시간`
+  return `${hrs}시간 ${min}분`
 }
 
 export function AdminPage() {
@@ -281,7 +290,58 @@ export function AdminPage() {
     if (tab === 'lessons' && !getFF(tenantFF, 'lesson_packages')) setTab('members')
     if (tab === 'autoassign' && !getFF(tenantFF, 'autoassign')) setTab('members')
     if (tab === 'notifications' && !getFF(tenantFF, 'notifications')) setTab('members')
+    if (tab === 'hours' && !getFF(tenantFF, 'volunteer_hours')) setTab('members')
   }, [adminIsFreeform, tab, tenantFF])
+
+  // Hours tab
+  const [hoursFrom, setHoursFrom] = useState(() => {
+    const d = new Date()
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
+  })
+  const [hoursTo, setHoursTo] = useState(() => {
+    const d = new Date()
+    const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+  })
+  const [hoursRows, setHoursRows] = useState<{ name: string; count: number; hours: number }[]>([])
+  const [hoursLoading, setHoursLoading] = useState(false)
+
+  useEffect(() => {
+    if (tab !== 'hours' || !adminTenantId) return
+    let cancelled = false
+    setHoursLoading(true)
+    supabase
+      .from('assignments')
+      .select('user_id, member_name, member_type, time_slot')
+      .eq('tenant_id', adminTenantId)
+      .gte('date', hoursFrom)
+      .lte('date', hoursTo)
+      .then(({ data }) => {
+        if (cancelled) return
+        if (!data) { setHoursLoading(false); return }
+        const countMap = new Map<string, number>()
+        const hoursMap = new Map<string, number>()
+        const nameMap = new Map<string, string>()
+        const memberNameLookup = new Map(members.map(m => [m.user_id, m.profile?.name ?? '?']))
+        for (const a of data) {
+          if (a.member_type === 'close') continue
+          const key = a.user_id ?? a.member_name ?? ''
+          if (!key) continue
+          if (!nameMap.has(key)) {
+            nameMap.set(key, a.user_id ? (memberNameLookup.get(a.user_id) ?? '?') : (a.member_name ?? '?'))
+          }
+          countMap.set(key, (countMap.get(key) ?? 0) + 1)
+          const [start, end] = a.time_slot.split('-').map(Number)
+          hoursMap.set(key, (hoursMap.get(key) ?? 0) + (isNaN(end - start) ? 0 : end - start))
+        }
+        const rows = [...countMap.keys()]
+          .map(k => ({ name: nameMap.get(k) ?? k, count: countMap.get(k)!, hours: hoursMap.get(k) ?? 0 }))
+          .sort((a, b) => b.hours - a.hours || b.count - a.count)
+        setHoursRows(rows)
+        setHoursLoading(false)
+      })
+    return () => { cancelled = true }
+  }, [tab, adminTenantId, hoursFrom, hoursTo, members])
 
   // Members tab
   const [showAddMember, setShowAddMember] = useState(false)
@@ -1168,6 +1228,7 @@ export function AdminPage() {
               if (t === 'lessons' && !getFF(tenantFF, 'lesson_packages')) return false
               if (t === 'autoassign' && !getFF(tenantFF, 'autoassign')) return false
               if (t === 'notifications' && !getFF(tenantFF, 'notifications')) return false
+              if (t === 'hours' && !getFF(tenantFF, 'volunteer_hours')) return false
               return true
             }).map(t => {
               const count = t === 'members'
@@ -3372,6 +3433,86 @@ export function AdminPage() {
               />
             )}
             {/* ── 피드백 ── */}
+            {tab === 'hours' && getFF(tenantFF, 'volunteer_hours') && (
+              <div>
+                <header className="mb-5">
+                  <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10 px-3 py-[5px] rounded-full">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    시간 집계
+                  </span>
+                  <h2 className="mt-3 mb-1.5 text-[clamp(22px,5vw,27px)] font-extrabold tracking-tight text-[var(--color-text-primary)]">시간 집계</h2>
+                  <p className="text-[14px] font-medium text-[var(--color-text-muted)] leading-relaxed max-w-[52ch]">
+                    기간을 지정해 사용자별 누적 참여 시간을 조회합니다.
+                  </p>
+                </header>
+
+                {/* Date range picker */}
+                <div className="flex flex-wrap items-center gap-3 mb-5 p-4 rounded-[14px] border border-[var(--color-border)] bg-[var(--color-surface)]">
+                  <div className="flex items-center gap-2">
+                    <label className="text-[13px] font-medium text-[var(--color-text-muted)] whitespace-nowrap">시작일</label>
+                    <input
+                      type="date"
+                      value={hoursFrom}
+                      onChange={e => setHoursFrom(e.target.value)}
+                      className="text-[13px] border border-[var(--color-border)] rounded-lg px-3 py-1.5 bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30"
+                    />
+                  </div>
+                  <span className="text-[var(--color-text-muted)]">—</span>
+                  <div className="flex items-center gap-2">
+                    <label className="text-[13px] font-medium text-[var(--color-text-muted)] whitespace-nowrap">종료일</label>
+                    <input
+                      type="date"
+                      value={hoursTo}
+                      onChange={e => setHoursTo(e.target.value)}
+                      className="text-[13px] border border-[var(--color-border)] rounded-lg px-3 py-1.5 bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30"
+                    />
+                  </div>
+                </div>
+
+                {hoursLoading ? (
+                  <p className="text-center text-[13px] text-[var(--color-text-muted)] py-10">불러오는 중...</p>
+                ) : hoursRows.length === 0 ? (
+                  <p className="text-center text-[13px] text-[var(--color-text-muted)] py-10">해당 기간에 참여 이력이 없습니다.</p>
+                ) : (
+                  <div className="rounded-[14px] border border-[var(--color-border)] overflow-hidden">
+                    <table className="w-full text-sm min-w-[360px]">
+                      <thead>
+                        <tr className="bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
+                          <th className="text-center px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">이름</th>
+                          <th className="text-center px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">참여 건수</th>
+                          <th className="text-center px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">총 시간</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {hoursRows.map((row, idx) => (
+                          <tr key={idx} className="border-b border-[var(--color-border)] last:border-b-0 bg-[var(--color-surface)] hover:bg-[var(--color-surface-secondary)] transition-colors">
+                            <td className="text-center px-4 py-3 text-[13px] font-medium text-[var(--color-text-primary)]">{row.name}</td>
+                            <td className="text-center px-4 py-3 text-[13px] tabular-nums text-[var(--color-text-primary)]">
+                              {row.count}<span className="text-[11px] text-[var(--color-text-muted)] ml-0.5">건</span>
+                            </td>
+                            <td className="text-center px-4 py-3 text-[13px] font-semibold tabular-nums text-[var(--color-text-primary)]">
+                              {adminFmtHours(row.hours)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot>
+                        <tr className="bg-[var(--color-surface-secondary)] border-t border-[var(--color-border)]">
+                          <td className="text-center px-4 py-3 text-[13px] font-bold text-[var(--color-text-primary)]">합계</td>
+                          <td className="text-center px-4 py-3 text-[13px] font-bold tabular-nums text-[var(--color-text-primary)]">
+                            {hoursRows.reduce((s, r) => s + r.count, 0)}<span className="text-[11px] text-[var(--color-text-muted)] ml-0.5">건</span>
+                          </td>
+                          <td className="text-center px-4 py-3 text-[13px] font-bold tabular-nums text-[var(--color-text-primary)]">
+                            {adminFmtHours(hoursRows.reduce((s, r) => s + r.hours, 0))}
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
             {tab === 'feedback' && (
               <FeedbackBoardPanel scope={{ kind: 'org', tenantId: adminTenantId }} />
             )}

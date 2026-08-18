@@ -11,7 +11,8 @@
     "customFields": "입력항목",
     "notifications": "배정알림",
     "lessons": "레슨권",
-    "feedback": "피드백"
+    "feedback": "피드백",
+    "hours": "시간 집계"
   },
   "org": {
     "label": "조직",
