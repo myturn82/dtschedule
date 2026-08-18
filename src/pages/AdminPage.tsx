@@ -2040,7 +2040,7 @@ export function AdminPage() {
                   </span>
                   <h2 className="mt-3 mb-1.5 text-[clamp(22px,5vw,27px)] font-extrabold tracking-tight text-[var(--color-text-primary)]">날짜·요일·시간 설정</h2>
                   <p className="text-[14px] font-medium text-[var(--color-text-muted)] leading-relaxed max-w-[52ch]">
-                    운영 요일과 타임슬롯, 날짜별 예외를 설정합니다. 각 섹션의 저장 버튼으로 개별 적용합니다.
+                    운영 요일·타임슬롯·날짜별 예외를 설정합니다. 요일 변경 후 저장 버튼을 누르세요.
                   </p>
                 </header>
 
