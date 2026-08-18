@@ -54,7 +54,6 @@ export function SlotEditModal({
 }: Props) {
   const { year, day, month, timeSlot, memberType: defaultType, roleId: initialRoleId } = target
   const isAdmin = profile?.is_super_admin || tenantRole === 'admin'
-  const isSuperAdmin = !!profile?.is_super_admin
   const isReadOnly = !isAdmin && (tenantMode === '회원개별' || tenantMode === '비회원')
   const profileType: MemberType = 'member'
 
@@ -963,7 +962,7 @@ export function SlotEditModal({
                           {isOwnEntry && <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-[var(--color-brand-primary)]/15 text-[var(--color-brand-primary)] self-center">나</span>}
                           {a.is_locked && <span title="관리자에 의해 고정됨" className="self-center"><LockIcon size={12} /></span>}
                         </div>
-                        {(canEdit || (onToggleLock && a.is_locked && isSuperAdmin)) && (
+                        {(canEdit || (onToggleLock && a.is_locked && isAdmin)) && (
                           <div className="flex gap-0.5 shrink-0">
                             {canEdit && (
                               <>
@@ -976,7 +975,7 @@ export function SlotEditModal({
                                 )}
                               </>
                             )}
-                            {onToggleLock && a.is_locked && isSuperAdmin && (
+                            {onToggleLock && a.is_locked && isAdmin && (
                               <button onClick={() => handleToggleLock(a.id, false)} className="flex items-center gap-1 text-xs font-bold text-[var(--color-text-muted)] px-2 py-1 rounded-lg hover:bg-[var(--color-surface-secondary)] hover:text-[var(--color-text-primary)] transition-colors"><UnlockIcon size={12} /> 해제</button>
                             )}
                           </div>
@@ -1017,7 +1016,7 @@ export function SlotEditModal({
                               </span>
                             )}
                           </div>
-                          {(canEdit || (onToggleLock && a.is_locked && isSuperAdmin)) && (
+                          {(canEdit || (onToggleLock && a.is_locked && isAdmin)) && (
                             <div className="flex gap-0.5 shrink-0">
                               {canEdit && (
                                 <>
@@ -1030,7 +1029,7 @@ export function SlotEditModal({
                                   )}
                                 </>
                               )}
-                              {onToggleLock && a.is_locked && isSuperAdmin && (
+                              {onToggleLock && a.is_locked && isAdmin && (
                                 <button onClick={() => handleToggleLock(a.id, false)} className="flex items-center gap-1 text-xs font-bold text-[var(--color-text-muted)] px-2 py-1 rounded-lg hover:bg-[var(--color-surface-secondary)] hover:text-[var(--color-text-primary)] transition-colors"><UnlockIcon size={12} /> 해제</button>
                               )}
                             </div>
@@ -1062,7 +1061,7 @@ export function SlotEditModal({
           {profile && ownLockedAssignment ? (
             <p className="text-sm text-[var(--color-text-muted)] text-center py-3 flex items-center justify-center gap-1.5">
               <LockIcon size={14} />
-              고정된 항목은 수정할 수 없습니다. 해제는 슈퍼관리자에게 문의하세요.
+              고정된 항목은 수정할 수 없습니다. 해제는 관리자에게 문의하세요.
             </p>
           ) : profile && blockNewRegistration ? (
             <p className="text-sm text-[var(--color-text-muted)] text-center py-3 flex items-center justify-center gap-1.5">
