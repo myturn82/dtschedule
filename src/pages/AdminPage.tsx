@@ -212,11 +212,10 @@ function roleDisplayMode(role: TenantRole): RoleDisplayMode {
   return 'none'
 }
 
-type Tab = 'members' | 'pending' | 'roles' | 'rules' | 'settings' | 'autoassign' | 'legend' | 'custom_fields' | 'notifications' | 'lessons' | 'feedback' | 'hours'
+type Tab = 'members' | 'roles' | 'rules' | 'settings' | 'autoassign' | 'legend' | 'custom_fields' | 'notifications' | 'lessons' | 'feedback' | 'hours'
 
 const TAB_LABELS: Record<Tab, string> = {
   members: '회원 관리',
-  pending: '승인 대기',
   roles: '역할 관리',
   rules: '날짜·요일·시간 설정',
   settings: '조직 설정',
@@ -402,6 +401,9 @@ export function AdminPage() {
   const [newRoleRequiresCustomerInfo, setNewRoleRequiresCustomerInfo] = useState(false)
   const [editingRoleId, setEditingRoleId] = useState<string | null>(null)
   const [editRoleName, setEditRoleName] = useState('')
+
+  // Members sub-tab
+  const [membersSubTab, setMembersSubTab] = useState<'list' | 'pending'>('list')
 
   // Rules tab
   const [showMatrix, setShowMatrix] = useState(false)
@@ -1269,8 +1271,6 @@ export function AdminPage() {
             }).map(t => {
               const count = t === 'members'
                 ? members.filter(m => m.is_approved !== false).length
-                : t === 'pending'
-                ? members.filter(m => m.is_approved === false).length
                 : t === 'feedback'
                 ? feedbackBadgeCount
                 : 0
@@ -1338,13 +1338,43 @@ export function AdminPage() {
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 17l9 5 9-5" opacity="0.5"/></svg>
                     승인 회원 <b className="text-[var(--color-brand-primary)] font-extrabold">{members.filter(m => m.is_approved).length}</b>명
                     {(() => { const n = members.filter(m => !m.is_approved).length; return n > 0 ? (
-                      <button onClick={() => setTab('pending')} className="ml-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors">
+                      <button onClick={() => setMembersSubTab('pending')} className="ml-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors">
                         승인대기 {n}건 →
                       </button>
                     ) : null })()}
                   </span>
                 </header>
 
+                {/* 서브탭 */}
+                <div className="flex gap-1 mb-5 border-b border-[var(--color-border)]">
+                  <button
+                    onClick={() => setMembersSubTab('list')}
+                    className={`px-3.5 py-2 text-[13px] font-semibold transition-colors border-b-2 -mb-px ${
+                      membersSubTab === 'list'
+                        ? 'border-[var(--color-brand-primary)] text-[var(--color-brand-primary)]'
+                        : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
+                    }`}
+                  >
+                    회원 목록
+                  </button>
+                  <button
+                    onClick={() => setMembersSubTab('pending')}
+                    className={`flex items-center gap-1.5 px-3.5 py-2 text-[13px] font-semibold transition-colors border-b-2 -mb-px ${
+                      membersSubTab === 'pending'
+                        ? 'border-[var(--color-brand-primary)] text-[var(--color-brand-primary)]'
+                        : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
+                    }`}
+                  >
+                    승인 대기
+                    {members.filter(m => !m.is_approved).length > 0 && (
+                      <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">
+                        {members.filter(m => !m.is_approved).length}
+                      </span>
+                    )}
+                  </button>
+                </div>
+
+                {membersSubTab === 'list' && <>
                 {/* 회원 추가 / 직접 등록 버튼 + 회원 검색 */}
                 <div className="flex items-center gap-2 mb-4 flex-wrap">
                   <button
@@ -1730,118 +1760,102 @@ export function AdminPage() {
                     </tbody>
                   </table>
                 </div>
-              </div>
-            )}
+                </>}
 
-            {/* ── 승인 대기 ── */}
-            {tab === 'pending' && (
-              <div className="max-w-lg">
-                {/* 페이지 헤더 */}
-                <header className="mb-5">
-                  <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10 px-3 py-[5px] rounded-full">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    조직 설정 · 승인 대기
-                  </span>
-                  <h2 className="mt-3 mb-1.5 text-[clamp(22px,5vw,27px)] font-extrabold tracking-tight text-[var(--color-text-primary)]">승인 대기</h2>
-                  <p className="text-[14px] font-medium text-[var(--color-text-muted)] leading-relaxed max-w-[52ch]">
-                    가입 신청을 한 회원을 검토하고 승인 또는 거절합니다.
-                  </p>
-                  <span className="mt-3.5 inline-flex items-center gap-1.5 text-[12.5px] font-bold text-[var(--color-text-secondary)]">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 17l9 5 9-5" opacity="0.5"/></svg>
-                    대기 <b className="text-[var(--color-brand-primary)] font-extrabold">{members.filter(m => !m.is_approved).length}</b>명
-                  </span>
-                </header>
+                {membersSubTab === 'pending' && (
+                  <div className="max-w-lg">
+                    {(() => {
+                      const pendingMembers = members.filter(m => !m.is_approved)
+                      if (pendingMembers.length === 0) {
+                        return <p className="text-sm text-[var(--color-text-muted)] px-4 py-6 text-center">승인 대기 중인 회원이 없습니다.</p>
+                      }
+                      return (
+                        <div className="flex flex-col gap-2.5">
+                          {pendingMembers.map(m => (
+                            <div key={m.user_id} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-sm hover:border-[var(--color-border-strong)] hover:shadow-md transition-all" style={{ padding: '13px' }}>
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="min-w-0">
+                                  <p className="text-[15px] font-bold text-[var(--color-text-primary)] truncate">{m.profile?.name ?? '-'}</p>
+                                  <p className="text-[12.5px] text-[var(--color-text-muted)] mt-0.5 truncate">{m.profile?.email ?? '-'}</p>
+                                  {m.tenant_role?.name && (
+                                    <p className="text-[11.5px] text-[var(--color-text-secondary)] mt-0.5">{m.tenant_role.name}</p>
+                                  )}
+                                </div>
+                                <div className="flex gap-2 shrink-0">
+                                  <button
+                                    onClick={async () => {
+                                      const err = await approveUser(m.user_id)
+                                      if (err) msg(err, true)
+                                      else msg(`${m.profile?.name ?? '회원'}을(를) 승인했습니다.`)
+                                    }}
+                                    className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors"
+                                  >
+                                    승인
+                                  </button>
+                                  <button
+                                    onClick={async () => {
+                                      if (!confirm(`"${m.profile?.name ?? '회원'}"을(를) 거절하고 조직에서 제외할까요?`)) return
+                                      const err = await removeMember(m.user_id)
+                                      if (err) msg(err, true)
+                                    }}
+                                    className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
+                                  >
+                                    거절
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )
+                    })()}
 
-                {(() => {
-                  const pendingMembers = members.filter(m => !m.is_approved)
-                  if (pendingMembers.length === 0) {
-                    return <p className="text-sm text-[var(--color-text-muted)] px-4 py-6 text-center">승인 대기 중인 회원이 없습니다.</p>
-                  }
-                  return (
-                    <div className="flex flex-col gap-2.5">
-                      {pendingMembers.map(m => (
-                        <div key={m.user_id} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-sm hover:border-[var(--color-border-strong)] hover:shadow-md transition-all" style={{ padding: '13px' }}>
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="min-w-0">
-                              <p className="text-[15px] font-bold text-[var(--color-text-primary)] truncate">{m.profile?.name ?? '-'}</p>
-                              <p className="text-[12.5px] text-[var(--color-text-muted)] mt-0.5 truncate">{m.profile?.email ?? '-'}</p>
-                              {m.tenant_role?.name && (
-                                <p className="text-[11.5px] text-[var(--color-text-secondary)] mt-0.5">{m.tenant_role.name}</p>
-                              )}
-                            </div>
-                            <div className="flex gap-2 shrink-0">
-                              <button
-                                onClick={async () => {
-                                  const err = await approveUser(m.user_id)
-                                  if (err) msg(err, true)
-                                  else msg(`${m.profile?.name ?? '회원'}을(를) 승인했습니다.`)
-                                }}
-                                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors"
-                              >
-                                승인
-                              </button>
-                              <button
-                                onClick={async () => {
-                                  if (!confirm(`"${m.profile?.name ?? '회원'}"을(를) 거절하고 조직에서 제외할까요?`)) return
-                                  const err = await removeMember(m.user_id)
-                                  if (err) msg(err, true)
-                                }}
-                                className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
-                              >
-                                거절
-                              </button>
-                            </div>
+                    {/* 탈퇴 신청 */}
+                    {(() => {
+                      const withdrawalPending = members.filter(m => m.withdrawal_status === 'pending')
+                      if (!withdrawalPending.length) return null
+                      return (
+                        <div className="mt-6">
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="h-px flex-1 bg-[var(--color-border)]" />
+                            <span className="text-[11px] font-bold text-[var(--color-text-muted)] tracking-[0.4px] uppercase">탈퇴 신청 ({withdrawalPending.length}건)</span>
+                            <div className="h-px flex-1 bg-[var(--color-border)]" />
+                          </div>
+                          <div className="flex flex-col gap-2.5">
+                            {withdrawalPending.map(m => (
+                              <div key={m.id} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-sm hover:border-[var(--color-border-strong)] hover:shadow-md transition-all" style={{ padding: '13px' }}>
+                                <div className="flex items-center justify-between gap-3">
+                                  <div>
+                                    <p className="text-[15px] font-bold text-[var(--color-text-primary)]">{m.profile?.name}</p>
+                                    <p className="text-[12.5px] text-[var(--color-text-muted)] mt-0.5">
+                                      신청일: {m.withdrawal_requested_at
+                                        ? new Date(m.withdrawal_requested_at).toLocaleDateString('ko-KR')
+                                        : '-'}
+                                    </p>
+                                  </div>
+                                  <div className="flex gap-2 shrink-0">
+                                    <button
+                                      onClick={() => approveWithdrawal(m.user_id)}
+                                      className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors"
+                                    >
+                                      승인
+                                    </button>
+                                    <button
+                                      onClick={() => rejectWithdrawal(m.user_id)}
+                                      className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
+                                    >
+                                      거절
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  )
-                })()}
-
-                {/* 탈퇴 신청 */}
-                {(() => {
-                  const withdrawalPending = members.filter(m => m.withdrawal_status === 'pending')
-                  if (!withdrawalPending.length) return null
-                  return (
-                    <div className="mt-6">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="h-px flex-1 bg-[var(--color-border)]" />
-                        <span className="text-[11px] font-bold text-[var(--color-text-muted)] tracking-[0.4px] uppercase">탈퇴 신청 ({withdrawalPending.length}건)</span>
-                        <div className="h-px flex-1 bg-[var(--color-border)]" />
-                      </div>
-                      <div className="flex flex-col gap-2.5">
-                        {withdrawalPending.map(m => (
-                          <div key={m.id} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-sm hover:border-[var(--color-border-strong)] hover:shadow-md transition-all" style={{ padding: '13px' }}>
-                            <div className="flex items-center justify-between gap-3">
-                              <div>
-                                <p className="text-[15px] font-bold text-[var(--color-text-primary)]">{m.profile?.name}</p>
-                                <p className="text-[12.5px] text-[var(--color-text-muted)] mt-0.5">
-                                  신청일: {m.withdrawal_requested_at
-                                    ? new Date(m.withdrawal_requested_at).toLocaleDateString('ko-KR')
-                                    : '-'}
-                                </p>
-                              </div>
-                              <div className="flex gap-2 shrink-0">
-                                <button
-                                  onClick={() => approveWithdrawal(m.user_id)}
-                                  className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors"
-                                >
-                                  승인
-                                </button>
-                                <button
-                                  onClick={() => rejectWithdrawal(m.user_id)}
-                                  className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
-                                >
-                                  거절
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )
-                })()}
+                      )
+                    })()}
+                  </div>
+                )}
               </div>
             )}
 
