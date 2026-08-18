@@ -2040,7 +2040,7 @@ export function AdminPage() {
                   </span>
                   <h2 className="mt-3 mb-1.5 text-[clamp(22px,5vw,27px)] font-extrabold tracking-tight text-[var(--color-text-primary)]">날짜·요일·시간 설정</h2>
                   <p className="text-[14px] font-medium text-[var(--color-text-muted)] leading-relaxed max-w-[52ch]">
-                    운영 요일·타임슬롯·날짜별 예외를 설정합니다. 요일 변경 후 저장 버튼을 누르세요.
+                    운영 요일과 타임슬롯, 날짜별 예외를 설정합니다. 각 섹션의 저장 버튼으로 개별 적용합니다.
                   </p>
                 </header>
 
@@ -2192,23 +2192,21 @@ export function AdminPage() {
                 <div className="flex items-center gap-3 mb-4 mt-6">
                   <span className="text-[11px] font-bold text-[var(--color-text-muted)] bg-[var(--color-surface-secondary)] px-2.5 py-1 rounded-full border border-[var(--color-border)] whitespace-nowrap tracking-wide">시간</span>
                   <div className="flex-1 h-px bg-[var(--color-border)]" />
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={handleSlotSave}
+                    className="shrink-0 px-4 py-1.5 bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-xs font-semibold rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50"
+                  >
+                    {saving ? '저장 중...' : '저장'}
+                  </button>
                 </div>
 
                 {/* 타임슬롯 설정 */}
                 <div className="mb-4 bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow-sm p-4 space-y-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-[var(--color-text-secondary)]">시간 설정</p>
-                      <p className="text-xs text-[var(--color-text-muted)] mt-0.5">스케줄에 표시할 시간 단위를 구성합니다. 변경 후 저장 버튼을 누르세요.</p>
-                    </div>
-                    <button
-                      type="button"
-                      disabled={saving}
-                      onClick={handleSlotSave}
-                      className="shrink-0 px-4 py-1.5 bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-xs font-semibold rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50"
-                    >
-                      {saving ? '저장 중...' : '저장'}
-                    </button>
+                  <div>
+                    <p className="text-sm font-semibold text-[var(--color-text-secondary)]">시간 설정</p>
+                    <p className="text-xs text-[var(--color-text-muted)] mt-0.5">스케줄에 표시할 시간 단위를 구성합니다.</p>
                   </div>
 
                   {/* 템플릿 적용 */}
