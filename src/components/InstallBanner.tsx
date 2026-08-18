@@ -60,7 +60,7 @@ export function InstallBanner() {
         </div>
       </div>
       <button onClick={install} style={{
-        background: 'oklch(0.66 0.16 28)', color: '#fff', border: 0,
+        background: BRAND.color, color: '#fff', border: 0,
         borderRadius: 9, padding: '7px 14px', fontSize: 13, fontWeight: 600,
         cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
       }}>설치</button>
