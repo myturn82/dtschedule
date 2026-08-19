@@ -212,7 +212,7 @@ function roleDisplayMode(role: TenantRole): RoleDisplayMode {
   return 'none'
 }
 
-type Tab = 'members' | 'roles' | 'rules' | 'settings' | 'autoassign' | 'legend' | 'custom_fields' | 'notifications' | 'lessons' | 'feedback' | 'hours'
+type Tab = 'members' | 'roles' | 'rules' | 'settings' | 'autoassign' | 'legend' | 'custom_fields' | 'notifications' | 'lessons' | 'feedback' | 'hours' | 'attendance'
 
 const TAB_LABELS: Record<Tab, string> = {
   members: '회원 관리',
@@ -226,6 +226,7 @@ const TAB_LABELS: Record<Tab, string> = {
   lessons: '레슨권',
   feedback: '피드백',
   hours: '시간 집계',
+  attendance: '출석 현황',
 }
 
 function adminFmtHours(h: number): string {
@@ -290,6 +291,7 @@ export function AdminPage() {
     if (tab === 'autoassign' && !getFF(tenantFF, 'autoassign')) setTab('members')
     if (tab === 'notifications' && !getFF(tenantFF, 'notifications')) setTab('members')
     if (tab === 'hours' && !getFF(tenantFF, 'volunteer_hours')) setTab('members')
+    if (tab === 'attendance' && !getFF(tenantFF, 'attendance')) setTab('members')
   }, [adminIsFreeform, tab, tenantFF])
 
   // Hours tab
@@ -304,6 +306,64 @@ export function AdminPage() {
   })
   const [hoursRows, setHoursRows] = useState<{ name: string; count: number; hours: number }[]>([])
   const [hoursLoading, setHoursLoading] = useState(false)
+
+  // Attendance tab
+  const [attendFrom, setAttendFrom] = useState(() => {
+    const d = new Date()
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
+  })
+  const [attendTo, setAttendTo] = useState(() => {
+    const d = new Date()
+    const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+  })
+  const [attendRows, setAttendRows] = useState<{ name: string; total: number; attended: number }[]>([])
+  const [attendLoading, setAttendLoading] = useState(false)
+
+  useEffect(() => {
+    if (tab !== 'attendance' || !adminTenantId) return
+    let cancelled = false
+    setAttendLoading(true)
+
+    const fromDate = new Date(attendFrom)
+    const toDate   = new Date(attendTo)
+    const fromY = fromDate.getFullYear(), fromM = fromDate.getMonth() + 1, fromD = fromDate.getDate()
+    const toY   = toDate.getFullYear(),   toM   = toDate.getMonth() + 1,   toD   = toDate.getDate()
+
+    supabase
+      .from('assignments')
+      .select('member_name, attended_at, year, month, day')
+      .eq('tenant_id', adminTenantId)
+      .or(
+        Array.from({ length: (toY - fromY) * 12 + toM - fromM + 1 }, (_, i) => {
+          const y = fromY + Math.floor((fromM - 1 + i) / 12)
+          const m = ((fromM - 1 + i) % 12) + 1
+          return `and(year.eq.${y},month.eq.${m})`
+        }).join(',')
+      )
+      .then(({ data, error }) => {
+        if (cancelled || error || !data) { setAttendLoading(false); return }
+        const filtered = data.filter(r => {
+          const d = new Date(r.year, r.month - 1, r.day)
+          const from = new Date(fromY, fromM - 1, fromD)
+          const to   = new Date(toY,   toM   - 1, toD)
+          return d >= from && d <= to
+        })
+        const map = new Map<string, { total: number; attended: number }>()
+        for (const r of filtered) {
+          const key = r.member_name
+          const cur = map.get(key) ?? { total: 0, attended: 0 }
+          cur.total += 1
+          if (r.attended_at) cur.attended += 1
+          map.set(key, cur)
+        }
+        const rows = [...map.entries()]
+          .map(([name, v]) => ({ name, ...v }))
+          .sort((a, b) => b.attended - a.attended || a.name.localeCompare(b.name))
+        if (!cancelled) { setAttendRows(rows); setAttendLoading(false) }
+      })
+    return () => { cancelled = true }
+  }, [tab, adminTenantId, attendFrom, attendTo])
 
   useEffect(() => {
     if (tab !== 'hours' || !adminTenantId) return
@@ -1276,6 +1336,7 @@ export function AdminPage() {
               if (t === 'autoassign' && !getFF(tenantFF, 'autoassign')) return false
               if (t === 'notifications' && !getFF(tenantFF, 'notifications')) return false
               if (t === 'hours' && !getFF(tenantFF, 'volunteer_hours')) return false
+              if (t === 'attendance' && !getFF(tenantFF, 'attendance')) return false
               return true
             }).map(t => {
               const count = t === 'members'
@@ -3558,6 +3619,94 @@ export function AdminPage() {
                           </td>
                           <td className="text-center px-4 py-3 text-[13px] font-bold tabular-nums text-[var(--color-text-primary)]">
                             {adminFmtHours(hoursRows.reduce((s, r) => s + r.hours, 0))}
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {tab === 'attendance' && getFF(tenantFF, 'attendance') && (
+              <div>
+                <header className="mb-5">
+                  <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10 px-3 py-[5px] rounded-full">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                    출석 현황
+                  </span>
+                  <h2 className="mt-3 mb-1.5 text-[clamp(22px,5vw,27px)] font-extrabold tracking-tight text-[var(--color-text-primary)]">출석 현황</h2>
+                  <p className="text-[14px] font-medium text-[var(--color-text-muted)] leading-relaxed max-w-[52ch]">
+                    기간을 지정해 사용자별 출석률을 조회합니다.
+                  </p>
+                </header>
+
+                {/* Date range picker */}
+                <div className="flex flex-wrap items-center gap-3 mb-5 p-4 rounded-[14px] border border-[var(--color-border)] bg-[var(--color-surface)]">
+                  <div className="flex items-center gap-2">
+                    <label className="text-[13px] font-medium text-[var(--color-text-muted)] whitespace-nowrap">시작일</label>
+                    <input type="date" value={attendFrom} onChange={e => setAttendFrom(e.target.value)}
+                      className="text-[13px] border border-[var(--color-border)] rounded-lg px-3 py-1.5 bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30" />
+                  </div>
+                  <span className="text-[var(--color-text-muted)]">—</span>
+                  <div className="flex items-center gap-2">
+                    <label className="text-[13px] font-medium text-[var(--color-text-muted)] whitespace-nowrap">종료일</label>
+                    <input type="date" value={attendTo} onChange={e => setAttendTo(e.target.value)}
+                      className="text-[13px] border border-[var(--color-border)] rounded-lg px-3 py-1.5 bg-[var(--color-surface)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30" />
+                  </div>
+                </div>
+
+                {attendLoading ? (
+                  <p className="text-center text-[13px] text-[var(--color-text-muted)] py-10">불러오는 중...</p>
+                ) : attendRows.length === 0 ? (
+                  <p className="text-center text-[13px] text-[var(--color-text-muted)] py-10">해당 기간에 배정 이력이 없습니다.</p>
+                ) : (
+                  <div className="rounded-[14px] border border-[var(--color-border)] overflow-hidden">
+                    <table className="w-full text-sm min-w-[400px]">
+                      <thead>
+                        <tr className="bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
+                          <th className="text-center px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">이름</th>
+                          <th className="text-center px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">총 배정</th>
+                          <th className="text-center px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">출석</th>
+                          <th className="text-center px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)]">출석률</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {attendRows.map((row, idx) => {
+                          const rate = row.total > 0 ? Math.round((row.attended / row.total) * 100) : 0
+                          return (
+                            <tr key={idx} className="border-b border-[var(--color-border)] last:border-b-0 bg-[var(--color-surface)] hover:bg-[var(--color-surface-secondary)] transition-colors">
+                              <td className="text-center px-4 py-3 text-[13px] font-medium text-[var(--color-text-primary)]">{row.name}</td>
+                              <td className="text-center px-4 py-3 text-[13px] tabular-nums text-[var(--color-text-primary)]">
+                                {row.total}<span className="text-[11px] text-[var(--color-text-muted)] ml-0.5">건</span>
+                              </td>
+                              <td className="text-center px-4 py-3 text-[13px] tabular-nums text-[var(--color-text-primary)]">
+                                {row.attended}<span className="text-[11px] text-[var(--color-text-muted)] ml-0.5">건</span>
+                              </td>
+                              <td className="text-center px-4 py-3 text-[13px] font-semibold tabular-nums">
+                                <span className={rate >= 80 ? 'text-emerald-600' : rate >= 50 ? 'text-amber-500' : 'text-red-500'}>
+                                  {rate}%
+                                </span>
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                      <tfoot>
+                        <tr className="bg-[var(--color-surface-secondary)] border-t border-[var(--color-border)]">
+                          <td className="text-center px-4 py-3 text-[13px] font-bold text-[var(--color-text-primary)]">합계</td>
+                          <td className="text-center px-4 py-3 text-[13px] font-bold tabular-nums text-[var(--color-text-primary)]">
+                            {attendRows.reduce((s, r) => s + r.total, 0)}<span className="text-[11px] text-[var(--color-text-muted)] ml-0.5">건</span>
+                          </td>
+                          <td className="text-center px-4 py-3 text-[13px] font-bold tabular-nums text-[var(--color-text-primary)]">
+                            {attendRows.reduce((s, r) => s + r.attended, 0)}<span className="text-[11px] text-[var(--color-text-muted)] ml-0.5">건</span>
+                          </td>
+                          <td className="text-center px-4 py-3 text-[13px] font-bold tabular-nums text-[var(--color-text-primary)]">
+                            {(() => {
+                              const t = attendRows.reduce((s, r) => s + r.total, 0)
+                              const a = attendRows.reduce((s, r) => s + r.attended, 0)
+                              return t > 0 ? `${Math.round((a / t) * 100)}%` : '-'
+                            })()}
                           </td>
                         </tr>
                       </tfoot>
