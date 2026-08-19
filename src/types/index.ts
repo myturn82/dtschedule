@@ -163,6 +163,7 @@ export interface Tenant {
   plan: PlanType;
   created_at: string;
   updated_at: string;
+  source_vertical: string | null;
 }
 
 // Access level within a tenant (controls RLS / admin permissions)

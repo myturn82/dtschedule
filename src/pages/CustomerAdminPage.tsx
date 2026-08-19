@@ -2,6 +2,7 @@
 import { DevFileLabel } from '../components/DevFileLabel'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { BRAND } from '../lib/brandConfig'
 import { useAuth } from '../hooks/useAuth'
 import { useTenant } from '../contexts/TenantContext'
 import { SlotEditor } from '../components/shared/SlotEditor'
@@ -129,7 +130,8 @@ export function CustomerAdminPage() {
           createdId = crypto.randomUUID()
           createdSlug = `${base||'org'}-${Math.random().toString(36).slice(2,7)}`
           const { error: te } = await supabase.from('tenants').insert({
-            id: createdId, slug: createdSlug, name: orgName, customer_id: myCustomer!.id, is_active: true, settings: tenantSettings
+            id: createdId, slug: createdSlug, name: orgName, customer_id: myCustomer!.id, is_active: true, settings: tenantSettings,
+            source_vertical: BRAND.vertical,
           })
           if (cancelled) return
           if (!te) break
@@ -253,6 +255,7 @@ export function CustomerAdminPage() {
       id: tenantId, slug: finalSlug, name: form.name.trim(),
       business_type: form.business_type.trim() || null,
       customer_id: customerId, settings: tenantSettings,
+      source_vertical: BRAND.vertical,
     })
     if (error) {
       if (error.code === '23505' && error.message.includes('slug')) {
@@ -263,6 +266,7 @@ export function CustomerAdminPage() {
           id: tenantId, slug: finalSlug, name: form.name.trim(),
           business_type: form.business_type.trim() || null,
           customer_id: customerId, settings: tenantSettings,
+          source_vertical: BRAND.vertical,
         })
         if (retryError) { setMessage('오류: 조직 생성에 실패했습니다. 다시 시도해 주세요.'); setSaving(false); return }
       } else if (error.code === '23503' && error.message.includes('customer_id')) {

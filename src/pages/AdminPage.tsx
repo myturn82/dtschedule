@@ -1243,13 +1243,22 @@ export function AdminPage() {
                     className="bg-transparent border-0 outline-none text-[15px] font-bold text-[var(--color-text-primary)] cursor-pointer max-w-[180px] leading-tight"
                   >
                     {availableTenants.map(t => (
-                      <option key={t.id} value={t.id}>{t.name}</option>
+                      <option key={t.id} value={t.id}>
+                        {t.name}{profile?.is_super_admin && t.source_vertical ? ` [${t.source_vertical}]` : ''}
+                      </option>
                     ))}
                   </select>
                 ) : (
                   <div className="text-[15px] font-bold text-[var(--color-text-primary)] truncate leading-tight">{adminTenant?.name ?? '관리자'}</div>
                 )}
-                <div className="text-[11.5px] text-[var(--color-text-muted)] font-medium leading-tight">{ta('title')}</div>
+                <div className="text-[11.5px] text-[var(--color-text-muted)] font-medium leading-tight">
+                  {ta('title')}
+                  {profile?.is_super_admin && adminTenant?.source_vertical && (
+                    <span className="ml-1.5 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)]">
+                      {adminTenant.source_vertical}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </div>

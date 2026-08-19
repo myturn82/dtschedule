@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { DevFileLabel } from '../components/DevFileLabel'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { BRAND } from '../lib/brandConfig'
 import { useAuth } from '../hooks/useAuth'
 import { ScheduleBackground } from '../components/auth/ScheduleBackground'
 import { isValidPhone, formatPhone } from '../lib/phone'
@@ -284,7 +285,8 @@ export function AuthPage() {
         tenantId = crypto.randomUUID()
         tenantSlug = `${base || 'org'}-${Math.random().toString(36).slice(2, 7)}`
         const { error: te } = await supabase.from('tenants').insert({
-          id: tenantId, slug: tenantSlug, name: tenantName, customer_id: custData.id, is_active: true, settings: tenantSettings
+          id: tenantId, slug: tenantSlug, name: tenantName, customer_id: custData.id, is_active: true, settings: tenantSettings,
+          source_vertical: BRAND.vertical,
         })
         if (!te) break
         if (te.code !== '23505') { tenantId = null; break }

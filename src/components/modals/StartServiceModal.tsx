@@ -2,6 +2,7 @@
 import { useNavigate } from 'react-router-dom'
 import { DevFileLabel } from '../DevFileLabel'
 import { supabase } from '../../lib/supabase'
+import { BRAND } from '../../lib/brandConfig'
 import { isValidPhone, formatPhone } from '../../lib/phone'
 
 interface Props {
@@ -66,6 +67,7 @@ export function StartServiceModal({ userId, onClose }: Props) {
       const { error: tenantErr } = await supabase.from('tenants').insert({
         id: tenantId, slug: tenantSlug, name: orgName,
         customer_id: customerId, is_active: true, settings: tenantSettings,
+        source_vertical: BRAND.vertical,
       })
       if (!tenantErr) break
       if (tenantErr.code !== '23505') { setError(`오류: ${tenantErr.message}`); setCreating(false); return }

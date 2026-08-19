@@ -4,6 +4,7 @@ import { DevFileLabel } from '../components/DevFileLabel'
 import { useAuth } from '../hooks/useAuth'
 import { useTenant } from '../contexts/TenantContext'
 import { supabase } from '../lib/supabase'
+import { BRAND } from '../lib/brandConfig'
 import { ScheduleBackground } from '../components/auth/ScheduleBackground'
 import { isValidPhone } from '../lib/phone'
 
@@ -220,6 +221,7 @@ export function PendingPage() {
       const { error: tenantErr } = await supabase.from('tenants').insert({
         id: tenantId, slug: tenantSlug, name: orgName,
         customer_id: customerId, is_active: true, settings: tenantSettings,
+        source_vertical: BRAND.vertical,
       })
       if (!tenantErr) break
       if (tenantErr.code !== '23505') { setError(`오류: ${tenantErr.message}`); setCustomerCreating(false); return }
