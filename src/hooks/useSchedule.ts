@@ -33,6 +33,7 @@ interface UpdateParams {
   extra_data?: Record<string, string>
   lesson_package_id?: string | null
   is_locked?: boolean
+  attended_at?: string | null
 }
 
 export function useSchedule(tenantId: string, year: number, month: number): ScheduleData {
