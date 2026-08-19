@@ -14,7 +14,7 @@ const assignment = (over: Partial<Assignment>): Assignment => ({
   time_slot: '09-11', member_name: '김간호', note: null, member_type: 'member',
   time_sub: null, color: null, user_id: null, role_id: null,
   customer_name: null, customer_phone: null, is_locked: false,
-  account_deleted: false, created_at: '', ...over,
+  account_deleted: false, attended_at: null, created_at: '', ...over,
 })
 
 const baseProps = {

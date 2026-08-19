@@ -20,6 +20,7 @@ const baseAssignment = (over: Partial<Assignment>): Assignment => ({
   customer_phone: null,
   is_locked: false,
   account_deleted: false,
+  attended_at: null,
   created_at: '',
   ...over,
 })

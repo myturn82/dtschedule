@@ -43,8 +43,8 @@ describe('getCellState', () => {
 
   it('returns isFull=true when assignments >= maxCapacity', () => {
     const assignments: Assignment[] = [
-      { id: 'a1', tenant_id: T, year: 2026, month: 4, day: 6, time_slot: '10-12', member_name: '홍길동', note: null, user_id: 'u1', created_at: '', member_type: 'member', time_sub: null, color: null, role_id: null, customer_name: null, customer_phone: null, is_locked: false, account_deleted: false },
-      { id: 'a2', tenant_id: T, year: 2026, month: 4, day: 6, time_slot: '10-12', member_name: '김철수', note: null, user_id: 'u2', created_at: '', member_type: 'member', time_sub: null, color: null, role_id: null, customer_name: null, customer_phone: null, is_locked: false, account_deleted: false },
+      { id: 'a1', tenant_id: T, year: 2026, month: 4, day: 6, time_slot: '10-12', member_name: '홍길동', note: null, user_id: 'u1', created_at: '', member_type: 'member', time_sub: null, color: null, role_id: null, customer_name: null, customer_phone: null, is_locked: false, account_deleted: false, attended_at: null },
+      { id: 'a2', tenant_id: T, year: 2026, month: 4, day: 6, time_slot: '10-12', member_name: '김철수', note: null, user_id: 'u2', created_at: '', member_type: 'member', time_sub: null, color: null, role_id: null, customer_name: null, customer_phone: null, is_locked: false, account_deleted: false, attended_at: null },
     ]
     const state = getCellState(6, '10-12', 2026, 4, baseRules, baseSettings, noOverrides, assignments)
     expect(state.isFull).toBe(true)
