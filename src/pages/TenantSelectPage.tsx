@@ -7,6 +7,7 @@ import { useCustomerAdmin } from '../hooks/useCustomerAdmin'
 import type { Tenant, Customer } from '../types'
 import { LogoIcon } from '../components/Logo'
 import { DevFileLabel } from '../components/DevFileLabel'
+import { VERTICAL_PRESETS, type VerticalId } from '../lib/verticalPresets'
 
 function getGreeting() {
   const h = new Date().getHours()
@@ -52,6 +53,7 @@ interface OrgCardProps {
   isAdmin: boolean
   mode?: string
   position?: string
+  vertical?: string
   pendingCount?: number
   memberCount?: number
   assignmentCount?: number
@@ -61,7 +63,7 @@ interface OrgCardProps {
   onPendingClick?: () => void
 }
 
-function OrgCard({ name, roleLabel, isAdmin, mode, position, pendingCount, memberCount, assignmentCount, tintIdx, themeColor, onClick, onPendingClick }: OrgCardProps) {
+function OrgCard({ name, roleLabel, isAdmin, mode, position, vertical, pendingCount, memberCount, assignmentCount, tintIdx, themeColor, onClick, onPendingClick }: OrgCardProps) {
   const [hovered, setHovered] = useState(false)
   const initial = name.charAt(0)
   const tint = themeColor ? { bg: themeColor, ink: '#fff' } : TINTS[tintIdx % TINTS.length]
@@ -137,6 +139,17 @@ function OrgCard({ name, roleLabel, isAdmin, mode, position, pendingCount, membe
             </span>
           )}
           {position && <span style={{ color: '#6B7280', whiteSpace: 'nowrap' }}>{position}</span>}
+          {vertical && (
+            <span style={{
+              display: 'inline-flex', alignItems: 'center',
+              padding: '1px 7px', borderRadius: 999,
+              fontSize: 10.5, fontWeight: 600, letterSpacing: 0.1,
+              background: 'oklch(0.93 0.04 265)', color: 'oklch(0.38 0.10 265)',
+              whiteSpace: 'nowrap',
+            }}>
+              {VERTICAL_PRESETS[vertical as VerticalId]?.appName ?? vertical}
+            </span>
+          )}
           {!!pendingCount && (
             <span
               onClick={onPendingClick ? e => { e.stopPropagation(); onPendingClick() } : undefined}
@@ -198,6 +211,7 @@ export function TenantSelectPage() {
   const [assignmentCounts, setAssignmentCounts] = useState<Record<string, number>>({})
   const [customers, setCustomers] = useState<Customer[]>([])
   const [filterCustomerId, setFilterCustomerId] = useState('')
+  const [filterVertical, setFilterVertical] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
@@ -258,6 +272,7 @@ export function TenantSelectPage() {
     isAdmin: boolean
     mode?: string
     position?: string
+    vertical?: string
     pendingCount?: number
     memberCount?: number
     assignmentCount?: number
@@ -456,26 +471,48 @@ export function TenantSelectPage() {
             </span>
           </div>
 
-          {/* System admin: customer filter */}
-          {profile?.is_super_admin && customers.length > 0 && (
-            <select
-              value={filterCustomerId}
-              onChange={e => setFilterCustomerId(e.target.value)}
-              style={{
-                width: '100%', marginBottom: 10,
-                padding: '8px 12px', borderRadius: 12,
-                border: '1px solid rgba(20,23,28,0.12)',
-                background: '#FFFFFF', fontSize: 13, fontFamily: 'inherit',
-                color: filterCustomerId ? '#14171C' : '#8A8F99',
-                outline: 'none', cursor: 'pointer',
-                boxShadow: '0 1px 0 rgba(20,23,28,0.03)',
-              }}
-            >
-              <option value="">전체 고객</option>
-              {customers.map(c => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
+          {/* System admin: customer + vertical filter */}
+          {profile?.is_super_admin && (
+            <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
+              {customers.length > 0 && (
+                <select
+                  value={filterCustomerId}
+                  onChange={e => setFilterCustomerId(e.target.value)}
+                  style={{
+                    flex: '1 1 140px', minWidth: 0,
+                    padding: '8px 12px', borderRadius: 12,
+                    border: '1px solid rgba(20,23,28,0.12)',
+                    background: '#FFFFFF', fontSize: 13, fontFamily: 'inherit',
+                    color: filterCustomerId ? '#14171C' : '#8A8F99',
+                    outline: 'none', cursor: 'pointer',
+                    boxShadow: '0 1px 0 rgba(20,23,28,0.03)',
+                  }}
+                >
+                  <option value="">전체 고객</option>
+                  {customers.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              )}
+              <select
+                value={filterVertical}
+                onChange={e => setFilterVertical(e.target.value)}
+                style={{
+                  flex: '1 1 120px', minWidth: 0,
+                  padding: '8px 12px', borderRadius: 12,
+                  border: '1px solid rgba(20,23,28,0.12)',
+                  background: '#FFFFFF', fontSize: 13, fontFamily: 'inherit',
+                  color: filterVertical ? '#14171C' : '#8A8F99',
+                  outline: 'none', cursor: 'pointer',
+                  boxShadow: '0 1px 0 rgba(20,23,28,0.03)',
+                }}
+              >
+                <option value="">전체 앱</option>
+                {(Object.values(VERTICAL_PRESETS) as typeof VERTICAL_PRESETS[VerticalId][]).map(v => (
+                  <option key={v.id} value={v.id}>{v.appName}</option>
+                ))}
+              </select>
+            </div>
           )}
 
           {/* Customer owner: org search */}
@@ -517,6 +554,7 @@ export function TenantSelectPage() {
                   isAdmin={item.isAdmin}
                   mode={item.mode}
                   position={item.position}
+                  vertical={item.vertical}
                   pendingCount={item.pendingCount}
                   memberCount={item.memberCount}
                   assignmentCount={item.assignmentCount}
@@ -547,17 +585,18 @@ export function TenantSelectPage() {
     </div>
   )
 
-  // Super admin: show all tenants with optional customer filter
+  // Super admin: show all tenants with optional customer + vertical filter
   if (profile?.is_super_admin) {
-    const visibleTenants = filterCustomerId
-      ? allTenants.filter(t => t.customer_id === filterCustomerId)
-      : allTenants
+    const visibleTenants = allTenants
+      .filter(t => !filterCustomerId || t.customer_id === filterCustomerId)
+      .filter(t => !filterVertical || t.source_vertical === filterVertical)
     const items = visibleTenants.map(t => ({
       id: t.id,
       name: t.name,
       roleLabel: '슈퍼관리자',
       isAdmin: true,
       mode: t.settings?.tenant_mode ?? '회원선택',
+      vertical: t.source_vertical ?? undefined,
       pendingCount: pendingCounts[t.id] ?? 0,
       memberCount: memberCounts[t.id] ?? 0,
       assignmentCount: assignmentCounts[t.id] ?? 0,

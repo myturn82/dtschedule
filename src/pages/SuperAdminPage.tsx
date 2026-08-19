@@ -19,6 +19,7 @@ import { displayMode } from '../lib/tenantMode'
 import { isValidPhone } from '../lib/phone'
 import { THEME_PRESETS, type ThemePresetKey } from '../lib/themePresets'
 import type { FeatureFlags } from '../lib/featureFlags'
+import { VERTICAL_PRESETS, type VerticalId } from '../lib/verticalPresets'
 import { getFunctionErrorMessage } from '../lib/functionsError'
 import '../styles/account-hub.css'
 
@@ -37,6 +38,7 @@ export function SuperAdminPage() {
 
   // Account Hub navigation state
   const [selectedCustomerId, setSelectedCustomerId] = useState('')
+  const [filterVertical, setFilterVertical] = useState('')
   const [selectedTenantId, setSelectedTenantId]     = useState<string | null>(null)
   const [view, setView]             = useState<HubView>('tree')
   const [railOpen, setRailOpen]     = useState(false)
@@ -779,9 +781,13 @@ export function SuperAdminPage() {
     return set
   }, [tenants, pendingCountsByTenant])
 
+  const verticalFilteredTenants = filterVertical
+    ? tenants.filter(t => t.source_vertical === filterVertical)
+    : tenants
+
   const customerTenants = useMemo(
-    () => tenants.filter(t => t.customer_id === selectedCustomer?.id),
-    [tenants, selectedCustomer]
+    () => verticalFilteredTenants.filter(t => t.customer_id === selectedCustomer?.id),
+    [verticalFilteredTenants, selectedCustomer]
   )
   const selectedTenant = tenants.find(t => t.id === selectedTenantId) ?? null
 
@@ -845,6 +851,31 @@ export function SuperAdminPage() {
           >
             {reminderSending ? '발송 중...' : '지금 발송'}
           </button>
+        </div>
+
+        {/* ── 버티컬 필터 ── */}
+        <div className="flex gap-1.5 mb-3 flex-wrap">
+          {(['', ...Object.keys(VERTICAL_PRESETS)] as ('' | VerticalId)[]).map(v => {
+            const label = v === '' ? '전체 앱' : VERTICAL_PRESETS[v].appName
+            const count = v === '' ? tenants.length : tenants.filter(t => t.source_vertical === v).length
+            if (v !== '' && count === 0) return null
+            return (
+              <button
+                key={v}
+                onClick={() => setFilterVertical(v)}
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-semibold transition-colors whitespace-nowrap border ${
+                  filterVertical === v
+                    ? 'bg-[var(--color-text-primary)] text-[var(--color-bg)] border-[var(--color-text-primary)]'
+                    : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] border-[var(--color-border)] hover:border-[var(--color-border-strong)]'
+                }`}
+              >
+                {label}
+                <span className={`text-[10.5px] font-bold px-1 rounded-full ${filterVertical === v ? 'bg-white/20' : 'bg-[var(--color-surface-secondary)]'}`}>
+                  {count}
+                </span>
+              </button>
+            )
+          })}
         </div>
 
         {/* ── 탭 네비게이션 ── */}
@@ -932,7 +963,7 @@ export function SuperAdminPage() {
         <div className="hub">
           <AccountRail
             customers={customers}
-            tenants={tenants}
+            tenants={verticalFilteredTenants}
             selectedId={selectedCustomer?.id ?? ''}
             onSelect={handleSelectCustomer}
             pendingCustomerIds={pendingCustomerIds}
