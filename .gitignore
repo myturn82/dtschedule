@@ -26,6 +26,9 @@ dist-promo
 
 .vercel
 
+# Local npm config (Windows PowerShell shell fix — not for Vercel/Linux)
+.npmrc
+
 # Environment variables (never commit secrets)
 .env
 .env.*
