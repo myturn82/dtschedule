@@ -249,6 +249,7 @@ export interface Assignment {
   extra_data?: Record<string, string>;
   lesson_package_id?: string | null;
   is_locked: boolean;
+  attended_at: string | null;
   account_deleted: boolean;
   created_at: string;
 }
