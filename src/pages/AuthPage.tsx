@@ -7,7 +7,7 @@ import { useAuth } from '../hooks/useAuth'
 import { ScheduleBackground } from '../components/auth/ScheduleBackground'
 import { isValidPhone, formatPhone } from '../lib/phone'
 import { TERMS, type DocKey } from '../lib/legalTerms'
-import { getPresetFromParam } from '../lib/verticalPresets'
+import { getPresetFromParam, VERTICAL_PRESETS } from '../lib/verticalPresets'
 
 type Tab       = 'login' | 'signup'
 type LoginStep = 'buttons' | 'email' | 'password' | 'forgot'
@@ -278,7 +278,7 @@ export function AuthPage() {
       // tenant 바로 생성 → CustomerAdminPage 경유 없이 /setup으로 직행
       const DEFAULT_SLOTS = ['09-10','10-11','11-12','12-13','13-14','14-15','15-16','16-17','17-18']
       const tenantName = orgName.trim()
-      const verticalPreset = getPresetFromParam(verticalParam)
+      const verticalPreset = getPresetFromParam(verticalParam) ?? (BRAND.vertical !== 'generic' ? VERTICAL_PRESETS[BRAND.vertical] : null)
       const tenantSettings = { title: tenantName, time_slots: DEFAULT_SLOTS, open_from: '09:00', open_to: '22:00', slot_interval_minutes: 60, timezone: 'Asia/Seoul', locale: 'ko-KR', tenant_mode: '회원공유', contact_phone: orgPhone.trim(), ...(verticalPreset ? { feature_flags: verticalPreset.feature_flags } : {}) }
       const base = tenantName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-+|-+$/g, '')
       let tenantId: string | null = null
