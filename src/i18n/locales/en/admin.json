@@ -12,7 +12,8 @@
     "notifications": "Notifications",
     "lessons": "Lessons",
     "feedback": "Feedback",
-    "hours": "Hours"
+    "hours": "Hours",
+    "attendance": "Attendance"
   },
   "org": {
     "label": "Organization",

@@ -111,11 +111,14 @@ export function SlotEditModal({
     ? 'member'
     : memberType
 
-  const displayedAssignments = isSplitMode
-    ? cellState.assignments.filter(a => a.role_id === selectedRoleId)
-    : isAdmin
-    ? cellState.assignments.filter(a => a.member_type === defaultType)
-    : cellState.assignments.filter(a => !a.member_type || a.member_type === memberType)
+  const displayedAssignments = useMemo(() =>
+    isSplitMode
+      ? cellState.assignments.filter(a => a.role_id === selectedRoleId)
+      : isAdmin
+      ? cellState.assignments.filter(a => a.member_type === defaultType)
+      : cellState.assignments.filter(a => !a.member_type || a.member_type === memberType),
+    [isSplitMode, cellState.assignments, selectedRoleId, isAdmin, defaultType, memberType]
+  )
 
   // 상세보기용 복호화 캐시: key = `${assignmentId}__${fieldId}`, value = 복호화된 전화번호
   const [viewDecryptedPhones, setViewDecryptedPhones] = useState<Record<string, string>>({})
@@ -1030,6 +1033,9 @@ export function SlotEditModal({
                                 <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-[var(--color-brand-primary)]/15 text-[var(--color-brand-primary)]">나</span>
                               )}
                               {a.is_locked && <span title="관리자에 의해 고정됨"><LockIcon size={12} className="inline -mt-0.5" /></span>}
+                              {a.attended_at && showAttendance && (
+                                <span className="shrink-0 text-[10px] font-bold px-2 py-[2px] rounded-full text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 dark:text-emerald-400">출석</span>
+                              )}
                             </span>
                             {a.lesson_package_id && packageInfoMap[a.lesson_package_id] && (
                               <span className="text-[11px] font-semibold text-[var(--color-text-muted)] inline-flex items-center gap-1 flex-wrap">
@@ -1061,6 +1067,27 @@ export function SlotEditModal({
                                 <button onClick={() => handleToggleLock(a.id, false)} className="flex items-center gap-1 text-xs font-bold text-[var(--color-text-muted)] px-2 py-1 rounded-lg hover:bg-[var(--color-surface-secondary)] hover:text-[var(--color-text-primary)] transition-colors"><UnlockIcon size={12} /> 해제</button>
                               )}
                             </div>
+                          )}
+                          {onToggleAttend && isAdmin && showAttendance && (
+                            <button
+                              type="button"
+                              title={a.attended_at ? '출석 취소' : '출석 확인'}
+                              disabled={loading}
+                              onClick={async () => {
+                                const err = await onToggleAttend(a.id, !a.attended_at)
+                                if (err) setError(err)
+                              }}
+                              className={`w-[30px] h-[30px] rounded-lg flex items-center justify-center transition-colors ${
+                                a.attended_at
+                                  ? 'text-emerald-600 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400'
+                                  : 'text-[var(--color-text-muted)] hover:bg-[var(--color-surface-secondary)]'
+                              }`}
+                            >
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M20 6 9 17l-5-5"/>
+                              </svg>
+                            </button>
                           )}
                         </div>
                         {(detailChips.length > 0 || imageChips.length > 0) && (

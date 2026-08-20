@@ -12,7 +12,8 @@
     "notifications": "배정알림",
     "lessons": "레슨권",
     "feedback": "피드백",
-    "hours": "시간 집계"
+    "hours": "시간 집계",
+    "attendance": "출석 현황"
   },
   "org": {
     "label": "조직",
