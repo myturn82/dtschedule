@@ -148,7 +148,7 @@ export function CustomerAdminPage() {
         )
         if (cancelled) return
         sessionStorage.setItem('vs_setup_tenant', JSON.stringify({ id: createdId, slug: createdSlug, name: orgName, customer_id: myCustomer!.id, is_active: true, settings: tenantSettings }))
-        navigate('/setup?org=' + createdId)
+        navigate(`/setup?org=${createdId}${BRAND.vertical !== 'generic' ? `&vertical=${BRAND.vertical}` : ''}`)
         reloadMemberships()
         return
       } else if (list.length === 1 && !list[0].settings?.setup_completed_at) {
@@ -292,7 +292,7 @@ export function CustomerAdminPage() {
     setCreateSlots(['09-12', '13-14', '14-16', '16-18', '20-22'])
     sessionStorage.setItem('vs_setup_tenant', JSON.stringify({ id: tenantId, slug: finalSlug, name: form.name.trim(), customer_id: customerId, is_active: true, settings: tenantSettings }))
     setSaving(false)
-    navigate('/setup?org=' + tenantId)
+    navigate(`/setup?org=${tenantId}${BRAND.vertical !== 'generic' ? `&vertical=${BRAND.vertical}` : ''}`)
   }, [form, createSlots, myCustomer, tenants.length, profile, refreshCustomer, reloadMemberships, planLimits])
 
   if (authLoading || loading) {

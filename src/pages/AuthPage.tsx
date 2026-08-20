@@ -301,7 +301,8 @@ export function AuthPage() {
       )
       sessionStorage.setItem('vs_setup_tenant', JSON.stringify({ id: tenantId, slug: tenantSlug, name: tenantName, customer_id: custData.id, is_active: true, settings: tenantSettings }))
       setJoinProgress('이동하는 중...')
-      const setupUrl = `/setup?org=${tenantId}${verticalParam ? `&vertical=${verticalParam}` : ''}`
+      const effectiveVertical = verticalParam ?? (BRAND.vertical !== 'generic' ? BRAND.vertical : null)
+      const setupUrl = `/setup?org=${tenantId}${effectiveVertical ? `&vertical=${effectiveVertical}` : ''}`
       window.location.href = setupUrl
     } finally {
       window.removeEventListener('beforeunload', clearCreatingFlag)

@@ -96,7 +96,7 @@ export function StartServiceModal({ userId, onClose }: Props) {
       customer_id: customerId, is_active: true, settings: tenantSettings,
     }))
     onClose()
-    navigate('/setup?org=' + tenantId)
+    navigate(`/setup?org=${tenantId}${BRAND.vertical !== 'generic' ? `&vertical=${BRAND.vertical}` : ''}`)
   }
 
   return (

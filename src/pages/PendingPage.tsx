@@ -249,7 +249,7 @@ export function PendingPage() {
       id: tenantId, slug: tenantSlug, name: orgName,
       customer_id: customerId, is_active: true, settings: tenantSettings,
     }))
-    navigate('/setup?org=' + tenantId)
+    navigate(`/setup?org=${tenantId}${BRAND.vertical !== 'generic' ? `&vertical=${BRAND.vertical}` : ''}`)
     refreshCustomer().then(() => reloadMemberships())
   }
 
