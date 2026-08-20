@@ -38,6 +38,7 @@ interface Props {
   onUpdate: (id: string, name: string, note: string, memberType: MemberType, timeSub: string | null, color?: string, roleId?: string | null, customerName?: string | null, customerPhone?: string | null, extraData?: Record<string, string>, lessonPackageId?: string | null) => Promise<string | null>
   onDelete: (id: string) => Promise<string | null>
   onToggleLock?: (id: string, locked: boolean) => Promise<string | null>
+  onToggleAttend?: (id: string, attended: boolean) => Promise<string | null>
   isHighlighted?: boolean
   onToggleHighlight?: () => void
 }
@@ -50,7 +51,7 @@ export function SlotEditModal({
   typeLabels = { member: '팀원', '50plus': '' },
   tenantId,
   lockedUserId,
-  onClose, onAdd, onUpdate, onDelete, onToggleLock, isHighlighted, onToggleHighlight,
+  onClose, onAdd, onUpdate, onDelete, onToggleLock, onToggleAttend, isHighlighted, onToggleHighlight,
 }: Props) {
   const { year, day, month, timeSlot, memberType: defaultType, roleId: initialRoleId } = target
   const isAdmin = profile?.is_super_admin || tenantRole === 'admin'
@@ -82,6 +83,7 @@ export function SlotEditModal({
   )
   const { tenant } = useTenant()
   const showLessonPackages = getFF(tenant?.settings?.feature_flags, 'lesson_packages')
+  const showAttendance = getFF(tenant?.settings?.feature_flags, 'attendance')
 
   const [userPackages, setUserPackages] = useState<LessonPackageWithUsage[]>([])
   const [selectedPackageId, setSelectedPackageId] = useState<string | null>(null)
@@ -961,6 +963,11 @@ export function SlotEditModal({
                           ))}
                           {isOwnEntry && <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-[var(--color-brand-primary)]/15 text-[var(--color-brand-primary)] self-center">나</span>}
                           {a.is_locked && <span title="관리자에 의해 고정됨" className="self-center"><LockIcon size={12} /></span>}
+                          {a.attended_at && showAttendance && (
+                            <span className="shrink-0 text-[10px] font-bold px-2 py-[2px] rounded-full text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 dark:text-emerald-400">
+                              출석
+                            </span>
+                          )}
                         </div>
                         {(canEdit || (onToggleLock && a.is_locked && isAdmin)) && (
                           <div className="flex gap-0.5 shrink-0">
@@ -979,6 +986,27 @@ export function SlotEditModal({
                               <button onClick={() => handleToggleLock(a.id, false)} className="flex items-center gap-1 text-xs font-bold text-[var(--color-text-muted)] px-2 py-1 rounded-lg hover:bg-[var(--color-surface-secondary)] hover:text-[var(--color-text-primary)] transition-colors"><UnlockIcon size={12} /> 해제</button>
                             )}
                           </div>
+                        )}
+                        {onToggleAttend && isAdmin && showAttendance && (
+                          <button
+                            type="button"
+                            title={a.attended_at ? '출석 취소' : '출석 확인'}
+                            disabled={loading}
+                            onClick={async () => {
+                              const err = await onToggleAttend(a.id, !a.attended_at)
+                              if (err) setError(err)
+                            }}
+                            className={`w-[30px] h-[30px] rounded-lg flex items-center justify-center transition-colors ${
+                              a.attended_at
+                                ? 'text-emerald-600 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400'
+                                : 'text-[var(--color-text-muted)] hover:bg-[var(--color-surface-secondary)]'
+                            }`}
+                          >
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                              stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M20 6 9 17l-5-5"/>
+                            </svg>
+                          </button>
                         )}
                       </div>
                     ) : (

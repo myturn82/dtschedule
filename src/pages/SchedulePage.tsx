@@ -190,6 +190,16 @@ export function SchedulePage() {
   const { assignments: primaryAssignments, slotSettings, scheduleRules, dateOverrides, loading, addAssignment, addAssignmentWithId, updateAssignment, deleteAssignment, clearAssignments, lockAssignments, updateSlotCapacity } = useSchedule(tenant?.id ?? '', year, month)
   const { assignments: adjAssignments, dateOverrides: adjDateOverrides, clearAssignments: clearAdjAssignments, lockAssignments: lockAdjAssignments } = useSchedule(needsAdj ? (tenant?.id ?? '') : '', adjYear, adjMonth)
   const { saveSnapshot, restoreSnapshot } = useAssignmentSnapshot(tenant?.id ?? '')
+
+  async function updateAttendance(id: string, attended: boolean): Promise<string | null> {
+    const { error } = await supabase
+      .from('assignments')
+      .update({ attended_at: attended ? new Date().toISOString() : null })
+      .eq('id', id)
+      .eq('tenant_id', tenant!.id)
+    return error ? error.message : null
+  }
+
   const assignments = needsAdj ? [...primaryAssignments, ...adjAssignments] : primaryAssignments
   const weekDateOverrides = needsAdj ? [...dateOverrides, ...adjDateOverrides] : dateOverrides
   const { profiles, memberPreferences } = useProfiles()
@@ -1093,6 +1103,7 @@ export function SchedulePage() {
           })}
           onDelete={deleteAssignment}
           onToggleLock={(id, locked) => updateAssignment(id, { is_locked: locked })}
+          onToggleAttend={isPrivileged ? updateAttendance : undefined}
         />
       )}
 

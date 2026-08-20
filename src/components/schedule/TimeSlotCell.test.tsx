@@ -15,7 +15,7 @@ const baseAssignment: Assignment = {
   note: null, user_id: 'u1', created_at: '',
   member_type: 'member', time_sub: null, color: null,
   role_id: null, customer_name: null, customer_phone: null,
-  is_locked: false, account_deleted: false,
+  is_locked: false, account_deleted: false, attended_at: null,
 }
 
 describe('TimeSlotCell', () => {
