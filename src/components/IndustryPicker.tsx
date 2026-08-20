@@ -8,6 +8,7 @@ interface Props {
   hideLabel?: boolean
   requireDetail?: boolean
   autoFocus?: boolean
+  allowedCategories?: string[]  // 허용할 대분류 레이블 목록 (undefined = 전체 표시)
 }
 
 function parseValue(value: string): { topLabel: string; midLabel: string; custom: string } {
@@ -34,7 +35,7 @@ export function isIndustryComplete(value: string): boolean {
   return !!midLabel
 }
 
-export function IndustryPicker({ value, onChange, inputCls, hideLabel, requireDetail, autoFocus }: Props) {
+export function IndustryPicker({ value, onChange, inputCls, hideLabel, requireDetail, autoFocus, allowedCategories }: Props) {
   const cls = inputCls ?? 'w-full px-3 py-2 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]'
   const labelCls = 'block text-xs text-[var(--color-text-secondary)] mb-1'
 
@@ -62,6 +63,9 @@ export function IndustryPicker({ value, onChange, inputCls, hideLabel, requireDe
     }
   }, [selTop])
 
+  const visibleCategories = allowedCategories
+    ? INDUSTRY_CATEGORIES.filter(c => allowedCategories.includes(c.label))
+    : INDUSTRY_CATEGORIES
   const topCat = INDUSTRY_CATEGORIES.find(c => c.label === selTop)
   const hasChildren = topCat && topCat.children.length > 0
   const selectedMidCat = topCat?.children.find(c => c.value === selMid)
@@ -117,7 +121,7 @@ export function IndustryPicker({ value, onChange, inputCls, hideLabel, requireDe
           autoFocus={autoFocus}
         >
           <option value="">업종을 선택하세요</option>
-          {INDUSTRY_CATEGORIES.map(c => (
+          {visibleCategories.map(c => (
             <option key={c.value} value={c.label}>{c.label}</option>
           ))}
         </select>

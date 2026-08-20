@@ -242,10 +242,13 @@ export function SetupWizardPage() {
     else if (stepNum === CUSTOM_FIELDS_STEP) ok = await saveStep7()
     if (ok) {
       // 업종 기반 추천 모드를 2단계 진입 시 한 번만 기본값으로 적용 (이후 수동 선택은 그대로 존중)
+      // 버티컬 프리셋이 있으면 프리셋 모드가 이미 적용됐으므로 업종 추천 스킵
       if (stepNum === 1 && !modeAutoAppliedRef.current) {
         modeAutoAppliedRef.current = true
-        const rec = getRecommendation(industry)
-        if (rec.precision !== null) setMode(rec.mode)
+        if (!activePreset) {
+          const rec = getRecommendation(industry)
+          if (rec.precision !== null) setMode(rec.mode)
+        }
       }
       // AI 어시스턴트가 제안한 휴무 요일·정원은 슬롯이 확정된 3단계 저장 직후에만 적용 가능
       if (stepNum === 3 && pendingSchedule) {
@@ -376,6 +379,7 @@ export function SetupWizardPage() {
                 name={name} title={title} industry={industry} phone={phone} error={error}
                 onChange={(n, t, ind) => { setName(n); setTitle(t); setIndustry(ind) }}
                 onPhoneChange={setPhone}
+                allowedCategories={activePreset?.industry_categories}
               />
             </>
           )}

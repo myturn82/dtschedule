@@ -19,6 +19,7 @@ export interface VerticalPreset {
   default_roles:        string[]
   custom_field_presets: string[]
   theme_preset:         string
+  industry_categories:  string[]  // 이 버티컬에서 선택 가능한 업종 대분류
 }
 
 export const VERTICAL_PRESETS: Record<VerticalId, VerticalPreset> = {
@@ -31,6 +32,7 @@ export const VERTICAL_PRESETS: Record<VerticalId, VerticalPreset> = {
     default_roles: ['강사', '회원'],
     custom_field_presets: ['lesson_type', 'injury_history', 'goal'],
     theme_preset: 'salmon',
+    industry_categories: ['스포츠·레저', '교육', '뷰티·헬스', '기타'],
   },
   'classon': {
     id:           'classon',
@@ -41,6 +43,7 @@ export const VERTICAL_PRESETS: Record<VerticalId, VerticalPreset> = {
     default_roles: ['강사', '학생'],
     custom_field_presets: ['school', 'grade', 'subject', 'parent_contact'],
     theme_preset: 'midnight',
+    industry_categories: ['교육', '스포츠·레저', '기타'],
   },
   'shifton': {
     id:           'shifton',
@@ -51,6 +54,7 @@ export const VERTICAL_PRESETS: Record<VerticalId, VerticalPreset> = {
     default_roles: ['홀', '주방', '카운터'],
     custom_field_presets: ['hourly_wage', 'employment_type', 'bank_account'],
     theme_preset: 'forest',
+    industry_categories: ['음식·외식', '소매·유통', '의료·보건', '전문·사무서비스', '공공·비영리', '기타'],
   },
   'salonon': {
     id:           'salonon',
@@ -61,6 +65,7 @@ export const VERTICAL_PRESETS: Record<VerticalId, VerticalPreset> = {
     default_roles: ['디자이너', '인턴'],
     custom_field_presets: ['service_type', 'request', 'allergy'],
     theme_preset: 'dusty_lavender',
+    industry_categories: ['뷰티·헬스', '의료·보건', '기타'],
   },
   'careon': {
     id:           'careon',
@@ -71,6 +76,7 @@ export const VERTICAL_PRESETS: Record<VerticalId, VerticalPreset> = {
     default_roles: ['의사', '간호사', '간병인'],
     custom_field_presets: ['license', 'ward', 'shift_type'],
     theme_preset: 'pistachio',
+    industry_categories: ['의료·보건', '공공·비영리', '기타'],
   },
   'serveon': {
     id:           'serveon',
@@ -81,6 +87,7 @@ export const VERTICAL_PRESETS: Record<VerticalId, VerticalPreset> = {
     default_roles: ['봉사자', '담당자'],
     custom_field_presets: ['available_days', 'qualification', 'has_car'],
     theme_preset: 'sage',
+    industry_categories: ['공공·비영리', '기타'],
   },
   'workon': {
     id:           'workon',
@@ -91,6 +98,7 @@ export const VERTICAL_PRESETS: Record<VerticalId, VerticalPreset> = {
     default_roles: ['팀원', '팀장'],
     custom_field_presets: ['project', 'client', 'priority'],
     theme_preset: 'deep_midnight',
+    industry_categories: ['전문·사무서비스', '소매·유통', '교육', '공공·비영리', '기타'],
   },
 }
 

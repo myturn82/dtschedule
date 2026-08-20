@@ -11,9 +11,10 @@ interface Props {
   error: string
   onChange: (name: string, title: string, industry: string) => void
   onPhoneChange: (phone: string) => void
+  allowedCategories?: string[]
 }
 
-export function Step1OrgName({ name, title, industry, phone, error, onChange, onPhoneChange }: Props) {
+export function Step1OrgName({ name, title, industry, phone, error, onChange, onPhoneChange, allowedCategories }: Props) {
   return (
     <div className="step-body">
       <StepHeader step={WIZARD_STEPS[0]} />
@@ -26,6 +27,7 @@ export function Step1OrgName({ name, title, industry, phone, error, onChange, on
           hideLabel
           requireDetail
           autoFocus
+          allowedCategories={allowedCategories}
         />
       </Field>
 
