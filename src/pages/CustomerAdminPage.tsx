@@ -3,6 +3,7 @@ import { DevFileLabel } from '../components/DevFileLabel'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { BRAND } from '../lib/brandConfig'
+import { VERTICAL_PRESETS } from '../lib/verticalPresets'
 import { useAuth } from '../hooks/useAuth'
 import { useTenant } from '../contexts/TenantContext'
 import { SlotEditor } from '../components/shared/SlotEditor'
@@ -122,7 +123,8 @@ export function CustomerAdminPage() {
         // 첫 번째 조직 자동 생성 — ID 미리 생성 후 INSERT만 수행 (SELECT 없이)
         const DEFAULT_SLOTS = ['09-10','10-11','11-12','12-13','13-14','14-15','15-16','16-17','17-18']
         const orgName = myCustomer!.name || '내 서비스'
-        const tenantSettings = { title: orgName, time_slots: DEFAULT_SLOTS, open_from:'09:00', open_to:'22:00', slot_interval_minutes:60, timezone:'Asia/Seoul', locale:'ko-KR', tenant_mode:'회원공유' }
+        const verticalPreset = BRAND.vertical !== 'generic' ? VERTICAL_PRESETS[BRAND.vertical] : undefined
+        const tenantSettings = { title: orgName, time_slots: DEFAULT_SLOTS, open_from:'09:00', open_to:'22:00', slot_interval_minutes:60, timezone:'Asia/Seoul', locale:'ko-KR', tenant_mode:'회원공유', ...(verticalPreset ? { feature_flags: verticalPreset.feature_flags } : {}) }
         const base = orgName.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'').replace(/-+/g,'-').replace(/^-+|-+$/g,'')
         let createdId: string | null = null
         let createdSlug = ''
@@ -238,6 +240,7 @@ export function CustomerAdminPage() {
     const freshCustomer = await refreshCustomer()
     const customerId = freshCustomer?.id ?? myCustomer.id
     const hasHalf = createSlots.some(s => s.includes('.'))
+    const verticalPreset = BRAND.vertical !== 'generic' ? VERTICAL_PRESETS[BRAND.vertical] : undefined
     const tenantSettings = {
       title: form.title.trim() || form.name.trim(),
       theme_color: form.theme_color.trim() || undefined,
@@ -246,6 +249,7 @@ export function CustomerAdminPage() {
       slot_interval_minutes: hasHalf ? 30 : 60,
       timezone: 'Asia/Seoul', locale: 'ko-KR',
       tenant_mode: form.tenant_mode,
+      ...(verticalPreset ? { feature_flags: verticalPreset.feature_flags } : {}),
     }
 
     // ID 미리 생성 후 INSERT만 수행 (SELECT 없이, RLS 우회)

@@ -77,7 +77,7 @@ export const VERTICAL_PRESETS: Record<VerticalId, VerticalPreset> = {
     appName:      'SERVE:ON',
     tagline:      '봉사자 모집부터 배정·확인까지, 엑셀 없이 한 화면에',
     tenant_mode:  '비회원',
-    feature_flags: { lesson_packages: false, autoassign: true, volunteer_hours: true },
+    feature_flags: { lesson_packages: false, autoassign: true, volunteer_hours: true, attendance: true },
     default_roles: ['봉사자', '담당자'],
     custom_field_presets: ['available_days', 'qualification', 'has_car'],
     theme_preset: 'sage',

@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useTenant } from '../contexts/TenantContext'
 import { supabase } from '../lib/supabase'
 import { BRAND } from '../lib/brandConfig'
+import { VERTICAL_PRESETS } from '../lib/verticalPresets'
 import { ScheduleBackground } from '../components/auth/ScheduleBackground'
 import { isValidPhone } from '../lib/phone'
 
@@ -208,10 +209,12 @@ export function PendingPage() {
 
     // 2. 조직 생성 — ID 미리 생성 후 INSERT만 수행 (SELECT 없이, RLS 우회)
     const orgName = customerName.trim()
+    const verticalPreset = BRAND.vertical !== 'generic' ? VERTICAL_PRESETS[BRAND.vertical] : undefined
     const tenantSettings = {
       title: orgName, time_slots: DEFAULT_SLOTS,
       open_from: '09:00', open_to: '22:00', slot_interval_minutes: 60,
       timezone: 'Asia/Seoul', locale: 'ko-KR', tenant_mode: '회원공유',
+      ...(verticalPreset ? { feature_flags: verticalPreset.feature_flags } : {}),
     }
     let tenantId: string | null = null
     let tenantSlug = ''
