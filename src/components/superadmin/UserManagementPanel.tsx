@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { fmtPhone } from '../../lib/format'
 import { KakaoBadge } from '../icons/KakaoBadge'
+import { WizardIcon } from '../setup/WizardIcons'
 
 export interface ProfileWithOrgCount {
   id: string
@@ -184,10 +185,10 @@ export function UserManagementPanel({ users, loading, onDeleteUsers }: Props) {
                         <span className="text-[11px] text-[var(--color-text-muted)]">{fmtPhone(user.phone)}</span>
                         <a
                           href={`sms:${user.phone.replace(/[^0-9]/g, '')}`}
-                          className="select-none text-sm leading-none"
+                          className="select-none text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
                           onClick={e => e.stopPropagation()}
                           title="문자 보내기"
-                        >📱</a>
+                        ><WizardIcon.phone size={12} /></a>
                       </span>
                     )}
                   </span>
@@ -272,14 +273,7 @@ export function UserManagementPanel({ users, loading, onDeleteUsers }: Props) {
                         </td>
                         <td className="px-3 py-2.5 text-center whitespace-nowrap">
                           {user.phone ? (
-                            <span className="inline-flex items-center gap-1">
-                              <span className="text-[12px] text-[var(--color-text-muted)]">{fmtPhone(user.phone)}</span>
-                              <a
-                                href={`sms:${user.phone.replace(/[^0-9]/g, '')}`}
-                                className="select-none text-sm leading-none"
-                                title="문자 보내기"
-                              >📱</a>
-                            </span>
+                            <span className="text-[12px] text-[var(--color-text-muted)]">{fmtPhone(user.phone)}</span>
                           ) : (
                             <span className="text-[12px] text-[var(--color-text-muted)]">-</span>
                           )}
