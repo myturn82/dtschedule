@@ -11,6 +11,7 @@ interface Props {
   industry?: string
   allowedModes?: TenantMode[]
   onChange: (mode: TenantMode) => void
+  onNext?: () => void
 }
 
 const MODE_CARDS: {
@@ -107,7 +108,7 @@ function MiniDiagram({ mode }: { mode: TenantMode }) {
 type Q1Answer = 'member' | 'visitor' | null
 type Q2Answer = 'shared'  | 'private' | null
 
-export function Step2Mode({ mode, error, industry, allowedModes, onChange }: Props) {
+export function Step2Mode({ mode, error, industry, allowedModes, onChange, onNext }: Props) {
   const [dismissed, setDismissed]   = useState(false)
   const [recoOpen, setRecoOpen]     = useState(false)
   const [q1, setQ1]                 = useState<Q1Answer>(null)
@@ -128,6 +129,7 @@ export function Step2Mode({ mode, error, industry, allowedModes, onChange }: Pro
     onChange(m)
     setDismissed(true)
     setRecoOpen(false)
+    onNext?.()
   }
 
   return (

@@ -364,6 +364,7 @@ export function SetupWizardPage() {
               mode={mode} error={error} industry={industry}
               allowedModes={activePreset?.allowed_modes}
               onChange={setMode}
+              onNext={() => goNext(2)}
             />
           )}
           {step === 3 && (
