@@ -2,6 +2,7 @@
 import { useLessonPackages } from '../../hooks/useLessonPackages'
 import { MemberSearchSelect } from '../shared/MemberSearchSelect'
 import { ExpiringPackageSmsModal } from '../modals/ExpiringPackageSmsModal'
+import { WizardIcon } from '../setup/WizardIcons'
 import type { TenantMemberWithRole, LessonPackageType } from '../../types'
 
 interface Props {
@@ -234,15 +235,15 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
       <section className="rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-4 py-3.5">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="min-w-0">
-            <p className="text-sm font-bold text-amber-800 dark:text-amber-400">⏰ 만료 임박 레슨권 미사용 회원 {expiringUnusedRecipients.length}명</p>
+            <p className="text-sm font-bold text-amber-800 dark:text-amber-400 flex items-center gap-1.5"><WizardIcon.clock size={14} /> 만료 임박 레슨권 미사용 회원 {expiringUnusedRecipients.length}명</p>
             <p className="text-xs text-amber-700/80 dark:text-amber-400/70 mt-0.5">선택한 기간 내 만료가 도래하지만 아직 다 사용하지 않은 회원입니다. 문자로 이용을 독려해 보세요.</p>
           </div>
           <button
             onClick={() => setShowExpirySms(true)}
             disabled={expiringUnusedRecipients.length === 0}
-            className="shrink-0 h-[36px] px-4 rounded-xl bg-amber-600 text-white text-sm font-semibold hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+            className="shrink-0 inline-flex items-center gap-1.5 h-[36px] px-4 rounded-xl bg-amber-600 text-white text-sm font-semibold hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
           >
-            📱 문자 발송
+            <WizardIcon.phone size={14} /> 문자 발송
           </button>
         </div>
 
