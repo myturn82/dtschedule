@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { SCHEDULE_RULE_TEMPLATES } from '../../../utils/scheduleRuleTemplates'
 import { StepHeader, WIZARD_STEPS } from '../StepHeader'
 import { Field, ErrLine } from '../WizardField'
@@ -22,11 +22,34 @@ function slotLabel(slot: string) {
   return `${h}:${m}`
 }
 
+function findMatchingRuleTemplate(rules: ScheduleRule[]): number | null {
+  const openDays = [0, 1, 2, 3, 4, 5, 6].filter(d =>
+    rules.some(r => r.day_of_week === d && r.is_open)
+  )
+  const idx = SCHEDULE_RULE_TEMPLATES.findIndex(t =>
+    t.openDays.length === openDays.length &&
+    t.openDays.every(d => openDays.includes(d))
+  )
+  return idx >= 0 ? idx : null
+}
+
 export function Step5Rules({ rules, timeSlots, error, onToggleRule, onApplyTemplate }: Props) {
   const [showMatrix, setShowMatrix] = useState(false)
   const [applyingTemplate, setApplyingTemplate] = useState<number | null>(null)
+  const [selectedTemplate, setSelectedTemplate] = useState<number | null>(() => findMatchingRuleTemplate(rules))
   const [closedDays, setClosedDays] = useState<Set<number>>(new Set())
   const [applyingHoliday, setApplyingHoliday] = useState(false)
+  const tplBtnRefs = useRef<(HTMLButtonElement | null)[]>([])
+
+  useEffect(() => {
+    setSelectedTemplate(findMatchingRuleTemplate(rules))
+  }, [rules])
+
+  useEffect(() => {
+    const focusIdx = findMatchingRuleTemplate(rules) ?? 0
+    tplBtnRefs.current[focusIdx]?.focus()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   function getRule(day: number, slot: string) {
     return rules.find(r => r.day_of_week === day && r.time_slot === slot)
@@ -61,13 +84,15 @@ export function Step5Rules({ rules, timeSlots, error, onToggleRule, onApplyTempl
           {SCHEDULE_RULE_TEMPLATES.map((t, i) => (
             <button
               key={t.label}
+              ref={el => { tplBtnRefs.current[i] = el }}
               disabled={isApplying}
               onClick={async () => {
                 setApplyingTemplate(i)
                 await onApplyTemplate(t.openDays, t.includeHolidays)
                 setApplyingTemplate(null)
+                setSelectedTemplate(i)
               }}
-              className={`tpl-card${applyingTemplate === i ? ' on' : ''}`}
+              className={`tpl-card${(applyingTemplate === i || selectedTemplate === i) ? ' on' : ''}`}
             >
               <span className="tpl-label">{applyingTemplate === i ? '적용 중...' : t.label}</span>
               <span className="tpl-sub">{t.description}</span>

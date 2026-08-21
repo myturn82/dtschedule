@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { SLOT_TEMPLATES, buildSlot, rangeSlotLabel } from '../../../utils/timeSlots'
 import { StepHeader, WIZARD_STEPS } from '../StepHeader'
 import { Field, ErrLine } from '../WizardField'
@@ -17,11 +17,33 @@ const TIME_OPTIONS = Array.from({ length: (24 - 6) * 2 + 1 }, (_, i) => {
   return { value: val, label: `${h}:${m}` }
 })
 
+function findMatchingTemplate(currentSlots: string[]): number | null {
+  const idx = SLOT_TEMPLATES.findIndex(t =>
+    t.slots.length === currentSlots.length &&
+    t.slots.every((s, i) => s === currentSlots[i])
+  )
+  return idx >= 0 ? idx : null
+}
+
 export function Step3Slots({ slots, error, onChange }: Props) {
   const [startVal, setStartVal] = useState(9)
   const [endVal, setEndVal] = useState(10)
   const [showCustom, setShowCustom] = useState(false)
-  const [selectedTemplate, setSelectedTemplate] = useState<number | null>(null)
+  const [selectedTemplate, setSelectedTemplate] = useState<number | null>(() => findMatchingTemplate(slots))
+  const tplBtnRefs = useRef<(HTMLButtonElement | null)[]>([])
+
+  useEffect(() => {
+    const matchIdx = findMatchingTemplate(slots)
+    if (slots.length === 0) {
+      setSelectedTemplate(0)
+      onChange(SLOT_TEMPLATES[0].slots)
+      tplBtnRefs.current[0]?.focus()
+    } else {
+      const focusIdx = matchIdx ?? 0
+      tplBtnRefs.current[focusIdx]?.focus()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   function applyTemplate(idx: number) {
     setSelectedTemplate(idx)
@@ -54,7 +76,7 @@ export function Step3Slots({ slots, error, onChange }: Props) {
       <Field label="빠른 선택">
         <div className="tpl-grid">
           {SLOT_TEMPLATES.map((t, i) => (
-            <button key={t.label} className={`tpl-card${selectedTemplate === i ? ' on' : ''}`} onClick={() => applyTemplate(i)}>
+            <button key={t.label} ref={el => { tplBtnRefs.current[i] = el }} className={`tpl-card${selectedTemplate === i ? ' on' : ''}`} onClick={() => applyTemplate(i)}>
               <span className="tpl-label">{t.label}</span>
               <span className="tpl-sub">{t.slots.length}개 슬롯</span>
             </button>
