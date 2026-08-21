@@ -427,6 +427,7 @@ export function AdminPage() {
   // Members tab
   const [showAddMember, setShowAddMember] = useState(false)
   const [addEmail, setAddEmail] = useState('')
+  const [addMemberError, setAddMemberError] = useState<string | null>(null)
   const [memberFilterId, setMemberFilterId] = useState('')
 
   // 회원 선호 설정 (자동배정)
@@ -728,12 +729,14 @@ export function AdminPage() {
 
   async function handleAddMember(e: React.FormEvent) {
     e.preventDefault()
+    setAddMemberError(null)
     setSaving(true)
     const err = await addMember(addEmail.trim())
     setSaving(false)
-    if (err) { msg(err, true); return }
+    if (err) { setAddMemberError(err); return }
     msg(`${addEmail} 회원이 추가됐습니다.`)
     setAddEmail('')
+    setAddMemberError(null)
     setShowAddMember(false)
   }
 
@@ -1546,18 +1549,21 @@ export function AdminPage() {
                     <form onSubmit={handleAddMember} className="flex gap-2 items-end flex-wrap">
                       <div className="flex-1 min-w-48">
                         <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">이메일</label>
-                        <input type="email" value={addEmail} onChange={e => setAddEmail(e.target.value)}
+                        <input type="email" value={addEmail} onChange={e => { setAddEmail(e.target.value); setAddMemberError(null) }}
                           placeholder="member@example.com" required className={inputCls + ' w-full mt-1'} />
                       </div>
                       <button type="submit" disabled={saving}
                         className="px-4 py-1.5 bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-sm rounded-lg hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50">
                         {saving ? '추가 중...' : '추가'}
                       </button>
-                      <button type="button" onClick={() => setShowAddMember(false)}
+                      <button type="button" onClick={() => { setShowAddMember(false); setAddMemberError(null) }}
                         className="px-4 py-1.5 border border-[var(--color-border-strong)] text-sm rounded-lg text-[var(--color-text-muted)]">
                         취소
                       </button>
                     </form>
+                    {addMemberError && (
+                      <p className="mt-2 text-[12.5px] text-red-600 dark:text-red-400">{addMemberError}</p>
+                    )}
                   </div>
                 )}
 

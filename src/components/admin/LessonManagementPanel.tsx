@@ -57,6 +57,9 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
   const [pkgSaving, setPkgSaving] = useState(false)
   const [pkgError, setPkgError] = useState<string | null>(null)
   const [filterUserId, setFilterUserId] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'warn' | 'expired' | 'done'>('all')
+  const [viewMode, setViewMode] = useState<'list' | 'group'>('list')
+  const [expandedMemberIds, setExpandedMemberIds] = useState<Set<string>>(new Set())
   const [showExpirySms, setShowExpirySms] = useState(false)
   const [thresholdPreset, setThresholdPreset] = useState<'7' | '14' | 'custom'>('7')
   const [customDays, setCustomDays] = useState('7')
@@ -164,9 +167,40 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
   const approvedMembers = members.filter(m => m.is_approved !== false && m.role !== 'admin')
   const memberOptions = approvedMembers.map(m => ({ id: m.user_id, name: m.profile?.name ?? m.user_id }))
 
-  const filteredPackages = filterUserId
+  const userFilteredPackages = filterUserId
     ? packages.filter(p => p.user_id === filterUserId)
     : packages
+
+  const statusCounts = {
+    all:     userFilteredPackages.length,
+    active:  userFilteredPackages.filter(p => pkgStatus(p) === 'active').length,
+    warn:    userFilteredPackages.filter(p => pkgStatus(p) === 'warn').length,
+    expired: userFilteredPackages.filter(p => pkgStatus(p) === 'expired').length,
+    done:    userFilteredPackages.filter(p => pkgStatus(p) === 'done').length,
+  }
+
+  const filteredPackages = statusFilter === 'all'
+    ? userFilteredPackages
+    : userFilteredPackages.filter(p => pkgStatus(p) === statusFilter)
+
+  const groupedPackages = filteredPackages.reduce<Record<string, typeof filteredPackages>>((acc, pkg) => {
+    const uid = pkg.user_id ?? ''
+    if (!acc[uid]) acc[uid] = []
+    acc[uid].push(pkg)
+    return acc
+  }, {})
+
+  const sortedGroupIds = Object.keys(groupedPackages).sort((a, b) =>
+    (memberMap.get(a) ?? '').localeCompare(memberMap.get(b) ?? '', 'ko')
+  )
+
+  function toggleMember(uid: string) {
+    setExpandedMemberIds(prev => {
+      const next = new Set(prev)
+      next.has(uid) ? next.delete(uid) : next.add(uid)
+      return next
+    })
+  }
 
   // 만료 도래 기준일 (선택한 프리셋 또는 직접 입력한 n일)
   const thresholdDays = thresholdPreset === 'custom'
@@ -408,8 +442,23 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
       {/* ── 결제 기록 ────────────────────────────────────── */}
       <section>
         <div className="mb-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
             <h2 className="flex-1 min-w-0 truncate text-[17px] font-bold text-[var(--color-text-primary)]">결제 기록</h2>
+            {/* 뷰 토글 */}
+            <div className="flex rounded-xl border border-[var(--color-border-strong)] overflow-hidden shrink-0">
+              <button
+                onClick={() => setViewMode('list')}
+                className={`px-3 py-1.5 text-xs font-semibold transition-colors ${viewMode === 'list' ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]' : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'}`}
+              >
+                목록
+              </button>
+              <button
+                onClick={() => setViewMode('group')}
+                className={`px-3 py-1.5 text-xs font-semibold border-l border-[var(--color-border-strong)] transition-colors ${viewMode === 'group' ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]' : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'}`}
+              >
+                회원별
+              </button>
+            </div>
             <div className="w-24 sm:w-40 shrink-0">
               <MemberSearchSelect
                 value={filterUserId}
@@ -430,10 +479,117 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
           <p className="text-[13px] text-[var(--color-text-muted)] mt-1">회원별 레슨권 구매 이력과 차감 현황을 관리합니다.</p>
         </div>
 
+        {/* ── 상태 필터 탭 ──────────────────────────────── */}
+        <div className="flex gap-1 flex-wrap mb-3">
+          {([
+            ['all',     '전체'],
+            ['active',  '진행중'],
+            ['warn',    '만료임박'],
+            ['expired', '만료'],
+            ['done',    '사용완료'],
+          ] as const).map(([key, label]) => {
+            const count = statusCounts[key]
+            const isActive = statusFilter === key
+            return (
+              <button
+                key={key}
+                onClick={() => setStatusFilter(key)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors ${
+                  isActive
+                    ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] border-[var(--color-brand-primary)]'
+                    : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] border-[var(--color-border-strong)] hover:bg-[var(--color-surface-hover)]'
+                }`}
+              >
+                {label}
+                <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                  isActive
+                    ? 'bg-white/20 text-[var(--color-brand-primary-contrast)]'
+                    : count === 0
+                    ? 'text-[var(--color-text-muted)]'
+                    : 'bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)]'
+                }`}>
+                  {count}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+
         {loading ? (
           <p className="text-sm text-[var(--color-text-muted)] text-center py-8">불러오는 중...</p>
         ) : filteredPackages.length === 0 ? (
           <p className="text-sm text-[var(--color-text-muted)] text-center py-8">결제 기록이 없습니다.</p>
+        ) : viewMode === 'group' ? (
+          <div className="rounded-2xl border border-[var(--color-border)] overflow-hidden divide-y divide-[var(--color-border)]">
+            {sortedGroupIds.map(uid => {
+              const pkgs = groupedPackages[uid]
+              const memberName = memberMap.get(uid) ?? '-'
+              const isExpanded = expandedMemberIds.has(uid)
+              const activeCnt = pkgs.filter(p => pkgStatus(p) === 'active').length
+              const warnCnt   = pkgs.filter(p => pkgStatus(p) === 'warn').length
+              const doneCnt   = pkgs.filter(p => pkgStatus(p) === 'done' || pkgStatus(p) === 'expired').length
+              const totalRemaining = pkgs.reduce((sum, p) => sum + Math.max(0, p.total_sessions - p.used_sessions), 0)
+              return (
+                <div key={uid}>
+                  <button
+                    onClick={() => toggleMember(uid)}
+                    className="w-full flex items-center gap-2.5 px-4 py-3 bg-[var(--color-surface)] hover:bg-[var(--color-surface-hover)] transition-colors text-left"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                      className={`shrink-0 text-[var(--color-text-muted)] transition-transform ${isExpanded ? 'rotate-90' : ''}`}>
+                      <path d="M9 18l6-6-6-6"/>
+                    </svg>
+                    <span className="font-semibold text-sm text-[var(--color-text-primary)] min-w-[4rem]">{memberName}</span>
+                    <div className="flex gap-1 flex-wrap">
+                      {activeCnt > 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400">진행중 {activeCnt}</span>}
+                      {warnCnt  > 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">만료임박 {warnCnt}</span>}
+                      {doneCnt  > 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[var(--color-surface-secondary)] text-[var(--color-text-muted)]">완료/만료 {doneCnt}</span>}
+                    </div>
+                    <span className="ml-auto text-xs font-medium text-[var(--color-text-muted)] whitespace-nowrap shrink-0">잔여 {totalRemaining}회 · {pkgs.length}건</span>
+                  </button>
+                  {isExpanded && (
+                    <div className="border-t border-[var(--color-border)]">
+                      <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <tbody className="divide-y divide-[var(--color-border)]">
+                          {pkgs.map(pkg => {
+                            const status = pkgStatus(pkg)
+                            const pct = Math.min(100, Math.round(pkg.used_sessions / pkg.total_sessions * 100))
+                            return (
+                              <tr key={pkg.id} className={`bg-[var(--color-surface-secondary)] hover:bg-[var(--color-surface-hover)] transition-opacity ${status === 'done' || status === 'expired' ? 'opacity-55' : ''}`}>
+                                <td className="px-2.5 sm:px-4 py-2.5 text-center text-[var(--color-text-secondary)] whitespace-nowrap text-xs">{pkg.package_name}</td>
+                                <td className="px-2 sm:px-3 py-2.5 text-center text-xs text-[var(--color-text-muted)] whitespace-nowrap">
+                                  <div>{pkg.payment_date}</div>
+                                  <div className="sm:hidden">{pkg.expires_at ?? '무제한'}</div>
+                                </td>
+                                <td className="px-2 sm:px-3 py-2.5 text-center text-xs text-[var(--color-text-muted)] hidden sm:table-cell whitespace-nowrap">{pkg.expires_at ?? '무제한'}</td>
+                                <td className="px-2 sm:px-3 py-2.5">
+                                  <div className="flex flex-col items-center gap-1 min-w-[52px]">
+                                    <span className="text-xs font-semibold tabular-nums text-[var(--color-text-primary)]">{pkg.used_sessions}/{pkg.total_sessions}</span>
+                                    <div className="w-full h-1.5 rounded-full bg-[var(--color-surface)] overflow-hidden">
+                                      <div className={`h-full rounded-full transition-all ${status === 'done' || status === 'expired' ? 'bg-[var(--color-text-muted)]' : status === 'warn' ? 'bg-amber-500' : 'bg-[var(--color-brand-primary)]'}`} style={{ width: `${pct}%` }} />
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-2 sm:px-3 py-2.5 text-center hidden md:table-cell whitespace-nowrap">
+                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${STATUS_CLS[status]}`}>{STATUS_LABEL[status]}</span>
+                                </td>
+                                <td className="px-2 sm:px-3 py-2.5 text-center whitespace-nowrap">
+                                  <button onClick={() => { if (confirm('이 결제 기록을 삭제할까요?')) deletePackage(pkg.id) }}
+                                    className="text-xs text-red-500 hover:text-red-700 font-semibold">삭제</button>
+                                </td>
+                              </tr>
+                            )
+                          })}
+                        </tbody>
+                      </table>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
         ) : (
           <div className="rounded-2xl border border-[var(--color-border)] overflow-hidden">
             <div className="overflow-x-auto">
@@ -457,7 +613,7 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
                   const status = pkgStatus(pkg)
                   const pct = Math.min(100, Math.round(pkg.used_sessions / pkg.total_sessions * 100))
                   return (
-                    <tr key={pkg.id} className="bg-[var(--color-surface)] hover:bg-[var(--color-surface-hover)]">
+                    <tr key={pkg.id} className={`bg-[var(--color-surface)] hover:bg-[var(--color-surface-hover)] transition-opacity ${status === 'done' || status === 'expired' ? 'opacity-55' : ''}`}>
                       <td className="px-2.5 sm:px-4 py-3 text-center font-medium text-[var(--color-text-primary)] whitespace-nowrap">
                         {memberMap.get(pkg.user_id ?? '') ?? '-'}
                       </td>

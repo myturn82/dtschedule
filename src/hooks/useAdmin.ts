@@ -122,11 +122,9 @@ export function useAdmin(tenantId: string): AdminState {
       }
     }
 
-    const { data: user, error: findErr } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('email', email)
-      .single()
+    const { data: rows, error: findErr } = await supabase
+      .rpc('find_profile_by_email', { p_email: email })
+    const user = (rows as { id: string; name: string; is_super_admin: boolean }[] | null)?.[0] ?? null
     if (findErr || !user) return '해당 이메일로 가입된 사용자가 없습니다.'
     if (user.is_super_admin) return '슈퍼관리자 계정은 조직에 추가할 수 없습니다.'
 
