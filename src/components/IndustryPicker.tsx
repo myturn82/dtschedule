@@ -141,6 +141,11 @@ export function IndustryPicker({ value, onChange, inputCls, hideLabel, requireDe
               <option key={c.value} value={c.value}>{c.label}</option>
             ))}
           </select>
+          {requireDetail && !selMid && (
+            <p style={{ marginTop: 4, fontSize: 12, color: 'var(--color-warning, #d97706)' }}>
+              세부 업종을 선택해야 다음 단계로 이동할 수 있습니다.
+            </p>
+          )}
         </div>
       )}
 

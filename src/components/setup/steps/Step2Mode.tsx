@@ -9,6 +9,7 @@ interface Props {
   mode: TenantMode
   error: string
   industry?: string
+  allowedModes?: TenantMode[]
   onChange: (mode: TenantMode) => void
 }
 
@@ -106,7 +107,7 @@ function MiniDiagram({ mode }: { mode: TenantMode }) {
 type Q1Answer = 'member' | 'visitor' | null
 type Q2Answer = 'shared'  | 'private' | null
 
-export function Step2Mode({ mode, error, industry, onChange }: Props) {
+export function Step2Mode({ mode, error, industry, allowedModes, onChange }: Props) {
   const [dismissed, setDismissed]   = useState(false)
   const [recoOpen, setRecoOpen]     = useState(false)
   const [q1, setQ1]                 = useState<Q1Answer>(null)
@@ -213,7 +214,7 @@ export function Step2Mode({ mode, error, industry, onChange }: Props) {
 
       {/* Mode cards */}
       <div className="mode-list">
-        {MODE_CARDS.map(card => {
+        {MODE_CARDS.filter(card => !allowedModes || allowedModes.includes(card.mode)).map(card => {
           const on = mode === card.mode
           const Mic = WizardIcon[card.icon]
           return (
