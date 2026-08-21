@@ -23,6 +23,7 @@ import { StepDone } from '../components/setup/steps/StepDone'
 import type { Tenant, TenantMode, CustomFieldDef } from '../types'
 import { getPresetFromParam } from '../lib/verticalPresets'
 import type { VerticalPreset } from '../lib/verticalPresets'
+import { BRAND } from '../lib/brandConfig'
 import { isValidPhone } from '../lib/phone'
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
@@ -35,7 +36,7 @@ const MODE_LABEL: Record<string, string> = {
 export function SetupWizardPage() {
   const [params] = useSearchParams()
   const orgId = params.get('org') ?? ''
-  const verticalParam = params.get('vertical')
+  const verticalParam = params.get('vertical') ?? (BRAND.vertical !== 'generic' ? BRAND.vertical : null)
   const [activePreset] = useState<VerticalPreset | null>(() => getPresetFromParam(verticalParam))
   const showLessonStep = !!activePreset &&
     ['lessonon', 'classon'].includes(activePreset.id)
