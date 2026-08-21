@@ -459,7 +459,7 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
                 회원별
               </button>
             </div>
-            <div className="w-24 sm:w-40 shrink-0">
+            <div className="w-[72px] sm:w-40 shrink-0">
               <MemberSearchSelect
                 value={filterUserId}
                 onChange={setFilterUserId}
@@ -471,7 +471,7 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
             </div>
             {packageTypes.some(t => t.is_active) && (
               <button onClick={() => setShowAddPkg(true)}
-                className="h-[38px] px-4 rounded-xl bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-sm font-semibold hover:bg-[var(--color-brand-primary-hover)] transition-colors whitespace-nowrap shrink-0">
+                className="h-[34px] sm:h-[38px] px-2 sm:px-4 rounded-xl bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-xs sm:text-sm font-semibold hover:bg-[var(--color-brand-primary-hover)] transition-colors whitespace-nowrap shrink-0">
                 + 결제 추가
               </button>
             )}
