@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect, useMemo, useCallback, Fragment, useRef } from 'react'
+import { WizardIcon } from '../components/setup/WizardIcons'
 import { AutoResizeTextarea } from '../components/shared/AutoResizeTextarea'
 import { useTranslation } from 'react-i18next'
 import { DevFileLabel } from '../components/DevFileLabel'
@@ -1704,7 +1705,7 @@ export function AdminPage() {
                                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                                 </button>
                                 {m.profile?.phone && (
-                                  <a href={`sms:${m.profile.phone.replace(/[^0-9]/g, '')}`} className="text-[10px] select-none text-[var(--color-text-muted)] hover:text-[var(--color-brand-primary)]" onClick={e => e.stopPropagation()}>📱</a>
+                                  <a href={`sms:${m.profile.phone.replace(/[^0-9]/g, '')}`} className="select-none text-[var(--color-text-muted)] hover:text-[var(--color-brand-primary)]" onClick={e => e.stopPropagation()} title="문자 보내기"><WizardIcon.phone size={12} /></a>
                                 )}
                               </div>
                             </td>
@@ -1769,9 +1770,6 @@ export function AdminPage() {
                                     {fmtPhone(m.profile?.phone) || '-'}
                                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                                   </button>
-                                  {m.profile?.phone && (
-                                    <a href={`sms:${m.profile.phone.replace(/[^0-9]/g, '')}`} className="select-none text-[var(--color-text-muted)] hover:text-[var(--color-brand-primary)] transition-colors" title="문자 보내기" onClick={e => e.stopPropagation()}>📱</a>
-                                  )}
                                 </span>
                               )}
                             </td>
@@ -1889,7 +1887,7 @@ export function AdminPage() {
                                       {fmtPhone(m.profile?.phone) || '-'}
                                     </button>
                                     {m.profile?.phone && (
-                                      <a href={`sms:${m.profile.phone.replace(/[^0-9]/g, '')}`} className="select-none text-[var(--color-text-muted)] hover:text-[var(--color-brand-primary)] transition-colors shrink-0" title="문자 보내기" onClick={e => e.stopPropagation()}>📱</a>
+                                      <a href={`sms:${m.profile.phone.replace(/[^0-9]/g, '')}`} className="select-none text-[var(--color-text-muted)] hover:text-[var(--color-brand-primary)] transition-colors shrink-0" title="문자 보내기" onClick={e => e.stopPropagation()}><WizardIcon.phone size={12} /></a>
                                     )}
                                   </div>
                                 )}
