@@ -785,6 +785,10 @@ export function SuperAdminPage() {
     ? tenants.filter(t => t.source_vertical === filterVertical)
     : tenants
 
+  const verticalFilteredCustomers = filterVertical
+    ? customers.filter(c => verticalFilteredTenants.some(t => t.customer_id === c.id))
+    : customers
+
   const customerTenants = useMemo(
     () => verticalFilteredTenants.filter(t => t.customer_id === selectedCustomer?.id),
     [verticalFilteredTenants, selectedCustomer]
@@ -962,7 +966,7 @@ export function SuperAdminPage() {
         {/* ── Account Hub ── */}
         <div className="hub">
           <AccountRail
-            customers={customers}
+            customers={verticalFilteredCustomers}
             tenants={verticalFilteredTenants}
             selectedId={selectedCustomer?.id ?? ''}
             onSelect={handleSelectCustomer}
