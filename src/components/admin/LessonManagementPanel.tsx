@@ -442,39 +442,41 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
       {/* ── 결제 기록 ────────────────────────────────────── */}
       <section>
         <div className="mb-4">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h2 className="flex-1 min-w-0 truncate text-[17px] font-bold text-[var(--color-text-primary)]">결제 기록</h2>
-            {/* 뷰 토글 */}
-            <div className="flex rounded-xl border border-[var(--color-border-strong)] overflow-hidden shrink-0">
-              <button
-                onClick={() => setViewMode('list')}
-                className={`px-3 py-1.5 text-xs font-semibold transition-colors ${viewMode === 'list' ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]' : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'}`}
-              >
-                목록
-              </button>
-              <button
-                onClick={() => setViewMode('group')}
-                className={`px-3 py-1.5 text-xs font-semibold border-l border-[var(--color-border-strong)] transition-colors ${viewMode === 'group' ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]' : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'}`}
-              >
-                회원별
-              </button>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <h2 className="sm:flex-1 text-[17px] font-bold text-[var(--color-text-primary)]">결제 기록</h2>
+            <div className="flex items-center gap-2">
+              {/* 뷰 토글 */}
+              <div className="flex rounded-xl border border-[var(--color-border-strong)] overflow-hidden shrink-0">
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`px-2.5 py-1.5 text-xs font-semibold transition-colors ${viewMode === 'list' ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]' : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'}`}
+                >
+                  목록
+                </button>
+                <button
+                  onClick={() => setViewMode('group')}
+                  className={`px-2.5 py-1.5 text-xs font-semibold border-l border-[var(--color-border-strong)] transition-colors ${viewMode === 'group' ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)]' : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'}`}
+                >
+                  회원별
+                </button>
+              </div>
+              <div className="flex-1 min-w-0 sm:w-40 sm:flex-none">
+                <MemberSearchSelect
+                  value={filterUserId}
+                  onChange={setFilterUserId}
+                  options={memberOptions}
+                  placeholder="전체 회원"
+                  clearLabel="전체 회원"
+                  className={inputCls + ' w-full'}
+                />
+              </div>
+              {packageTypes.some(t => t.is_active) && (
+                <button onClick={() => setShowAddPkg(true)}
+                  className="h-[34px] sm:h-[38px] px-3 sm:px-4 rounded-xl bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-xs sm:text-sm font-semibold hover:bg-[var(--color-brand-primary-hover)] transition-colors whitespace-nowrap shrink-0">
+                  + 결제 추가
+                </button>
+              )}
             </div>
-            <div className="w-[72px] sm:w-40 shrink-0">
-              <MemberSearchSelect
-                value={filterUserId}
-                onChange={setFilterUserId}
-                options={memberOptions}
-                placeholder="전체 회원"
-                clearLabel="전체 회원"
-                className={inputCls + ' w-full'}
-              />
-            </div>
-            {packageTypes.some(t => t.is_active) && (
-              <button onClick={() => setShowAddPkg(true)}
-                className="h-[34px] sm:h-[38px] px-2 sm:px-4 rounded-xl bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-xs sm:text-sm font-semibold hover:bg-[var(--color-brand-primary-hover)] transition-colors whitespace-nowrap shrink-0">
-                + 결제 추가
-              </button>
-            )}
           </div>
           <p className="text-[13px] text-[var(--color-text-muted)] mt-1">회원별 레슨권 구매 이력과 차감 현황을 관리합니다.</p>
         </div>
