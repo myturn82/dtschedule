@@ -264,6 +264,9 @@ export function TenantSelectPage() {
   const greeting = getGreeting()
   const displayName = profile?.name ?? ''
   const displayEmail = profile?.email ?? ''
+  const membershipVerticals = Array.from(
+    new Set(memberships.map(m => m.tenant.source_vertical).filter(Boolean))
+  ) as string[]
 
   interface ItemData {
     id: string
@@ -515,27 +518,49 @@ export function TenantSelectPage() {
             </div>
           )}
 
-          {/* Customer owner: org search */}
+          {/* Customer owner: vertical filter + org search */}
           {isCustomerAdmin && (
-            <div style={{ position: 'relative', marginBottom: 10 }}>
-              <svg style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
-                viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="#8A8F99" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="8.5" cy="8.5" r="5.5"/><path d="M15 15l-3-3"/>
-              </svg>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="조직 검색..."
-                style={{
-                  width: '100%', boxSizing: 'border-box',
-                  padding: '8px 12px 8px 30px', borderRadius: 12,
-                  border: '1px solid rgba(20,23,28,0.12)',
-                  background: '#FFFFFF', fontSize: 13, fontFamily: 'inherit',
-                  color: '#14171C', outline: 'none',
-                  boxShadow: '0 1px 0 rgba(20,23,28,0.03)',
-                }}
-              />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 10 }}>
+              {membershipVerticals.length > 1 && (
+                <select
+                  value={filterVertical}
+                  onChange={e => setFilterVertical(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px', borderRadius: 12,
+                    border: '1px solid rgba(20,23,28,0.12)',
+                    background: '#FFFFFF', fontSize: 13, fontFamily: 'inherit',
+                    color: filterVertical ? '#14171C' : '#8A8F99',
+                    outline: 'none', cursor: 'pointer',
+                    boxShadow: '0 1px 0 rgba(20,23,28,0.03)',
+                  }}
+                >
+                  <option value="">전체 앱</option>
+                  {membershipVerticals.map(vId => (
+                    <option key={vId} value={vId}>{VERTICAL_PRESETS[vId as VerticalId]?.appName ?? vId}</option>
+                  ))}
+                </select>
+              )}
+              <div style={{ position: 'relative' }}>
+                <svg style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
+                  viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="#8A8F99" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="8.5" cy="8.5" r="5.5"/><path d="M15 15l-3-3"/>
+                </svg>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="조직 검색..."
+                  style={{
+                    width: '100%', boxSizing: 'border-box',
+                    padding: '8px 12px 8px 30px', borderRadius: 12,
+                    border: '1px solid rgba(20,23,28,0.12)',
+                    background: '#FFFFFF', fontSize: 13, fontFamily: 'inherit',
+                    color: '#14171C', outline: 'none',
+                    boxShadow: '0 1px 0 rgba(20,23,28,0.03)',
+                  }}
+                />
+              </div>
             </div>
           )}
 
@@ -609,10 +634,10 @@ export function TenantSelectPage() {
     return pageContent(items)
   }
 
-  // Regular user / customer owner: own memberships with optional search
-  const visibleMemberships = searchQuery
-    ? memberships.filter(m => m.tenant.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    : memberships
+  // Regular user / customer owner: own memberships with optional vertical + search filter
+  const visibleMemberships = memberships
+    .filter(m => !filterVertical || m.tenant.source_vertical === filterVertical)
+    .filter(m => !searchQuery || m.tenant.name.toLowerCase().includes(searchQuery.toLowerCase()))
   const items = visibleMemberships.map(m => ({
     id: m.id,
     name: m.tenant.name,
@@ -620,6 +645,7 @@ export function TenantSelectPage() {
     isAdmin: m.role === 'admin',
     mode: m.tenant.settings?.tenant_mode ?? '회원선택',
     position: m.tenant_role?.name,
+    vertical: m.tenant.source_vertical ?? undefined,
     themeColor: m.tenant.settings?.theme_color,
     onClick: () => { setTenant(m.tenant, m.role); navigate('/') },
   }))
