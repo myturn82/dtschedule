@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import { BRAND } from '../lib/brandConfig'
 import { useAuth } from '../hooks/useAuth'
 import { ScheduleBackground } from '../components/auth/ScheduleBackground'
+import { LogoStack } from '../components/Logo'
 import { isValidPhone, formatPhone } from '../lib/phone'
 import { TERMS, type DocKey } from '../lib/legalTerms'
 import { getPresetFromParam, VERTICAL_PRESETS } from '../lib/verticalPresets'
@@ -385,7 +386,7 @@ export function AuthPage() {
       {/* ── Main card ── */}
       <div className="af-card">
         <div style={{ marginBottom: 24 }}>
-          <img src="/logo-timetable-stack.png" alt="Dynamic Team Schedule" style={{ width: 200, height: 'auto', display: 'block' }} />
+          <LogoStack />
         </div>
         <span className="af-eyebrow">{tab === 'login' ? 'WELCOME BACK' : 'JOIN US'}</span>
         <h2 className="af-title">

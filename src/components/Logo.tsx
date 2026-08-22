@@ -44,15 +44,16 @@ export function LogoMonogram({ dark, className }: MonogramProps) {
 
 interface WordmarkProps {
   dark?: boolean
+  color?: string
   size?: 'sm' | 'md'
   thin?: boolean
   className?: string
 }
 
-export function LogoWordmark({ dark, size = 'md', thin, className }: WordmarkProps) {
+export function LogoWordmark({ dark, color, size = 'md', thin, className }: WordmarkProps) {
   const fs = size === 'sm' ? 14 : 20
   const fw = thin ? 300 : 800
-  const inkColor = dark ? '#EEF0F4' : 'var(--color-text-primary, #14171C)'
+  const inkColor = color ?? (dark ? '#EEF0F4' : 'var(--color-text-primary, #14171C)')
   const accentColor = dark ? 'oklch(0.72 0.16 28)' : ACCENT
 
   return (
@@ -67,6 +68,21 @@ export function LogoWordmark({ dark, size = 'md', thin, className }: WordmarkPro
       Dynamic{' '}
       <span style={{ color: accentColor }}>Team</span>
       {' '}Schedule
+    </div>
+  )
+}
+
+interface StackProps {
+  className?: string
+  style?: React.CSSProperties
+}
+
+export function LogoStack({ className, style }: StackProps) {
+  return (
+    <div className={className} style={{ lineHeight: 1.05, letterSpacing: '-1.5px', ...style }}>
+      <div style={{ fontSize: 36, fontWeight: 900, color: '#14171C', fontFamily: '"Pretendard Variable", Pretendard, system-ui, sans-serif' }}>DYNAMIC</div>
+      <div style={{ fontSize: 36, fontWeight: 900, color: ACCENT, fontFamily: '"Pretendard Variable", Pretendard, system-ui, sans-serif' }}>TEAM</div>
+      <div style={{ fontSize: 36, fontWeight: 900, color: '#14171C', fontFamily: '"Pretendard Variable", Pretendard, system-ui, sans-serif' }}>SCHEDULE</div>
     </div>
   )
 }

@@ -331,7 +331,7 @@ export function ScheduleBackground({ topNavSlot, children }: ScheduleBackgroundP
       <header className="lmp-brand-bar">
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
           <LogoIcon size={28} />
-          <LogoWordmark size="sm" thin />
+          <LogoWordmark size="sm" thin color="#14171C" />
           <span className="lmp-brand-pill">WORKSPACE</span>
         </div>
         <div className="lmp-top-nav">
