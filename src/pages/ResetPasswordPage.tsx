@@ -25,6 +25,14 @@ const IArrow = () => (
   </svg>
 )
 
+function validatePassword(pw: string): string | null {
+  if (pw.length < 8) return '비밀번호는 8자 이상이어야 합니다.'
+  if (!/[a-zA-Z]/.test(pw)) return '영문자를 포함해야 합니다.'
+  if (!/[0-9]/.test(pw)) return '숫자를 포함해야 합니다.'
+  if (!/[^a-zA-Z0-9]/.test(pw)) return '특수문자를 포함해야 합니다.'
+  return null
+}
+
 export function ResetPasswordPage() {
   const navigate = useNavigate()
   const [ready, setReady] = useState(false)
@@ -49,7 +57,7 @@ export function ResetPasswordPage() {
   }, [])
 
   async function handleSubmit() {
-    if (password.length < 6) { setError('비밀번호는 6자 이상이어야 합니다.'); return }
+    const pwErr = validatePassword(password); if (pwErr) { setError(pwErr); return }
     if (password !== confirm) { setError('비밀번호가 일치하지 않습니다.'); return }
     setLoading(true); setError(null)
     const { error: err } = await supabase.auth.updateUser({ password })
@@ -82,12 +90,13 @@ export function ResetPasswordPage() {
         ) : (
           <>
             <h2 className="af-title">새 비밀번호<br />설정하기</h2>
-            <div className="af-field" style={{ marginTop: 20 }}>
+            <p className="af-sub" style={{ marginTop: 4 }}>8자 이상, 영문·숫자·특수문자를 모두 포함해야 합니다.</p>
+            <div className="af-field" style={{ marginTop: 16 }}>
               <label className="af-label">새 비밀번호</label>
               <div className="af-input-wrap">
                 <span className="af-input-ic"><ILock /></span>
                 <input className="af-input" type={showPw ? 'text' : 'password'} value={password}
-                  onChange={e => setPassword(e.target.value)} placeholder="6자 이상"
+                  onChange={e => setPassword(e.target.value)} placeholder="8자 이상, 영문+숫자+특수문자"
                   autoComplete="new-password" autoFocus
                   onKeyDown={e => { if (e.key === 'Enter') handleSubmit() }} />
                 <button type="button" className="af-input-eye" onClick={() => setShowPw(p => !p)}>
