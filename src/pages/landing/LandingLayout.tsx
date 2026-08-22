@@ -82,6 +82,27 @@ export function LandingLayout({ appName, tagline, accentColor, verticalId, child
           지금 무료로 시작하기 →
         </button>
       </section>
+
+      {/* Footer */}
+      <footer style={{ textAlign: 'center', padding: '20px 24px 32px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginBottom: 10 }}>
+          <button
+            onClick={() => navigate('/privacy')}
+            style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}
+          >
+            개인정보처리방침
+          </button>
+          <button
+            onClick={() => navigate('/privacy')}
+            style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}
+          >
+            서비스 이용약관
+          </button>
+        </div>
+        <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: 11, margin: 0 }}>
+          © {new Date().getFullYear()} 다이나믹팀스케줄. All rights reserved.
+        </p>
+      </footer>
     </div>
   )
 }

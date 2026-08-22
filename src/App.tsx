@@ -25,6 +25,7 @@ import { LandingWorkOn   } from './pages/landing/LandingWorkOn'
 import { LandingSalonOn  } from './pages/landing/LandingSalonOn'
 import { LandingCareOn   } from './pages/landing/LandingCareOn'
 import { ConsentPage }  from './pages/ConsentPage'
+import { PrivacyPage }  from './pages/PrivacyPage'
 import { AuthPage }     from './pages/AuthPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { SetupWizardPage } from './pages/SetupWizardPage'
@@ -85,6 +86,7 @@ function AppRoutes() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/share"          element={<SharePage />} />
         <Route path="/embed"          element={<EmbedPage />} />
+        <Route path="/privacy"        element={<PrivacyPage />} />
         <Route path="*"               element={<Navigate to="/" replace />} />
       </Routes>
     )
@@ -99,6 +101,7 @@ function AppRoutes() {
         <Route path="/embed" element={<EmbedPage />} />
         <Route path="/superadmin" element={<SuperAdminPage />} />
         <Route path="/setup" element={<SetupWizardPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="*" element={<PendingPage />} />
       </Routes>
     )
@@ -112,6 +115,7 @@ function AppRoutes() {
         <Route path="/share" element={<SharePage />} />
         <Route path="/embed" element={<EmbedPage />} />
         <Route path="/superadmin" element={<SuperAdminPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="*" element={<TenantSelectPage />} />
       </Routes>
     )
@@ -127,6 +131,7 @@ function AppRoutes() {
         <Route path="/superadmin" element={<SuperAdminPage />} />
         <Route path="/customer-admin" element={<CustomerAdminPage />} />
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="*" element={
           justLoggedInRef.current ? <Navigate to="/superadmin" replace /> : <TenantSelectPage />
         } />
@@ -142,6 +147,7 @@ function AppRoutes() {
         <Route path="/embed" element={<EmbedPage />} />
         <Route path="/setup" element={<SetupWizardPage />} />
         <Route path="/customer-admin" element={<CustomerAdminPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="*" element={<CustomerAdminPage />} />
       </Routes>
     )
@@ -172,6 +178,7 @@ function AppRoutes() {
       <Route path="/customer-admin" element={
         isCustomerAdmin || profile?.is_super_admin ? <CustomerAdminPage /> : <Navigate to="/" replace />
       } />
+      <Route path="/privacy" element={<PrivacyPage />} />
     </Routes>
   )
 }
