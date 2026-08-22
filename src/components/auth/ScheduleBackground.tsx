@@ -202,6 +202,7 @@ export function ScheduleBackground({ topNavSlot, children }: ScheduleBackgroundP
           display:flex; align-items:center; padding:0 24px 0 20px;
           border-bottom:1px solid rgba(20,23,28,0.07);
           background:#F4F1EA; z-index:3; position:relative;
+          --color-text-primary: #14171C;
         }
         .lmp-brand-pill {
           margin-left:4px; font-size:10px; font-family:"JetBrains Mono",monospace;
