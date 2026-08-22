@@ -1127,7 +1127,21 @@ export function AdminPage() {
     })
     setSaving(false)
     if (err) msg(err, true)
-    else { msg('저장됐습니다.'); setPendingTemplateIdx(null) }
+    else {
+      msg('저장됐습니다.')
+      setPendingTemplateIdx(null)
+      if (adminTenant) {
+        const updated = {
+          ...adminTenant,
+          settings: {
+            ...adminTenant.settings,
+            hidden_days: settingsHiddenDays.length > 0 ? settingsHiddenDays : undefined,
+          },
+        }
+        setAdminTenant(updated)
+        if (adminTenant.id === tenant?.id) updateCurrentTenant(updated)
+      }
+    }
   }
 
   async function handleSlotSave() {
