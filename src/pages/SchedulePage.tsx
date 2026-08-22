@@ -107,8 +107,9 @@ export function SchedulePage() {
   const { profile } = useAuth()
   const { tenant, tenantRole, memberships, timeSlots, slotLabels, legendItems, customFields, typeLabels, hiddenDays } = useTenant()
 
-  // 최신 커스텀 필드를 DB에서 직접 조회 (TenantContext stale 방지)
+  // 최신 settings를 DB에서 직접 조회 (TenantContext stale 방지)
   const [freshCustomFields, setFreshCustomFields] = useState<CustomFieldDef[] | null>(null)
+  const [freshHiddenDays, setFreshHiddenDays] = useState<number[] | null>(null)
   useEffect(() => {
     if (!tenant?.id) return
     let cancelled = false
@@ -122,10 +123,12 @@ export function SchedulePage() {
             typeof opt === 'string' ? { name: opt, value: opt } : opt
           ),
         })))
+        setFreshHiddenDays((data?.settings?.hidden_days ?? []) as number[])
       })
     return () => { cancelled = true }
   }, [tenant?.id])
   const effectiveCustomFields = freshCustomFields ?? customFields
+  const effectiveHiddenDays = freshHiddenDays ?? hiddenDays
 
   const memberRoleId = memberships.find(m => m.tenant_id === tenant?.id)?.role_id ?? null
   const isPrivileged = profile?.is_super_admin || tenantRole === 'admin'
@@ -476,8 +479,8 @@ export function SchedulePage() {
   }
 
   const weekDays = getWeekDays(year, month, day)
-  const filteredWeekDays = hiddenDays.length > 0
-    ? weekDays.filter(d => !hiddenDays.includes(d.getDay()))
+  const filteredWeekDays = effectiveHiddenDays.length > 0
+    ? weekDays.filter(d => !effectiveHiddenDays.includes(d.getDay()))
     : weekDays
 
   function getTargetDays(): Date[] {
@@ -944,7 +947,7 @@ export function SchedulePage() {
                   canAdd={canAdd}
                   memberRoleId={memberRoleId}
                   onCellClick={handleCellClick}
-                  hiddenDays={hiddenDays}
+                  hiddenDays={effectiveHiddenDays}
                   highlightName={highlightName || null}
                 />
               ) : (
@@ -964,7 +967,7 @@ export function SchedulePage() {
                   hiddenRoleIds={hiddenRoleIds}
                   slotLabels={slotLabels}
                   canAdd={canAdd}
-                  hiddenDays={hiddenDays}
+                  hiddenDays={effectiveHiddenDays}
                   onCellClick={handleCellClick}
                   onCellMouseDown={handleCellMouseDown}
                   onCellMouseEnter={handleCellMouseEnter}
