@@ -1,6 +1,14 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { Capacitor } from '@capacitor/core'
+import { App as CapApp } from '@capacitor/app'
 import { supabase } from '../lib/supabase'
 import type { Profile, Customer } from '../types'
+
+const NATIVE_OAUTH_REDIRECT = `${import.meta.env.VITE_APP_ID ?? 'com.dtschedule.app'}://login-callback`
+
+function getOAuthRedirect(): string {
+  return Capacitor.isNativePlatform() ? NATIVE_OAUTH_REDIRECT : window.location.origin
+}
 
 interface AuthState {
   profile: Profile | null
@@ -41,7 +49,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       else { setProfile(null); setMyCustomer(null); setLoading(false) }
     })
 
-    return () => subscription.unsubscribe()
+    // Capacitor 딥링크 처리: OAuth 후 앱으로 돌아올 때 URL에서 세션 복구
+    let capListenerHandle: { remove: () => void } | null = null
+    if (Capacitor.isNativePlatform()) {
+      CapApp.addListener('appUrlOpen', async ({ url }) => {
+        if (!url.includes('login-callback')) return
+        // PKCE flow (Supabase v2 기본값): ?code=... 쿼리 파라미터
+        const queryStr = url.includes('?') ? url.split('?')[1].split('#')[0] : ''
+        const code = new URLSearchParams(queryStr).get('code')
+        if (code) {
+          await supabase.auth.exchangeCodeForSession(code)
+          return
+        }
+        // Implicit flow 폴백: #access_token=...&refresh_token=... 해시
+        const hashStr = url.includes('#') ? url.split('#')[1] : ''
+        const hashParams = new URLSearchParams(hashStr)
+        const accessToken = hashParams.get('access_token')
+        const refreshToken = hashParams.get('refresh_token')
+        if (accessToken && refreshToken) {
+          await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
+        }
+      }).then(h => { capListenerHandle = h })
+    }
+
+    return () => {
+      subscription.unsubscribe()
+      capListenerHandle?.remove()
+    }
   }, [])
 
   async function fetchProfile(userId: string) {
@@ -137,7 +171,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithGoogle = useCallback(async (): Promise<string | null> => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: getOAuthRedirect() },
     })
     return error?.message ?? null
   }, [])
@@ -145,7 +179,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithKakao = useCallback(async (): Promise<string | null> => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'kakao',
-      options: { redirectTo: window.location.origin, scopes: 'profile_nickname profile_image' },
+      options: { redirectTo: getOAuthRedirect(), scopes: 'profile_nickname profile_image' },
     })
     return error?.message ?? null
   }, [])
@@ -153,7 +187,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const linkGoogle = useCallback(async (): Promise<string | null> => {
     const { error } = await supabase.auth.linkIdentity({
       provider: 'google',
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: getOAuthRedirect() },
     })
     return error?.message ?? null
   }, [])
@@ -161,7 +195,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const linkKakao = useCallback(async (): Promise<string | null> => {
     const { error } = await supabase.auth.linkIdentity({
       provider: 'kakao',
-      options: { redirectTo: window.location.origin, scopes: 'profile_nickname profile_image' },
+      options: { redirectTo: getOAuthRedirect(), scopes: 'profile_nickname profile_image' },
     })
     return error?.message ?? null
   }, [])

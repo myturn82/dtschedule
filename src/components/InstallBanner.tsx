@@ -6,10 +6,14 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
 }
 
+// Android는 네이티브 앱으로 배포하므로 PWA 설치 배너 불필요 — iOS만 표시
+const isAndroid = /android/i.test(navigator.userAgent)
+
 export function InstallBanner() {
   const [promptEvent, setPromptEvent] = useState<BeforeInstallPromptEvent | null>(null)
 
   useEffect(() => {
+    if (isAndroid) return
     if (sessionStorage.getItem('pwa-install-dismissed')) return
     const handler = (e: Event) => {
       e.preventDefault()

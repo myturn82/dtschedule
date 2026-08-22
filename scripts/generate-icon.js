@@ -12,7 +12,7 @@
  *   - OS/브라우저가 플랫폼별 rounding을 자체 적용 → 흰 여백 없음
  */
 import { chromium } from 'playwright'
-import { writeFileSync, mkdirSync } from 'fs'
+import { writeFileSync, readFileSync, mkdirSync } from 'fs'
 import { dirname } from 'path'
 
 const VERTICAL_ICONS = {
@@ -62,6 +62,21 @@ async function renderToFile(page, svg, size, outputPath) {
   console.log(`   → ${outputPath} (${size}×${size})`)
 }
 
+// 1024px 소스 PNG를 img 태그로 리사이즈 — 네이티브 아이콘과 동일한 소스 보장
+async function resizePngToFile(page, sourcePath, size, outputPath) {
+  mkdirSync(dirname(outputPath), { recursive: true })
+  const sourceBase64 = readFileSync(sourcePath).toString('base64')
+  await page.setViewportSize({ width: size, height: size })
+  await page.setContent(`<!DOCTYPE html><html><body style="margin:0;padding:0;overflow:hidden">
+    <img id="i" src="data:image/png;base64,${sourceBase64}"
+      width="${size}" height="${size}" style="display:block;width:${size}px;height:${size}px" />
+  </body></html>`)
+  await page.waitForLoadState('load')
+  const buf = await page.screenshot({ clip: { x: 0, y: 0, width: size, height: size } })
+  writeFileSync(outputPath, buf)
+  console.log(`   → ${outputPath} (${size}×${size} resized from source)`)
+}
+
 async function generateIcon(vertical = 'lesson-on') {
   const conf = VERTICAL_ICONS[vertical]
   if (!conf) {
@@ -76,25 +91,22 @@ async function generateIcon(vertical = 'lesson-on') {
   // Capacitor용 1024px (Android 빌드 입력)
   await renderToFile(page, buildSvg(conf, 1024), 1024, 'assets/icon-only.png')
 
-  // PWA 아이콘 → public/icons/<vertical>/
+  // PWA 아이콘 → public/icons/<vertical>/  (1024px 소스에서 리사이즈 — 네이티브와 동일)
   const pwaDest = `public/icons/${vertical}`
-  const svg512 = buildSvg(conf, 512)
-  const svg192 = buildSvg(conf, 192)
-  const svg180 = buildSvg(conf, 180)
-  await renderToFile(page, svg512, 512, `${pwaDest}/icon-512.png`)
-  await renderToFile(page, svg192, 192, `${pwaDest}/icon-192.png`)
-  await renderToFile(page, svg180, 180, `${pwaDest}/apple-touch-icon.png`)
-  await renderToFile(page, svg512, 512, `${pwaDest}/icon-maskable-512.png`)
-  await renderToFile(page, svg192, 192, `${pwaDest}/icon-maskable-192.png`)
+  await resizePngToFile(page, 'assets/icon-only.png', 512, `${pwaDest}/icon-512.png`)
+  await resizePngToFile(page, 'assets/icon-only.png', 192, `${pwaDest}/icon-192.png`)
+  await resizePngToFile(page, 'assets/icon-only.png', 180, `${pwaDest}/apple-touch-icon.png`)
+  await resizePngToFile(page, 'assets/icon-only.png', 512, `${pwaDest}/icon-maskable-512.png`)
+  await resizePngToFile(page, 'assets/icon-only.png', 192, `${pwaDest}/icon-maskable-192.png`)
 
   // dts는 public/icons/ 기본 위치에도 복사 (dev 서버 참조 대상)
   if (vertical === 'dts') {
     const defaultDest = 'public/icons'
-    await renderToFile(page, svg512, 512, `${defaultDest}/icon-512.png`)
-    await renderToFile(page, svg192, 192, `${defaultDest}/icon-192.png`)
-    await renderToFile(page, svg180, 180, `${defaultDest}/apple-touch-icon.png`)
-    await renderToFile(page, svg512, 512, `${defaultDest}/icon-maskable-512.png`)
-    await renderToFile(page, svg192, 192, `${defaultDest}/icon-maskable-192.png`)
+    await resizePngToFile(page, 'assets/icon-only.png', 512, `${defaultDest}/icon-512.png`)
+    await resizePngToFile(page, 'assets/icon-only.png', 192, `${defaultDest}/icon-192.png`)
+    await resizePngToFile(page, 'assets/icon-only.png', 180, `${defaultDest}/apple-touch-icon.png`)
+    await resizePngToFile(page, 'assets/icon-only.png', 512, `${defaultDest}/icon-maskable-512.png`)
+    await resizePngToFile(page, 'assets/icon-only.png', 192, `${defaultDest}/icon-maskable-192.png`)
     console.log(`   기본 위치: ${defaultDest}/`)
   }
 
