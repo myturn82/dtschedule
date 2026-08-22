@@ -15,6 +15,14 @@ type JoinStep  = 'name' | 'password' | 'confirm' | 'phone' | 'choice' | 'org-nam
 
 const COUNTABLE: JoinStep[] = ['name', 'password', 'confirm', 'phone', 'org-name']
 
+function validatePassword(pw: string): string | null {
+  if (pw.length < 8) return '비밀번호는 8자 이상이어야 합니다.'
+  if (!/[a-zA-Z]/.test(pw)) return '영문자를 포함해야 합니다.'
+  if (!/[0-9]/.test(pw)) return '숫자를 포함해야 합니다.'
+  if (!/[^a-zA-Z0-9]/.test(pw)) return '특수문자를 포함해야 합니다.'
+  return null
+}
+
 // ── SVG icons ──────────────────────────────────────────────────
 const IKakao = () => (
   <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
@@ -603,19 +611,19 @@ export function AuthPage() {
               {joinStep === 'password' && (
                 <>
                   <h3 className="af-title sm">비밀번호를 설정하세요</h3>
-                  <p className="af-sub">6자 이상으로 안전하게 만들어 주세요.</p>
+                  <p className="af-sub">8자 이상, 영문·숫자·특수문자를 모두 포함해야 합니다.</p>
                   <div className="af-field">
                     <label className="af-label">비밀번호</label>
-                    <PwField id="signup-password" value={joinPw} onChange={e => setJoinPw(e.target.value)} placeholder="6자 이상"
+                    <PwField id="signup-password" value={joinPw} onChange={e => setJoinPw(e.target.value)} placeholder="8자 이상, 영문+숫자+특수문자"
                       show={showJoinPw} onToggle={() => setShowJoinPw(p => !p)}
                       onEnter={() => {
-                        if (joinPw.length < 6) { setError('비밀번호는 6자 이상이어야 합니다.'); return }
+                        const err = validatePassword(joinPw); if (err) { setError(err); return }
                         setError(null); setJoinStep('confirm')
                       }} />
                   </div>
                   {error && <div className="af-err">{error}</div>}
                   <button className="af-btn af-btn-primary" style={{ marginTop: 6 }} onClick={() => {
-                    if (joinPw.length < 6) { setError('비밀번호는 6자 이상이어야 합니다.'); return }
+                    const err = validatePassword(joinPw); if (err) { setError(err); return }
                     setError(null); setJoinStep('confirm')
                   }}>계속하기 <IArrow /></button>
                   <button className="af-back-link" onClick={() => { setJoinStep('name'); setError(null) }}><IBack /> 뒤로</button>
@@ -633,14 +641,14 @@ export function AuthPage() {
                       show={showJoinPw} onToggle={() => setShowJoinPw(p => !p)}
                       onEnter={() => {
                         if (joinPw !== joinConfirm) { setError('비밀번호가 일치하지 않습니다.'); return }
-                        if (joinPw.length < 6) { setError('비밀번호는 6자 이상이어야 합니다.'); return }
+                        const err = validatePassword(joinPw); if (err) { setError(err); return }
                         setError(null); setJoinStep('phone')
                       }} />
                   </div>
                   {error && <div className="af-err">{error}</div>}
                   <button className="af-btn af-btn-primary" style={{ marginTop: 6 }} onClick={() => {
                     if (joinPw !== joinConfirm) { setError('비밀번호가 일치하지 않습니다.'); return }
-                    if (joinPw.length < 6) { setError('비밀번호는 6자 이상이어야 합니다.'); return }
+                    const err = validatePassword(joinPw); if (err) { setError(err); return }
                     setError(null); setJoinStep('phone')
                   }}>계속하기 <IArrow /></button>
                   <button className="af-back-link" onClick={() => { setJoinStep('password'); setError(null) }}><IBack /> 뒤로</button>
