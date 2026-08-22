@@ -24,6 +24,7 @@ TRUNCATE TABLE
   consent_logs,
   policy_versions,
   push_subscriptions,
+  push_tokens,
   notifications,
   notification_settings,
   slot_highlights,

@@ -72,6 +72,7 @@ DROP TABLE IF EXISTS feedback_posts   CASCADE;
 DROP TABLE IF EXISTS consent_logs    CASCADE;
 DROP TABLE IF EXISTS policy_versions CASCADE;
 DROP TABLE IF EXISTS push_subscriptions CASCADE;
+DROP TABLE IF EXISTS push_tokens CASCADE;
 DROP TABLE IF EXISTS notifications CASCADE;
 DROP TABLE IF EXISTS notification_settings CASCADE;
 DROP TABLE IF EXISTS slot_highlights        CASCADE;
@@ -358,6 +359,17 @@ CREATE TABLE notifications (
   archived_at timestamptz
 );
 
+-- push_tokens (FCM)
+CREATE TABLE push_tokens (
+  id          uuid        DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id     uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  token       text        NOT NULL,
+  platform    text        NOT NULL DEFAULT 'android',
+  created_at  timestamptz DEFAULT now(),
+  updated_at  timestamptz DEFAULT now(),
+  UNIQUE (user_id, token)
+);
+
 -- push_subscriptions
 CREATE TABLE push_subscriptions (
   id         uuid DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -424,6 +436,7 @@ CREATE UNIQUE INDEX unique_member_assignment
 CREATE INDEX idx_notifications_user_unread ON notifications(user_id, is_read);
 CREATE INDEX idx_notifications_tenant ON notifications(tenant_id);
 CREATE INDEX idx_notifications_active ON notifications(user_id, created_at DESC) WHERE archived_at IS NULL;
+CREATE INDEX idx_push_tokens_user ON push_tokens(user_id);
 CREATE INDEX idx_push_subs_user ON push_subscriptions(user_id);
 CREATE UNIQUE INDEX idx_push_subs_endpoint ON push_subscriptions(endpoint);
 CREATE INDEX idx_consent_logs_user_type ON consent_logs(user_id, type, agreed_at DESC);
@@ -453,6 +466,7 @@ ALTER TABLE slot_highlights         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notification_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE push_subscriptions    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE push_tokens           ENABLE ROW LEVEL SECURITY;
 ALTER TABLE policy_versions       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE consent_logs          ENABLE ROW LEVEL SECURITY;
 ALTER TABLE lesson_package_types  ENABLE ROW LEVEL SECURITY;
@@ -1317,6 +1331,12 @@ CREATE POLICY "notif_select_superadmin" ON notifications FOR SELECT
 
 -- ── push_subscriptions ─────────────────────────────────────────
 CREATE POLICY "push_sub_own" ON push_subscriptions FOR ALL USING (user_id = auth.uid());
+
+-- ── push_tokens ─────────────────────────────────────────────────
+CREATE POLICY "push_tokens_user_self" ON push_tokens
+  FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "push_tokens_service_role" ON push_tokens
+  FOR ALL TO service_role USING (true) WITH CHECK (true);
 
 -- ── policy_versions ────────────────────────────────────────────
 CREATE POLICY "policy_versions_select_all" ON policy_versions

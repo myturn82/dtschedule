@@ -32,4 +32,6 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Android 13+ 푸시 알림 권한 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 </manifest>
