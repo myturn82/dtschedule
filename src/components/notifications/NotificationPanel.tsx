@@ -23,7 +23,11 @@ export function NotificationPanel({ notifications, onMarkAsRead, onMarkAllAsRead
 
   async function handleClick(n: AppNotification) {
     await onMarkAsRead(n.id)
-    if (n.metadata?.date) navigate(`/schedule?date=${n.metadata.date}`)
+    if (n.type === 'feedback_new') {
+      navigate('/superadmin')
+    } else if (n.metadata?.date) {
+      navigate(`/schedule?date=${n.metadata.date}`)
+    }
     onClose()
   }
 

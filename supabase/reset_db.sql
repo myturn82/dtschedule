@@ -1,7 +1,7 @@
 -- ============================================================
 -- 운영 DB 초기화 스크립트 (전체 재생성)
 -- 생성일: 2026-06-10
--- 기준 마이그레이션: 001 ~ 089
+-- 기준 마이그레이션: 001 ~ 093
 --
 -- ⚠️  주의: 이 스크립트는 모든 데이터를 삭제합니다.
 --           Supabase SQL Editor에서 직접 실행하세요.
@@ -65,6 +65,7 @@ DROP FUNCTION IF EXISTS public.encrypt_extra_data_phone_fields()         CASCADE
 DROP FUNCTION IF EXISTS public.set_feedback_post_defaults()              CASCADE;
 DROP FUNCTION IF EXISTS public.set_feedback_reply_role()                 CASCADE;
 DROP FUNCTION IF EXISTS public.handle_feedback_reply()                   CASCADE;
+DROP FUNCTION IF EXISTS public.notify_super_admins_on_new_feedback()     CASCADE;
 
 -- 테이블 삭제 (CASCADE로 FK·인덱스·정책 자동 제거)
 DROP TABLE IF EXISTS feedback_replies CASCADE;
@@ -1083,6 +1084,43 @@ END;
 $$;
 
 
+-- feedback_posts AFTER INSERT: 슈퍼관리자 알림
+CREATE OR REPLACE FUNCTION public.notify_super_admins_on_new_feedback()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $func$
+DECLARE
+  v_admin RECORD;
+  v_category_label text;
+BEGIN
+  v_category_label := CASE NEW.category
+    WHEN 'inquiry' THEN '단순문의'
+    WHEN 'bug'     THEN '오류'
+    WHEN 'feature' THEN '기능개선'
+    ELSE NEW.category
+  END;
+
+  FOR v_admin IN
+    SELECT id FROM profiles WHERE is_super_admin = true
+  LOOP
+    INSERT INTO notifications (tenant_id, user_id, title, body, type, metadata)
+    VALUES (
+      NEW.tenant_id,
+      v_admin.id,
+      '새 피드백이 등록됐습니다',
+      '[' || v_category_label || '] ' || NEW.title || ' — ' || NEW.author_name || ' (' || coalesce(NEW.tenant_name, '') || ')',
+      'feedback_new',
+      jsonb_build_object('feedback_post_id', NEW.id)
+    );
+  END LOOP;
+
+  RETURN NEW;
+END;
+$func$;
+
+
 -- ────────────────────────────────────────────────────────────
 -- STEP 6. RLS 정책
 -- ────────────────────────────────────────────────────────────
@@ -1739,6 +1777,10 @@ CREATE TRIGGER trg_feedback_reply_before_insert
 CREATE TRIGGER trg_feedback_reply_after_insert
   AFTER INSERT ON feedback_replies
   FOR EACH ROW EXECUTE FUNCTION public.handle_feedback_reply();
+
+CREATE TRIGGER trg_feedback_post_after_insert
+  AFTER INSERT ON feedback_posts
+  FOR EACH ROW EXECUTE FUNCTION public.notify_super_admins_on_new_feedback();
 
 
 -- ────────────────────────────────────────────────────────────
