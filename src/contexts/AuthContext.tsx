@@ -220,6 +220,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const signOut = useCallback(async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session?.user?.id) {
+      const userId = session.user.id
+      await Promise.all([
+        supabase.from('push_tokens').delete().eq('user_id', userId),
+        supabase.from('push_subscriptions').delete().eq('user_id', userId),
+      ])
+    }
     const { error } = await supabase.auth.signOut({ scope: 'global' })
     // 토큰 만료(403) 등으로 서버 로그아웃 실패 시 로컬 세션만 제거
     if (error) await supabase.auth.signOut({ scope: 'local' })
