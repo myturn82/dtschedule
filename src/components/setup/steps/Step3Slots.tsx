@@ -17,10 +17,15 @@ const TIME_OPTIONS = Array.from({ length: (24 - 6) * 2 + 1 }, (_, i) => {
   return { value: val, label: `${h}:${m}` }
 })
 
+function normalizeSlot(s: string): string {
+  return s.split('-').map(Number).join('-')
+}
+
 function findMatchingTemplate(currentSlots: string[]): number | null {
+  const normalizedCurrent = currentSlots.map(normalizeSlot)
   const idx = SLOT_TEMPLATES.findIndex(t =>
-    t.slots.length === currentSlots.length &&
-    t.slots.every((s, i) => s === currentSlots[i])
+    t.slots.length === normalizedCurrent.length &&
+    t.slots.every((s, i) => normalizeSlot(s) === normalizedCurrent[i])
   )
   return idx >= 0 ? idx : null
 }
@@ -31,6 +36,13 @@ export function Step3Slots({ slots, error, onChange }: Props) {
   const [showCustom, setShowCustom] = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState<number | null>(() => findMatchingTemplate(slots))
   const tplBtnRefs = useRef<(HTMLButtonElement | null)[]>([])
+  const isFirstRender = useRef(true)
+
+  // slots prop이 부모에서 비동기로 업데이트될 때 빠른선택 하이라이트 동기화
+  useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return }
+    setSelectedTemplate(findMatchingTemplate(slots))
+  }, [slots])
 
   useEffect(() => {
     const matchIdx = findMatchingTemplate(slots)
@@ -39,8 +51,8 @@ export function Step3Slots({ slots, error, onChange }: Props) {
       onChange(SLOT_TEMPLATES[0].slots)
       tplBtnRefs.current[0]?.focus()
     } else {
-      const focusIdx = matchIdx ?? 0
-      tplBtnRefs.current[focusIdx]?.focus()
+      setSelectedTemplate(matchIdx)
+      tplBtnRefs.current[matchIdx ?? 0]?.focus()
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
