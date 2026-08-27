@@ -1054,19 +1054,19 @@ export function AuthPage() {
                       ))}
                     </div>
                     <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
-                      <input className="af-input" value={wizRoleName} onChange={e => setWizRoleName(e.target.value)}
+                      <input className="af-input plain" value={wizRoleName} onChange={e => setWizRoleName(e.target.value)}
                         placeholder="예: 강사, 보조, 매니저" style={{ flex: 1 }}
                         onKeyDown={e => {
                           if (e.key === 'Enter' && wizRoleName.trim()) {
                             setWizRoles(prev => [...prev, { id: crypto.randomUUID(), name: wizRoleName.trim(), split_cell: false, indicator_bar: false, display_order: prev.length }])
-                            setWizRoleName('')
+                            setWizRoleName(''); setError('')
                           }
                         }} />
                       <button type="button" onClick={() => {
                         if (!wizRoleName.trim()) return
                         setWizRoles(prev => [...prev, { id: crypto.randomUUID(), name: wizRoleName.trim(), split_cell: false, indicator_bar: false, display_order: prev.length }])
-                        setWizRoleName('')
-                      }} style={{ padding: '0 14px', height: 40, borderRadius: 10, border: '1px solid var(--color-border)', background: 'var(--color-surface)', cursor: 'pointer', fontSize: 13, flexShrink: 0 }}>
+                        setWizRoleName(''); setError('')
+                      }} style={{ padding: '0 14px', height: 50, borderRadius: 10, border: '1px solid var(--color-border)', background: 'var(--color-surface)', cursor: 'pointer', fontSize: 13, flexShrink: 0 }}>
                         추가
                       </button>
                     </div>
@@ -1113,7 +1113,7 @@ export function AuthPage() {
                         <label style={{ fontSize: 12, color: 'var(--ink-500)', display: 'block', marginBottom: 4 }}>
                           레슨권 이름 <span style={{ color: 'var(--color-danger)' }}>*</span>
                         </label>
-                        <input className="af-input" value={wizLessonName} onChange={e => setWizLessonName(e.target.value)}
+                        <input className="af-input plain" value={wizLessonName} onChange={e => setWizLessonName(e.target.value)}
                           placeholder="예: 1:1 레슨 10회, 그룹 수업 20회" />
                       </div>
                       <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end' }}>
@@ -1121,14 +1121,14 @@ export function AuthPage() {
                           <label style={{ fontSize: 12, color: 'var(--ink-500)', display: 'block', marginBottom: 4 }}>
                             회차 수 <span style={{ color: 'var(--color-danger)' }}>*</span>
                           </label>
-                          <input className="af-input" type="number" min={1} value={wizLessonCount}
+                          <input className="af-input plain" type="number" min={1} value={wizLessonCount}
                             onChange={e => setWizLessonCount(e.target.value)} placeholder="예: 10" />
                         </div>
                         <div style={{ flex: 1 }}>
                           <label style={{ fontSize: 12, color: 'var(--ink-500)', display: 'block', marginBottom: 4 }}>
                             유효기간(주) <span style={{ color: 'var(--ink-400)', fontWeight: 400 }}>선택</span>
                           </label>
-                          <input className="af-input" type="number" min={1} value={wizLessonWeeks}
+                          <input className="af-input plain" type="number" min={1} value={wizLessonWeeks}
                             onChange={e => setWizLessonWeeks(e.target.value)} placeholder="예: 8" />
                         </div>
                         <button type="button" onClick={() => {
@@ -1139,8 +1139,8 @@ export function AuthPage() {
                             validity_days: wizLessonWeeks ? parseInt(wizLessonWeeks, 10) * 7 : null,
                             display_order: prev.length,
                           }])
-                          setWizLessonName(''); setWizLessonCount(''); setWizLessonWeeks('')
-                        }} style={{ padding: '0 12px', height: 40, borderRadius: 10, border: '1px solid var(--color-border)', background: 'var(--color-surface)', cursor: 'pointer', fontSize: 13, flexShrink: 0 }}>
+                          setWizLessonName(''); setWizLessonCount(''); setWizLessonWeeks(''); setError('')
+                        }} style={{ padding: '0 12px', height: 50, borderRadius: 10, border: '1px solid var(--color-border)', background: 'var(--color-surface)', cursor: 'pointer', fontSize: 13, flexShrink: 0 }}>
                           추가
                         </button>
                       </div>
