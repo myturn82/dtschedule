@@ -39,6 +39,20 @@ chcp 65001 | Out-Null
 
 > 새 PC/환경 최초 설정 절차는 `new-environment-setup` 스킬로 이동했다. 필요할 때 해당 스킬을 참고한다.
 
+## Supabase CLI 인증 규칙
+
+Supabase CLI 명령(`db push`, `functions deploy` 등)을 실행할 때 **`supabase login` 대화형 명령을 사용하지 않는다.**
+토큰은 `%USERPROFILE%\.supabase\access-token`에 저장되어 있으며, PowerShell에서 아래와 같이 환경변수로 주입해 사용한다.
+
+```powershell
+$env:SUPABASE_ACCESS_TOKEN = (Get-Content "$env:USERPROFILE\.supabase\access-token" -Raw).Trim()
+npx supabase db push --project-ref mcuszdvophmqrwostcah
+```
+
+명령 여러 개를 연속 실행할 때도 첫 줄에 환경변수 설정을 포함한다.
+
+---
+
 ## DB 환경 구성
 
 | 환경 | Supabase Project ID |

@@ -142,7 +142,8 @@ function AppRoutes() {
   }
 
   // Customer admin who hasn't selected a tenant → customer admin page
-  if (isCustomerAdmin && !tenantSelectedByUser) {
+  // tenant가 이미 설정된 경우(멤버십 1개 자동 선택)는 건너뜀
+  if (isCustomerAdmin && !tenantSelectedByUser && !tenant) {
     return (
       <Routes>
         <Route path="/share" element={<SharePage />} />

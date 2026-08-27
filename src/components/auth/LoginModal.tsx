@@ -46,6 +46,7 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
   const [success, setSuccess] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [socialPending, setSocialPending] = useState<'google' | 'kakao' | null>(null)
+  const [devInfo, setDevInfo] = useState<string | null>(null)
 
   const tabLoginRef = useRef<HTMLButtonElement>(null)
   const tabSignupRef = useRef<HTMLButtonElement>(null)
@@ -176,6 +177,49 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
   const accent = 'oklch(0.66 0.16 28)'
   const accentSoft = 'oklch(0.95 0.04 28)'
   const accentInk = 'oklch(0.38 0.13 28)'
+
+  const DEV_NAMES = ['김민준','이서연','박지훈','최수아','정우진','강하은','조민서','윤예은','장도현','임소연','한지우','오세훈','서지아','신예린','홍재원','문채린','배성현','권유진','남도윤','류하진']
+  const DEV_PW = 'Dev1234!'
+
+  async function handleDevAutoSignup() {
+    if (tenants.length === 0) { setError('조직이 없습니다. 먼저 조직을 만들어 주세요.'); return }
+    setLoading(true); setError(null); setDevInfo(null)
+
+    const tenant = tenants[Math.floor(Math.random() * tenants.length)]
+    const { data: roles } = await supabase.from('tenant_roles').select('id, name').eq('tenant_id', tenant.id).limit(10)
+    const role = roles && roles.length > 0 ? roles[Math.floor(Math.random() * roles.length)] : null
+
+    const name = DEV_NAMES[Math.floor(Math.random() * DEV_NAMES.length)]
+    const email = `dev.${Date.now()}@dtschedule.test`
+    const now = new Date().toISOString()
+
+    const { data, error: fnErr } = await supabase.functions.invoke('signup', {
+      body: {
+        email, password: DEV_PW, name,
+        role: 'volunteer',
+        tenant_id: tenant.id,
+        ...(role ? { tenant_role_id: role.id } : {}),
+        terms_agreed_at: now,
+        privacy_agreed_at: now,
+        auto_approve: true,
+      },
+    })
+
+    if (fnErr || data?.error) {
+      setError(data?.error ?? fnErr?.message ?? '오류가 발생했습니다.')
+      setLoading(false); return
+    }
+
+    const signInErr = await onSignIn(email, DEV_PW)
+    setLoading(false)
+    if (signInErr) {
+      setDevInfo(`이메일: ${email}  /  PW: ${DEV_PW}`)
+      setError(`계정 생성됨, 로그인 실패: ${signInErr}`)
+      return
+    }
+    localStorage.setItem('lastLoginEmail', email)
+    onClose()
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault(); setError(null); setLoading(true)
@@ -715,6 +759,36 @@ export function LoginModal({ onClose, onSignIn, onSignUp, onGoogle, onKakao, hid
                   </>
                 )}
               </>
+            )}
+
+            {import.meta.env.DEV && (
+              <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px dashed oklch(0.80 0.10 290)' }}>
+                <p style={{ fontSize: 9.5, fontFamily: '"JetBrains Mono",monospace', fontWeight: 700, letterSpacing: '1.5px', color: 'oklch(0.55 0.18 290)', textTransform: 'uppercase' as const, margin: '0 0 8px' }}>
+                  ⚡ Dev Only
+                </p>
+                {tenants.length === 0
+                  ? <p style={{ fontSize: 12, color: '#8A8F99', margin: 0 }}>조직 없음 — 먼저 조직을 만들어 주세요.</p>
+                  : (
+                    <button type="button" onClick={handleDevAutoSignup} disabled={loading} style={{
+                      width: '100%', height: 38,
+                      background: 'oklch(0.95 0.04 290)',
+                      border: '1.5px dashed oklch(0.65 0.15 290)',
+                      borderRadius: 10, cursor: loading ? 'not-allowed' : 'pointer',
+                      font: 'inherit', fontSize: 12.5, fontWeight: 700,
+                      color: 'oklch(0.40 0.18 290)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                      opacity: loading ? 0.6 : 1, transition: 'opacity .15s',
+                    }}>
+                      1-클릭 테스트 계정 생성 + 자동 로그인
+                    </button>
+                  )
+                }
+                {devInfo && (
+                  <p style={{ fontSize: 10.5, color: '#6B7280', marginTop: 8, fontFamily: '"JetBrains Mono",monospace', wordBreak: 'break-all' as const, lineHeight: 1.5 }}>
+                    {devInfo}
+                  </p>
+                )}
+              </div>
             )}
           </div>
         </main>

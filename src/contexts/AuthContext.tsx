@@ -16,7 +16,7 @@ interface AuthState {
   loading: boolean
   refreshCustomer: () => Promise<Customer | null>
   signIn: (email: string, password: string) => Promise<string | null>
-  signUp: (email: string, password: string, name: string, role: 'volunteer' | '50plus' | 'team_leader' | 'admin', tenantId?: string, tenantRoleId?: string, phone?: string) => Promise<string | null>
+  signUp: (email: string, password: string, name: string, role: 'volunteer' | '50plus' | 'team_leader' | 'admin', tenantId?: string, tenantRoleId?: string, phone?: string) => Promise<{ error: string | null; userId: string | null }>
   signInWithGoogle: () => Promise<string | null>
   signInWithKakao: () => Promise<string | null>
   linkGoogle: () => Promise<string | null>
@@ -142,7 +142,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return error.message
   }, [])
 
-  const signUp = useCallback(async (email: string, password: string, name: string, role: 'volunteer' | '50plus' | 'team_leader' | 'admin', tenantId?: string, tenantRoleId?: string, phone?: string): Promise<string | null> => {
+  const signUp = useCallback(async (email: string, password: string, name: string, role: 'volunteer' | '50plus' | 'team_leader' | 'admin', tenantId?: string, tenantRoleId?: string, phone?: string): Promise<{ error: string | null; userId: string | null }> => {
     const consentTs = sessionStorage.getItem('vs_consent_ts') ?? new Date().toISOString()
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -159,13 +159,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       },
     })
     if (error) {
-      if (error.status === 429) return '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.'
-      if (error.message === 'User already registered') return '이미 가입된 이메일입니다. 로그인 후 재신청해 주세요.'
-      return error.message
+      if (error.status === 429) return { error: '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.', userId: null }
+      if (error.message === 'User already registered') return { error: '이미 가입된 이메일입니다. 로그인 후 재신청해 주세요.', userId: null }
+      return { error: error.message, userId: null }
     }
-    if (data.user?.identities?.length === 0) return '이미 가입된 이메일입니다. 로그인 후 재신청해 주세요.'
+    if (data.user?.identities?.length === 0) return { error: '이미 가입된 이메일입니다. 로그인 후 재신청해 주세요.', userId: null }
     sessionStorage.removeItem('vs_consent_ts')
-    return null
+    return { error: null, userId: data.user?.id ?? null }
   }, [])
 
   const signInWithGoogle = useCallback(async (): Promise<string | null> => {
