@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { Capacitor } from '@capacitor/core'
 import { DevFileLabel } from '../components/DevFileLabel'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
@@ -385,7 +386,11 @@ export function AuthPage() {
         default_roles: defaultRoles,
         lesson_types: wizLessonTypes,
         ...(effectiveVertical ? { source_vertical: effectiveVertical } : {}),
-        redirect_to: window.location.origin,
+        redirect_to: Capacitor.isNativePlatform()
+          ? `${import.meta.env.VITE_APP_ID ?? 'com.dtschedule.app'}://login-callback`
+          : effectiveVertical
+            ? `${window.location.origin}/?vertical=${effectiveVertical}`
+            : window.location.origin,
       },
     })
 
