@@ -10,6 +10,7 @@ import { LogoStack } from '../components/Logo'
 import { isValidPhone, formatPhone } from '../lib/phone'
 import { TERMS, type DocKey } from '../lib/legalTerms'
 import { VERTICAL_PRESETS } from '../lib/verticalPresets'
+import { SLOT_TEMPLATES } from '../utils/timeSlots'
 import { Step2Mode } from '../components/setup/steps/Step2Mode'
 import { Step3Slots } from '../components/setup/steps/Step3Slots'
 import { Step7CustomFields } from '../components/setup/steps/Step7CustomFields'
@@ -23,7 +24,7 @@ type WizardRole = { id: string; name: string; split_cell: boolean; indicator_bar
 type WizardLessonType = { name: string; session_count: number; validity_days: number | null; display_order: number }
 
 const COUNTABLE: JoinStep[] = ['name', 'password', 'confirm', 'phone', 'org-name']
-const DEFAULT_SLOTS = ['09-10','10-11','11-12','12-13','13-14','14-15','15-16','16-17','17-18']
+const DEFAULT_SLOTS = SLOT_TEMPLATES[1].slots // 업무 (09-18시·1시간)
 
 function validatePassword(pw: string): string | null {
   if (pw.length < 8) return '비밀번호는 8자 이상이어야 합니다.'
@@ -1073,6 +1074,7 @@ export function AuthPage() {
                     <button className="af-btn af-btn-primary"
                       disabled={loading}
                       onClick={() => {
+                        if (wizRoleName.trim()) { setError('역할 이름을 입력하셨습니다. 추가 버튼을 눌러 등록하거나 입력란을 비워 주세요.'); return }
                         if (nextStep) { setError(''); setJoinStep(nextStep) }
                         else handleJoinSubmit()
                       }}>
@@ -1132,6 +1134,7 @@ export function AuthPage() {
                     <button className="af-btn af-btn-primary"
                       disabled={loading}
                       onClick={() => {
+                        if (wizLessonName.trim() || wizLessonCount) { setError('레슨권 정보를 입력하셨습니다. 추가 버튼을 눌러 등록하거나 입력란을 비워 주세요.'); return }
                         if (nextStep) { setError(''); setJoinStep(nextStep) }
                         else handleJoinSubmit()
                       }}>

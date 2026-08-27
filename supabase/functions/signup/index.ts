@@ -121,8 +121,9 @@ Deno.serve(async (req) => {
 
       // 2. tenant 생성
       const newTenantId = crypto.randomUUID()
-      const baseSlug = (org_name as string)
+      const rawSlug = (org_name as string)
         .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'org'
+      const baseSlug = rawSlug.slice(0, 34).replace(/-+$/, '') || 'org'
       const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 7)}`
       // DEV 원스텝 생성은 위자드 불필요 — setup_completed_at 미리 설정
       const finalSettings = {
