@@ -1,17 +1,11 @@
 import { useState, type FormEvent, type ReactNode } from 'react'
-import type { CustomFieldDef, CustomFieldType, CustomFieldOption, OptionValueType } from '../../../types'
-import { FIELD_TYPES_WITH_OPTIONS, FIELD_TYPES_WITH_DASHBOARD, OPTION_VALUE_TYPES, getOptionUnit } from '../../../types'
+import type { CustomFieldDef, CustomFieldType, CustomFieldOption } from '../../../types'
+import { FIELD_TYPES_WITH_OPTIONS, FIELD_TYPES_WITH_DASHBOARD } from '../../../types'
 import { CUSTOM_FIELD_TEMPLATES } from '../../../utils/customFieldTemplates'
 import { StepHeader, WIZARD_STEPS } from '../StepHeader'
 import { Field, ErrLine } from '../WizardField'
 import { WizardIcon, type WizardIconKey } from '../WizardIcons'
 
-const OPT_PLACEHOLDER: Record<string, { name: string; value: string }> = {
-  none:     { name: '예: 일반, 특별, 기타',    value: '예: normal, special' },
-  amount:   { name: '예: 기본, 청소년, 경로',  value: '예: 10000, 5000, 3000' },
-  quantity: { name: '예: 소, 중, 대',          value: '예: 1, 5, 10' },
-  people:   { name: '예: 1인, 2인, 단체',      value: '예: 1, 2, 10' },
-}
 
 interface Props {
   fields: CustomFieldDef[]
@@ -84,23 +78,12 @@ function TogglePill({ on, onClick, icon, children }: { on: boolean; onClick: () 
 }
 
 function OptRow({ opt, onChange, onRemove }: { opt: CustomFieldOption; onChange: (o: CustomFieldOption) => void; onRemove: () => void }) {
-  const unit = getOptionUnit(opt.value_type)
   return (
     <div className="optrow">
       <span className="optrow-grip"><WizardIcon.grip size={15} /></span>
-      <div className="sel-wrap optrow-vt">
-        <select className="sel" value={opt.value_type ?? 'none'} onChange={e => onChange({ ...opt, value_type: e.target.value as OptionValueType })}>
-          {OPTION_VALUE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-        </select>
-        <WizardIcon.chevron size={14} className="sel-chev" />
-      </div>
-      <input className="ipt optrow-name" value={opt.name} placeholder={OPT_PLACEHOLDER[opt.value_type ?? 'none']?.name ?? '표시명'}
-        onChange={e => onChange({ ...opt, name: e.target.value })} />
-      <div className="optrow-val">
-        <input className="ipt" value={opt.value} placeholder={OPT_PLACEHOLDER[opt.value_type ?? 'none']?.value ?? '저장값'}
-          onChange={e => onChange({ ...opt, value: e.target.value })} />
-        {unit && <span className="optrow-unit">{unit}</span>}
-      </div>
+      <input className="ipt optrow-name" style={{ flex: 1, height: 34 }} value={opt.name}
+        placeholder="선택지 이름 (예: 일반, 청소년, 경로)"
+        onChange={e => onChange({ ...opt, name: e.target.value, value: e.target.value, value_type: 'none' })} />
       <button className="iconbtn danger" onClick={onRemove} aria-label="옵션 삭제"><WizardIcon.x size={15} /></button>
     </div>
   )
@@ -344,19 +327,12 @@ export function Step7CustomFields({ fields, isFreeform, error, onChange }: Props
       {fields.length > 0 && <div className="new-sep"><span>새 항목</span></div>}
 
       <form className="newcard" onSubmit={addField}>
-        <div className="newcard-head">
-          <span className="newcard-badge"><WizardIcon.plus size={15} sw={2.2} /></span>
-          <div>
-            <p className="newcard-title">새 입력항목 추가</p>
-            <p className="newcard-sub">등록 팝업에 표시될 입력항목을 만듭니다</p>
-          </div>
+        <div className="ecol">
+          <label className="wlabel">항목명 <span className="wreq">*</span></label>
+          <input className="ipt" value={newLabel} maxLength={50} placeholder="예: 성명, 회비, 동의 여부" onChange={e => setNewLabel(e.target.value)} />
         </div>
-        <div className="newcard-main">
-          <div className="ecol newcard-name">
-            <label className="wlabel">항목명 <span className="wreq">*</span></label>
-            <input className="ipt" value={newLabel} maxLength={50} placeholder="예: 성명, 회비, 동의 여부" onChange={e => setNewLabel(e.target.value)} />
-          </div>
-          <div className="ecol newcard-type">
+        <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
+          <div className="ecol">
             <label className="wlabel">타입</label>
             <div className="sel-wrap">
               <select className="sel" value={newType} onChange={e => { setNewType(e.target.value as CustomFieldType); setNewOptions([]); setNewDash(false) }}>
@@ -366,16 +342,10 @@ export function Step7CustomFields({ fields, isFreeform, error, onChange }: Props
             </div>
           </div>
           {newType !== 'checkbox' && (
-            <div className="ecol-shrink">
-              <label className="wlabel">&nbsp;</label>
+            <div className="ecol-shrink" style={{ paddingBottom: 1 }}>
               <TogglePill on={newRequired} onClick={() => setNewRequired(v => !v)} icon="star">필수</TogglePill>
             </div>
           )}
-          <button type="submit"
-            disabled={!newLabel.trim() || (newHasOpt && (newOptions.length === 0 || newOptions.some(o => !o.name.trim())))}
-            className="btn btn-primary">
-            <WizardIcon.plus size={16} sw={2.2} /> 추가
-          </button>
         </div>
         {newType === 'number' && (
           <div className="erow-split" style={{ paddingTop: 12, borderTop: '1px solid var(--border)' }}>
@@ -389,10 +359,10 @@ export function Step7CustomFields({ fields, isFreeform, error, onChange }: Props
         )}
         {newHasOpt && (
           <div className="newcard-extra">
-            <label className="wlabel">선택지 <span className="whint">유형 · 표시명 · 저장값</span></label>
+            <label className="wlabel">선택지</label>
             <OptionsEditor options={newOptions} onUpdate={setNewOptions} />
             {newOptions.length === 0 && <p className="err-line">선택지를 하나 이상 추가해야 합니다 *</p>}
-            {newOptions.length > 0 && newOptions.some(o => !o.name.trim()) && <p className="err-line">표시명을 모두 입력해주세요</p>}
+            {newOptions.length > 0 && newOptions.some(o => !o.name.trim()) && <p className="err-line">선택지 이름을 모두 입력해주세요</p>}
             {newHasDash && <TogglePill on={newDash} onClick={() => setNewDash(v => !v)} icon="chart">대시보드 통계 포함</TogglePill>}
           </div>
         )}
@@ -406,6 +376,11 @@ export function Step7CustomFields({ fields, isFreeform, error, onChange }: Props
             <Field label="플레이스홀더" hint="선택"><input className="ipt" value={newPlaceholder} maxLength={100} placeholder="입력 안내 문구" onChange={e => setNewPlaceholder(e.target.value)} /></Field>
           </div>
         )}
+        <button type="submit"
+          disabled={!newLabel.trim() || (newHasOpt && (newOptions.length === 0 || newOptions.some(o => !o.name.trim())))}
+          className="btn btn-primary" style={{ width: '100%', marginTop: 4 }}>
+          <WizardIcon.plus size={16} sw={2.2} /> 항목 추가하기
+        </button>
       </form>
 
       <ErrLine error={error} />
