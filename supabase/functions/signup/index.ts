@@ -21,6 +21,7 @@ Deno.serve(async (req) => {
       create_org, org_name, org_phone, tenant_settings, default_roles, source_vertical,
       redirect_to,
       lesson_types,
+      open_days,
     } = await req.json()
 
     if (!email || !password || !name) {
@@ -183,9 +184,10 @@ Deno.serve(async (req) => {
       // 6. 기본 스케줄 규칙 생성
       const defaultSlots: string[] = (tenant_settings?.time_slots as string[] | undefined)
         ?? ['09-10','10-11','11-12','12-13','13-14','14-15','15-16','16-17','17-18']
+      const openDaysSet = new Set<number>((open_days as number[] | undefined) ?? [0,1,2,3,4,5,6])
       await supabaseAdmin.from('schedule_rules').insert(
         [0,1,2,3,4,5,6].flatMap((d: number) =>
-          defaultSlots.map((s: string) => ({ tenant_id: newTenantId, day_of_week: d, time_slot: s, is_open: true }))
+          defaultSlots.map((s: string) => ({ tenant_id: newTenantId, day_of_week: d, time_slot: s, is_open: openDaysSet.has(d) }))
         )
       )
 
