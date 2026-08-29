@@ -148,6 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email,
       password,
       options: {
+        emailRedirectTo: getOAuthRedirect(),
         data: {
           name, role,
           terms_agreed_at: consentTs,
