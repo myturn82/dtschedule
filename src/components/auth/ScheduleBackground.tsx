@@ -146,7 +146,7 @@ export function ScheduleBackground({ topNavSlot, children }: ScheduleBackgroundP
   useEffect(() => { return runAssignAnimation() }, [runAssignAnimation])
 
   return (
-    <div className="lmp">
+    <div className="lmp" style={{ colorScheme: 'light' }}>
       <style>{`
         .lmp {
           font-family: "Pretendard Variable", Pretendard, system-ui, sans-serif;

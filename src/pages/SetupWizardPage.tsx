@@ -292,7 +292,7 @@ export function SetupWizardPage() {
 
   if (loadingTenant) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-[var(--color-text-muted)]">
+      <div className="min-h-screen flex items-center justify-center text-[var(--color-text-muted)]" style={{ colorScheme: 'light' }}>
         로딩 중...
       </div>
     )
@@ -321,7 +321,7 @@ export function SetupWizardPage() {
   const isDone = step > TOTAL
 
   return (
-    <div className="wiz-root wiz-stage">
+    <div className="wiz-root wiz-stage" style={{ colorScheme: 'light' }}>
       <div className="wiz-card">
         <div className="wiz-progress"><div className="wiz-progress-fill" style={{ width: `${(Math.min(step, TOTAL) / TOTAL) * 100}%` }} /></div>
 
