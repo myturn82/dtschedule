@@ -1,4 +1,4 @@
-import { useState, type FormEvent, type ReactNode } from 'react'
+import { useState, useEffect, type FormEvent, type ReactNode } from 'react'
 import type { CustomFieldDef, CustomFieldType, CustomFieldOption } from '../../../types'
 import { FIELD_TYPES_WITH_OPTIONS, FIELD_TYPES_WITH_DASHBOARD } from '../../../types'
 import { CUSTOM_FIELD_TEMPLATES } from '../../../utils/customFieldTemplates'
@@ -12,6 +12,7 @@ interface Props {
   isFreeform: boolean
   error: string
   onChange: (fields: CustomFieldDef[]) => void
+  onPendingChange?: (hasPending: boolean) => void
 }
 
 const FIELD_TYPE_DEFS: { value: CustomFieldType; label: string; tone: string; icon: WizardIconKey }[] = [
@@ -67,12 +68,12 @@ function FieldPreview({ field }: { field: CustomFieldDef }) {
   return <div className="prev-opts"><span className="prev-opt"><span className="prev-check" />{field.label}</span></div>
 }
 
-function TogglePill({ on, onClick, icon, children }: { on: boolean; onClick: () => void; icon: WizardIconKey; children: ReactNode }) {
-  const Ic = WizardIcon[icon]
+function TogglePill({ on, onClick, icon, children }: { on: boolean; onClick: () => void; icon?: WizardIconKey; children: ReactNode }) {
+  const Ic = icon ? WizardIcon[icon] : null
   return (
     <button type="button" className={`tpill${on ? ' on' : ''}`} onClick={onClick} aria-pressed={on}>
       <span className="tpill-box">{on && <WizardIcon.check size={11} sw={3} />}</span>
-      <Ic size={13} />{children}
+      {Ic && <Ic size={13} />}{children}
     </button>
   )
 }
@@ -127,7 +128,7 @@ function FieldEditor({ f, set }: { f: Omit<CustomFieldDef, 'id'>; set: (f: Omit<
         {f.type !== 'checkbox' && (
           <div className="ecol-shrink">
             <label className="wlabel">&nbsp;</label>
-            <TogglePill on={f.required} onClick={() => set({ ...f, required: !f.required })} icon="star">필수</TogglePill>
+            <TogglePill on={f.required} onClick={() => set({ ...f, required: !f.required })}>필수</TogglePill>
           </div>
         )}
       </div>
@@ -210,7 +211,7 @@ function FieldCard({ field, draft, idx, total, editing, onEdit, onChange, onSave
   )
 }
 
-export function Step7CustomFields({ fields, isFreeform, error, onChange }: Props) {
+export function Step7CustomFields({ fields, isFreeform, error, onChange, onPendingChange }: Props) {
   const [newLabel, setNewLabel]             = useState('')
   const [newType, setNewType]               = useState<CustomFieldType>('text')
   const [newRequired, setNewRequired]       = useState(true)
@@ -222,6 +223,10 @@ export function Step7CustomFields({ fields, isFreeform, error, onChange }: Props
 
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editField, setEditField] = useState<Omit<CustomFieldDef, 'id'>>(BLANK_EDIT())
+
+  useEffect(() => {
+    onPendingChange?.(!!newLabel.trim())
+  }, [newLabel, onPendingChange])
 
   function startEdit(field: CustomFieldDef) {
     setEditingId(field.id)
@@ -324,31 +329,45 @@ export function Step7CustomFields({ fields, isFreeform, error, onChange }: Props
         </div>
       )}
 
-      {fields.length > 0 && <div className="new-sep"><span>새 항목</span></div>}
+      <div className="new-sep"><span>직접 추가</span></div>
 
       <form className="newcard" onSubmit={addField}>
+        <div className="newcard-head">
+          <span className="newcard-badge"><WizardIcon.plus size={18} sw={2} /></span>
+          <div>
+            <p className="newcard-title">새 항목 추가</p>
+            <p className="newcard-sub">항목명과 타입을 입력하고 추가하세요</p>
+          </div>
+        </div>
+
         <div className="ecol">
           <label className="wlabel">항목명 <span className="wreq">*</span></label>
           <input className="ipt" value={newLabel} maxLength={50} placeholder="예: 성명, 회비, 동의 여부" onChange={e => setNewLabel(e.target.value)} />
         </div>
-        <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
-          <div className="ecol">
-            <label className="wlabel">타입</label>
-            <div className="sel-wrap">
-              <select className="sel" value={newType} onChange={e => { setNewType(e.target.value as CustomFieldType); setNewOptions([]); setNewDash(false) }}>
-                {FIELD_TYPE_DEFS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-              </select>
-              <WizardIcon.chevron size={15} className="sel-chev" />
-            </div>
+
+        <div className="ecol">
+          <label className="wlabel">타입</label>
+          <div className="sel-wrap">
+            <select className="sel" value={newType} onChange={e => { setNewType(e.target.value as CustomFieldType); setNewOptions([]); setNewDash(false) }}>
+              {FIELD_TYPE_DEFS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+            <WizardIcon.chevron size={15} className="sel-chev" />
           </div>
-          {newType !== 'checkbox' && (
-            <div className="ecol-shrink" style={{ paddingBottom: 1 }}>
-              <TogglePill on={newRequired} onClick={() => setNewRequired(v => !v)} icon="star">필수</TogglePill>
-            </div>
-          )}
         </div>
+
+        <div style={{ display: 'flex', gap: 8 }}>
+          {newType !== 'checkbox' && (
+            <TogglePill on={newRequired} onClick={() => setNewRequired(v => !v)}>필수</TogglePill>
+          )}
+          <button type="submit"
+            disabled={!newLabel.trim() || (newHasOpt && (newOptions.length === 0 || newOptions.some(o => !o.name.trim())))}
+            className="btn btn-primary" style={{ flex: 1 }}>
+            <WizardIcon.plus size={16} sw={2.2} /> 항목 추가하기
+          </button>
+        </div>
+
         {newType === 'number' && (
-          <div className="erow-split" style={{ paddingTop: 12, borderTop: '1px solid var(--border)' }}>
+          <div className="erow-split newcard-extra">
             <div className="ecol">
               <Field label="최솟값" hint="선택"><input type="number" className="ipt" value={newMin} placeholder="없음" onChange={e => setNewMin(e.target.value)} /></Field>
             </div>
@@ -376,11 +395,6 @@ export function Step7CustomFields({ fields, isFreeform, error, onChange }: Props
             <Field label="플레이스홀더" hint="선택"><input className="ipt" value={newPlaceholder} maxLength={100} placeholder="입력 안내 문구" onChange={e => setNewPlaceholder(e.target.value)} /></Field>
           </div>
         )}
-        <button type="submit"
-          disabled={!newLabel.trim() || (newHasOpt && (newOptions.length === 0 || newOptions.some(o => !o.name.trim())))}
-          className="btn btn-primary" style={{ width: '100%', marginTop: 4 }}>
-          <WizardIcon.plus size={16} sw={2.2} /> 항목 추가하기
-        </button>
       </form>
 
       <ErrLine error={error} />

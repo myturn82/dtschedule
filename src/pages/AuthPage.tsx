@@ -169,6 +169,7 @@ export function AuthPage() {
   const [wizLessonCount, setWizLessonCount] = useState('')
   const [wizLessonWeeks, setWizLessonWeeks] = useState('')
   const [wizCustomFields, setWizCustomFields] = useState<CustomFieldDef[]>([])
+  const [wizFieldsPending, setWizFieldsPending] = useState(false)
 
   useEffect(() => {
     if (profile && !signupInProgress.current) {
@@ -1223,11 +1224,15 @@ export function AuthPage() {
                     isFreeform={wizMode === '비회원'}
                     error={error ?? ''}
                     onChange={f => { setWizCustomFields(f); setError('') }}
+                    onPendingChange={setWizFieldsPending}
                   />
                   {error && <div className="af-err">{error}</div>}
                   <button className="af-btn af-btn-primary" style={{ marginTop: 8 }}
                     disabled={loading}
-                    onClick={handleJoinSubmit}>
+                    onClick={() => {
+                      if (wizFieldsPending) { setError('항목명을 입력 중입니다. 추가 버튼을 눌러 등록하거나 항목명을 지워 주세요.'); return }
+                      handleJoinSubmit()
+                    }}>
                     {loading ? <><span className="af-btn-spinner" /> {joinProgress || '처리 중...'}</> : <>가입 완료 <IArrow /></>}
                   </button>
                   <button className="af-back-link" onClick={() => { setJoinStep(showLesson ? 'wiz-lesson' : 'wiz-roles'); setError('') }}>
