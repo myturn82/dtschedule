@@ -394,7 +394,7 @@ export function AuthPage() {
         {/* ── 이메일 인증 대기 화면 ── */}
         {joinEmailSent && (
           <div style={{ textAlign: 'center', padding: '8px 0 4px' }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>📧</div>
+            <div style={{ marginBottom: 12, color: 'var(--ink-600)' }}>{IMail(44)}</div>
             <h3 className="af-title sm" style={{ marginBottom: 8 }}>이메일을 확인해 주세요</h3>
             <p className="af-sub" style={{ marginBottom: 20 }}>
               <strong>{joinEmail}</strong>로<br />인증 링크를 보냈습니다.<br />링크를 클릭하면 가입이 완료됩니다.
@@ -495,7 +495,7 @@ export function AuthPage() {
                 {forgotSent ? (
                   <>
                     <div style={{ textAlign: 'center', padding: '8px 0 4px' }}>
-                      <div style={{ fontSize: 36, marginBottom: 8 }}>📧</div>
+                      <div style={{ marginBottom: 8, color: 'var(--ink-600)' }}>{IMail(40)}</div>
                       <h3 className="af-title sm" style={{ marginBottom: 6 }}>이메일을 확인해 주세요</h3>
                       <p className="af-sub" style={{ marginBottom: 0 }}>
                         <strong>{loginEmail}</strong>로<br />비밀번호 재설정 링크를 보냈습니다.
