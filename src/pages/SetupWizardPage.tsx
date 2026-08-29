@@ -286,8 +286,6 @@ export function SetupWizardPage() {
     return openDays.map(d => DAY_LABELS[d]).join('·')
   }, [scheduleRules])
 
-  const shareUrl = `${window.location.origin}/share?tid=${orgId}&year=${new Date().getFullYear()}&month=${new Date().getMonth() + 1}`
-
   // ── Footer button disabled logic ─────────────────────────────────────────
 
   const nextDisabled =
@@ -413,7 +411,6 @@ export function SetupWizardPage() {
               fieldCount={customFields.length}
               modeName={MODE_LABEL[mode] ?? mode}
               openDays={openDaysSummary}
-              shareUrl={shareUrl}
               onGoSchedule={async () => {
                 await reloadMemberships()
                 if (tenant) setTenant(tenant, 'admin')

@@ -269,7 +269,7 @@ export function AuthPage() {
       setLoading(false); if (err) setError(err)
     } else {
       setKakaoWizMode(true)
-      setWizChoice('join')
+      setWizChoice('service')
       setJoinStep('choice')
       setOrgSearch(''); setSelectedTenantId(null); setOrgOptions([])
       setWizOpen(true)

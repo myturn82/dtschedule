@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import { DevFileLabel } from '../../components/DevFileLabel'
 
-const ACCENT = '#22C55E'
+const ACCENT = '#FB923C'
 
 function useInView(threshold = 0.12) {
   const ref = useRef<HTMLDivElement>(null)

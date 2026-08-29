@@ -7,17 +7,12 @@ interface Props {
   fieldCount: number
   modeName: string
   openDays: string
-  shareUrl: string
   onGoSchedule: () => void
   onGoMembers: () => void
   onGoAdmin: () => void
 }
 
-export function StepDone({ orgName, slotCount, roleCount, fieldCount, modeName, openDays, shareUrl, onGoSchedule, onGoMembers, onGoAdmin }: Props) {
-  function copyShareUrl() {
-    navigator.clipboard.writeText(shareUrl).then(() => alert('공유 링크가 복사됐습니다.\n' + shareUrl))
-  }
-
+export function StepDone({ orgName, slotCount, roleCount, fieldCount, modeName, openDays, onGoSchedule, onGoMembers, onGoAdmin }: Props) {
   const summary = [
     { label: '운영 모드', value: modeName },
     { label: '시간 슬롯', value: `${slotCount}개` },
@@ -46,7 +41,6 @@ export function StepDone({ orgName, slotCount, roleCount, fieldCount, modeName, 
       <div className="done-cta">
         <button className="btn btn-primary wide" onClick={onGoSchedule}><WizardIcon.calendar size={16} /> 스케줄 보러가기</button>
         <button className="btn btn-outline wide" onClick={onGoMembers}><WizardIcon.user size={16} /> 회원 초대하기</button>
-        <button className="btn btn-ghost wide" onClick={copyShareUrl}><WizardIcon.link size={16} /> 공유 링크 복사</button>
         <button className="link-btn center" onClick={onGoAdmin}>전체 관리자 설정 열기 <WizardIcon.arrowRight size={14} /></button>
       </div>
     </div>
