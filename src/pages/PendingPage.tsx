@@ -7,7 +7,7 @@ import { supabase } from '../lib/supabase'
 import { BRAND } from '../lib/brandConfig'
 import { VERTICAL_PRESETS } from '../lib/verticalPresets'
 import { ScheduleBackground } from '../components/auth/ScheduleBackground'
-import { isValidPhone } from '../lib/phone'
+import { isValidPhone, formatPhone } from '../lib/phone'
 
 interface TenantRole { id: string; name: string; display_order: number }
 
@@ -336,7 +336,7 @@ export function PendingPage() {
                 <div className="af-field">
                   <label style={labelSt}>전화번호</label>
                   <input className="af-input plain" type="tel" required value={customerPhone}
-                    onChange={e => setCustomerPhone(e.target.value)} placeholder="예: 010-1234-5678" />
+                    onChange={e => setCustomerPhone(formatPhone(e.target.value))} placeholder="예: 010-1234-5678" />
                 </div>
                 {error && <div className="af-err">{error}</div>}
                 <div className="af-btn-row">
