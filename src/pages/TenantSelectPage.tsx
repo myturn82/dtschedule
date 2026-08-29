@@ -283,7 +283,7 @@ export function TenantSelectPage() {
     onClick: () => void
   }
 
-  const pageContent = (items: ItemData[]) => (
+  const pageContent = (items: ItemData[], otherItems?: ItemData[]) => (
     <div style={{
       position: 'relative',
       minHeight: '100dvh',
@@ -567,7 +567,7 @@ export function TenantSelectPage() {
           {/* Org list */}
           {loading ? (
             <div style={{ padding: '40px 0', textAlign: 'center', color: '#8A8F99', fontSize: 14 }}>로딩 중...</div>
-          ) : items.length === 0 ? (
+          ) : items.length === 0 && (!otherItems || otherItems.length === 0) ? (
             <div style={{ padding: '40px 0', textAlign: 'center', color: '#8A8F99', fontSize: 14 }}>소속된 조직이 없습니다.</div>
           ) : (
             <div className="tsp-orglist" style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
@@ -589,6 +589,34 @@ export function TenantSelectPage() {
                   onPendingClick={(item as { onPendingClick?: () => void }).onPendingClick}
                 />
               ))}
+              {otherItems && otherItems.length > 0 && (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', marginTop: 2 }}>
+                    <div style={{ flex: 1, height: 1, background: 'rgba(20,23,28,0.10)' }} />
+                    <span style={{ fontSize: 11, color: '#8A8F99', whiteSpace: 'nowrap' }}>다른 앱의 조직</span>
+                    <div style={{ flex: 1, height: 1, background: 'rgba(20,23,28,0.10)' }} />
+                  </div>
+                  {otherItems.map((item, idx) => (
+                    <div key={item.id} style={{ opacity: 0.5 }}>
+                      <OrgCard
+                        name={item.name}
+                        roleLabel={item.roleLabel}
+                        isAdmin={item.isAdmin}
+                        mode={item.mode}
+                        position={item.position}
+                        vertical={item.vertical}
+                        pendingCount={item.pendingCount}
+                        memberCount={item.memberCount}
+                        assignmentCount={item.assignmentCount}
+                        tintIdx={items.length + idx}
+                        themeColor={item.themeColor}
+                        onClick={item.onClick}
+                        onPendingClick={(item as { onPendingClick?: () => void }).onPendingClick}
+                      />
+                    </div>
+                  ))}
+                </>
+              )}
             </div>
           )}
         </div>
@@ -635,10 +663,17 @@ export function TenantSelectPage() {
   }
 
   // Regular user / customer owner: own memberships with optional vertical + search filter
+  const currentVertical = import.meta.env.VITE_VERTICAL as string | undefined
   const visibleMemberships = memberships
     .filter(m => !filterVertical || m.tenant.source_vertical === filterVertical)
     .filter(m => !searchQuery || m.tenant.name.toLowerCase().includes(searchQuery.toLowerCase()))
-  const items = visibleMemberships.map(m => ({
+  const sameMemberships = visibleMemberships.filter(
+    m => !currentVertical || !m.tenant.source_vertical || m.tenant.source_vertical === currentVertical
+  )
+  const otherMemberships = visibleMemberships.filter(
+    m => currentVertical && m.tenant.source_vertical && m.tenant.source_vertical !== currentVertical
+  )
+  const toItem = (m: typeof visibleMemberships[0]) => ({
     id: m.id,
     name: m.tenant.name,
     roleLabel: m.role === 'admin' ? '관리자' : '멤버',
@@ -648,6 +683,8 @@ export function TenantSelectPage() {
     vertical: m.tenant.source_vertical ?? undefined,
     themeColor: m.tenant.settings?.theme_color,
     onClick: () => { setTenant(m.tenant, m.role); navigate('/') },
-  }))
-  return pageContent(items)
+  })
+  const items = sameMemberships.map(toItem)
+  const otherItems = otherMemberships.map(toItem)
+  return pageContent(items, otherItems)
 }
