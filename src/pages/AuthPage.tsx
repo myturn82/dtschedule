@@ -1,31 +1,19 @@
 import { useState, useEffect, useRef } from 'react'
-import { Capacitor } from '@capacitor/core'
 import { DevFileLabel } from '../components/DevFileLabel'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { BRAND } from '../lib/brandConfig'
 import { useAuth } from '../hooks/useAuth'
 import { ScheduleBackground } from '../components/auth/ScheduleBackground'
 import { LogoStack } from '../components/Logo'
-import { isValidPhone, formatPhone } from '../lib/phone'
 import { TERMS, type DocKey } from '../lib/legalTerms'
 import { VERTICAL_PRESETS } from '../lib/verticalPresets'
-import { SLOT_TEMPLATES } from '../utils/timeSlots'
-import { SCHEDULE_RULE_TEMPLATES } from '../utils/scheduleRuleTemplates'
-import { Step2Mode } from '../components/setup/steps/Step2Mode'
-import { Step3Slots } from '../components/setup/steps/Step3Slots'
-import { Step7CustomFields } from '../components/setup/steps/Step7CustomFields'
-import type { TenantMode, CustomFieldDef } from '../types'
 
 type Tab       = 'login' | 'signup'
 type LoginStep = 'buttons' | 'email' | 'password' | 'forgot'
-type JoinStep  = 'name' | 'password' | 'confirm' | 'phone' | 'choice' | 'org-name' | 'org-select'
-  | 'wiz-mode' | 'wiz-slots' | 'wiz-days' | 'wiz-roles' | 'wiz-lesson' | 'wiz-fields'
-type WizardRole = { id: string; name: string; split_cell: boolean; indicator_bar: boolean; display_order: number }
-type WizardLessonType = { name: string; session_count: number; validity_days: number | null; display_order: number }
+type JoinStep  = 'name' | 'password' | 'confirm' | 'choice' | 'org-select'
 
-const COUNTABLE: JoinStep[] = ['name', 'password', 'confirm', 'phone', 'org-name']
-const DEFAULT_SLOTS = SLOT_TEMPLATES[1].slots // 업무 (09-18시·1시간)
+const COUNTABLE: JoinStep[] = ['name', 'password', 'confirm']
+const DEV_DEFAULT_SLOTS = ['09-10','10-11','11-12','12-13','13-14','14-15','15-16','16-17','17-18']
 
 function validatePassword(pw: string): string | null {
   if (pw.length < 8) return '비밀번호는 8자 이상이어야 합니다.'
@@ -97,11 +85,6 @@ const IJoin = () => (
     <path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="m10 8 4 4-4 4"/><path d="M14 12H4"/>
   </svg>
 )
-const IPlus = () => (
-  <svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M10 2v16M2 10h16"/>
-  </svg>
-)
 
 export function AuthPage() {
   const { profile, signIn, signUp, signInWithKakao, resetPassword } = useAuth()
@@ -109,10 +92,6 @@ export function AuthPage() {
   const [searchParams] = useSearchParams()
 
   const initTab = searchParams.get('tab') === 'login' ? 'login' : 'signup'
-  const verticalParam = searchParams.get('vertical')
-  const effectiveVertical = verticalParam ?? (BRAND.vertical !== 'generic' ? BRAND.vertical : null)
-  const verticalPreset = effectiveVertical ? (VERTICAL_PRESETS[effectiveVertical as keyof typeof VERTICAL_PRESETS] ?? null) : null
-  const showLesson = !!verticalPreset && ['lessonon', 'classon'].includes(verticalPreset.id)
 
   const [tab, setTab] = useState<Tab>(initTab)
 
@@ -134,12 +113,9 @@ export function AuthPage() {
   const [joinName, setJoinName] = useState('')
   const [joinPw, setJoinPw] = useState('')
   const [joinConfirm, setJoinConfirm] = useState('')
-  const [orgName, setOrgName] = useState('')
-  const [orgPhone, setOrgPhone] = useState('')
   const [showJoinPw, setShowJoinPw] = useState(false)
   const [wizChoice, setWizChoice] = useState<'service' | 'join'>('service')
   const [kakaoWizMode, setKakaoWizMode] = useState(false)
-  const [joinPhone, setJoinPhone] = useState('')
   const [orgSearch, setOrgSearch] = useState('')
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null)
   const [orgOptions, setOrgOptions] = useState<{ name: string; tenantId: string }[]>([])
@@ -150,7 +126,6 @@ export function AuthPage() {
   // Shared
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [joinProgress, setJoinProgress] = useState('')
   const [legalDoc, setLegalDoc] = useState<DocKey | null>(null)
   const [joinEmailSent, setJoinEmailSent] = useState(false)
   const [devInfo, setDevInfo] = useState<string | null>(null)
@@ -158,29 +133,12 @@ export function AuthPage() {
   const [devEmail, setDevEmail] = useState('')
   const [devCreated, setDevCreated] = useState(false)
 
-  // 위자드 단계별 데이터 (signup 완료 시 Edge Function에 전달)
-  const [wizMode, setWizMode] = useState<TenantMode>(() => verticalPreset?.tenant_mode ?? '회원공유')
-  const [wizSlots, setWizSlots] = useState<string[]>(DEFAULT_SLOTS)
-  const [wizOpenDays, setWizOpenDays] = useState<number[]>([1,2,3,4,5])
-  const [wizRoles, setWizRoles] = useState<WizardRole[]>([])
-  const [wizRoleName, setWizRoleName] = useState('')
-  const [wizLessonTypes, setWizLessonTypes] = useState<WizardLessonType[]>([])
-  const [wizLessonName, setWizLessonName] = useState('')
-  const [wizLessonCount, setWizLessonCount] = useState('')
-  const [wizLessonWeeks, setWizLessonWeeks] = useState('')
-  const [wizCustomFields, setWizCustomFields] = useState<CustomFieldDef[]>([])
-  const [wizFieldsPending, setWizFieldsPending] = useState(false)
-
   useEffect(() => {
     if (profile && !signupInProgress.current) {
       navigate(profile.is_super_admin ? '/superadmin' : '/', { replace: true })
     }
   }, [profile, navigate])
 
-  // 회원가입 탭은 서비스 이용 동의(/consent)를 거친 적이 있어야 접근 허용.
-  // 동의 플래그는 즉시 소멸시키지 않고 같은 탭(세션) 동안 유지 — 새로고침해도
-  // 다시 동의 화면으로 튕기지 않음. 새 탭/재로그인 등 새 세션에서는 sessionStorage가
-  // 자연히 비어 있으므로 다시 동의를 거치게 된다.
   useEffect(() => {
     if (tab !== 'signup') return
     if (sessionStorage.getItem('vs_consent_ok') !== '1') {
@@ -202,14 +160,8 @@ export function AuthPage() {
     setWizOpen(false); setError(null)
     setSignupEmailInCard(true)
     setJoinStep('name')
-    setJoinName(''); setJoinPw(''); setJoinConfirm(''); setJoinPhone('')
+    setJoinName(''); setJoinPw(''); setJoinConfirm('')
     setOrgSearch(''); setSelectedTenantId(null); setOrgOptions([])
-    setOrgName(''); setOrgPhone('')
-    setWizMode(verticalPreset?.tenant_mode ?? '회원공유')
-    setWizSlots(DEFAULT_SLOTS)
-    setWizRoles([]); setWizRoleName('')
-    setWizLessonTypes([]); setWizLessonName(''); setWizLessonCount(''); setWizLessonWeeks('')
-    setWizCustomFields([])
   }
 
   // ── handlers ──────────────────────────────────────────────────
@@ -252,13 +204,11 @@ export function AuthPage() {
     signupInProgress.current = true
     setSignupEmailInCard(false)
     setJoinStep('name')
-    setJoinName(''); setJoinPw(''); setJoinConfirm(''); setJoinPhone('')
+    setJoinName(''); setJoinPw(''); setJoinConfirm('')
     setOrgSearch(''); setSelectedTenantId(null); setOrgOptions([])
-    setOrgName(''); setOrgPhone('')
     setWizOpen(true)
   }
 
-  // 이미 가입된 이메일 오류 시 wizard를 완전히 초기화하고 로그인 비밀번호 단계로 전환
   function redirectToLoginTab(message: string) {
     signupInProgress.current = false
     setWizOpen(false)
@@ -267,9 +217,8 @@ export function AuthPage() {
     setLoginEmail(joinEmail.trim())
     setLoginPw('')
     setJoinStep('name')
-    setJoinName(''); setJoinPw(''); setJoinConfirm(''); setJoinPhone('')
+    setJoinName(''); setJoinPw(''); setJoinConfirm('')
     setOrgSearch(''); setSelectedTenantId(null); setOrgOptions([])
-    setOrgName(''); setOrgPhone('')
     setError(message)
   }
 
@@ -281,6 +230,98 @@ export function AuthPage() {
     setOrgOptions(opts)
   }
 
+  // 이메일 가입 — 내 서비스 시작하기: 계정만 생성 후 PendingPage → SetupWizardPage
+  async function handleSignUpForService() {
+    setLoading(true); setError(null)
+    localStorage.setItem('vs_pending_mode', 'start-service')
+    const { error: err } = await signUp(joinEmail.trim(), joinPw, joinName.trim(), 'volunteer', '', undefined, undefined)
+    setLoading(false)
+    if (err) {
+      localStorage.removeItem('vs_pending_mode')
+      if (err.includes('이미 가입된')) { redirectToLoginTab(err); return }
+      setError(err); return
+    }
+    setWizOpen(false)
+    setJoinEmailSent(true)
+  }
+
+  // 이메일 가입 — 기존 조직 가입하기
+  async function handleSignUpOnly(tenantId = '') {
+    setLoading(true); setError(null)
+    localStorage.setItem('vs_pending_mode', 'join-org')
+    const { error: err } = await signUp(joinEmail.trim(), joinPw, joinName.trim(), 'volunteer', tenantId)
+    setLoading(false)
+    if (err) {
+      localStorage.removeItem('vs_pending_mode')
+      if (err.includes('이미 가입된')) { redirectToLoginTab(err); return }
+      setError(err); return
+    }
+    setWizOpen(false)
+    setJoinEmailSent(true)
+  }
+
+  async function handleKakao() {
+    setError(null)
+    if (tab === 'login') {
+      setLoading(true)
+      sessionStorage.setItem('vs_just_logged_in', '1')
+      const err = await signInWithKakao()
+      setLoading(false); if (err) setError(err)
+    } else {
+      setKakaoWizMode(true)
+      setWizChoice('join')
+      setJoinStep('choice')
+      setOrgSearch(''); setSelectedTenantId(null); setOrgOptions([])
+      setWizOpen(true)
+    }
+  }
+
+  async function handleKakaoOAuth() {
+    if (wizChoice === 'join' && !selectedTenantId) { setError('조직을 선택해 주세요.'); return }
+    setLoading(true); setError(null)
+    if (wizChoice === 'join' && selectedTenantId) {
+      localStorage.setItem('vs_pending_social', JSON.stringify({ tenantId: selectedTenantId, tenantRoleId: null }))
+    } else {
+      localStorage.setItem('vs_pending_mode', 'start-service')
+    }
+    const err = await signInWithKakao()
+    setLoading(false); if (err) setError(err)
+  }
+
+  // ── step counter ──────────────────────────────────────────────
+  const stepIdx = (joinStep === 'choice' || joinStep === 'org-select')
+    ? COUNTABLE.length
+    : COUNTABLE.indexOf(joinStep as (typeof COUNTABLE)[number])
+
+  // ── top nav ───────────────────────────────────────────────────
+  const topNavSlot = (
+    <>
+      <span className="lmp-nav-hint">{tab === 'login' ? '계정이 없으신가요?' : '이미 계정이 있나요?'}</span>
+      <button className="lmp-nav-btn" onClick={() => switchTab(tab === 'login' ? 'signup' : 'login')}>
+        {tab === 'login' ? '회원가입' : '로그인'}
+      </button>
+    </>
+  )
+
+  // ── password field helper ─────────────────────────────────────
+  function PwField({ id, value, onChange, placeholder, show, onToggle, onEnter }: {
+    id: string; value: string; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+    placeholder: string; show: boolean; onToggle: () => void; onEnter?: () => void
+  }) {
+    return (
+      <div className="af-input-wrap">
+        <span className="af-input-ic"><ILock /></span>
+        <input id={id} name={id} className="af-input" type={show ? 'text' : 'password'} value={value}
+          onChange={onChange} placeholder={placeholder} autoComplete="new-password" autoFocus
+          onKeyDown={e => { if (e.key === 'Enter' && onEnter) onEnter() }} />
+        <button type="button" className="af-input-eye" onClick={onToggle} aria-label="비밀번호 표시">
+          {show ? <IEyeOff /> : <IEye />}
+        </button>
+      </div>
+    )
+  }
+
+  // ── DEV helpers ───────────────────────────────────────────────
   const DEV_NAMES = ['김민준','이서연','박지훈','최수아','정우진','강하은','조민서','윤예은','장도현','임소열','한지우','오세훈','서지아','신예린','홍재원','문채린','배성현','권유진','남도윤','류하진']
   const DEV_PW = 'Dev1234!'
 
@@ -296,7 +337,7 @@ export function AuthPage() {
 
     const tenantSettings = {
       title: orgName,
-      time_slots: DEFAULT_SLOTS,
+      time_slots: DEV_DEFAULT_SLOTS,
       open_from: '09:00', open_to: '22:00',
       slot_interval_minutes: 60,
       timezone: 'Asia/Seoul', locale: 'ko-KR',
@@ -335,156 +376,6 @@ export function AuthPage() {
     if (err) { setError(`로그인 실패: ${err}`); return }
     sessionStorage.setItem('vs_just_logged_in', '1')
     navigate('/', { replace: true })
-  }
-
-  async function handleSignUpOnly(tenantId = '') {
-    setLoading(true); setError(null)
-    // signUp 도중 App.tsx가 PendingPage로 전환되기 전에 먼저 세팅
-    localStorage.setItem('vs_pending_mode', 'join-org')
-    const { error: err } = await signUp(joinEmail.trim(), joinPw, joinName.trim(), 'volunteer', tenantId, undefined, joinPhone || undefined)
-    setLoading(false)
-    if (err) {
-      localStorage.removeItem('vs_pending_mode')
-      if (err.includes('이미 가입된')) { redirectToLoginTab(err); return }
-      setError(err); return
-    }
-    window.location.href = '/'
-  }
-
-  async function handleJoinSubmit() {
-    if (!orgName.trim()) { setError('서비스 이름을 입력해 주세요.'); return }
-    if (!isValidPhone(orgPhone)) { setError('올바른 전화번호를 입력해 주세요. (예: 010-1234-5678)'); return }
-    setLoading(true); setError(null); setJoinProgress('계정을 만드는 중...')
-
-    const now = new Date().toISOString()
-    const tenantName = orgName.trim()
-    const tenantSettings = {
-      title: tenantName,
-      time_slots: wizSlots,
-      open_from: '09:00', open_to: '22:00',
-      slot_interval_minutes: wizSlots.some(s => s.includes('.')) ? 30 : 60,
-      timezone: 'Asia/Seoul', locale: 'ko-KR',
-      tenant_mode: wizMode,
-      contact_phone: orgPhone.trim(),
-      ...(wizCustomFields.length > 0 ? { custom_fields: wizCustomFields } : {}),
-      ...(verticalPreset ? { feature_flags: verticalPreset.feature_flags } : {}),
-      setup_completed_at: now,
-    }
-
-    const defaultRoles = wizRoles.length > 0
-      ? wizRoles.map((r, i) => ({ name: r.name, split_cell: r.split_cell, indicator_bar: r.indicator_bar, display_order: i }))
-      : (verticalPreset?.default_roles ?? []).map((name: string, i: number) => ({ name, split_cell: false, indicator_bar: false, display_order: i }))
-
-    const { data, error: fnErr } = await supabase.functions.invoke('signup', {
-      body: {
-        email: joinEmail.trim(),
-        password: joinPw,
-        name: joinName.trim(),
-        role: 'volunteer',
-        terms_agreed_at: now,
-        privacy_agreed_at: now,
-        create_org: true,
-        org_name: tenantName,
-        org_phone: orgPhone.trim(),
-        tenant_settings: tenantSettings,
-        default_roles: defaultRoles,
-        lesson_types: wizLessonTypes,
-        open_days: wizOpenDays,
-        ...(effectiveVertical ? { source_vertical: effectiveVertical } : {}),
-        redirect_to: Capacitor.isNativePlatform()
-          ? `${import.meta.env.VITE_APP_ID ?? 'com.dtschedule.app'}://login-callback`
-          : effectiveVertical
-            ? `${window.location.origin}/?vertical=${effectiveVertical}`
-            : window.location.origin,
-      },
-    })
-
-    setLoading(false); setJoinProgress('')
-    if (fnErr || data?.error) {
-      let msg = data?.error ?? ''
-      if (!msg && fnErr) {
-        try {
-          const errBody = await (fnErr as any).context?.json?.()
-          msg = errBody?.error ?? fnErr.message
-        } catch { msg = fnErr.message }
-      }
-      msg = msg || '오류가 발생했습니다.'
-      if (msg.includes('이미 가입된')) { redirectToLoginTab(msg); return }
-      setError(msg); return
-    }
-
-    sessionStorage.removeItem('vs_consent_ts')
-    setWizOpen(false)
-    setJoinEmailSent(true)
-  }
-
-  async function handleKakao() {
-    setError(null)
-    if (tab === 'login') {
-      setLoading(true)
-      sessionStorage.setItem('vs_just_logged_in', '1')
-      const err = await signInWithKakao()
-      setLoading(false); if (err) setError(err)
-    } else {
-      // 회원가입: 조직 선택 위자드를 먼저 보여주고 선택 후 OAuth 진행
-      setKakaoWizMode(true)
-      setWizChoice('join')
-      setJoinStep('choice')
-      setOrgSearch(''); setSelectedTenantId(null); setOrgOptions([])
-      setWizOpen(true)
-    }
-  }
-
-  async function handleKakaoOAuth() {
-    if (wizChoice === 'join' && !selectedTenantId) { setError('조직을 선택해 주세요.'); return }
-    setLoading(true); setError(null)
-    if (wizChoice === 'join' && selectedTenantId) {
-      localStorage.setItem('vs_pending_social', JSON.stringify({ tenantId: selectedTenantId, tenantRoleId: null }))
-    } else {
-      localStorage.setItem('vs_pending_mode', 'start-service')
-    }
-    const err = await signInWithKakao()
-    setLoading(false); if (err) setError(err)
-  }
-
-  // ── wizard dots / step counter ────────────────────────────────
-  const wizStepList: JoinStep[] = [
-    'wiz-mode', 'wiz-slots', 'wiz-days', 'wiz-roles',
-    ...(showLesson ? ['wiz-lesson' as JoinStep] : []),
-    'wiz-fields',
-  ]
-  const isWizStep = (wizStepList as string[]).includes(joinStep)
-  const wizStepIdx = wizStepList.indexOf(joinStep as JoinStep) + 1
-  const stepIdx = (joinStep === 'choice' || joinStep === 'org-name' || joinStep === 'org-select')
-    ? COUNTABLE.length - 1
-    : COUNTABLE.indexOf(joinStep as (typeof COUNTABLE)[number])
-
-  // ── top nav ───────────────────────────────────────────────────
-  const topNavSlot = (
-    <>
-      <span className="lmp-nav-hint">{tab === 'login' ? '계정이 없으신가요?' : '이미 계정이 있나요?'}</span>
-      <button className="lmp-nav-btn" onClick={() => switchTab(tab === 'login' ? 'signup' : 'login')}>
-        {tab === 'login' ? '회원가입' : '로그인'}
-      </button>
-    </>
-  )
-
-  // ── password field helper ─────────────────────────────────────
-  function PwField({ id, value, onChange, placeholder, show, onToggle, onEnter }: {
-    id: string; value: string; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-    placeholder: string; show: boolean; onToggle: () => void; onEnter?: () => void
-  }) {
-    return (
-      <div className="af-input-wrap">
-        <span className="af-input-ic"><ILock /></span>
-        <input id={id} name={id} className="af-input" type={show ? 'text' : 'password'} value={value}
-          onChange={onChange} placeholder={placeholder} autoComplete="new-password" autoFocus
-          onKeyDown={e => { if (e.key === 'Enter' && onEnter) onEnter() }} />
-        <button type="button" className="af-input-eye" onClick={onToggle} aria-label="비밀번호 표시">
-          {show ? <IEyeOff /> : <IEye />}
-        </button>
-      </div>
-    )
   }
 
   return (
@@ -598,6 +489,7 @@ export function AuthPage() {
                 </button>
               </>
             )}
+
             {loginStep === 'forgot' && (
               <>
                 {forgotSent ? (
@@ -683,6 +575,7 @@ export function AuthPage() {
             </p>
           </>
         )}
+
         {import.meta.env.DEV && !joinEmailSent && (
           <div style={{ marginTop: 20, paddingTop: 14, borderTop: '1px dashed oklch(0.80 0.10 290)' }}>
             <p style={{ fontSize: 9.5, fontFamily: '"JetBrains Mono",monospace', fontWeight: 700, letterSpacing: '1.5px', color: 'oklch(0.55 0.18 290)', textTransform: 'uppercase' as const, margin: '0 0 10px' }}>
@@ -754,19 +647,12 @@ export function AuthPage() {
           <div className="af-overlay" />
           <div className="af-popup-layer">
             <div className="af-popup">
-              {/* Header: dots (기본 단계) or step counter (위자드 단계) */}
               <div className="af-popup-head">
-                {isWizStep ? (
-                  <span style={{ fontSize: 12, color: 'var(--ink-400)', fontWeight: 500 }}>
-                    조직 설정 {wizStepIdx} / {wizStepList.length}
-                  </span>
-                ) : (
-                  <div className="af-dots">
-                    {COUNTABLE.map((_, i) => (
-                      <span key={i} className={`af-dot-step${i < stepIdx ? ' done' : i === stepIdx ? ' now' : ''}`} />
-                    ))}
-                  </div>
-                )}
+                <div className="af-dots">
+                  {COUNTABLE.map((_, i) => (
+                    <span key={i} className={`af-dot-step${i < stepIdx ? ' done' : i === stepIdx ? ' now' : ''}`} />
+                  ))}
+                </div>
                 <button className="af-popup-x" onClick={closeWiz}><IClose /></button>
               </div>
 
@@ -833,46 +719,16 @@ export function AuthPage() {
                       onEnter={() => {
                         if (joinPw !== joinConfirm) { setError('비밀번호가 일치하지 않습니다.'); return }
                         const err = validatePassword(joinPw); if (err) { setError(err); return }
-                        setError(null); setJoinStep('phone')
+                        setError(null); setJoinStep('choice')
                       }} />
                   </div>
                   {error && <div className="af-err">{error}</div>}
                   <button className="af-btn af-btn-primary" style={{ marginTop: 6 }} onClick={() => {
                     if (joinPw !== joinConfirm) { setError('비밀번호가 일치하지 않습니다.'); return }
                     const err = validatePassword(joinPw); if (err) { setError(err); return }
-                    setError(null); setJoinStep('phone')
-                  }}>계속하기 <IArrow /></button>
-                  <button className="af-back-link" onClick={() => { setJoinStep('password'); setError(null) }}><IBack /> 뒤로</button>
-                </>
-              )}
-
-              {/* phone */}
-              {joinStep === 'phone' && (
-                <>
-                  <h3 className="af-title sm">서비스 연락처를 입력하세요</h3>
-                  <p className="af-sub">서비스 운영에 사용할 연락처입니다. (필수)</p>
-                  <div className="af-field">
-                    <label className="af-label">전화번호 *</label>
-                    <div className="af-input-wrap">
-                      <input id="signup-phone" name="tel" className="af-input" type="tel" value={joinPhone}
-                        onChange={e => setJoinPhone(formatPhone(e.target.value))}
-                        placeholder="예: 010-1234-5678" autoComplete="tel" autoFocus
-                        onKeyDown={e => {
-                          if (e.key === 'Enter') {
-                            if (!joinPhone.trim()) { setError('전화번호를 입력해 주세요.'); return }
-                            if (!isValidPhone(joinPhone)) { setError('올바른 전화번호를 입력해 주세요. (예: 010-1234-5678)'); return }
-                            setError(null); setJoinStep('choice')
-                          }
-                        }} />
-                    </div>
-                  </div>
-                  {error && <div className="af-err">{error}</div>}
-                  <button className="af-btn af-btn-primary" style={{ marginTop: 6 }} onClick={() => {
-                    if (!joinPhone.trim()) { setError('전화번호를 입력해 주세요.'); return }
-                    if (!isValidPhone(joinPhone)) { setError('올바른 전화번호를 입력해 주세요. (예: 010-1234-5678)'); return }
                     setError(null); setJoinStep('choice')
                   }}>계속하기 <IArrow /></button>
-                  <button className="af-back-link" onClick={() => { setJoinStep('confirm'); setError(null) }}><IBack /> 뒤로</button>
+                  <button className="af-back-link" onClick={() => { setJoinStep('password'); setError(null) }}><IBack /> 뒤로</button>
                 </>
               )}
 
@@ -903,13 +759,21 @@ export function AuthPage() {
                   <button className="af-btn af-btn-primary" style={{ marginTop: 8, opacity: loading ? 0.6 : 1 }}
                     disabled={loading}
                     onClick={() => {
+                      setError(null)
                       if (kakaoWizMode && wizChoice === 'service') { handleKakaoOAuth(); return }
-                      if (wizChoice === 'service') { if (!orgPhone && joinPhone) setOrgPhone(joinPhone); setJoinStep('org-name'); setError(null) }
-                      else { setJoinStep('org-select'); setError(null); loadOrgList() }
+                      if (wizChoice === 'service') { handleSignUpForService(); return }
+                      setJoinStep('org-select'); loadOrgList()
                     }}>
-                    {loading ? '처리 중...' : kakaoWizMode && wizChoice === 'service' ? <>카카오로 계속하기 <IArrow /></> : <>계속하기 <IArrow /></>}
+                    {loading
+                      ? '처리 중...'
+                      : kakaoWizMode && wizChoice === 'service'
+                        ? <>카카오로 계속하기 <IArrow /></>
+                        : <>계속하기 <IArrow /></>}
                   </button>
-                  <button className="af-back-link" onClick={() => { if (kakaoWizMode) { closeWiz(); return } setJoinStep('confirm'); setError(null) }}><IBack /> 뒤로</button>
+                  <button className="af-back-link" onClick={() => {
+                    if (kakaoWizMode) { closeWiz(); return }
+                    setJoinStep('confirm'); setError(null)
+                  }}><IBack /> 뒤로</button>
                 </>
               )}
 
@@ -960,293 +824,11 @@ export function AuthPage() {
                 </>
               )}
 
-              {/* org-name */}
-              {joinStep === 'org-name' && (
-                <>
-                  <h3 className="af-title sm">서비스 이름을 정해주세요</h3>
-                  <p className="af-sub">나중에 변경할 수 있어요.</p>
-                  <div className="af-field">
-                    <label className="af-label">서비스 이름</label>
-                    <div className="af-input-wrap">
-                      <span className="af-input-ic"><IPlus /></span>
-                      <input id="signup-org-name" name="organization" className="af-input" type="text" value={orgName} onChange={e => setOrgName(e.target.value)}
-                        placeholder="예: 홍길동 미용실" autoComplete="organization" autoFocus
-                        onKeyDown={e => { if (e.key === 'Enter' && orgName.trim() && isValidPhone(orgPhone)) { setError(null); setJoinStep('wiz-mode') } }} />
-                    </div>
-                  </div>
-                  <div className="af-field">
-                    <label className="af-label">서비스 연락처 <span style={{ color: 'var(--ink-500)', fontWeight: 400, fontSize: 11 }}>* 필수</span></label>
-                    <div className="af-input-wrap">
-                      <span className="af-input-ic"><IPlus /></span>
-                      <input id="signup-org-phone" name="tel" className="af-input" type="tel" required value={orgPhone} onChange={e => setOrgPhone(formatPhone(e.target.value))}
-                        placeholder="예: 010-1234-5678" autoComplete="tel"
-                        onKeyDown={e => { if (e.key === 'Enter' && orgName.trim() && isValidPhone(orgPhone)) { setError(null); setJoinStep('wiz-mode') } }} />
-                    </div>
-                  </div>
-                  {error && <div className="af-err">{error}</div>}
-                  <button className="af-btn af-btn-primary" style={{ marginTop: 6 }}
-                    onClick={() => {
-                      if (!orgName.trim()) { setError('서비스 이름을 입력해 주세요.'); return }
-                      if (!isValidPhone(orgPhone)) { setError('올바른 전화번호를 입력해 주세요. (예: 010-1234-5678)'); return }
-                      setError(null); setJoinStep('wiz-mode')
-                    }}>
-                    계속하기 <IArrow />
-                  </button>
-                  <button className="af-back-link" onClick={() => { setJoinStep('choice'); setError(null) }}><IBack /> 뒤로</button>
-                </>
-              )}
-
-              {/* wiz-mode — 운영 방식 */}
-              {joinStep === 'wiz-mode' && (
-                <>
-                  <Step2Mode
-                    mode={wizMode}
-                    error={error ?? ''}
-                    allowedModes={verticalPreset?.allowed_modes}
-                    onChange={m => { setWizMode(m); setError('') }}
-                  />
-                  {error && <div className="af-err">{error}</div>}
-                  <button className="af-btn af-btn-primary" style={{ marginTop: 8 }}
-                    onClick={() => { setError(''); setJoinStep('wiz-slots') }}>
-                    계속하기 <IArrow />
-                  </button>
-                  <button className="af-back-link" onClick={() => { setJoinStep('org-name'); setError('') }}>
-                    <IBack /> 뒤로
-                  </button>
-                </>
-              )}
-
-              {/* wiz-slots — 시간 슬롯 */}
-              {joinStep === 'wiz-slots' && (
-                <>
-                  <Step3Slots slots={wizSlots} error={error ?? ''} onChange={s => { setWizSlots(s); setError('') }} />
-                  {error && <div className="af-err">{error}</div>}
-                  <button className="af-btn af-btn-primary" style={{ marginTop: 8 }}
-                    onClick={() => {
-                      if (wizSlots.length === 0) { setError('슬롯을 하나 이상 선택해 주세요.'); return }
-                      setError(''); setJoinStep('wiz-days')
-                    }}>
-                    계속하기 <IArrow />
-                  </button>
-                  <button className="af-back-link" onClick={() => { setJoinStep('wiz-mode'); setError('') }}>
-                    <IBack /> 뒤로
-                  </button>
-                </>
-              )}
-
-              {/* wiz-days — 운영 요일 설정 */}
-              {joinStep === 'wiz-days' && (() => {
-                const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
-                const dayTemplates = SCHEDULE_RULE_TEMPLATES.slice(0, 4)
-                const isMatch = (openDays: number[]) =>
-                  wizOpenDays.length === openDays.length && openDays.every(d => wizOpenDays.includes(d))
-                return (
-                  <>
-                    <h3 className="af-title sm">운영 요일을 설정하세요</h3>
-                    <p className="af-sub">나중에 변경할 수 있어요.</p>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
-                      {dayTemplates.map((tpl, i) => (
-                        <button key={i}
-                          className={`af-choice${isMatch(tpl.openDays) ? ' on' : ''}`}
-                          onClick={() => setWizOpenDays([...tpl.openDays])}>
-                          <span className="af-choice-body">
-                            <span className="af-choice-t">{tpl.label}</span>
-                            <span className="af-choice-d">{tpl.description}</span>
-                          </span>
-                          <span className="af-choice-radio"><ICheck /></span>
-                        </button>
-                      ))}
-                    </div>
-                    <div style={{ display: 'flex', gap: 5, marginBottom: 14 }}>
-                      {DAY_LABELS.map((d, idx) => (
-                        <button key={idx}
-                          onClick={() => setWizOpenDays(prev =>
-                            prev.includes(idx) ? prev.filter(x => x !== idx) : [...prev, idx].sort((a, b) => a - b)
-                          )}
-                          style={{
-                            flex: 1, height: 40, borderRadius: 8,
-                            border: wizOpenDays.includes(idx) ? '2px solid var(--color-primary)' : '1.5px solid var(--color-border)',
-                            background: wizOpenDays.includes(idx) ? 'var(--color-primary)' : 'transparent',
-                            color: wizOpenDays.includes(idx) ? '#fff' : idx === 0 ? 'var(--color-danger)' : 'var(--ink-600)',
-                            fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
-                          }}>
-                          {d}
-                        </button>
-                      ))}
-                    </div>
-                    {error && <div className="af-err">{error}</div>}
-                    <button className="af-btn af-btn-primary"
-                      onClick={() => { setError(''); setJoinStep('wiz-roles') }}>
-                      계속하기 <IArrow />
-                    </button>
-                    <button className="af-back-link" onClick={() => { setJoinStep('wiz-slots'); setError('') }}>
-                      <IBack /> 뒤로
-                    </button>
-                  </>
-                )
-              })()}
-
-              {/* wiz-roles — 역할 설정 */}
-              {joinStep === 'wiz-roles' && (() => {
-                const nextStep = showLesson ? 'wiz-lesson' : 'wiz-fields'
-                return (
-                  <>
-                    <h3 className="af-title sm">역할을 설정하세요</h3>
-                    <p className="af-sub">구성원 유형을 미리 정해두면 배정 관리가 쉬워져요. 나중에 변경할 수 있어요.</p>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 8 }}>
-                      {wizRoles.length === 0 && (
-                        <p style={{ fontSize: 13, color: 'var(--ink-400)', textAlign: 'center', padding: '6px 0' }}>
-                          역할을 추가하거나 건너뛰세요.
-                        </p>
-                      )}
-                      {wizRoles.map(r => (
-                        <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 10, border: '1px solid var(--color-border)', background: 'var(--color-surface)' }}>
-                          <span style={{ flex: 1, fontSize: 14 }}>{r.name}</span>
-                          <button type="button" onClick={() => setWizRoles(prev => prev.filter(x => x.id !== r.id))}
-                            style={{ fontSize: 11, color: 'var(--ink-400)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}>
-                            삭제
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                    <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
-                      <input className="af-input plain" value={wizRoleName} onChange={e => setWizRoleName(e.target.value)}
-                        placeholder="예: 강사, 보조, 매니저" style={{ flex: 1 }}
-                        onKeyDown={e => {
-                          if (e.key === 'Enter' && wizRoleName.trim()) {
-                            setWizRoles(prev => [...prev, { id: crypto.randomUUID(), name: wizRoleName.trim(), split_cell: false, indicator_bar: false, display_order: prev.length }])
-                            setWizRoleName(''); setError('')
-                          }
-                        }} />
-                      <button type="button" onClick={() => {
-                        if (!wizRoleName.trim()) return
-                        setWizRoles(prev => [...prev, { id: crypto.randomUUID(), name: wizRoleName.trim(), split_cell: false, indicator_bar: false, display_order: prev.length }])
-                        setWizRoleName(''); setError('')
-                      }} style={{ padding: '0 14px', height: 50, borderRadius: 10, border: '1px solid var(--color-border)', background: 'var(--color-surface)', cursor: 'pointer', fontSize: 13, flexShrink: 0 }}>
-                        추가
-                      </button>
-                    </div>
-                    {error && <div className="af-err">{error}</div>}
-                    <button className="af-btn af-btn-primary"
-                      disabled={loading}
-                      onClick={() => {
-                        if (wizRoleName.trim()) { setError('역할 이름을 입력하셨습니다. 추가 버튼을 눌러 등록하거나 입력란을 비워 주세요.'); return }
-                        if (nextStep) { setError(''); setJoinStep(nextStep) }
-                        else handleJoinSubmit()
-                      }}>
-                      {nextStep
-                        ? <>계속하기 <IArrow /></>
-                        : loading ? <><span className="af-btn-spinner" /> {joinProgress || '처리 중...'}</> : <>가입 완료 <IArrow /></>}
-                    </button>
-                    <button className="af-back-link" onClick={() => { setJoinStep('wiz-slots'); setError('') }}>
-                      <IBack /> 뒤로
-                    </button>
-                  </>
-                )
-              })()}
-
-              {/* wiz-lesson — 레슨권 종류 (lessonon/classon) */}
-              {joinStep === 'wiz-lesson' && (() => {
-                const nextStep: JoinStep = 'wiz-fields'
-                return (
-                  <>
-                    <h3 className="af-title sm">레슨권 종류를 등록하세요</h3>
-                    <p className="af-sub">회원에게 판매할 수업 묶음이에요. 나중에 추가·변경할 수 있어요.</p>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 8 }}>
-                      {wizLessonTypes.map((lt, i) => (
-                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 10, border: '1px solid var(--color-border)', background: 'var(--color-surface)', fontSize: 13 }}>
-                          <span style={{ flex: 1 }}>{lt.name}</span>
-                          <span style={{ color: 'var(--ink-400)', flexShrink: 0 }}>{lt.session_count}회{lt.validity_days ? ` · ${lt.validity_days / 7}주` : ''}</span>
-                          <button type="button" onClick={() => setWizLessonTypes(prev => prev.filter((_, j) => j !== i))}
-                            style={{ fontSize: 11, color: 'var(--ink-400)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}>
-                            삭제
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 8 }}>
-                      <div>
-                        <label style={{ fontSize: 12, color: 'var(--ink-500)', display: 'block', marginBottom: 4 }}>
-                          레슨권 이름 <span style={{ color: 'var(--color-danger)' }}>*</span>
-                        </label>
-                        <input className="af-input plain" value={wizLessonName} onChange={e => setWizLessonName(e.target.value)}
-                          placeholder="예: 1:1 레슨 10회, 그룹 수업 20회" />
-                      </div>
-                      <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end' }}>
-                        <div style={{ flex: 1 }}>
-                          <label style={{ fontSize: 12, color: 'var(--ink-500)', display: 'block', marginBottom: 4 }}>
-                            회차 수 <span style={{ color: 'var(--color-danger)' }}>*</span>
-                          </label>
-                          <input className="af-input plain" type="number" min={1} value={wizLessonCount}
-                            onChange={e => setWizLessonCount(e.target.value)} placeholder="예: 10" />
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <label style={{ fontSize: 12, color: 'var(--ink-500)', display: 'block', marginBottom: 4 }}>
-                            유효기간(주) <span style={{ color: 'var(--ink-400)', fontWeight: 400 }}>선택</span>
-                          </label>
-                          <input className="af-input plain" type="number" min={1} value={wizLessonWeeks}
-                            onChange={e => setWizLessonWeeks(e.target.value)} placeholder="예: 8" />
-                        </div>
-                        <button type="button" onClick={() => {
-                          if (!wizLessonName.trim() || !wizLessonCount) return
-                          setWizLessonTypes(prev => [...prev, {
-                            name: wizLessonName.trim(),
-                            session_count: parseInt(wizLessonCount, 10),
-                            validity_days: wizLessonWeeks ? parseInt(wizLessonWeeks, 10) * 7 : null,
-                            display_order: prev.length,
-                          }])
-                          setWizLessonName(''); setWizLessonCount(''); setWizLessonWeeks(''); setError('')
-                        }} style={{ padding: '0 12px', height: 50, borderRadius: 10, border: '1px solid var(--color-border)', background: 'var(--color-surface)', cursor: 'pointer', fontSize: 13, flexShrink: 0 }}>
-                          추가
-                        </button>
-                      </div>
-                    </div>
-                    {error && <div className="af-err">{error}</div>}
-                    <button className="af-btn af-btn-primary"
-                      onClick={() => {
-                        if (wizLessonName.trim() || wizLessonCount) { setError('레슨권 정보를 입력하셨습니다. 추가 버튼을 눌러 등록하거나 입력란을 비워 주세요.'); return }
-                        setError(''); setJoinStep(nextStep)
-                      }}>
-                      계속하기 <IArrow />
-                    </button>
-                    <button className="af-back-link" onClick={() => { setJoinStep('wiz-roles'); setError('') }}>
-                      <IBack /> 뒤로
-                    </button>
-                  </>
-                )
-              })()}
-
-              {/* wiz-fields — 입력 항목 */}
-              {joinStep === 'wiz-fields' && (
-                <>
-                  <div className="wiz-root" style={{ background: 'none' }}>
-                    <Step7CustomFields
-                      fields={wizCustomFields}
-                      isFreeform={wizMode === '비회원'}
-                      error={error ?? ''}
-                      onChange={f => { setWizCustomFields(f); setError('') }}
-                      onPendingChange={setWizFieldsPending}
-                    />
-                  </div>
-                  {error && <div className="af-err">{error}</div>}
-                  <button className="af-btn af-btn-primary" style={{ marginTop: 8 }}
-                    disabled={loading}
-                    onClick={() => {
-                      if (wizFieldsPending) { setError('항목명을 입력 중입니다. 추가 버튼을 눌러 등록하거나 항목명을 지워 주세요.'); return }
-                      handleJoinSubmit()
-                    }}>
-                    {loading ? <><span className="af-btn-spinner" /> {joinProgress || '처리 중...'}</> : <>가입 완료 <IArrow /></>}
-                  </button>
-                  <button className="af-back-link" onClick={() => { setJoinStep(showLesson ? 'wiz-lesson' : 'wiz-roles'); setError('') }}>
-                    <IBack /> 뒤로
-                  </button>
-                </>
-              )}
-
             </div>
           </div>
         </>
       )}
+
       {/* 약관 상세 모달 */}
       {legalDoc && (
         <>
