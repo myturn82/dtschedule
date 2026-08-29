@@ -301,9 +301,11 @@ export function Step7CustomFields({ fields, isFreeform, error, onChange, onPendi
   return (
     <div className="step-body">
       <StepHeader step={WIZARD_STEPS[5]} />
-      <p className="step-desc" style={{ marginTop: -8 }}>
-        {isFreeform ? '첫 번째 입력항목이 이름으로 사용됩니다. 연락처도 추가해두면 편리합니다.' : '배정 등록 시 이름·연락처 외에 더 받을 정보를 설정합니다. 건너뛰어도 됩니다.'}
-      </p>
+      {isFreeform && (
+        <p className="step-desc" style={{ marginTop: -8 }}>
+          첫 번째 입력항목이 이름으로 사용됩니다. 연락처도 추가해두면 편리합니다.
+        </p>
+      )}
 
       <Field label="자주 쓰는 항목">
         <div className="chip-wrap">
@@ -329,7 +331,7 @@ export function Step7CustomFields({ fields, isFreeform, error, onChange, onPendi
         </div>
       )}
 
-      <div className="new-sep"><span>직접 추가</span></div>
+      <div className="new-sep" style={{ marginTop: 8 }}><span>직접 추가</span></div>
 
       <form className="newcard" onSubmit={addField}>
         <div className="newcard-head">

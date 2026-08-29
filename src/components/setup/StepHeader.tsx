@@ -14,7 +14,7 @@ export const WIZARD_STEPS: WizardStepMeta[] = [
   { n: 3, icon: 'clock',    tone: 'teal',   title: '운영 시간 단위를 정해주세요', desc: '달력 한 칸이 얼마의 시간을 나타낼지 설정합니다.' },
   { n: 4, icon: 'users',    tone: 'amber',  title: '역할이 필요한가요?', desc: "'팀장·봉사자'처럼 역할을 구분하면 달력에서 역할별로 칸이 나뉩니다." },
   { n: 5, icon: 'calendar', tone: 'purple', title: '운영 요일을 설정하세요', desc: '운영하는 요일을 선택해주세요. 날짜별 개별 설정도 가능합니다.' },
-  { n: 6, icon: 'list',     tone: 'green',  title: '입력 항목을 설정하세요', desc: '배정 등록 시 이름·연락처 외에 더 받을 정보를 설정합니다.' },
+  { n: 6, icon: 'list',     tone: 'green',  title: '입력 항목을 설정하세요', desc: '배정 등록 시 이름·연락처 외에 더 받을 정보를 설정합니다. 건너뛰어도 됩니다.' },
 ]
 
 export const LESSON_STEP_META: WizardStepMeta = {

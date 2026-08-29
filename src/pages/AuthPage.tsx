@@ -1219,13 +1219,15 @@ export function AuthPage() {
               {/* wiz-fields — 입력 항목 */}
               {joinStep === 'wiz-fields' && (
                 <>
-                  <Step7CustomFields
-                    fields={wizCustomFields}
-                    isFreeform={wizMode === '비회원'}
-                    error={error ?? ''}
-                    onChange={f => { setWizCustomFields(f); setError('') }}
-                    onPendingChange={setWizFieldsPending}
-                  />
+                  <div className="wiz-root" style={{ background: 'none' }}>
+                    <Step7CustomFields
+                      fields={wizCustomFields}
+                      isFreeform={wizMode === '비회원'}
+                      error={error ?? ''}
+                      onChange={f => { setWizCustomFields(f); setError('') }}
+                      onPendingChange={setWizFieldsPending}
+                    />
+                  </div>
                   {error && <div className="af-err">{error}</div>}
                   <button className="af-btn af-btn-primary" style={{ marginTop: 8 }}
                     disabled={loading}
