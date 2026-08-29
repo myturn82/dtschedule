@@ -1,5 +1,6 @@
 /* Org Setup Wizard — ported from claude.ai/design "Org Setup Wizard.html" (light mode only) */
 .wiz-root {
+  color-scheme: light;
   --page: #F5F4F1; --surface: #FFFFFF; --surface-2: #FAFAFA; --surface-inset: #F4F4F5;
   --border: #E9E6E0; --border-strong: #D9D9DE;
   --text: #18181B; --text-2: #3F3F46; --text-muted: #8A8A93; --text-faint: #B4B4BC;

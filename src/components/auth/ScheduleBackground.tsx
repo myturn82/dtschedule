@@ -13,6 +13,14 @@ const MONTH_NAMES = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT'
 export function ScheduleBackground({ topNavSlot, children }: ScheduleBackgroundProps) {
   const assignGridRef = useRef<HTMLDivElement>(null)
 
+  // 로그인·가입 화면은 항상 라이트모드 — 진입 시 .dark 제거, 이탈 시 복원
+  useEffect(() => {
+    const html = document.documentElement
+    const wasDark = html.classList.contains('dark')
+    html.classList.remove('dark')
+    return () => { if (wasDark) html.classList.add('dark') }
+  }, [])
+
   const now = new Date()
   const monthStr = String(now.getMonth() + 1).padStart(2, '0')
   const yearNum = now.getFullYear()
@@ -149,6 +157,7 @@ export function ScheduleBackground({ topNavSlot, children }: ScheduleBackgroundP
     <div className="lmp" style={{ colorScheme: 'light' }}>
       <style>{`
         .lmp {
+          color-scheme: light;
           font-family: "Pretendard Variable", Pretendard, system-ui, sans-serif;
           -webkit-font-smoothing: antialiased;
           background: #F4F1EA;

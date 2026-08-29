@@ -52,6 +52,14 @@ export function SetupWizardPage() {
   // 신규 가입 완료 — 깜빡임 방지 플래그 해제
   useEffect(() => { sessionStorage.removeItem('vs_setup_creating') }, [])
 
+  // 위자드 화면은 항상 라이트모드 — 진입 시 .dark 제거, 이탈 시 복원
+  useEffect(() => {
+    const html = document.documentElement
+    const wasDark = html.classList.contains('dark')
+    html.classList.remove('dark')
+    return () => { if (wasDark) html.classList.add('dark') }
+  }, [])
+
   // Load tenant by orgId — sessionStorage 우선(생성 직후 RLS 경쟁 방지), 없으면 DB 조회
   // sessionStorage는 즉시 삭제하지 않음 — 라우팅 브랜치 변경 시 재마운트 대비
   useEffect(() => {
