@@ -214,6 +214,7 @@ export function PendingPage() {
       title: orgName, time_slots: DEFAULT_SLOTS,
       open_from: '09:00', open_to: '22:00', slot_interval_minutes: 60,
       timezone: 'Asia/Seoul', locale: 'ko-KR', tenant_mode: '회원공유',
+      contact_phone: customerPhone.trim(),
       ...(verticalPreset ? { feature_flags: verticalPreset.feature_flags } : {}),
     }
     let tenantId: string | null = null
