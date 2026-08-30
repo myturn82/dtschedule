@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useMemo, useRef, type ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Tenant, TenantMember, TenantAccessRole, LegendItem, CustomFieldDef, CustomFieldOption, PlanType } from '../types'
 import { generateTimeSlots, DEFAULT_TIME_SLOTS } from '../utils/timeSlots'
@@ -41,6 +41,8 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [tenantSelectedByUser, setTenantSelectedByUser] = useState(false)
   const [alreadyMemberNotice, setAlreadyMemberNotice] = useState<string | null>(null)
+  // ref로 동기적으로 추적 — async fetchMemberships 클로저에서 최신값 읽기 위해
+  const tenantSelectedRef = useRef(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -117,7 +119,9 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     const approved = list.filter(m => m.is_approved !== false && m.tenant?.is_active !== false)
     setMemberships(approved)
 
-    if (approved.length === 1) {
+    // 사용자가 이미 명시적으로 조직을 선택한 경우 덮어쓰지 않음
+    // (ref로 확인 — 클로저 stale 문제 방지)
+    if (approved.length === 1 && !tenantSelectedRef.current) {
       setTenantState(approved[0].tenant)
       setTenantRole(approved[0].role)
     }
@@ -126,6 +130,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   }
 
   function setTenant(t: Tenant, role: TenantAccessRole) {
+    tenantSelectedRef.current = true
     setTenantState(t)
     setTenantRole(role)
     setTenantSelectedByUser(true)
@@ -148,6 +153,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   }, [tenant?.customer_id])
 
   function resetTenantSelection() {
+    tenantSelectedRef.current = false
     setTenantState(null)
     setTenantRole(null)
     setTenantPlan(null)
@@ -157,6 +163,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   async function reloadMemberships() {
     const { data: { session } } = await supabase.auth.getSession()
     if (session?.user) {
+      tenantSelectedRef.current = false
       setTenantState(null)
       setTenantRole(null)
       setTenantPlan(null)

@@ -45,6 +45,7 @@ export function useSchedule(tenantId: string, year: number, month: number): Sche
 
   useEffect(() => {
     if (!tenantId) { setLoading(false); return }
+    let cancelled = false
     setLoading(true)
     Promise.all([
       supabase.from('assignments').select('*')
@@ -58,6 +59,7 @@ export function useSchedule(tenantId: string, year: number, month: number): Sche
         .gte('date', `${year}-${String(month).padStart(2, '0')}-01`)
         .lte('date', `${year}-${String(month).padStart(2, '0')}-${new Date(year, month, 0).getDate()}`),
     ]).then(([a, ss, sr, dov]) => {
+      if (cancelled) return
       if (a.data) setAssignments(a.data)
       if (ss.data) setSlotSettings(ss.data)
       if (sr.data) setScheduleRules(sr.data)
@@ -123,7 +125,7 @@ export function useSchedule(tenantId: string, year: number, month: number): Sche
       })
       .subscribe()
 
-    return () => { supabase.removeChannel(channel) }
+    return () => { cancelled = true; supabase.removeChannel(channel) }
   }, [tenantId, year, month])
 
   const addAssignmentWithId = useCallback(async (params: AddParams): Promise<{ error: string | null; id: string | null }> => {
