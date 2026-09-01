@@ -64,6 +64,7 @@ interface Props {
   canAdd?: boolean
   selectionRange?: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number; minColIdx: number; maxColIdx: number } | null
   copyRange?: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number; minColIdx: number; maxColIdx: number } | null
+  lessonPackageMap?: Map<string, { remaining: number; total: number }>
 }
 
 export function WeekGrid({
@@ -71,7 +72,7 @@ export function WeekGrid({
   highlightName, splitRoles = [], indicatorBarRoles = [], isSplitMode = false, hiddenRoleIds = EMPTY_SET, slotLabels = {},
   selectedDay, onDateHeaderClick, onCellClick, onCellMouseDown, onCellMouseEnter,
   memberRoleId, teamLeaderUserIds, isPrivileged = false, displayAssignmentFilter, withdrawnUserIds, highlightedSlots, canAdd = true,
-  selectionRange, copyRange,
+  selectionRange, copyRange, lessonPackageMap,
 }: Props) {
   function inRange(d: number, si: number, ci: number, r: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number; minColIdx: number; maxColIdx: number }) {
     return d >= r.minDay && d <= r.maxDay && si >= r.minSlotIdx && si <= r.maxSlotIdx && ci >= r.minColIdx && ci <= r.maxColIdx
@@ -303,6 +304,7 @@ export function WeekGrid({
                                     </span>
                                     {isWithdrawn && <span className="block text-[6px] sm:text-[8px] font-normal">삭제됨</span>}
                                     {timeLbl && <span className="block text-[6px] sm:text-[8px] font-normal opacity-60">{timeLbl}</span>}
+                                    {a.lesson_package_id && (() => { const pkg = lessonPackageMap?.get(a.lesson_package_id!); return pkg ? <span className="block text-[6px] sm:text-[8px] font-bold tabular-nums opacity-80">{pkg.remaining}/{pkg.total}</span> : null })()}
                                   </div>
                                 )
                               })
@@ -378,6 +380,7 @@ export function WeekGrid({
                             </span>
                             {isWithdrawn && <span className="block text-[6px] sm:text-[8px] font-normal">삭제됨</span>}
                             {timeLbl && <span className="block text-[6px] sm:text-[8px] font-normal opacity-60">{timeLbl}</span>}
+                            {a.lesson_package_id && (() => { const pkg = lessonPackageMap?.get(a.lesson_package_id!); return pkg ? <span className="block text-[6px] sm:text-[8px] font-bold tabular-nums opacity-80">{pkg.remaining}/{pkg.total}</span> : null })()}
                           </div>
                         )
                       })

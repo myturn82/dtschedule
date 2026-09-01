@@ -1,7 +1,10 @@
 ﻿import { useState } from 'react'
 import { useLessonPackages } from '../../hooks/useLessonPackages'
+import { useTenant } from '../../contexts/TenantContext'
 import { MemberSearchSelect } from '../shared/MemberSearchSelect'
 import { ExpiringPackageSmsModal } from '../modals/ExpiringPackageSmsModal'
+import { PastAttendanceModal } from '../modals/PastAttendanceModal'
+import { PackageDeleteModal } from '../modals/PackageDeleteModal'
 import { WizardIcon } from '../setup/WizardIcons'
 import type { TenantMemberWithRole, LessonPackageType } from '../../types'
 
@@ -38,7 +41,8 @@ const STATUS_CLS: Record<ReturnType<typeof pkgStatus>, string> = {
 const inputCls = 'px-3 py-2 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]'
 
 export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
-  const { packageTypes, packages, loading, addPackageType, updatePackageType, deletePackageType, movePackageType, addPackage, deletePackage } = useLessonPackages(tenantId)
+  const { packageTypes, packages, loading, addPackageType, updatePackageType, deletePackageType, movePackageType, addPackage, reload } = useLessonPackages(tenantId)
+  const { slotLabels } = useTenant()
 
   // ── 레슨 종류 폼 ─────────────────────────────────────────
   const [newTypeName, setNewTypeName] = useState('')
@@ -64,6 +68,9 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
   const [showExpirySms, setShowExpirySms] = useState(false)
   const [thresholdPreset, setThresholdPreset] = useState<'7' | '14' | 'custom'>('7')
   const [customDays, setCustomDays] = useState('7')
+  const [pkgInitialUsed, setPkgInitialUsed] = useState('')
+  const [pastAttTarget, setPastAttTarget] = useState<{ userId: string; packageId: string } | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<{ pkgId: string; pkgName: string; userId: string | null } | null>(null)
 
   // ── 레슨 종류 빠른 예시 ───────────────────────────────────
   const TYPE_QUICK_EXAMPLES = [
@@ -151,6 +158,7 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
       package_type_id: pkgTypeId || null,
       package_name: type?.name ?? '레슨권',
       total_sessions: type?.session_count ?? 1,
+      initial_used_sessions: pkgInitialUsed ? parseInt(pkgInitialUsed) : 0,
       payment_date: pkgDate,
       expires_at: expiresAt,
       notes: pkgNotes.trim() || null,
@@ -159,7 +167,7 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
     setPkgSaving(false)
     if (err) { setPkgError(err); return }
     setShowAddPkg(false)
-    setPkgUserId(''); setPkgTypeId(''); setPkgDate(''); setPkgNotes('')
+    setPkgUserId(''); setPkgTypeId(''); setPkgDate(''); setPkgNotes(''); setPkgInitialUsed('')
   }
 
   const memberMap = new Map(members.map(m => [m.user_id, m.profile?.name ?? m.user_id]))
@@ -578,8 +586,18 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
                                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${STATUS_CLS[status]}`}>{STATUS_LABEL[status]}</span>
                                 </td>
                                 <td className="px-2 sm:px-3 py-2.5 text-center whitespace-nowrap">
-                                  <button onClick={() => { if (confirm('이 결제 기록을 삭제할까요?')) deletePackage(pkg.id) }}
-                                    className="text-xs text-red-500 hover:text-red-700 font-semibold">삭제</button>
+                                  <div className="flex items-center justify-center gap-2">
+                                    <button
+                                      onClick={() => setPastAttTarget({ userId: pkg.user_id ?? '', packageId: pkg.id })}
+                                      className="text-xs text-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary-hover)] font-semibold whitespace-nowrap"
+                                    >
+                                      소급 입력
+                                    </button>
+                                    <button
+                                      onClick={() => setDeleteTarget({ pkgId: pkg.id, pkgName: pkg.package_name, userId: pkg.user_id })}
+                                      className="text-xs text-red-500 hover:text-red-700 font-semibold"
+                                    >삭제</button>
+                                  </div>
                                 </td>
                               </tr>
                             )
@@ -653,10 +671,20 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
                         </span>
                       </td>
                       <td className="px-2 sm:px-3 py-3 text-center whitespace-nowrap">
-                        <button onClick={() => { if (confirm('이 결제 기록을 삭제할까요?')) deletePackage(pkg.id) }}
-                          className="text-xs text-red-500 hover:text-red-700 font-semibold">
-                          삭제
-                        </button>
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => setPastAttTarget({ userId: pkg.user_id ?? '', packageId: pkg.id })}
+                            className="text-xs text-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary-hover)] font-semibold whitespace-nowrap"
+                          >
+                            소급 입력
+                          </button>
+                          <button
+                            onClick={() => setDeleteTarget({ pkgId: pkg.id, pkgName: pkg.package_name, userId: pkg.user_id })}
+                            className="text-xs text-red-500 hover:text-red-700 font-semibold"
+                          >
+                            삭제
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   )
@@ -706,6 +734,24 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
                   className={inputCls + ' w-full'} />
               </div>
               <div>
+                <label className="text-xs font-semibold text-[var(--color-text-secondary)] block mb-1">
+                  시스템 도입 전 이미 사용한 횟수 <span className="font-normal text-[var(--color-text-muted)]">선택</span>
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  value={pkgInitialUsed}
+                  onChange={e => setPkgInitialUsed(e.target.value)}
+                  placeholder="0"
+                  className={inputCls + ' w-full text-center'}
+                />
+                {pkgInitialUsed && selectedType && parseInt(pkgInitialUsed) > 0 && (
+                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                    잔여 {selectedType.session_count - parseInt(pkgInitialUsed)}회로 시작
+                  </p>
+                )}
+              </div>
+              <div>
                 <label className="text-xs font-semibold text-[var(--color-text-secondary)] block mb-1">메모 <span className="font-normal text-[var(--color-text-muted)]">선택</span></label>
                 <input value={pkgNotes} onChange={e => setPkgNotes(e.target.value)}
                   placeholder="예: 카드결제" className={inputCls + ' w-full'} />
@@ -732,6 +778,32 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
           tenantId={tenantId}
           recipients={expiringUnusedRecipients}
           onClose={() => setShowExpirySms(false)}
+        />
+      )}
+
+      {/* ── 소급 출석 입력 모달 ──────────────────────────── */}
+      {pastAttTarget && (
+        <PastAttendanceModal
+          tenantId={tenantId}
+          members={memberOptions}
+          prefillUserId={pastAttTarget.userId}
+          prefillPackageId={pastAttTarget.packageId}
+          onClose={() => setPastAttTarget(null)}
+          onSaved={() => reload()}
+        />
+      )}
+
+      {/* ── 결제기록 삭제 모달 ───────────────────────────── */}
+      {deleteTarget && (
+        <PackageDeleteModal
+          tenantId={tenantId}
+          packageId={deleteTarget.pkgId}
+          packageName={deleteTarget.pkgName}
+          memberName={memberMap.get(deleteTarget.userId ?? '') ?? '-'}
+          slotLabels={slotLabels ?? null}
+          onClose={() => setDeleteTarget(null)}
+          onPackageDeleted={() => { setDeleteTarget(null); reload() }}
+          onAssignmentsChanged={() => reload()}
         />
       )}
     </div>

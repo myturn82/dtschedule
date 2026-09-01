@@ -272,6 +272,7 @@ export interface LessonPackage {
   package_type_id: string | null;
   package_name: string;
   total_sessions: number;
+  initial_used_sessions: number;
   payment_date: string;
   expires_at: string | null;
   notes: string | null;

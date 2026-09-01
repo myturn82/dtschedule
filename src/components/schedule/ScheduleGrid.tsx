@@ -36,6 +36,7 @@ interface Props {
   copyRange?: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number; minColIdx: number; maxColIdx: number } | null
   canAdd?: boolean
   hiddenDays?: number[]
+  lessonPackageMap?: Map<string, { remaining: number; total: number }>
 }
 
 const DOW_ORDER = [1, 2, 3, 4, 5, 6, 0]
@@ -178,7 +179,7 @@ function buildColMap(
 export function ScheduleGrid({
   year, month, timeSlots, assignments, slotSettings, scheduleRules, dateOverrides,
   highlightName, profile, tenantRole, memberRoleId, teamLeaderUserIds, splitRoles = [], indicatorBarRoles = [], isSplitMode = false, hiddenRoleIds = EMPTY_SET, slotLabels = {}, onCellClick, onCellMouseDown, onCellMouseEnter, onHolidayCellClick, displayAssignmentFilter, withdrawnUserIds, highlightedSlots,
-  selectionRange, copyRange, canAdd = true, hiddenDays = [],
+  selectionRange, copyRange, canAdd = true, hiddenDays = [], lessonPackageMap,
 }: Props) {
   const pad2 = (n: number) => String(n).padStart(2, '0')
   const isAdmin = profile?.is_super_admin || tenantRole === 'admin'
@@ -452,6 +453,7 @@ export function ScheduleGrid({
                                   isAdmin={isAdmin}
                                   highlighted={highlightedSlots?.has(`${year}-${pad2(month)}-${pad2(day)}|${slot}`) ?? false}
                                   myUserId={myUserId}
+                                  lessonPackageMap={lessonPackageMap}
                                 />
                               </td>
                               )
@@ -506,6 +508,7 @@ export function ScheduleGrid({
                                 isAdmin={isAdmin}
                                 highlighted={highlightedSlots?.has(`${year}-${pad2(month)}-${pad2(day)}|${slot}`) ?? false}
                                 myUserId={myUserId}
+                                lessonPackageMap={lessonPackageMap}
                               />
                             </td>
                           )}
@@ -533,6 +536,7 @@ export function ScheduleGrid({
                                 canInteract={canAdd}
                                 withdrawnUserIds={withdrawnUserIds}
                                 isAdmin={isAdmin}
+                                lessonPackageMap={lessonPackageMap}
                               />
                             </td>
                           )}

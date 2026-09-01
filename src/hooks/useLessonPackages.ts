@@ -10,7 +10,7 @@ export interface UseLessonPackagesResult {
   updatePackageType: (id: string, data: Partial<Pick<LessonPackageType, 'name' | 'session_count' | 'validity_days' | 'is_active' | 'display_order'>>) => Promise<string | null>
   deletePackageType: (id: string) => Promise<string | null>
   movePackageType: (id: string, dir: -1 | 1) => void
-  addPackage: (data: { user_id: string; package_type_id: string | null; package_name: string; total_sessions: number; payment_date: string; expires_at: string | null; notes: string | null; created_by: string | null }) => Promise<string | null>
+  addPackage: (data: { user_id: string; package_type_id: string | null; package_name: string; total_sessions: number; initial_used_sessions?: number; payment_date: string; expires_at: string | null; notes: string | null; created_by: string | null }) => Promise<string | null>
   deletePackage: (id: string) => Promise<string | null>
   reload: () => Promise<void>
 }
@@ -55,7 +55,7 @@ export function useLessonPackages(tenantId: string): UseLessonPackagesResult {
     setPackages(
       ((pkgsRes.data ?? []) as LessonPackage[]).map(p => ({
         ...p,
-        used_sessions: countMap.get(p.id) ?? 0,
+        used_sessions: (p.initial_used_sessions ?? 0) + (countMap.get(p.id) ?? 0),
       }))
     )
 
@@ -115,14 +115,15 @@ export function useLessonPackages(tenantId: string): UseLessonPackagesResult {
     ])
   }, [packageTypes])
 
-  const addPackage = useCallback(async (data: { user_id: string; package_type_id: string | null; package_name: string; total_sessions: number; payment_date: string; expires_at: string | null; notes: string | null; created_by: string | null }): Promise<string | null> => {
+  const addPackage = useCallback(async (data: { user_id: string; package_type_id: string | null; package_name: string; total_sessions: number; initial_used_sessions?: number; payment_date: string; expires_at: string | null; notes: string | null; created_by: string | null }): Promise<string | null> => {
     const { data: inserted, error } = await supabase
       .from('lesson_packages')
       .insert({ ...data, tenant_id: tenantId })
       .select()
       .single()
     if (error) return error.message
-    setPackages(prev => [{ ...(inserted as LessonPackage), used_sessions: 0 }, ...prev])
+    const pkg = inserted as LessonPackage
+    setPackages(prev => [{ ...pkg, used_sessions: pkg.initial_used_sessions ?? 0 }, ...prev])
     return null
   }, [tenantId])
 

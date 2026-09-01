@@ -21,6 +21,7 @@ import { Legend } from '../components/schedule/Legend'
 import { FilterBar } from '../components/shared/FilterBar'
 import { SlotEditModal } from '../components/modals/SlotEditModal'
 import { RecurringModal } from '../components/modals/RecurringModal'
+import { PastAttendanceModal } from '../components/modals/PastAttendanceModal'
 import { CapacityModal } from '../components/modals/CapacityModal'
 import { HolidayNoteModal } from '../components/modals/HolidayNoteModal'
 import { ConfirmDialog } from '../components/shared/ConfirmDialog'
@@ -32,6 +33,7 @@ import { exportMonthScheduleToExcel, exportMonthScheduleToCsv, exportMonthSchedu
 import type { ProposedAssignment } from '../utils/autoAssign'
 import type { ModalTarget, ViewType, TenantMode, Assignment, DateOverride, CustomFieldDef, CustomFieldOption } from '../types'
 import { supabase } from '../lib/supabase'
+import { getFF } from '../lib/featureFlags'
 
 // 날짜 단위 잠금(date_overrides.is_locked) 기준으로 고정/해제 대상이 있는지 확인
 function hasDateLockTarget(dateOverrides: DateOverride[], dates: string[], locked: boolean): boolean {
@@ -92,6 +94,7 @@ export function SchedulePage() {
   const [modalTarget, setModalTarget] = useState<ModalTarget | null>(null)
   const [directRegMsg, setDirectRegMsg] = useState<string | null>(null)
   const [showRecurring, setShowRecurring] = useState(false)
+  const [showPastAtt, setShowPastAtt] = useState(false)
   const [showSms, setShowSms] = useState(false)
   const [holidayTarget, setHolidayTarget] = useState<{ day: number; startHour: number; endHour: number } | null>(null)
   const [memberNotice, setMemberNotice] = useState<string | null>(null)
@@ -204,6 +207,29 @@ export function SchedulePage() {
   }
 
   const assignments = needsAdj ? [...primaryAssignments, ...adjAssignments] : primaryAssignments
+
+  const showLessonPackages = getFF(tenant?.settings?.feature_flags, 'lesson_packages')
+  const [lessonPackageMap, setLessonPackageMap] = useState<Map<string, { remaining: number; total: number }>>(new Map())
+  useEffect(() => {
+    if (!showLessonPackages || !tenant?.id) { setLessonPackageMap(new Map()); return }
+    const ids = [...new Set(assignments.map(a => a.lesson_package_id).filter((id): id is string => !!id))]
+    if (ids.length === 0) { setLessonPackageMap(new Map()); return }
+    Promise.all([
+      supabase.from('lesson_packages').select('id,total_sessions').eq('tenant_id', tenant.id).in('id', ids),
+      supabase.from('assignments').select('lesson_package_id').eq('tenant_id', tenant.id).in('lesson_package_id', ids),
+    ]).then(([pkgsRes, assRes]) => {
+      const countMap = new Map<string, number>()
+      for (const a of assRes.data ?? []) {
+        if (a.lesson_package_id) countMap.set(a.lesson_package_id, (countMap.get(a.lesson_package_id) ?? 0) + 1)
+      }
+      const map = new Map<string, { remaining: number; total: number }>()
+      for (const pkg of pkgsRes.data ?? []) {
+        const used = countMap.get(pkg.id) ?? 0
+        map.set(pkg.id, { remaining: pkg.total_sessions - used, total: pkg.total_sessions })
+      }
+      setLessonPackageMap(map)
+    })
+  }, [showLessonPackages, assignments, tenant?.id]) // eslint-disable-line react-hooks/exhaustive-deps
   const weekDateOverrides = needsAdj ? [...dateOverrides, ...adjDateOverrides] : dateOverrides
   const { profiles, memberPreferences } = useProfiles()
   const adminUserIds = useMemo(() => new Set(profiles.filter(p => p.memberRole === 'admin').map(p => p.id)), [profiles])
@@ -820,6 +846,14 @@ export function SchedulePage() {
               </button>
             )}
             {isPrivileged && (
+              <button onClick={() => { setShowPastAtt(true); close() }} className={menuItemCls}>
+                <NavIcon>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/><path d="M3.6 9h.01M3.6 15h.01"/></svg>
+                </NavIcon>
+                소급 출석 입력
+              </button>
+            )}
+            {isPrivileged && (
               <button onClick={() => { setShowSms(true); close() }} className={menuItemCls}>
                 <NavIcon>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -956,6 +990,7 @@ export function SchedulePage() {
                   timeSlots={timeSlots}
                   assignments={assignments} slotSettings={slotSettings}
                   scheduleRules={scheduleRules} dateOverrides={dateOverrides}
+                  lessonPackageMap={lessonPackageMap}
                   highlightName={highlightName || null}
                   profile={profile}
                   tenantRole={tenantRole}
@@ -1005,6 +1040,7 @@ export function SchedulePage() {
                   timeSlots={timeSlots}
                   assignments={assignments} slotSettings={slotSettings}
                   scheduleRules={scheduleRules} dateOverrides={weekDateOverrides}
+                  lessonPackageMap={lessonPackageMap}
                   highlightName={highlightName || null}
                   profile={profile}
                   splitRoles={splitRoles}
@@ -1039,6 +1075,7 @@ export function SchedulePage() {
                 timeSlots={timeSlots}
                 assignments={assignments} slotSettings={slotSettings}
                 scheduleRules={scheduleRules} dateOverrides={dateOverrides}
+                lessonPackageMap={lessonPackageMap}
                 profile={profile}
                 splitRoles={splitRoles}
                 isSplitMode={isSplitMode}
@@ -1074,6 +1111,8 @@ export function SchedulePage() {
           onClose={() => setModalTarget(null)}
           tenantId={tenant?.id}
           lockedUserId={tenantMode === '회원개별' && isPrivileged ? (filterMemberId ?? undefined) : undefined}
+          scheduleRules={scheduleRules}
+          dateOverrides={dateOverrides}
           isHighlighted={highlightedSlots.has(`${modalTarget.year}-${pad2(modalTarget.month)}-${pad2(modalTarget.day)}|${modalTarget.timeSlot}`)}
           onToggleHighlight={isPrivileged ? () => toggleHighlight(`${modalTarget.year}-${pad2(modalTarget.month)}-${pad2(modalTarget.day)}`, modalTarget.timeSlot) : undefined}
           onAdd={(name, note, memberType, timeSub, color, userId, roleId, customerName, customerPhone, extraData, lessonPackageId) => addAssignment({
@@ -1092,7 +1131,7 @@ export function SchedulePage() {
             extra_data: extraData,
             lesson_package_id: lessonPackageId ?? null,
           })}
-          onUpdate={(id, name, note, memberType, timeSub, color, roleId, customerName, customerPhone, extraData, lessonPackageId) => updateAssignment(id, {
+          onUpdate={(id, name, note, memberType, timeSub, color, roleId, customerName, customerPhone, extraData, lessonPackageId, newYear, newMonth, newDay, newTimeSlot) => updateAssignment(id, {
             member_name: name,
             note,
             member_type: memberType,
@@ -1103,6 +1142,10 @@ export function SchedulePage() {
             customer_phone: customerPhone ?? null,
             extra_data: extraData,
             lesson_package_id: lessonPackageId ?? null,
+            ...(newYear !== undefined && { year: newYear }),
+            ...(newMonth !== undefined && { month: newMonth }),
+            ...(newDay !== undefined && { day: newDay }),
+            ...(newTimeSlot !== undefined && { time_slot: newTimeSlot }),
           })}
           onDelete={deleteAssignment}
           onToggleLock={(id, locked) => updateAssignment(id, { is_locked: locked })}
@@ -1176,6 +1219,14 @@ export function SchedulePage() {
             )
             setTimeout(() => setDirectRegMsg(null), 3000)
           }}
+        />
+      )}
+
+      {showPastAtt && tenant && (
+        <PastAttendanceModal
+          tenantId={tenant.id}
+          members={profiles.filter(p => p.memberRole !== 'admin').map(p => ({ id: p.id, name: p.name }))}
+          onClose={() => setShowPastAtt(false)}
         />
       )}
 

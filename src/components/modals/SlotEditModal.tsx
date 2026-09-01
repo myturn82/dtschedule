@@ -2,7 +2,7 @@
 import { AutoResizeTextarea } from '../shared/AutoResizeTextarea'
 import { MemberSearchSelect } from '../shared/MemberSearchSelect'
 import { DevFileLabel } from '../DevFileLabel'
-import type { Assignment, CellState, ModalTarget, Profile, TenantRole, MemberType, CustomFieldDef, TenantMode, LessonPackage, LessonPackageWithUsage } from '../../types'
+import type { Assignment, CellState, ModalTarget, Profile, TenantRole, MemberType, CustomFieldDef, TenantMode, LessonPackage, LessonPackageWithUsage, ScheduleRule, DateOverride } from '../../types'
 import { useTenant } from '../../contexts/TenantContext'
 import { getFF } from '../../lib/featureFlags'
 import { getOptionUnit } from '../../types'
@@ -17,6 +17,7 @@ import { ImageUploadField } from '../schedule/ImageUploadField'
 import type { PendingImage } from '../schedule/ImageUploadField'
 import { ImageGalleryModal } from '../schedule/ImageGalleryModal'
 import { uploadScheduleImage } from '../../lib/uploadScheduleImage'
+import { DatePickerModal } from '../schedule/DatePickerModal'
 
 interface Props {
   target: ModalTarget
@@ -33,9 +34,11 @@ interface Props {
   typeLabels?: { member: string; '50plus': string }
   tenantId?: string
   lockedUserId?: string
+  scheduleRules?: ScheduleRule[]
+  dateOverrides?: DateOverride[]
   onClose: () => void
   onAdd: (name: string, note: string, memberType: MemberType, timeSub: string | null, color?: string, userId?: string, roleId?: string | null, customerName?: string | null, customerPhone?: string | null, extraData?: Record<string, string>, lessonPackageId?: string | null) => Promise<string | null>
-  onUpdate: (id: string, name: string, note: string, memberType: MemberType, timeSub: string | null, color?: string, roleId?: string | null, customerName?: string | null, customerPhone?: string | null, extraData?: Record<string, string>, lessonPackageId?: string | null) => Promise<string | null>
+  onUpdate: (id: string, name: string, note: string, memberType: MemberType, timeSub: string | null, color?: string, roleId?: string | null, customerName?: string | null, customerPhone?: string | null, extraData?: Record<string, string>, lessonPackageId?: string | null, newYear?: number, newMonth?: number, newDay?: number, newTimeSlot?: string) => Promise<string | null>
   onDelete: (id: string) => Promise<string | null>
   onToggleLock?: (id: string, locked: boolean) => Promise<string | null>
   onToggleAttend?: (id: string, attended: boolean) => Promise<string | null>
@@ -51,6 +54,8 @@ export function SlotEditModal({
   typeLabels = { member: '팀원', '50plus': '' },
   tenantId,
   lockedUserId,
+  scheduleRules,
+  dateOverrides,
   onClose, onAdd, onUpdate, onDelete, onToggleLock, onToggleAttend, isHighlighted, onToggleHighlight,
 }: Props) {
   const { year, day, month, timeSlot, memberType: defaultType, roleId: initialRoleId } = target
@@ -77,11 +82,29 @@ export function SlotEditModal({
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [isInputExpanded, setIsInputExpanded] = useState(false)
+  const [editYear, setEditYear] = useState(year)
+  const [editMonth, setEditMonth] = useState(month)
+  const [editDay, setEditDay] = useState(day)
+  const [editTimeSlot, setEditTimeSlot] = useState<string>(timeSlot)
+  const [showDatePicker, setShowDatePicker] = useState(false)
+  const [showTimeSlotPicker, setShowTimeSlotPicker] = useState(false)
+
+  const isValidDate = useMemo(() => {
+    if (!scheduleRules || !dateOverrides) return undefined
+    return (y: number, m: number, d: number): boolean => {
+      const dateStr = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+      const dow = new Date(y, m - 1, d).getDay()
+      const override = dateOverrides.find(o => o.date === dateStr)
+      if (override !== undefined) return override.is_open
+      const rule = scheduleRules.find(r => r.day_of_week === dow && r.time_slot === editTimeSlot)
+      return !rule || rule.is_open
+    }
+  }, [scheduleRules, dateOverrides, editTimeSlot])
 
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(
     initialRoleId ?? (!isAdmin && memberRoleId ? memberRoleId : (splitRoles[0]?.id ?? null))
   )
-  const { tenant } = useTenant()
+  const { tenant, timeSlots } = useTenant()
   const showLessonPackages = getFF(tenant?.settings?.feature_flags, 'lesson_packages')
   const showAttendance = getFF(tenant?.settings?.feature_flags, 'attendance')
 
@@ -272,6 +295,10 @@ export function SlotEditModal({
     setNote(a.note ?? '')
     setTimeSub(a.time_sub ?? null)
     setSelectedPackageId(a.lesson_package_id ?? null)
+    setEditYear(a.year)
+    setEditMonth(a.month)
+    setEditDay(a.day)
+    setEditTimeSlot(a.time_slot)
     if (isSplitMode) setSelectedRoleId(a.role_id ?? null)
     if (useDynamicFields) {
       const nameFieldId = customFields[0]?.id
@@ -324,6 +351,12 @@ export function SlotEditModal({
     setTimeSub(defaultTimeSub)
     setFieldValues({})
     setSelectedPackageId(null)
+    setEditYear(year)
+    setEditMonth(month)
+    setEditDay(day)
+    setEditTimeSlot(timeSlot)
+    setShowDatePicker(false)
+    setShowTimeSlotPicker(false)
     Object.values(pendingImages).flat().forEach(img => URL.revokeObjectURL(img.previewUrl))
     setPendingImages({})
     setSelectedUserId(isAdmin ? (lockedUserId ?? '') : (profile?.id ?? ''))
@@ -557,12 +590,16 @@ export function SlotEditModal({
       customerPhone,
       extraData,
       selectedPackageId,
+      isAdmin ? editYear : undefined,
+      isAdmin ? editMonth : undefined,
+      isAdmin ? editDay : undefined,
+      isAdmin ? editTimeSlot : undefined,
     )
     setLoading(false)
     if (err) { setError(err); return }
     Object.values(pendingImages).flat().forEach(img => URL.revokeObjectURL(img.previewUrl))
     setPendingImages({})
-    cancelEdit()
+    onClose()
   }
 
   async function handleDelete(id: string) {
@@ -1167,6 +1204,98 @@ export function SlotEditModal({
                 style={{ gridTemplateRows: (!displayedAssignments.length || !!editingId || isInputExpanded) ? '1fr' : '0fr' }}
               >
               <div className="overflow-hidden flex flex-col gap-3">
+
+              {/* 날짜 및 시간대 변경 (관리자 수정 모드) */}
+              {editingId && isAdmin && (
+                <div className="flex flex-col gap-2">
+                  <div className="flex gap-2 flex-wrap">
+                    {/* 날짜 chip */}
+                    <button
+                      type="button"
+                      onClick={() => setShowDatePicker(true)}
+                      className={`flex items-center gap-1.5 px-3.5 h-9 rounded-xl text-[13px] font-bold border transition-all duration-200 ${
+                        editYear !== year || editMonth !== month || editDay !== day
+                          ? 'bg-[color-mix(in_srgb,var(--color-brand-primary)_10%,var(--color-surface))] border-[var(--color-brand-primary)]/50 text-[var(--color-brand-primary)]'
+                          : 'bg-[var(--color-surface)] border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:border-[var(--color-brand-primary)]/40 hover:bg-[color-mix(in_srgb,var(--color-brand-primary)_4%,var(--color-surface))]'
+                      }`}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="4" width="14" height="14" rx="2"/><path d="M3 8h14M7 2v2M13 2v2"/>
+                      </svg>
+                      {editMonth}월 {editDay}일
+                      {(editYear !== year || editMonth !== month || editDay !== day) && (
+                        <span className="text-[10px] font-extrabold opacity-80">변경됨</span>
+                      )}
+                      <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <path d="m5 8 5 5 5-5"/>
+                      </svg>
+                    </button>
+
+                    {/* 시간대 chip */}
+                    <button
+                      type="button"
+                      onClick={() => setShowTimeSlotPicker(prev => !prev)}
+                      className={`flex items-center gap-1.5 px-3.5 h-9 rounded-xl text-[13px] font-bold border transition-all duration-200 ${
+                        editTimeSlot !== timeSlot
+                          ? 'bg-[color-mix(in_srgb,var(--color-brand-primary)_10%,var(--color-surface))] border-[var(--color-brand-primary)]/50 text-[var(--color-brand-primary)]'
+                          : showTimeSlotPicker
+                            ? 'bg-[var(--color-surface-secondary)] border-[var(--color-border-strong)] text-[var(--color-text-secondary)]'
+                            : 'bg-[var(--color-surface)] border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:border-[var(--color-brand-primary)]/40 hover:bg-[color-mix(in_srgb,var(--color-brand-primary)_4%,var(--color-surface))]'
+                      }`}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                        <circle cx="10" cy="10" r="7"/><path d="M10 6.5v4l2.5 1.5"/>
+                      </svg>
+                      {parseSlotLabel(editTimeSlot)}
+                      {editTimeSlot !== timeSlot && (
+                        <span className="text-[10px] font-extrabold opacity-80">변경됨</span>
+                      )}
+                      <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+                        className={`transition-transform duration-200 ${showTimeSlotPicker ? 'rotate-180' : ''}`}>
+                        <path d="m5 8 5 5 5-5"/>
+                      </svg>
+                    </button>
+                  </div>
+
+                  {/* 시간대 선택 목록 (펼쳐질 때) */}
+                  {showTimeSlotPicker && (
+                    <div className="flex gap-1.5 flex-wrap p-2.5 rounded-xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)]">
+                      {timeSlots.map(slot => (
+                        <button
+                          key={slot}
+                          type="button"
+                          onClick={() => { setEditTimeSlot(slot); setShowTimeSlotPicker(false) }}
+                          className={`px-3.5 h-9 rounded-xl text-[13px] font-bold border transition-all duration-200 ${
+                            editTimeSlot === slot
+                              ? 'bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] border-[var(--color-brand-primary)] shadow-[0_4px_10px_-6px_var(--color-brand-primary)]'
+                              : 'bg-[var(--color-surface)] border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:border-[var(--color-brand-primary)]/40'
+                          }`}
+                        >
+                          {parseSlotLabel(slot)}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {showDatePicker && (
+                    <DatePickerModal
+                      year={editYear}
+                      month={editMonth}
+                      day={editDay}
+                      mode="full"
+                      isValidDate={isValidDate}
+                      onConfirm={(y, m, d) => {
+                        setEditYear(y)
+                        setEditMonth(m)
+                        if (d !== undefined) setEditDay(d)
+                        setShowDatePicker(false)
+                      }}
+                      onClose={() => setShowDatePicker(false)}
+                    />
+                  )}
+                </div>
+              )}
+
               {/* Time slot selector */}
               {timeSubOptions && (
                 <div>

@@ -34,6 +34,10 @@ interface UpdateParams {
   lesson_package_id?: string | null
   is_locked?: boolean
   attended_at?: string | null
+  year?: number
+  month?: number
+  day?: number
+  time_slot?: TimeSlot
 }
 
 export function useSchedule(tenantId: string, year: number, month: number): ScheduleData {
@@ -142,9 +146,17 @@ export function useSchedule(tenantId: string, year: number, month: number): Sche
   const updateAssignment = useCallback(async (id: string, params: UpdateParams): Promise<string | null> => {
     const { error } = await supabase.from('assignments').update(params).eq('id', id)
     if (error) return error.message
-    setAssignments(prev => prev.map(a => a.id === id ? { ...a, ...params } : a))
+    setAssignments(prev => {
+      const mapped = prev.map(a => a.id === id ? { ...a, ...params } : a)
+      // 다른 월/연도로 이동한 경우 현재 뷰에서 제거
+      if ((params.year !== undefined && params.year !== year) ||
+          (params.month !== undefined && params.month !== month)) {
+        return mapped.filter(a => a.id !== id)
+      }
+      return mapped
+    })
     return null
-  }, [])
+  }, [year, month])
 
   const deleteAssignment = useCallback(async (id: string): Promise<string | null> => {
     const { error } = await supabase.from('assignments').delete().eq('id', id)

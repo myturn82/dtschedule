@@ -34,9 +34,10 @@ interface Props {
   selectionRange?: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number; minColIdx: number; maxColIdx: number } | null
   copyRange?: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number; minColIdx: number; maxColIdx: number } | null
   isAdmin?: boolean
+  lessonPackageMap?: Map<string, { remaining: number; total: number }>
 }
 
-function PersonChip({ a, withdrawnUserIds, onClick, isAdmin }: { a: Assignment; withdrawnUserIds?: Set<string>; onClick?: () => void; isAdmin?: boolean }) {
+function PersonChip({ a, withdrawnUserIds, onClick, isAdmin, lessonPackageMap }: { a: Assignment; withdrawnUserIds?: Set<string>; onClick?: () => void; isAdmin?: boolean; lessonPackageMap?: Map<string, { remaining: number; total: number }> }) {
   const isW = !!(a.user_id && withdrawnUserIds?.has(a.user_id)) || a.account_deleted
   const cellLabel = a.extra_data?._nf ? (a.extra_data._cl ?? '') : a.member_name
   const initial = cellLabel?.charAt(0) ?? '?'
@@ -68,6 +69,7 @@ function PersonChip({ a, withdrawnUserIds, onClick, isAdmin }: { a: Assignment; 
       {!isW && a.note && (
         <span className="text-xs text-[var(--color-text-muted)] truncate">· {a.note}</span>
       )}
+      {a.lesson_package_id && (() => { const pkg = lessonPackageMap?.get(a.lesson_package_id!); return pkg ? <span className="text-xs font-bold tabular-nums text-[var(--color-text-muted)]">{pkg.remaining}/{pkg.total}</span> : null })()}
     </div>
   )
 }
@@ -90,7 +92,7 @@ export function DayView({
   year, month, day, timeSlots, assignments, slotSettings, scheduleRules, dateOverrides,
   profile: _profile, splitRoles = [], isSplitMode = false, slotLabels = {},
   canAdd = true, onCellClick, displayAssignmentFilter, withdrawnUserIds,
-  selectionRange, copyRange, isAdmin,
+  selectionRange, copyRange, isAdmin, lessonPackageMap,
 }: Props) {
   function inRange(d: number, si: number, ci: number, r: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number; minColIdx: number; maxColIdx: number }) {
     return d >= r.minDay && d <= r.maxDay && si >= r.minSlotIdx && si <= r.maxSlotIdx && ci >= r.minColIdx && ci <= r.maxColIdx
@@ -225,7 +227,7 @@ export function DayView({
                           {role.name}
                         </span>
                         {roleAssigns.map(a => (
-                          <PersonChip key={a.id} a={a} withdrawnUserIds={withdrawnUserIds} isAdmin={isAdmin} onClick={() => onCellClick({ year, month, day, timeSlot: slot, memberType: 'member', roleId: role.id })} />
+                          <PersonChip key={a.id} a={a} withdrawnUserIds={withdrawnUserIds} isAdmin={isAdmin} onClick={() => onCellClick({ year, month, day, timeSlot: slot, memberType: 'member', roleId: role.id })} lessonPackageMap={lessonPackageMap} />
                         ))}
                         {canAdd && <AssignButton onClick={() => onCellClick({ year, month, day, timeSlot: slot, memberType: 'member', roleId: role.id })} />}
                       </div>
@@ -241,7 +243,7 @@ export function DayView({
                     <div className="absolute inset-0 border-2 border-dashed border-blue-500 pointer-events-none z-10" />
                   )}
                   {visible.map(a => (
-                    <PersonChip key={a.id} a={a} withdrawnUserIds={withdrawnUserIds} isAdmin={isAdmin} onClick={() => onCellClick({ year, month, day, timeSlot: slot, memberType: 'member' })} />
+                    <PersonChip key={a.id} a={a} withdrawnUserIds={withdrawnUserIds} isAdmin={isAdmin} onClick={() => onCellClick({ year, month, day, timeSlot: slot, memberType: 'member' })} lessonPackageMap={lessonPackageMap} />
                   ))}
                   {canAdd && <AssignButton onClick={() => onCellClick({ year, month, day, timeSlot: slot, memberType: 'member' })} />}
                 </div>
