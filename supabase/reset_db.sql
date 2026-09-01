@@ -1,7 +1,7 @@
 -- ============================================================
 -- 운영 DB 초기화 스크립트 (전체 재생성)
 -- 생성일: 2026-06-10
--- 기준 마이그레이션: 001 ~ 093
+-- 기준 마이그레이션: 001 ~ 095
 --
 -- ⚠️  주의: 이 스크립트는 모든 데이터를 삭제합니다.
 --           Supabase SQL Editor에서 직접 실행하세요.
@@ -204,17 +204,18 @@ CREATE TABLE lesson_package_types (
 
 -- lesson_packages (결제 기록)
 CREATE TABLE lesson_packages (
-  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  tenant_id       uuid NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-  user_id         uuid REFERENCES profiles(id) ON DELETE SET NULL,
-  package_type_id uuid REFERENCES lesson_package_types(id) ON DELETE SET NULL,
-  package_name    text NOT NULL,
-  total_sessions  int  NOT NULL CHECK (total_sessions > 0),
-  payment_date    date NOT NULL,
-  expires_at      date,
-  notes           text,
-  created_by      uuid REFERENCES profiles(id) ON DELETE SET NULL,
-  created_at      timestamptz NOT NULL DEFAULT now()
+  id                    uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id             uuid NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  user_id               uuid REFERENCES profiles(id) ON DELETE SET NULL,
+  package_type_id       uuid REFERENCES lesson_package_types(id) ON DELETE SET NULL,
+  package_name          text NOT NULL,
+  total_sessions        int  NOT NULL CHECK (total_sessions > 0),
+  initial_used_sessions int  NOT NULL DEFAULT 0,
+  payment_date          date NOT NULL,
+  expires_at            date,
+  notes                 text,
+  created_by            uuid REFERENCES profiles(id) ON DELETE SET NULL,
+  created_at            timestamptz NOT NULL DEFAULT now()
 );
 
 -- feedback_posts (자체 피드백 게시판 — 문의 글)
