@@ -28,6 +28,7 @@ import type { FeatureFlags } from '../lib/featureFlags'
 import { LessonManagementPanel } from '../components/admin/LessonManagementPanel'
 import { FeedbackBoardPanel } from '../components/admin/FeedbackBoardPanel'
 import { useFeedbackBadge } from '../hooks/useFeedbackBadge'
+import { type Tab, TAB_LABELS, DEFAULT_TAB_ORDER } from '../lib/adminTabs'
 import { MemberSearchSelect } from '../components/shared/MemberSearchSelect'
 import { KakaoBadge } from '../components/icons/KakaoBadge'
 
@@ -213,25 +214,6 @@ function roleDisplayMode(role: TenantRole): RoleDisplayMode {
   return 'none'
 }
 
-type Tab = 'members' | 'roles' | 'rules' | 'settings' | 'autoassign' | 'legend' | 'custom_fields' | 'notifications' | 'lessons' | 'feedback' | 'hours' | 'attendance'
-
-const TAB_LABELS: Record<Tab, string> = {
-  members: '회원 관리',
-  roles: '역할 관리',
-  rules: '날짜·요일·시간 설정',
-  settings: '조직 설정',
-  autoassign: '자동배정',
-  legend: '범례 관리',
-  custom_fields: '입력항목',
-  notifications: '배정알림',
-  lessons: '레슨권',
-  feedback: '피드백',
-  hours: '시간 집계',
-  attendance: '출석 현황',
-}
-
-const DEFAULT_TAB_ORDER: Tab[] = Object.keys(TAB_LABELS) as Tab[]
-
 function loadTabOrder(): Tab[] {
   try {
     const stored = localStorage.getItem('admin_tab_order')
@@ -295,6 +277,10 @@ export function AdminPage() {
   const [tab, setTab] = useState<Tab>(
     initTab && (Object.keys(TAB_LABELS) as Tab[]).includes(initTab) ? initTab : 'members'
   )
+  useEffect(() => {
+    const t = searchParams.get('tab') as Tab | null
+    if (t && (Object.keys(TAB_LABELS) as Tab[]).includes(t)) setTab(t)
+  }, [searchParams])
   const feedbackBadgeCount = useFeedbackBadge(adminTenantId ? { kind: 'org', tenantId: adminTenantId } : null, tab === 'feedback' ? 1 : 0)
   const [message, setMessage] = useState<{ text: string; isError: boolean } | null>(null)
   const [saving, setSaving] = useState(false)
@@ -311,6 +297,7 @@ export function AdminPage() {
     if (t === 'attendance' && !getFF(tenantFF, 'attendance')) return false
     return true
   })
+
   const handleDragStart = (t: Tab) => { dragTabRef.current = t }
   const handleDragOver = (e: React.DragEvent, over: Tab) => {
     e.preventDefault()
@@ -1438,23 +1425,27 @@ export function AdminPage() {
                 </button>
               )
             })}
-            <button
-              onClick={() => setReorderMode(r => !r)}
-              title={reorderMode ? '순서 편집 완료' : '탭 순서 편집'}
-              className={`ml-auto shrink-0 flex items-center gap-1 px-2.5 my-2 rounded-lg text-[12px] font-medium transition-colors ${
-                reorderMode
-                  ? 'bg-[var(--color-brand-primary)] text-white'
-                  : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)]'
-              }`}
-            >
-              {reorderMode ? '완료' : (
-                <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" className="opacity-50">
-                  <circle cx="5" cy="4" r="1.2"/><circle cx="11" cy="4" r="1.2"/>
-                  <circle cx="5" cy="8" r="1.2"/><circle cx="11" cy="8" r="1.2"/>
-                  <circle cx="5" cy="12" r="1.2"/><circle cx="11" cy="12" r="1.2"/>
-                </svg>
-              )}
-            </button>
+
+            {/* 우측 편집 버튼 */}
+            <div className="ml-auto flex items-center gap-1 shrink-0">
+              <button
+                onClick={() => setReorderMode(r => !r)}
+                title={reorderMode ? '순서 편집 완료' : '탭 순서 편집'}
+                className={`flex items-center gap-1 px-2.5 my-2 rounded-lg text-[12px] font-medium transition-colors ${
+                  reorderMode
+                    ? 'bg-[var(--color-brand-primary)] text-white'
+                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-secondary)]'
+                }`}
+              >
+                {reorderMode ? '완료' : (
+                  <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" className="opacity-50">
+                    <circle cx="5" cy="4" r="1.2"/><circle cx="11" cy="4" r="1.2"/>
+                    <circle cx="5" cy="8" r="1.2"/><circle cx="11" cy="8" r="1.2"/>
+                    <circle cx="5" cy="12" r="1.2"/><circle cx="11" cy="12" r="1.2"/>
+                  </svg>
+                )}
+              </button>
+            </div>
           </nav>
         </div>
       </div>

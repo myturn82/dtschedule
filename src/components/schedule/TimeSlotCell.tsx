@@ -77,8 +77,8 @@ function NameChips({ assignments, highlightName, tintBg, tintInk, teamLeaderUser
         const isWithdrawn = !!(a.user_id && withdrawnUserIds?.has(a.user_id)) || a.account_deleted
         const isMyOwn = !!(myUserId && a.user_id && a.user_id === myUserId)
         const nameLabel = a.extra_data?._nf ? (a.extra_data._cl ?? '') : a.member_name
-        const displayText = a.note ? `${nameLabel}(${a.note})` : nameLabel
         const timeLabel = showTimeSub && a.time_sub ? formatTimeSub(a.time_sub) : null
+        const pkg = a.lesson_package_id ? lessonPackageMap?.get(a.lesson_package_id) : null
         return (
           <div
             key={a.id}
@@ -87,9 +87,15 @@ function NameChips({ assignments, highlightName, tintBg, tintInk, teamLeaderUser
               ? { background: '#fef08a', color: '#92400e' }
               : { background: tintBg, color: tintInk, ...(isMyOwn && !isWithdrawn ? { boxShadow: '0 0 0 1px var(--color-brand-primary)' } : {}) }}
           >
-            <span style={isWithdrawn ? { textDecoration: 'line-through' } : undefined}>{displayText}</span>
+            <span style={isWithdrawn ? { textDecoration: 'line-through' } : undefined}>
+              {nameLabel}
+              {pkg && <span className={`font-normal opacity-75 ml-0.5 tabular-nums`}>[{pkg.remaining}/{pkg.total}]</span>}
+            </span>
             {a.is_locked && <span title="고정됨" className="inline-flex items-center"><LockIcon size={9} className="ml-0.5" /></span>}
             {isWithdrawn && <span className={`block ${subSize} font-normal`}>삭제됨</span>}
+            {a.note && (
+              <span className={`block ${subSize} font-normal opacity-80 truncate`}>{a.note}</span>
+            )}
             {timeLabel && (
               <span className={`block ${subSize} font-normal opacity-60`}>{timeLabel}</span>
             )}
@@ -98,11 +104,6 @@ function NameChips({ assignments, highlightName, tintBg, tintInk, teamLeaderUser
                 {a.customer_name}{a.customer_phone ? ` · ${isAdmin ? fmtPhone(a.customer_phone) : maskPhone(a.customer_phone)}` : ''}
               </span>
             )}
-            {a.lesson_package_id && (() => {
-              const pkg = lessonPackageMap?.get(a.lesson_package_id!)
-              if (!pkg) return null
-              return <span className={`block ${subSize} font-bold tabular-nums opacity-80`}>{pkg.remaining}/{pkg.total}</span>
-            })()}
           </div>
         )
       })}

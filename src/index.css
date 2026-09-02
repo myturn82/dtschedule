@@ -139,6 +139,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+
 @media (min-width: 1024px) {
   body[data-sidebar="open"] > #root {
     padding-left: 11rem; /* w-44 = 176px */

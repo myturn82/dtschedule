@@ -11,6 +11,7 @@ import { useTenantRoles } from '../hooks/useTenantRoles'
 import { getCellState } from '../utils/cellState'
 import { getTimeSubOptions, remapTimeSub, getWeekDays } from '../utils/timeSlots'
 import { AppHeader } from '../components/AppHeader'
+import { type ExtraMenuGroup } from '../components/FullScreenMenu'
 import { ScheduleHeader } from '../components/schedule/ScheduleHeader'
 import { ScheduleGrid } from '../components/schedule/ScheduleGrid'
 import { WeekGrid } from '../components/schedule/WeekGrid'
@@ -554,6 +555,60 @@ export function SchedulePage() {
   async function handleExportDocx() { await exportMonthScheduleToDocx(exportParams()) }
   async function handleExportPdf() { await exportMonthScheduleToPdf(exportParams()) }
 
+  // 모바일 풀스크린 메뉴용 스케줄 기능 그룹
+  const scheduleExtraGroups = useMemo<ExtraMenuGroup[]>(() => [
+    ...(isPrivileged ? [{
+      id: 'view', label: '화면', description: '월간 · 주간 · 일간 뷰',
+      items: [
+        { id: 'view:month', label: '월간', active: viewType === 'month', action: (close: () => void) => { handleViewTypeChange('month'); close() } },
+        { id: 'view:week',  label: '주간', active: viewType === 'week',  action: (close: () => void) => { handleViewTypeChange('week');  close() } },
+        { id: 'view:day',   label: '일간', active: viewType === 'day',   action: (close: () => void) => { handleViewTypeChange('day');   close() } },
+        ...(viewType === 'month' ? [{ id: 'view:excel', label: '엑셀 모드', active: excelMode, action: (close: () => void) => { setExcelMode(v => { setCellSel(null); setCopyBuf(null); setPasteHistory([]); return !v }); close() } }] : []),
+      ],
+    }] : []),
+    {
+      id: 'docs', label: '문서', description: 'Excel · CSV · Word · PDF',
+      items: [
+        { id: 'doc:excel', label: 'Excel (.xlsx)', action: (close: () => void) => { handleExportExcel(); close() } },
+        { id: 'doc:csv',   label: 'CSV (.csv)',    action: (close: () => void) => { handleExportCsv();   close() } },
+        { id: 'doc:docx',  label: 'Word (.docx)',  action: (close: () => void) => { handleExportDocx();  close() } },
+        { id: 'doc:pdf',   label: 'PDF (.pdf)',    action: (close: () => void) => { handleExportPdf();   close() } },
+      ],
+    },
+    ...(isPrivileged ? [{
+      id: 'operation', label: '운영', description: '인원 설정 · 배정 · 반복 · 출석',
+      items: [
+        { id: 'op:capacity',  label: '인원 설정',     action: (close: () => void) => { setShowCapacity(true);  close() } },
+        ...(tenantMode !== '비회원' ? [{ id: 'op:auto', label: '자동배정', action: (close: () => void) => { handleAutoAssign(); close() } }] : []),
+        ...(profile        ? [{ id: 'op:recur', label: '반복 등록',     action: (close: () => void) => { setShowRecurring(true); close() } }] : []),
+        { id: 'op:past',      label: '소급 출석 입력', action: (close: () => void) => { setShowPastAtt(true);  close() } },
+        { id: 'op:sms',       label: '문자 발송',      action: (close: () => void) => { setShowSms(true);      close() } },
+      ],
+    }] : []),
+    ...(isPrivileged ? [{
+      id: 'lock', label: '잠금', description: '전체 고정 · 고정 해제',
+      items: [
+        { id: 'lock:on',  label: '전체 고정',      action: (close: () => void) => { handleLockClick(true);  close() } },
+        { id: 'lock:off', label: '전체 고정 해제', action: (close: () => void) => { handleLockClick(false); close() } },
+        { id: 'lock:reset', label: '초기화', danger: true, action: (close: () => void) => { handleClearClick(); close() } },
+      ],
+    }] : []),
+    ...(isPrivileged && tenantMode === '비회원' ? [{
+      id: 'share', label: '공유', description: '임베드 코드',
+      items: [
+        { id: 'share:embed', label: '임베드 코드 복사', action: (close: () => void) => {
+          if (!tenant) return
+          const url = `${window.location.origin}/embed?tid=${tenant.id}`
+          const elId = `dts-widget-${tenant.id.slice(0, 8)}`
+          const code = `<iframe id="${elId}" src="${url}" style="width:100%;border:0;" scrolling="no"></iframe>`
+          navigator.clipboard.writeText(code).then(() => alert('임베드 코드가 클립보드에 복사되었습니다.'))
+          close()
+        }},
+      ],
+    }] : []),
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [isPrivileged, viewType, excelMode, tenantMode, profile])
+
   function handleClearClick() {
     const hasClearTarget = viewType === 'month'
       ? assignments.some(a => a.year === year && a.month === month)
@@ -711,6 +766,7 @@ export function SchedulePage() {
         leftSlot={<FilterBar value={highlightName} onChange={setHighlightName} />}
         memberSelectSlot={memberSelectEl}
         roleLabel={memberTenantRoleName ?? undefined}
+        extraMenuGroups={scheduleExtraGroups}
         userMenuItems={(close) => (
           tenant ? (
             <button

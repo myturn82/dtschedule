@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useLayoutEffect } from 'react'
+import { useState, useEffect, useLayoutEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useCustomerAdmin } from '../hooks/useCustomerAdmin'
@@ -15,6 +15,7 @@ import { NotificationPanel } from './notifications/NotificationPanel'
 import { useDarkMode } from '../contexts/DarkModeContext'
 import { FeedbackModal } from './modals/FeedbackModal'
 import { useFeedbackBadge } from '../hooks/useFeedbackBadge'
+import { FullScreenMenu, MENU_GROUPS, type ExtraMenuGroup } from './FullScreenMenu'
 
 // 웹푸시 배치 발송(GitHub Actions cron)이 비활성화된 동안 구독 유도 UI도 숨김.
 // 재활성화 시 true로 되돌리면 됨.
@@ -22,17 +23,13 @@ const PUSH_NOTIFICATIONS_ENABLED = false
 
 function IconChip({ children, active, danger }: { children: React.ReactNode; active?: boolean; danger?: boolean }) {
   return (
-    <span
-      className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border transition-colors ${
-        active
-          ? 'bg-[var(--color-brand-primary)] border-transparent text-[var(--color-brand-primary-contrast)]'
-          : danger
-          ? 'bg-[var(--color-surface)] border-[var(--color-border)] text-red-500 group-hover:border-red-200 group-hover:bg-red-50'
-          : 'bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-muted)] group-hover:text-[var(--color-text-primary)] group-hover:border-[var(--color-border-strong)]'
-      }`}
-    >
-      {children}
-    </span>
+    <span className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border transition-colors ${
+      active
+        ? 'bg-[var(--color-brand-primary)] border-transparent text-[var(--color-brand-primary-contrast)]'
+        : danger
+        ? 'bg-[var(--color-surface)] border-[var(--color-border)] text-red-500 group-hover:border-red-200 group-hover:bg-red-50'
+        : 'bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-muted)] group-hover:text-[var(--color-text-primary)] group-hover:border-[var(--color-border-strong)]'
+    }`}>{children}</span>
   )
 }
 
@@ -42,6 +39,7 @@ function NavLabel({ children }: { children: React.ReactNode }) {
 
 interface AppHeaderProps {
   funcMenuItems?: (closeMenu: () => void) => React.ReactNode
+  extraMenuGroups?: ExtraMenuGroup[]
   userMenuItems?: (closeMenu: () => void) => React.ReactNode
   leftSlot?: React.ReactNode
   memberSelectSlot?: React.ReactNode
@@ -50,12 +48,15 @@ interface AppHeaderProps {
   onShowLogin?: () => void
 }
 
-export function AppHeader({ funcMenuItems, userMenuItems, leftSlot, memberSelectSlot, rightSlot, roleLabel, onShowLogin }: AppHeaderProps) {
+export function AppHeader({ funcMenuItems, extraMenuGroups, userMenuItems, leftSlot, memberSelectSlot, rightSlot, roleLabel, onShowLogin }: AppHeaderProps) {
   const navigate = useNavigate()
   const { profile, loading: authLoading, signOut, deleteAccount, linkGoogle, linkKakao, getIdentities } = useAuth()
   const { isCustomerAdmin } = useCustomerAdmin()
   const { tenant, tenantRole, tenantPlan, memberships, resetTenantSelection, reloadMemberships } = useTenant()
+  // 데스크탑 사이드바 상태 (lg 이상에서 사용)
   const [showFuncMenu, setShowFuncMenu] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 1024)
+  // 모바일 풀스크린 메뉴 상태
+  const [showFullMenu, setShowFullMenu] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
   const [showJoinOrg, setShowJoinOrg] = useState(false)
@@ -79,14 +80,14 @@ export function AppHeader({ funcMenuItems, userMenuItems, leftSlot, memberSelect
     : (tenantRole === 'admin' && tenant) ? ({ kind: 'org' as const, tenantId: tenant.id }) : null
   const feedbackBadgeCount = useFeedbackBadge(feedbackBadgeScope, feedbackReloadKey)
 
+  // 창 크기 변경 시 데스크탑 사이드바 자동 표시/숨김
   useEffect(() => {
-    const handleResize = () => {
-      setShowFuncMenu(window.innerWidth >= 1024)
-    }
+    const handleResize = () => { setShowFuncMenu(window.innerWidth >= 1024) }
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
+  // 데스크탑 사이드바가 열리면 body에 data-sidebar 속성 설정 (레이아웃 padding 조정용)
   useLayoutEffect(() => {
     if (!showHamburger) return
     document.body.setAttribute('data-sidebar', showFuncMenu ? 'open' : 'closed')
@@ -97,6 +98,15 @@ export function AppHeader({ funcMenuItems, userMenuItems, leftSlot, memberSelect
   const navItemCls = 'group w-full flex items-center gap-2.5 text-left px-2.5 py-2 text-[13px] font-medium rounded-xl text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] transition-colors'
   const sep = <div className="h-px bg-[var(--color-border)] mx-1 my-1" />
 
+  // 햄버거 클릭: 모바일에서는 풀스크린, 데스크탑에서는 사이드바 토글
+  const handleHamburgerClick = () => {
+    if (window.innerWidth >= 1024) {
+      setShowFuncMenu(v => !v)
+    } else {
+      setShowFullMenu(true)
+    }
+  }
+
   return (
     <>
       <div className="relative bg-[var(--color-surface)] border-b border-[var(--color-border)]">
@@ -106,7 +116,7 @@ export function AppHeader({ funcMenuItems, userMenuItems, leftSlot, memberSelect
           <div className="flex flex-1 items-center gap-1.5 min-w-0">
             {showHamburger && (
               <button
-                onClick={() => setShowFuncMenu(v => !v)}
+                onClick={handleHamburgerClick}
                 aria-label="기능 메뉴"
                 className="flex items-center justify-center gap-1.5 w-8 h-8 sm:w-auto sm:h-auto px-0 py-0 sm:px-3 sm:py-1.5 text-xs font-medium rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-all shrink-0"
               >
@@ -119,7 +129,6 @@ export function AppHeader({ funcMenuItems, userMenuItems, leftSlot, memberSelect
             )}
             {leftSlot && (
               <>
-                {/* 모바일: 조직명 + 검색 토글 버튼 */}
                 <span className="sm:hidden text-sm font-semibold text-[var(--color-text-primary)] truncate flex-1 min-w-0">
                   {tenant?.settings?.title || tenant?.name}
                 </span>
@@ -130,7 +139,6 @@ export function AppHeader({ funcMenuItems, userMenuItems, leftSlot, memberSelect
                 >
                   <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="9" r="6"/><path d="M17 17l-3.5-3.5"/></svg>
                 </button>
-                {/* 데스크탑: 기존 검색바 */}
                 <div className="hidden sm:flex">{leftSlot}</div>
               </>
             )}
@@ -138,8 +146,7 @@ export function AppHeader({ funcMenuItems, userMenuItems, leftSlot, memberSelect
             {leftSlot && memberSelectSlot && <div className="hidden sm:block">{memberSelectSlot}</div>}
           </div>
 
-
-          {/* Right: rightSlot + bell + feedback + name/badge + avatar */}
+          {/* Right */}
           <div className="flex items-center gap-1.5 shrink-0">
             {rightSlot}
             {isPrivileged && tenant && (
@@ -217,7 +224,7 @@ export function AppHeader({ funcMenuItems, userMenuItems, leftSlot, memberSelect
           </div>
         )}
 
-        {/* Notification panel — 헤더 전체 기준으로 우측 정렬 (벨 버튼 기준 시 모바일 좌측 잘림 발생) */}
+        {/* 알림 패널 */}
         {showNotifications && (
           <NotificationPanel
             notifications={notifications}
@@ -227,7 +234,7 @@ export function AppHeader({ funcMenuItems, userMenuItems, leftSlot, memberSelect
           />
         )}
 
-        {/* Hamburger menu — mobile: dropdown, desktop: fixed sidebar */}
+        {/* 데스크탑 사이드바 (lg 이상) */}
         {showHamburger && showFuncMenu && (
           <>
             <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={() => setShowFuncMenu(false)} />
@@ -250,30 +257,31 @@ export function AppHeader({ funcMenuItems, userMenuItems, leftSlot, memberSelect
                   <NavLabel>콘솔</NavLabel>
                   {profile?.is_super_admin && (
                     <button onClick={() => { navigate('/superadmin'); setShowFuncMenu(false) }} className={navItemCls}>
-                      <IconChip>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                      </IconChip>
+                      <IconChip><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></IconChip>
                       조직관리
                     </button>
                   )}
                   {(isCustomerAdmin && !profile?.is_super_admin) && (
                     <button onClick={() => { navigate('/customer-admin'); setShowFuncMenu(false) }} className={navItemCls}>
-                      <IconChip>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01"/></svg>
-                      </IconChip>
+                      <IconChip><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01"/></svg></IconChip>
                       고객 어드민
                     </button>
                   )}
-                  <button onClick={() => { navigate('/admin'); setShowFuncMenu(false) }} className={navItemCls}>
-                    <IconChip>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
-                    </IconChip>
-                    관리자콘솔
-                  </button>
+                  <NavLabel>관리자콘솔</NavLabel>
+                  {MENU_GROUPS.map(group => (
+                    <div key={group.id}>
+                      <p className="px-3 pt-2 pb-0.5 text-[9px] font-bold uppercase tracking-wider text-[var(--color-text-muted)]">{group.label}</p>
+                      {group.items.map(item => (
+                        <button key={item.id} onClick={() => { navigate(item.path); setShowFuncMenu(false) }}
+                          className="w-full text-left px-3 py-1.5 text-[12px] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] rounded-xl transition-colors truncate block">
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  ))}
                   {funcMenuItems && <div className="h-px bg-[var(--color-border)] mx-2.5 my-2.5" />}
                   {funcMenuItems?.(() => { if (window.innerWidth < 1024) setShowFuncMenu(false) })}
                 </div>
-                {/* PC 사이드바 하단 다크모드 토글 */}
                 <div className="hidden lg:block border-t border-[var(--color-border)] px-2 py-2 mt-auto">
                   <button onClick={toggleDark} className={navItemCls}>
                     <IconChip>
@@ -290,7 +298,26 @@ export function AppHeader({ funcMenuItems, userMenuItems, leftSlot, memberSelect
           </>
         )}
 
-        {/* User menu dropdown */}
+        {/* 모바일 풀스크린 메뉴 (lg 미만에서만) */}
+        {showHamburger && showFullMenu && (
+          <FullScreenMenu
+            profile={profile}
+            tenant={tenant}
+            isPrivileged={!!isPrivileged}
+            isSuperAdmin={!!profile?.is_super_admin}
+            isCustomerAdmin={isCustomerAdmin}
+            extraMenuGroups={extraMenuGroups}
+            onClose={() => setShowFullMenu(false)}
+            onShowProfile={() => setShowProfile(true)}
+            onShowNotifications={() => setShowNotifications(true)}
+            unreadCount={unreadCount}
+            isDark={isDark}
+            onToggleDark={toggleDark}
+            onSignOut={signOut}
+          />
+        )}
+
+        {/* 사용자 메뉴 드롭다운 */}
         {showUserMenu && profile && (
           <>
             <div className="fixed inset-0 z-40" onClick={() => setShowUserMenu(false)} />
@@ -351,16 +378,9 @@ export function AppHeader({ funcMenuItems, userMenuItems, leftSlot, memberSelect
                   </span>
                 </button>
                 {PUSH_NOTIFICATIONS_ENABLED && pushSupported && !isTenantFreeform && (
-                  <button
-                    onClick={async () => { isSubscribed ? await unsubscribe() : await subscribe(); setShowUserMenu(false) }}
-                    disabled={pushLoading}
-                    className={menuBtn}
-                  >
+                  <button onClick={async () => { isSubscribed ? await unsubscribe() : await subscribe(); setShowUserMenu(false) }} disabled={pushLoading} className={menuBtn}>
                     <span className="flex items-center gap-2.5">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                      </svg>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                       {pushLoading ? '처리 중...' : isSubscribed ? '푸시 알림 끄기' : '푸시 알림 켜기'}
                     </span>
                   </button>
@@ -403,31 +423,19 @@ export function AppHeader({ funcMenuItems, userMenuItems, leftSlot, memberSelect
       {isPrivileged && (profile?.is_super_admin || tenantPlan === 'business') && <DashboardNav />}
 
       {showProfile && profile && (
-        <ProfileModal
-          profile={profile}
-          onClose={() => setShowProfile(false)}
-          linkGoogle={linkGoogle}
-          linkKakao={linkKakao}
-          getIdentities={getIdentities}
-        />
+        <ProfileModal profile={profile} onClose={() => setShowProfile(false)} linkGoogle={linkGoogle} linkKakao={linkKakao} getIdentities={getIdentities} />
       )}
 
       {showJoinOrg && profile && (
         <JoinOrgModal
           userId={profile.id}
           onClose={() => setShowJoinOrg(false)}
-          onSuccess={() => {
-            setShowJoinOrg(false)
-            setJoinSuccessMsg('가입 신청이 완료됐습니다. 관리자 승인 후 이용하실 수 있습니다.')
-          }}
+          onSuccess={() => { setShowJoinOrg(false); setJoinSuccessMsg('가입 신청이 완료됐습니다. 관리자 승인 후 이용하실 수 있습니다.') }}
         />
       )}
 
       {showStartService && profile && (
-        <StartServiceModal
-          userId={profile.id}
-          onClose={() => setShowStartService(false)}
-        />
+        <StartServiceModal userId={profile.id} onClose={() => setShowStartService(false)} />
       )}
 
       {showQuickBooking && (
@@ -449,12 +457,7 @@ export function AppHeader({ funcMenuItems, userMenuItems, leftSlot, memberSelect
               <h2 className="text-base font-semibold text-[var(--color-text-primary)]">탈퇴 방식 선택</h2>
               {tenant && memberships.filter(m => m.is_approved).length > 1 && (
                 <button
-                  onClick={async () => {
-                    setShowWithdrawModal(false)
-                    const err = await deleteAccount(tenant.id)
-                    if (err) alert(err)
-                    else await reloadMemberships()
-                  }}
+                  onClick={async () => { setShowWithdrawModal(false); const err = await deleteAccount(tenant.id); if (err) alert(err); else await reloadMemberships() }}
                   className="w-full px-4 py-3 text-left rounded-xl border border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] transition-colors"
                 >
                   <p className="text-sm font-medium text-[var(--color-text-primary)]">현재 조직 탈퇴</p>
@@ -462,20 +465,13 @@ export function AppHeader({ funcMenuItems, userMenuItems, leftSlot, memberSelect
                 </button>
               )}
               <button
-                onClick={async () => {
-                  setShowWithdrawModal(false)
-                  const err = await deleteAccount()
-                  if (err) alert(err)
-                }}
+                onClick={async () => { setShowWithdrawModal(false); const err = await deleteAccount(); if (err) alert(err) }}
                 className="w-full px-4 py-3 text-left rounded-xl border border-red-200 dark:border-red-800/40 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
               >
                 <p className="text-sm font-medium text-red-600 dark:text-red-400">전체 계정 삭제</p>
                 <p className="text-xs text-red-400 dark:text-red-500 mt-0.5">모든 조직에서 탈퇴하고 계정을 완전히 삭제합니다.</p>
               </button>
-              <button
-                onClick={() => setShowWithdrawModal(false)}
-                className="w-full py-2 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
-              >
+              <button onClick={() => setShowWithdrawModal(false)} className="w-full py-2 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors">
                 취소
               </button>
             </div>
