@@ -2683,9 +2683,9 @@ export function AdminPage() {
                 <header className="mb-5">
                   <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10 px-3 py-[5px] rounded-full">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8 19 13M17.8 6.2 19 5M12.2 6.2 11 5M12.2 11.8 11 13"/><path d="M3 21l9-9"/><path d="M12.2 6.2 3 15l3 3 9.2-9.2"/></svg>
-                    조직 설정 · 자동배정
+                    조직 설정 · 자동배정관리
                   </span>
-                  <h2 className="mt-3 mb-1.5 text-[clamp(22px,5vw,27px)] font-extrabold tracking-tight text-[var(--color-text-primary)]">자동배정</h2>
+                  <h2 className="mt-3 mb-1.5 text-[clamp(22px,5vw,27px)] font-extrabold tracking-tight text-[var(--color-text-primary)]">자동배정관리</h2>
                   <p className="text-[14px] font-medium text-[var(--color-text-muted)] leading-relaxed max-w-[52ch]">
                     역할 비율과 회원별 가능 요일·횟수를 설정합니다.
                   </p>

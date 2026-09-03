@@ -5,7 +5,7 @@ export const TAB_LABELS: Record<Tab, string> = {
   roles: '역할 관리',
   rules: '날짜·요일·시간 설정',
   settings: '조직 설정',
-  autoassign: '자동배정',
+  autoassign: '자동배정관리',
   legend: '범례 관리',
   custom_fields: '입력항목',
   notifications: '배정알림',

@@ -56,7 +56,7 @@ export const MENU_GROUPS: NavMenuGroup[] = [
     id: 'schedule', label: '스케줄 설정', description: '시간 · 요일 · 자동배정 · 범례',
     items: [
       { id: 'tab:rules',      label: '날짜·요일·시간 설정', path: '/admin?tab=rules',      keywords: ['날짜', '요일', '시간', '규칙'] },
-      { id: 'tab:autoassign', label: '자동배정',            path: '/admin?tab=autoassign', keywords: ['자동', '배정'] },
+      { id: 'tab:autoassign', label: '자동배정관리',          path: '/admin?tab=autoassign', keywords: ['자동', '배정'] },
       { id: 'tab:legend',     label: '범례 관리',           path: '/admin?tab=legend',     keywords: ['범례', '색상'] },
     ],
   },
