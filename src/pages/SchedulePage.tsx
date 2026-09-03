@@ -522,8 +522,28 @@ export function SchedulePage() {
   function handleAutoAssign() {
     if (!isPrivileged) return
     if (tenantMode === '비회원') return
+
+    if (profiles.length === 0) {
+      alert('배정 가능한 회원이 없습니다.\n먼저 회원을 등록해 주세요.')
+      return
+    }
+
+    if (!scheduleRules.some(r => r.is_open)) {
+      alert('운영 시간이 설정되어 있지 않습니다.\n관리자콘솔 → 날짜·요일·시간 설정에서 운영할 요일과 시간을 먼저 설정해 주세요.')
+      return
+    }
+
+    const targetDays = getTargetDays()
+    const hasExistingAssignments = assignments.some(a =>
+      targetDays.some(d => a.year === d.getFullYear() && a.month === d.getMonth() + 1 && a.day === d.getDate())
+    )
+    if (hasExistingAssignments) {
+      alert('해당 기간에 이미 배정된 스케줄이 있습니다.\n자동배정은 배정이 없는 상태에서만 실행할 수 있습니다.')
+      return
+    }
+
     const proposals = computeAutoAssignments({
-      days: getTargetDays(),
+      days: targetDays,
       timeSlots,
       assignments,
       slotSettings,
@@ -537,7 +557,7 @@ export function SchedulePage() {
       volunteerLabel: typeLabels.member,
     })
     if (!proposals.length) {
-      alert('배정할 빈 슬롯이 없거나 배정 가능한 회원이 없습니다.')
+      alert('자동배정할 수 있는 빈 슬롯이 없습니다.\n운영 중인 날짜와 시간 설정을 확인해 주세요.')
       return
     }
     setAutoProposals(proposals)
