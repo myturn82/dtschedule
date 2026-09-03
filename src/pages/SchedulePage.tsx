@@ -602,7 +602,7 @@ export function SchedulePage() {
         { id: 'op:capacity',  label: '인원 설정',     action: (close: () => void) => { setShowCapacity(true);  close() } },
         ...(tenantMode !== '비회원' && tenantMode !== '회원개별' ? [{ id: 'op:auto', label: '자동배정', action: (close: () => void) => { handleAutoAssign(); close() } }] : []),
         ...(profile        ? [{ id: 'op:recur', label: '반복 등록',     action: (close: () => void) => { setShowRecurring(true); close() } }] : []),
-        ...(showLessonPackages && BRAND.vertical === 'lesson-on' ? [{ id: 'op:past', label: '소급 출석 입력', action: (close: () => void) => { setShowPastAtt(true); close() } }] : []),
+        ...(showLessonPackages && BRAND.vertical === 'lessonon' ? [{ id: 'op:past', label: '소급 출석 입력', action: (close: () => void) => { setShowPastAtt(true); close() } }] : []),
         { id: 'op:sms',       label: '문자 발송',      action: (close: () => void) => { setShowSms(true);      close() } },
       ],
     }] : []),
@@ -922,7 +922,7 @@ export function SchedulePage() {
                 반복 등록
               </button>
             )}
-            {isPrivileged && showLessonPackages && BRAND.vertical === 'lesson-on' && (
+            {isPrivileged && showLessonPackages && BRAND.vertical === 'lessonon' && (
               <button onClick={() => { setShowPastAtt(true); close() }} className={menuItemCls}>
                 <NavIcon>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/><path d="M3.6 9h.01M3.6 15h.01"/></svg>

@@ -291,7 +291,7 @@ export function AdminPage() {
   const dragTabRef = useRef<Tab | null>(null)
   const visibleOrderedTabs = tabOrder.filter(t => {
     if (adminIsFreeform && (t === 'notifications' || t === 'autoassign')) return false
-    if (t === 'lessons' && (!getFF(tenantFF, 'lesson_packages') || BRAND.vertical !== 'lesson-on')) return false
+    if (t === 'lessons' && (!getFF(tenantFF, 'lesson_packages') || BRAND.vertical !== 'lessonon')) return false
     if (t === 'autoassign' && !getFF(tenantFF, 'autoassign')) return false
     if (t === 'notifications' && !getFF(tenantFF, 'notifications')) return false
     if (t === 'hours' && !getFF(tenantFF, 'volunteer_hours')) return false
@@ -320,7 +320,7 @@ export function AdminPage() {
   // 비회원 모드 또는 feature flag 꺼짐 시 해당 탭 강제 이탈
   useEffect(() => {
     if (adminIsFreeform && tab === 'notifications') { setTab('members'); return }
-    if (tab === 'lessons' && (!getFF(tenantFF, 'lesson_packages') || BRAND.vertical !== 'lesson-on')) setTab('members')
+    if (tab === 'lessons' && (!getFF(tenantFF, 'lesson_packages') || BRAND.vertical !== 'lessonon')) setTab('members')
     if (tab === 'autoassign' && !getFF(tenantFF, 'autoassign')) setTab('members')
     if (tab === 'notifications' && !getFF(tenantFF, 'notifications')) setTab('members')
     if (tab === 'hours' && !getFF(tenantFF, 'volunteer_hours')) setTab('members')
@@ -3615,7 +3615,7 @@ export function AdminPage() {
               </div>
             )}
             {/* ── 레슨권 관리 ── */}
-            {tab === 'lessons' && getFF(tenantFF, 'lesson_packages') && BRAND.vertical === 'lesson-on' && (
+            {tab === 'lessons' && getFF(tenantFF, 'lesson_packages') && BRAND.vertical === 'lessonon' && (
               <LessonManagementPanel
                 tenantId={adminTenantId}
                 members={members}
