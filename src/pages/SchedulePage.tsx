@@ -579,7 +579,7 @@ export function SchedulePage() {
       id: 'operation', label: '운영', description: '인원 설정 · 배정 · 반복 · 출석',
       items: [
         { id: 'op:capacity',  label: '인원 설정',     action: (close: () => void) => { setShowCapacity(true);  close() } },
-        ...(tenantMode !== '비회원' ? [{ id: 'op:auto', label: '자동배정', action: (close: () => void) => { handleAutoAssign(); close() } }] : []),
+        ...(tenantMode !== '비회원' && tenantMode !== '회원개별' ? [{ id: 'op:auto', label: '자동배정', action: (close: () => void) => { handleAutoAssign(); close() } }] : []),
         ...(profile        ? [{ id: 'op:recur', label: '반복 등록',     action: (close: () => void) => { setShowRecurring(true); close() } }] : []),
         { id: 'op:past',      label: '소급 출석 입력', action: (close: () => void) => { setShowPastAtt(true);  close() } },
         { id: 'op:sms',       label: '문자 발송',      action: (close: () => void) => { setShowSms(true);      close() } },
@@ -885,7 +885,7 @@ export function SchedulePage() {
               </NavIcon>
               인원 설정
             </button>
-            {tenantMode !== '비회원' && (
+            {tenantMode !== '비회원' && tenantMode !== '회원개별' && (
               <button onClick={() => { handleAutoAssign(); close() }} className={menuItemCls}>
                 <NavIcon>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8 19 13M17.8 6.2 19 5M12.2 6.2 11 5M12.2 11.8 11 13"/><path d="M3 21l9-9"/><path d="M12.2 6.2 3 15l3 3 9.2-9.2"/></svg>
