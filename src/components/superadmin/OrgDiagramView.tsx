@@ -38,6 +38,7 @@ export function OrgDiagramView({ customerName, tenants, memberCounts, pendingCou
               <span className="flex flex-col min-w-0">
                 <span className="flex items-center gap-2">
                   <span className="text-[13px] font-bold text-[var(--color-text-primary)] whitespace-nowrap">{t.name}</span>
+                  {t.source_vertical && <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)]">{t.source_vertical}</span>}
                   {pending > 0 && <span className="hub-badge hub-badge-pending">{pending}</span>}
                 </span>
                 <span className="text-[11px] text-[var(--color-text-muted)] whitespace-nowrap">
