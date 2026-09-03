@@ -131,17 +131,7 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
 
   // 토요일도 평일과 동일한 배경색을 사용한다 (isSaturdayShift는 plus 회원 병합 표시에만 사용)
   const tint = resolveTint(colType, slotStart)
-  const relevantForWithdrawn = colType === 'role' && roleId
-    ? assignments.filter(a => a.role_id === roleId)
-    : colType === 'plus'
-    ? assignments.filter(a => a.member_type === '50plus')
-    : assignments.filter(a => !a.member_type || a.member_type === 'member')
-  const hasWithdrawnMember = relevantForWithdrawn.some(a =>
-    (a.user_id && withdrawnUserIds?.has(a.user_id)) || a.account_deleted
-  )
-  const effectiveTint = hasWithdrawnMember
-    ? { bg: 'oklch(0.97 0.02 25)', ink: 'oklch(0.55 0.16 25)' }
-    : tint
+  const effectiveTint = tint
 
   // ── CLOSE states ─────────────────────────────────────────────────────────────
   if (isBreaktime) {
