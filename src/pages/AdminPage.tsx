@@ -13,6 +13,7 @@ import { buildSlot, parseSlotLabel, generateTimeSlots, DEFAULT_TIME_SLOTS, SLOT_
 import { SCHEDULE_RULE_TEMPLATES } from '../utils/scheduleRuleTemplates'
 import { getKoreanHolidaysInYear } from '../utils/koreanHolidays'
 import { CUSTOM_FIELD_TEMPLATES } from '../utils/customFieldTemplates'
+import { BRAND } from '../lib/brandConfig'
 import type { TimeSlot, Tenant, TenantAccessRole, TenantRole, LegendItem, LegendColor, CustomFieldDef, CustomFieldOption, OptionValueType, CustomFieldType, Assignment } from '../types'
 import { OPTION_VALUE_TYPES, getOptionUnit, FIELD_TYPES_WITH_OPTIONS, FIELD_TYPES_WITH_DASHBOARD } from '../types'
 import { LEGEND_COLOR_STYLES } from '../components/schedule/Legend'
@@ -290,7 +291,7 @@ export function AdminPage() {
   const dragTabRef = useRef<Tab | null>(null)
   const visibleOrderedTabs = tabOrder.filter(t => {
     if (adminIsFreeform && (t === 'notifications' || t === 'autoassign')) return false
-    if (t === 'lessons' && !getFF(tenantFF, 'lesson_packages')) return false
+    if (t === 'lessons' && (!getFF(tenantFF, 'lesson_packages') || BRAND.vertical !== 'lesson-on')) return false
     if (t === 'autoassign' && !getFF(tenantFF, 'autoassign')) return false
     if (t === 'notifications' && !getFF(tenantFF, 'notifications')) return false
     if (t === 'hours' && !getFF(tenantFF, 'volunteer_hours')) return false
@@ -319,7 +320,7 @@ export function AdminPage() {
   // 비회원 모드 또는 feature flag 꺼짐 시 해당 탭 강제 이탈
   useEffect(() => {
     if (adminIsFreeform && tab === 'notifications') { setTab('members'); return }
-    if (tab === 'lessons' && !getFF(tenantFF, 'lesson_packages')) setTab('members')
+    if (tab === 'lessons' && (!getFF(tenantFF, 'lesson_packages') || BRAND.vertical !== 'lesson-on')) setTab('members')
     if (tab === 'autoassign' && !getFF(tenantFF, 'autoassign')) setTab('members')
     if (tab === 'notifications' && !getFF(tenantFF, 'notifications')) setTab('members')
     if (tab === 'hours' && !getFF(tenantFF, 'volunteer_hours')) setTab('members')
@@ -1342,31 +1343,31 @@ export function AdminPage() {
                 {adminTenant?.name?.[0] ?? '관'}
               </div>
               <div className="min-w-0">
-                {availableTenants.length > 1 ? (
-                  <select
-                    value={adminTenant?.id ?? ''}
-                    onChange={e => {
-                      const t = availableTenants.find(t => t.id === e.target.value)
-                      if (t) setAdminTenant(t)
-                    }}
-                    className="bg-transparent border-0 outline-none text-[15px] font-bold text-[var(--color-text-primary)] cursor-pointer max-w-[180px] leading-tight"
-                  >
-                    {availableTenants.map(t => (
-                      <option key={t.id} value={t.id}>
-                        {t.name}{profile?.is_super_admin && t.source_vertical ? ` [${t.source_vertical}]` : ''}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <div className="text-[15px] font-bold text-[var(--color-text-primary)] truncate leading-tight">{adminTenant?.name ?? '관리자'}</div>
-                )}
-                <div className="text-[11.5px] text-[var(--color-text-muted)] font-medium leading-tight">
-                  {ta('title')}
+                <div className="flex items-center gap-1.5">
+                  {availableTenants.length > 1 ? (
+                    <select
+                      value={adminTenant?.id ?? ''}
+                      onChange={e => {
+                        const t = availableTenants.find(t => t.id === e.target.value)
+                        if (t) setAdminTenant(t)
+                      }}
+                      className="bg-transparent border-0 outline-none text-[15px] font-bold text-[var(--color-text-primary)] cursor-pointer max-w-[180px] leading-tight"
+                    >
+                      {availableTenants.map(t => (
+                        <option key={t.id} value={t.id}>{t.name}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="text-[15px] font-bold text-[var(--color-text-primary)] truncate leading-tight">{adminTenant?.name ?? '관리자'}</div>
+                  )}
                   {profile?.is_super_admin && adminTenant?.source_vertical && (
-                    <span className="ml-1.5 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)]">
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] shrink-0">
                       {adminTenant.source_vertical}
                     </span>
                   )}
+                </div>
+                <div className="text-[11.5px] text-[var(--color-text-muted)] font-medium leading-tight">
+                  {ta('title')}
                 </div>
               </div>
             </div>
@@ -3614,7 +3615,7 @@ export function AdminPage() {
               </div>
             )}
             {/* ── 레슨권 관리 ── */}
-            {tab === 'lessons' && getFF(tenantFF, 'lesson_packages') && (
+            {tab === 'lessons' && getFF(tenantFF, 'lesson_packages') && BRAND.vertical === 'lesson-on' && (
               <LessonManagementPanel
                 tenantId={adminTenantId}
                 members={members}
