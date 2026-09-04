@@ -86,6 +86,7 @@ interface FullScreenMenuProps {
   isSuperAdmin: boolean
   isCustomerAdmin: boolean
   extraMenuGroups?: ExtraMenuGroup[]
+  asSidebar?: boolean
   onClose: () => void
   onShowProfile?: () => void
   onShowNotifications?: () => void
@@ -239,7 +240,7 @@ const StarIcon = ({ filled }: { filled: boolean }) => (
 // ─── 메인 컴포넌트 ───────────────────────────────────────────────────────────
 export function FullScreenMenu({
   profile, tenant, isPrivileged, isSuperAdmin, isCustomerAdmin,
-  extraMenuGroups = [], onClose,
+  extraMenuGroups = [], asSidebar = false, onClose,
   onShowProfile, onShowNotifications,
   unreadCount = 0, isDark, onToggleDark, onSignOut,
 }: FullScreenMenuProps) {
@@ -332,7 +333,14 @@ export function FullScreenMenu({
   const inputCls = "w-full pl-10 pr-9 py-2.5 rounded-xl text-sm outline-none bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] border border-[var(--color-border)] focus:border-[var(--color-brand-primary)] transition-colors"
 
   return (
-    <div className="fixed inset-0 z-50 bg-[var(--color-bg)] overflow-y-auto">
+    <>
+    {asSidebar && (
+      <div className="fixed inset-0 z-40 bg-black/40" onClick={onClose} />
+    )}
+    <div className={asSidebar
+      ? "fixed top-0 left-0 bottom-0 z-50 w-[400px] bg-[var(--color-bg)] overflow-y-auto shadow-2xl border-r border-[var(--color-border)]"
+      : "fixed inset-0 z-50 bg-[var(--color-bg)] overflow-y-auto"
+    }>
       {/* ── 헤더 ─────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-4 pt-4 pb-2 sticky top-0 z-10 bg-[var(--color-bg)] border-b border-[var(--color-border)]">
         <button
@@ -612,5 +620,6 @@ export function FullScreenMenu({
         )}
       </div>
     </div>
+    </>
   )
 }

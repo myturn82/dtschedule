@@ -16,10 +16,39 @@ import { useDarkMode } from '../contexts/DarkModeContext'
 import { FeedbackModal } from './modals/FeedbackModal'
 import { useFeedbackBadge } from '../hooks/useFeedbackBadge'
 import { FullScreenMenu, MENU_GROUPS, type ExtraMenuGroup } from './FullScreenMenu'
+import { WizardIcon } from './setup/WizardIcons'
+
+function SidebarGroupIcon({ id }: { id: string }) {
+  const icons: Record<string, React.ReactNode> = {
+    members: <WizardIcon.users size={11} />,
+    schedule: <WizardIcon.calendar size={11} />,
+    service: <WizardIcon.gear size={11} />,
+  }
+  return <>{icons[id] ?? null}</>
+}
+
+function SidebarItemIcon({ id }: { id: string }) {
+  const icons: Record<string, React.ReactNode> = {
+    'tab:members':       <WizardIcon.user size={11} />,
+    'tab:roles':         <WizardIcon.tag size={11} />,
+    'tab:custom_fields': <WizardIcon.text size={11} />,
+    'tab:attendance':    <WizardIcon.check2 size={11} />,
+    'tab:hours':         <WizardIcon.calendarClock size={11} />,
+    'tab:rules':         <WizardIcon.calendar size={11} />,
+    'tab:autoassign':    <WizardIcon.refresh size={11} />,
+    'tab:legend':        <WizardIcon.palette size={11} />,
+    'tab:settings':      <WizardIcon.gear size={11} />,
+    'tab:notifications': <WizardIcon.bell size={11} />,
+    'tab:lessons':       <WizardIcon.ticket size={11} />,
+    'tab:feedback':      <WizardIcon.message size={11} />,
+  }
+  return <>{icons[id] ?? null}</>
+}
 
 // 웹푸시 배치 발송(GitHub Actions cron)이 비활성화된 동안 구독 유도 UI도 숨김.
 // 재활성화 시 true로 되돌리면 됨.
 const PUSH_NOTIFICATIONS_ENABLED = false
+
 
 function IconChip({ children, active, danger }: { children: React.ReactNode; active?: boolean; danger?: boolean }) {
   return (
@@ -55,6 +84,8 @@ export function AppHeader({ funcMenuItems, extraMenuGroups, userMenuItems, leftS
   const { tenant, tenantRole, tenantPlan, memberships, resetTenantSelection, reloadMemberships } = useTenant()
   // 데스크탑 사이드바 상태 (lg 이상에서 사용)
   const [showFuncMenu, setShowFuncMenu] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 1024)
+  // PC 사이드바 관리자콘솔 섹션 접기 (기본 접힘)
+  const [sidebarAdminOpen, setSidebarAdminOpen] = useState(false)
   // 모바일 풀스크린 메뉴 상태
   const [showFullMenu, setShowFullMenu] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
@@ -82,10 +113,19 @@ export function AppHeader({ funcMenuItems, extraMenuGroups, userMenuItems, leftS
 
   // 창 크기 변경 시 데스크탑 사이드바 자동 표시/숨김
   useEffect(() => {
-    const handleResize = () => { setShowFuncMenu(window.innerWidth >= 1024) }
+    const handleResize = () => {
+      const w = window.innerWidth
+      setShowFuncMenu(w >= 1024)
+      setIsWideMobile(w > 430 && w < 1024)
+    }
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
+
+  // 와이드 모바일 감지 (430px 초과 = 폴더블 등, 1024px 미만 = 데스크탑 아님)
+  const [isWideMobile, setIsWideMobile] = useState(() =>
+    typeof window !== 'undefined' && window.innerWidth > 430 && window.innerWidth < 1024
+  )
 
   // 데스크탑 사이드바가 열리면 body에 data-sidebar 속성 설정 (레이아웃 padding 조정용)
   useLayoutEffect(() => {
@@ -267,14 +307,30 @@ export function AppHeader({ funcMenuItems, extraMenuGroups, userMenuItems, leftS
                       고객 어드민
                     </button>
                   )}
-                  <NavLabel>관리자콘솔</NavLabel>
-                  {MENU_GROUPS.map(group => (
+                  <button
+                    onClick={() => setSidebarAdminOpen(v => !v)}
+                    className="w-full flex items-center justify-between px-2.5 pt-3 pb-1 text-[10.5px] font-bold uppercase tracking-wide text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
+                  >
+                    <span>관리자콘솔</span>
+                    <svg
+                      width="10" height="10" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
+                      className={`transition-transform duration-200 ${sidebarAdminOpen ? 'rotate-180' : ''}`}
+                    >
+                      <path d="M6 9l6 6 6-6"/>
+                    </svg>
+                  </button>
+                  {sidebarAdminOpen && MENU_GROUPS.map(group => (
                     <div key={group.id}>
-                      <p className="px-3 pt-2 pb-0.5 text-[9px] font-bold uppercase tracking-wider text-[var(--color-text-muted)]">{group.label}</p>
+                      <p className="px-3 pt-2 pb-0.5 text-[10.5px] font-semibold text-[var(--color-text-muted)] flex items-center gap-1.5">
+                        <SidebarGroupIcon id={group.id} />
+                        {group.label}
+                      </p>
                       {group.items.map(item => (
                         <button key={item.id} onClick={() => { navigate(item.path); setShowFuncMenu(false) }}
-                          className="w-full text-left px-3 py-1.5 text-[12px] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] rounded-xl transition-colors truncate block">
-                          {item.label}
+                          className="w-full text-left pl-6 pr-3 py-1.5 text-[13px] font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] rounded-xl transition-colors flex items-center gap-1.5">
+                          <SidebarItemIcon id={item.id} />
+                          <span className="truncate">{item.label}</span>
                         </button>
                       ))}
                     </div>
@@ -307,6 +363,7 @@ export function AppHeader({ funcMenuItems, extraMenuGroups, userMenuItems, leftS
             isSuperAdmin={!!profile?.is_super_admin}
             isCustomerAdmin={isCustomerAdmin}
             extraMenuGroups={extraMenuGroups}
+            asSidebar={isWideMobile}
             onClose={() => setShowFullMenu(false)}
             onShowProfile={() => setShowProfile(true)}
             onShowNotifications={() => setShowNotifications(true)}
