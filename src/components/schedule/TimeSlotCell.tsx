@@ -78,7 +78,7 @@ function NameChips({ assignments, highlightName, tintBg, tintInk, teamLeaderUser
         const isMyOwn = !!(myUserId && a.user_id && a.user_id === myUserId)
         const nameLabel = a.extra_data?._nf ? (a.extra_data._cl ?? '') : a.member_name
         const timeLabel = showTimeSub && a.time_sub ? formatTimeSub(a.time_sub) : null
-        const pkg = a.lesson_package_id ? lessonPackageMap?.get(a.lesson_package_id) : null
+        const pkg = a.lesson_package_id ? lessonPackageMap?.get(a.id) : null
         return (
           <div
             key={a.id}

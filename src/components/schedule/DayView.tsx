@@ -69,7 +69,7 @@ function PersonChip({ a, withdrawnUserIds, onClick, isAdmin, lessonPackageMap }:
       {!isW && a.note && (
         <span className="text-xs text-[var(--color-text-muted)] truncate">· {a.note}</span>
       )}
-      {a.lesson_package_id && (() => { const pkg = lessonPackageMap?.get(a.lesson_package_id!); return pkg ? <span className="text-xs font-bold tabular-nums text-[var(--color-text-muted)]">{pkg.remaining}/{pkg.total}</span> : null })()}
+      {a.lesson_package_id && (() => { const pkg = lessonPackageMap?.get(a.id); return pkg ? <span className="text-xs font-bold tabular-nums text-[var(--color-text-muted)]">{pkg.remaining}/{pkg.total}</span> : null })()}
     </div>
   )
 }

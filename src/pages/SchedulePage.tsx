@@ -211,23 +211,39 @@ export function SchedulePage() {
   const assignments = needsAdj ? [...primaryAssignments, ...adjAssignments] : primaryAssignments
 
   const showLessonPackages = getFF(tenant?.settings?.feature_flags, 'lesson_packages')
+  // keyed by assignment ID → {remaining, total} at the time of that specific session
   const [lessonPackageMap, setLessonPackageMap] = useState<Map<string, { remaining: number; total: number }>>(new Map())
   useEffect(() => {
     if (!showLessonPackages || !tenant?.id) { setLessonPackageMap(new Map()); return }
-    const ids = [...new Set(assignments.map(a => a.lesson_package_id).filter((id): id is string => !!id))]
-    if (ids.length === 0) { setLessonPackageMap(new Map()); return }
+    const packagedAssignments = assignments.filter(a => a.lesson_package_id)
+    if (packagedAssignments.length === 0) { setLessonPackageMap(new Map()); return }
+    const ids = [...new Set(packagedAssignments.map(a => a.lesson_package_id!))]
     Promise.all([
       supabase.from('lesson_packages').select('id,total_sessions,initial_used_sessions').eq('tenant_id', tenant.id).in('id', ids),
-      supabase.from('assignments').select('lesson_package_id').eq('tenant_id', tenant.id).in('lesson_package_id', ids),
+      supabase.from('assignments').select('id,lesson_package_id,year,month,day,created_at').eq('tenant_id', tenant.id).in('lesson_package_id', ids).order('year').order('month').order('day').order('created_at'),
     ]).then(([pkgsRes, assRes]) => {
-      const countMap = new Map<string, number>()
-      for (const a of assRes.data ?? []) {
-        if (a.lesson_package_id) countMap.set(a.lesson_package_id, (countMap.get(a.lesson_package_id) ?? 0) + 1)
-      }
-      const map = new Map<string, { remaining: number; total: number }>()
+      const pkgInfo = new Map<string, { total: number; initialUsed: number }>()
       for (const pkg of pkgsRes.data ?? []) {
-        const used = (pkg.initial_used_sessions ?? 0) + (countMap.get(pkg.id) ?? 0)
-        map.set(pkg.id, { remaining: pkg.total_sessions - used, total: pkg.total_sessions })
+        pkgInfo.set(pkg.id, { total: pkg.total_sessions, initialUsed: pkg.initial_used_sessions ?? 0 })
+      }
+      // 패키지별 배정을 날짜순으로 정렬한 ID 목록
+      const pkgOrderedIds = new Map<string, string[]>()
+      for (const a of assRes.data ?? []) {
+        if (!a.lesson_package_id) continue
+        if (!pkgOrderedIds.has(a.lesson_package_id)) pkgOrderedIds.set(a.lesson_package_id, [])
+        pkgOrderedIds.get(a.lesson_package_id)!.push(a.id)
+      }
+      // 각 배정의 회차 순서로 잔여 회수 계산
+      const map = new Map<string, { remaining: number; total: number }>()
+      for (const a of packagedAssignments) {
+        const pkgId = a.lesson_package_id!
+        const info = pkgInfo.get(pkgId)
+        if (!info) continue
+        const orderedIds = pkgOrderedIds.get(pkgId) ?? []
+        const rank = orderedIds.indexOf(a.id) + 1 // 1-indexed
+        if (rank === 0) continue
+        const used = info.initialUsed + rank
+        map.set(a.id, { remaining: Math.max(0, info.total - used), total: info.total })
       }
       setLessonPackageMap(map)
     })
