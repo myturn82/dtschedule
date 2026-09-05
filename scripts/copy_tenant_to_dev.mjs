@@ -53,7 +53,9 @@ async function getDevCols(table) {
 
 // ── 개발 DB auth.users FK 제거 (개발 DB 전용 1회 설정) ─────────────────────
 async function dropDevAuthFKs() {
-  console.log('\n▶ 개발 DB auth.users FK 제거')
+  console.log('\n▶ 개발 DB auth.users FK 제거 → profiles FK 대체')
+
+  // 1. auth.users 참조 FK 제거
   const drops = [
     `ALTER TABLE profiles          DROP CONSTRAINT IF EXISTS profiles_id_fkey`,
     `ALTER TABLE assignments       DROP CONSTRAINT IF EXISTS assignments_user_id_fkey`,
@@ -64,7 +66,17 @@ async function dropDevAuthFKs() {
   ]
   for (const sql of drops) {
     const res = await apiQuery(DEV_REF, sql, 'DROP FK')
-    if (res !== null) console.log(`  ✓ ${sql.match(/DROP CONSTRAINT IF EXISTS (\S+)/)?.[1]}`)
+    if (res !== null) console.log(`  ✓ DROP ${sql.match(/DROP CONSTRAINT IF EXISTS (\S+)/)?.[1]}`)
+  }
+
+  // 2. profiles.id 직접 참조 FK 추가 (PostgREST가 관계를 인식하도록)
+  const adds = [
+    `ALTER TABLE tenant_members ADD CONSTRAINT IF NOT EXISTS tenant_members_user_id_profiles_fkey FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE SET NULL`,
+    `ALTER TABLE assignments    ADD CONSTRAINT IF NOT EXISTS assignments_user_id_profiles_fkey    FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE SET NULL`,
+  ]
+  for (const sql of adds) {
+    const res = await apiQuery(DEV_REF, sql, 'ADD FK')
+    if (res !== null) console.log(`  ✓ ADD ${sql.match(/ADD CONSTRAINT IF NOT EXISTS (\S+)/)?.[1]}`)
   }
 }
 
