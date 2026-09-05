@@ -74,6 +74,24 @@ npx supabase db push --project-ref mcuszdvophmqrwostcah
    - 이 설정은 운영 DB에 절대 적용하지 않는다.
    - 개발 DB에 새 테이블을 추가할 때, auth.users FK가 포함된 경우 마이그레이션 직후 FK를 제거하는 SQL을 스크립트에 추가한다.
 
+3. **auth.users FK 제거·대체는 마이그레이션 파일에 절대 포함하지 않는다.**
+   - `supabase/migrations/*.sql` 파일은 운영 DB에도 그대로 적용되므로, 개발 전용 FK 변경(`DROP CONSTRAINT … profiles_id_fkey` 등)을 마이그레이션에 넣으면 운영 DB 구조가 파괴된다.
+   - FK 변경은 오직 `scripts/copy_tenant_to_dev.mjs`의 `dropDevAuthFKs()` 함수 안에서만 처리한다.
+   - 새 테이블에 `auth.users` FK가 추가되는 마이그레이션이 생기면, 마이그레이션 파일은 그대로 두고 `dropDevAuthFKs()` 함수에 해당 FK DROP과 profiles FK ADD만 추가한다.
+
+   **현재 개발 DB 전용 FK 상태** (운영 DB와 다른 부분):
+
+   | 구분 | 제약명 | 비고 |
+   |------|--------|------|
+   | 제거됨 | `profiles_id_fkey` | auth.users → profiles |
+   | 제거됨 | `assignments_user_id_fkey` | auth.users → assignments |
+   | 제거됨 | `tenant_members_user_id_fkey` | auth.users → tenant_members |
+   | 제거됨 | `lesson_packages_user_id_fkey` | auth.users → lesson_packages |
+   | 제거됨 | `lesson_packages_created_by_fkey` | auth.users → lesson_packages |
+   | 제거됨 | `assignment_snapshots_created_by_fkey` | auth.users → assignment_snapshots |
+   | 추가됨 | `tenant_members_user_id_profiles_fkey` | profiles → tenant_members (PostgREST용) |
+   | 추가됨 | `assignments_user_id_profiles_fkey` | profiles → assignments (PostgREST용) |
+
 ## DB 변경 워크플로우
 
 테이블·컬럼 추가/삭제/수정 등 스키마 변경이 필요한 경우 반드시 아래 순서를 따른다.
