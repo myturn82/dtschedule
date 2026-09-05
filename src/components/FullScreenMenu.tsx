@@ -248,8 +248,10 @@ export function FullScreenMenu({
   const [search, setSearch] = useState('')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [recent, setRecent] = useState<RecentItem[]>(getRecent)
+  const [dragFrom, setDragFrom] = useState<number | null>(null)
+  const [dragTo, setDragTo] = useState<number | null>(null)
   const searchRef = useRef<HTMLInputElement>(null)
-  const { favorites, isFavorite, toggleFavorite } = useAdminFavorites()
+  const { favorites, isFavorite, toggleFavorite, reorderFavorites } = useAdminFavorites()
 
   // 피처 플래그 기반 메뉴 필터링
   const ff = tenant?.settings?.feature_flags
@@ -272,11 +274,6 @@ export function FullScreenMenu({
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => { document.body.style.overflow = prev }
-  }, [])
-
-  useEffect(() => {
-    const t = setTimeout(() => searchRef.current?.focus(), 80)
-    return () => clearTimeout(t)
   }, [])
 
   useEffect(() => {
@@ -481,15 +478,13 @@ export function FullScreenMenu({
         ) : (
           <>
             {/* ── 빠른 접근 ─────────────────────────────────────────────────── */}
-            <div className="rounded-2xl overflow-hidden border border-[var(--color-border)] bg-[var(--color-surface-secondary)]">
-              {quickLinks.map((link, idx) => (
+            <div className="flex gap-2">
+              {quickLinks.map((link) => (
                 <button key={link.id}
                   onClick={() => { pushRecent({ id: link.id, label: link.label }); setRecent(getRecent()); navigate(link.path); onClose() }}
-                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[var(--color-surface-hover)] transition-colors text-left"
-                  style={{ borderTop: idx > 0 ? '1px solid var(--color-border)' : 'none' }}>
-                  <span className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)]">{link.icon}</span>
-                  <span className="text-sm font-medium text-[var(--color-text-primary)]">{link.label}</span>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" className="ml-auto text-[var(--color-text-muted)]"><path d="M9 18l6-6-6-6"/></svg>
+                  className="flex-1 flex flex-col items-center gap-1.5 px-2 py-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors min-w-0">
+                  <span className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)]">{link.icon}</span>
+                  <span className="text-[11px] font-medium text-[var(--color-text-primary)] text-center leading-tight truncate w-full">{link.label}</span>
                 </button>
               ))}
             </div>
@@ -497,24 +492,38 @@ export function FullScreenMenu({
             {/* ── 즐겨찾기 (최근 본 메뉴 위) ──────────────────────────────── */}
             {isPrivileged && visibleFavorites.length > 0 && (
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-wider mb-2 text-[var(--color-text-muted)]">즐겨찾기</p>
+                <p className="text-[11px] font-bold uppercase tracking-wider mb-2 text-[var(--color-text-muted)]">즐겨찾기 <span className="font-normal normal-case opacity-60">드래그로 순서 변경</span></p>
                 <div className="grid grid-cols-3 gap-2">
-                  {visibleFavorites.map(tabId => (
-                    <button key={tabId}
-                      onClick={() => goTo({ id: `tab:${tabId}`, label: TAB_LABELS[tabId], path: `/admin?tab=${tabId}` })}
-                      className="text-left rounded-2xl p-2.5 border border-[var(--color-border)] bg-[var(--color-surface-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors w-full">
-                      <div className="flex items-center gap-1.5 mb-1.5">
-                        <div className="flex-1 h-0.5 rounded-full bg-[var(--color-brand-primary)] opacity-70" />
-                        <span
-                          role="button"
-                          onClick={e => { e.stopPropagation(); toggleFavorite(tabId) }}
-                          className="w-4 h-4 flex items-center justify-center rounded-md shrink-0 text-[var(--color-brand-primary)] opacity-60 hover:opacity-100 transition-opacity"
-                          title="즐겨찾기 해제">
-                          <StarIcon filled={true} />
-                        </span>
-                      </div>
-                      <span className="text-xs font-medium text-[var(--color-text-primary)] leading-tight line-clamp-2">{TAB_LABELS[tabId]}</span>
-                    </button>
+                  {visibleFavorites.map((tabId, idx) => (
+                    <div
+                      key={tabId}
+                      draggable
+                      onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; setDragFrom(idx) }}
+                      onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDragTo(idx) }}
+                      onDrop={e => {
+                        e.preventDefault()
+                        if (dragFrom !== null && dragFrom !== idx) reorderFavorites(dragFrom, idx)
+                        setDragFrom(null); setDragTo(null)
+                      }}
+                      onDragEnd={() => { setDragFrom(null); setDragTo(null) }}
+                      className={`rounded-2xl transition-all ${dragFrom === idx ? 'opacity-40 scale-95' : ''} ${dragTo === idx && dragFrom !== idx ? 'ring-2 ring-[var(--color-brand-primary)]' : ''}`}
+                    >
+                      <button
+                        onClick={() => goTo({ id: `tab:${tabId}`, label: TAB_LABELS[tabId], path: `/admin?tab=${tabId}` })}
+                        className="text-left rounded-2xl p-2.5 border border-[var(--color-border)] bg-[var(--color-surface-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors w-full cursor-grab active:cursor-grabbing">
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <div className="flex-1 h-0.5 rounded-full bg-[var(--color-brand-primary)] opacity-70" />
+                          <span
+                            role="button"
+                            onClick={e => { e.stopPropagation(); toggleFavorite(tabId) }}
+                            className="w-4 h-4 flex items-center justify-center rounded-md shrink-0 text-[var(--color-brand-primary)] opacity-60 hover:opacity-100 transition-opacity"
+                            title="즐겨찾기 해제">
+                            <StarIcon filled={true} />
+                          </span>
+                        </div>
+                        <span className="text-xs font-medium text-[var(--color-text-primary)] leading-tight line-clamp-2">{TAB_LABELS[tabId]}</span>
+                      </button>
+                    </div>
                   ))}
                 </div>
               </div>

@@ -10,7 +10,6 @@ interface Row {
   id: number
   date: string
   time_slot: string
-  note: string
 }
 
 interface SavedItem {
@@ -55,7 +54,7 @@ export function PastAttendanceModal({ tenantId, members, prefillUserId, prefillP
 
   const [userId, setUserId] = useState(prefillUserId ?? '')
   const [packageId, setPackageId] = useState(prefillPackageId ?? '')
-  const [rows, setRows] = useState<Row[]>([{ id: ++_rowId, date: '', time_slot: timeSlots[0] ?? '', note: '' }])
+  const [rows, setRows] = useState<Row[]>([{ id: ++_rowId, date: '', time_slot: timeSlots[0] ?? '' }])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [savedItems, setSavedItems] = useState<SavedItem[] | null>(null)
@@ -85,6 +84,7 @@ export function PastAttendanceModal({ tenantId, members, prefillUserId, prefillP
     if (override?.is_holiday) return false
     if (override?.is_open === false) return false
     if (override?.is_open === true) return true
+    if (scheduleRules.length === 0) return true
     const dow = new Date(year, month - 1, day).getDay()
     return scheduleRules.some(r => r.day_of_week === dow && r.is_open)
   }
@@ -116,7 +116,6 @@ export function PastAttendanceModal({ tenantId, members, prefillUserId, prefillP
       id: ++_rowId,
       date: '',
       time_slot: last?.time_slot ?? (timeSlots[0] ?? ''),
-      note: '',
     }])
   }
 
@@ -152,7 +151,7 @@ export function PastAttendanceModal({ tenantId, members, prefillUserId, prefillP
         member_name: memberName,
         member_type: 'member',
         user_id: userId,
-        note: r.note.trim() || null,
+        note: null,
         lesson_package_id: packageId || null,
       }
     })
@@ -331,15 +330,14 @@ export function PastAttendanceModal({ tenantId, members, prefillUserId, prefillP
 
         {/* 행 목록 */}
         <div className="space-y-2">
-          <div className="grid grid-cols-[1fr_1fr_1fr_28px] gap-2 px-1">
+          <div className="grid grid-cols-[1fr_1fr_28px] gap-2 px-1">
             <span className="text-xs font-semibold text-[var(--color-text-muted)]">날짜</span>
             <span className="text-xs font-semibold text-[var(--color-text-muted)]">시간 슬롯</span>
-            <span className="text-xs font-semibold text-[var(--color-text-muted)]">비고</span>
             <span />
           </div>
 
           {rows.map(row => (
-            <div key={row.id} className="grid grid-cols-[1fr_1fr_1fr_28px] gap-2 items-center">
+            <div key={row.id} className="grid grid-cols-[1fr_1fr_28px] gap-2 items-center">
               <button
                 type="button"
                 onClick={() => setOpenPickerRowId(row.id)}
@@ -356,13 +354,6 @@ export function PastAttendanceModal({ tenantId, members, prefillUserId, prefillP
                   <option key={ts} value={ts}>{slotLabels?.[ts] ?? ts}</option>
                 ))}
               </select>
-              <input
-                type="text"
-                value={row.note}
-                onChange={e => updateRow(row.id, 'note', e.target.value)}
-                placeholder="메모"
-                className={inputCls + ' w-full'}
-              />
               <button
                 type="button"
                 onClick={() => removeRow(row.id)}

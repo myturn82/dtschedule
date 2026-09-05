@@ -27,5 +27,15 @@ export function useAdminFavorites() {
 
   const isFavorite = useCallback((t: Tab) => favorites.includes(t), [favorites])
 
-  return { favorites, isFavorite, toggleFavorite }
+  const reorderFavorites = useCallback((from: number, to: number) => {
+    setFavorites(prev => {
+      const next = [...prev]
+      const [item] = next.splice(from, 1)
+      next.splice(to, 0, item)
+      localStorage.setItem('admin_tab_favorites', JSON.stringify(next))
+      return next
+    })
+  }, [])
+
+  return { favorites, isFavorite, toggleFavorite, reorderFavorites }
 }
