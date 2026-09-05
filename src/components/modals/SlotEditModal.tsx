@@ -78,6 +78,7 @@ export function SlotEditModal({
     isAdmin ? (lockedUserId ?? '') : (profile?.id ?? '')
   )
   const [note, setNote] = useState('')
+  const [noteVisible, setNoteVisible] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -293,6 +294,7 @@ export function SlotEditModal({
   function startEdit(a: Assignment) {
     setEditingId(a.id)
     setNote(a.note ?? '')
+    setNoteVisible(a.extra_data?._nv === '1')
     setTimeSub(a.time_sub ?? null)
     setSelectedPackageId(a.lesson_package_id ?? null)
     setEditYear(a.year)
@@ -348,6 +350,7 @@ export function SlotEditModal({
   function cancelEdit() {
     setEditingId(null)
     setNote('')
+    setNoteVisible(false)
     setTimeSub(defaultTimeSub)
     setFieldValues({})
     setSelectedPackageId(null)
@@ -463,6 +466,8 @@ export function SlotEditModal({
       }
     }
 
+    if (noteVisible) extraData = { ...(extraData ?? {}), _nv: '1' }
+
     const err = await onAdd(
       name,
       note.trim(),
@@ -577,6 +582,8 @@ export function SlotEditModal({
         }
       }
     }
+
+    if (noteVisible) extraData = { ...(extraData ?? {}), _nv: '1' }
 
     const err = await onUpdate(
       editingId,
@@ -1334,10 +1341,14 @@ export function SlotEditModal({
                         value={note}
                         rows={1}
                         onChange={e => setNote(e.target.value)}
-                        placeholder="메모(여기에 입력시 달력 괄호 안에 표출됨)"
+                        placeholder="메모"
                         maxLength={200}
                         className={inputClass + ' min-h-[44px] py-[12px] resize-none overflow-hidden'}
                       />
+                      <label className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] cursor-pointer select-none">
+                        <input type="checkbox" checked={noteVisible} onChange={e => setNoteVisible(e.target.checked)} className="accent-[var(--color-brand-primary)]" />
+                        달력에 메모 표시
+                      </label>
                     </>
                   )}
                 </>
@@ -1411,14 +1422,20 @@ export function SlotEditModal({
                     </div>
                   )}
                   {(!isSplitMode || !!selectedUserId) && (
-                    <AutoResizeTextarea
-                      minH={44}
-                      value={note}
-                      rows={1}
-                      onChange={e => setNote(e.target.value)}
-                      placeholder="메모(여기에 입력시 달력 괄호 안에 표출됨)"
-                      className={inputClass + ' min-h-[44px] py-[12px] resize-none overflow-hidden'}
-                    />
+                    <>
+                      <AutoResizeTextarea
+                        minH={44}
+                        value={note}
+                        rows={1}
+                        onChange={e => setNote(e.target.value)}
+                        placeholder="메모"
+                        className={inputClass + ' min-h-[44px] py-[12px] resize-none overflow-hidden'}
+                      />
+                      <label className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] cursor-pointer select-none">
+                        <input type="checkbox" checked={noteVisible} onChange={e => setNoteVisible(e.target.checked)} className="accent-[var(--color-brand-primary)]" />
+                        달력에 메모 표시
+                      </label>
+                    </>
                   )}
                 </>
               )}

@@ -93,7 +93,7 @@ function NameChips({ assignments, highlightName, tintBg, tintInk, teamLeaderUser
             </span>
             {a.is_locked && <span title="고정됨" className="inline-flex items-center"><LockIcon size={9} className="ml-0.5" /></span>}
             {isWithdrawn && <span className={`block ${subSize} font-normal`}>삭제됨</span>}
-            {a.note && (
+            {a.note && a.extra_data?._nv === '1' && (
               <span className={`block ${subSize} font-normal opacity-80 truncate`}>{a.note}</span>
             )}
             {timeLabel && (
