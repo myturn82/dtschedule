@@ -20,7 +20,7 @@ interface Props {
   highlighted?: boolean
   isAdmin?: boolean
   myUserId?: string
-  lessonPackageMap?: Map<string, { remaining: number; total: number }>
+  lessonPackageMap?: Map<string, { used: number; total: number }>
 }
 
 function getSlotHours(timeSlot: string): number[] {
@@ -64,7 +64,7 @@ function NameChips({ assignments, highlightName, tintBg, tintInk, teamLeaderUser
   isAdmin?: boolean
   myUserId?: string
   hasBarInCell?: boolean
-  lessonPackageMap?: Map<string, { remaining: number; total: number }>
+  lessonPackageMap?: Map<string, { used: number; total: number }>
 }) {
   const visible = assignments.filter(a => !(a.user_id && teamLeaderUserIds?.has(a.user_id ?? '')))
   if (!visible.length) return null
@@ -89,7 +89,7 @@ function NameChips({ assignments, highlightName, tintBg, tintInk, teamLeaderUser
           >
             <span style={isWithdrawn ? { textDecoration: 'line-through' } : undefined}>
               {nameLabel}
-              {pkg && <span className={`font-normal opacity-75 ml-0.5 tabular-nums`}>[{pkg.remaining}/{pkg.total}]</span>}
+              {pkg && <span className={`font-normal opacity-75 ml-0.5 tabular-nums`}>[{pkg.used}/{pkg.total}]</span>}
             </span>
             {a.is_locked && <span title="고정됨" className="inline-flex items-center"><LockIcon size={9} className="ml-0.5" /></span>}
             {isWithdrawn && <span className={`block ${subSize} font-normal`}>삭제됨</span>}

@@ -36,7 +36,7 @@ interface Props {
   copyRange?: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number; minColIdx: number; maxColIdx: number } | null
   canAdd?: boolean
   hiddenDays?: number[]
-  lessonPackageMap?: Map<string, { remaining: number; total: number }>
+  lessonPackageMap?: Map<string, { used: number; total: number }>
 }
 
 const DOW_ORDER = [1, 2, 3, 4, 5, 6, 0]

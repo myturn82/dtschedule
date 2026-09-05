@@ -64,7 +64,7 @@ interface Props {
   canAdd?: boolean
   selectionRange?: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number; minColIdx: number; maxColIdx: number } | null
   copyRange?: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number; minColIdx: number; maxColIdx: number } | null
-  lessonPackageMap?: Map<string, { remaining: number; total: number }>
+  lessonPackageMap?: Map<string, { used: number; total: number }>
 }
 
 export function WeekGrid({
@@ -304,7 +304,7 @@ export function WeekGrid({
                                     </span>
                                     {isWithdrawn && <span className="block text-[6px] sm:text-[8px] font-normal">삭제됨</span>}
                                     {timeLbl && <span className="block text-[6px] sm:text-[8px] font-normal opacity-60">{timeLbl}</span>}
-                                    {a.lesson_package_id && (() => { const pkg = lessonPackageMap?.get(a.lesson_package_id!); return pkg ? <span className="block text-[6px] sm:text-[8px] font-bold tabular-nums opacity-80">{pkg.remaining}/{pkg.total}</span> : null })()}
+                                    {a.lesson_package_id && (() => { const pkg = lessonPackageMap?.get(a.id); return pkg ? <span className="block text-[6px] sm:text-[8px] font-bold tabular-nums opacity-80">{pkg.used}/{pkg.total}</span> : null })()}
                                   </div>
                                 )
                               })
@@ -380,7 +380,7 @@ export function WeekGrid({
                             </span>
                             {isWithdrawn && <span className="block text-[6px] sm:text-[8px] font-normal">삭제됨</span>}
                             {timeLbl && <span className="block text-[6px] sm:text-[8px] font-normal opacity-60">{timeLbl}</span>}
-                            {a.lesson_package_id && (() => { const pkg = lessonPackageMap?.get(a.lesson_package_id!); return pkg ? <span className="block text-[6px] sm:text-[8px] font-bold tabular-nums opacity-80">{pkg.remaining}/{pkg.total}</span> : null })()}
+                            {a.lesson_package_id && (() => { const pkg = lessonPackageMap?.get(a.id); return pkg ? <span className="block text-[6px] sm:text-[8px] font-bold tabular-nums opacity-80">{pkg.used}/{pkg.total}</span> : null })()}
                           </div>
                         )
                       })

@@ -211,8 +211,8 @@ export function SchedulePage() {
   const assignments = needsAdj ? [...primaryAssignments, ...adjAssignments] : primaryAssignments
 
   const showLessonPackages = getFF(tenant?.settings?.feature_flags, 'lesson_packages')
-  // keyed by assignment ID → {remaining, total} at the time of that specific session
-  const [lessonPackageMap, setLessonPackageMap] = useState<Map<string, { remaining: number; total: number }>>(new Map())
+  // keyed by assignment ID → {used, total} 해당 세션 포함 누적 사용 회차
+  const [lessonPackageMap, setLessonPackageMap] = useState<Map<string, { used: number; total: number }>>(new Map())
   useEffect(() => {
     if (!showLessonPackages || !tenant?.id) { setLessonPackageMap(new Map()); return }
     const packagedAssignments = assignments.filter(a => a.lesson_package_id)
@@ -233,8 +233,8 @@ export function SchedulePage() {
         if (!pkgOrderedIds.has(a.lesson_package_id)) pkgOrderedIds.set(a.lesson_package_id, [])
         pkgOrderedIds.get(a.lesson_package_id)!.push(a.id)
       }
-      // 각 배정의 회차 순서로 잔여 회수 계산
-      const map = new Map<string, { remaining: number; total: number }>()
+      // 각 배정의 회차 순서로 사용 카운트 계산
+      const map = new Map<string, { used: number; total: number }>()
       for (const a of packagedAssignments) {
         const pkgId = a.lesson_package_id!
         const info = pkgInfo.get(pkgId)
@@ -243,7 +243,7 @@ export function SchedulePage() {
         const rank = orderedIds.indexOf(a.id) + 1 // 1-indexed
         if (rank === 0) continue
         const used = info.initialUsed + rank
-        map.set(a.id, { remaining: Math.max(0, info.total - used), total: info.total })
+        map.set(a.id, { used: Math.min(used, info.total), total: info.total })
       }
       setLessonPackageMap(map)
     })

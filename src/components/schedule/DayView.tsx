@@ -34,10 +34,10 @@ interface Props {
   selectionRange?: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number; minColIdx: number; maxColIdx: number } | null
   copyRange?: { minDay: number; maxDay: number; minSlotIdx: number; maxSlotIdx: number; minColIdx: number; maxColIdx: number } | null
   isAdmin?: boolean
-  lessonPackageMap?: Map<string, { remaining: number; total: number }>
+  lessonPackageMap?: Map<string, { used: number; total: number }>
 }
 
-function PersonChip({ a, withdrawnUserIds, onClick, isAdmin, lessonPackageMap }: { a: Assignment; withdrawnUserIds?: Set<string>; onClick?: () => void; isAdmin?: boolean; lessonPackageMap?: Map<string, { remaining: number; total: number }> }) {
+function PersonChip({ a, withdrawnUserIds, onClick, isAdmin, lessonPackageMap }: { a: Assignment; withdrawnUserIds?: Set<string>; onClick?: () => void; isAdmin?: boolean; lessonPackageMap?: Map<string, { used: number; total: number }> }) {
   const isW = !!(a.user_id && withdrawnUserIds?.has(a.user_id)) || a.account_deleted
   const cellLabel = a.extra_data?._nf ? (a.extra_data._cl ?? '') : a.member_name
   const initial = cellLabel?.charAt(0) ?? '?'
@@ -69,7 +69,7 @@ function PersonChip({ a, withdrawnUserIds, onClick, isAdmin, lessonPackageMap }:
       {!isW && a.note && (
         <span className="text-xs text-[var(--color-text-muted)] truncate">· {a.note}</span>
       )}
-      {a.lesson_package_id && (() => { const pkg = lessonPackageMap?.get(a.id); return pkg ? <span className="text-xs font-bold tabular-nums text-[var(--color-text-muted)]">{pkg.remaining}/{pkg.total}</span> : null })()}
+      {a.lesson_package_id && (() => { const pkg = lessonPackageMap?.get(a.id); return pkg ? <span className="text-xs font-bold tabular-nums text-[var(--color-text-muted)]">{pkg.used}/{pkg.total}</span> : null })()}
     </div>
   )
 }
