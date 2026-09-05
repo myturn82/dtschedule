@@ -33,13 +33,14 @@ interface Props {
   onCellClick: (target: ModalTarget) => void
   hiddenDays?: number[]
   highlightName?: string | null
+  lessonPackageMap?: Map<string, { used: number; total: number }>
 }
 
 export function MonthScheduleByDay({
   year, month, timeSlots, assignments, slotSettings, scheduleRules, dateOverrides,
   splitRoles = [], indicatorBarRoles = [], isSplitMode = false, hiddenRoleIds = EMPTY_SET,
   displayAssignmentFilter, withdrawnUserIds, canAdd = true, memberRoleId = null, onCellClick,
-  hiddenDays = [], highlightName = null,
+  hiddenDays = [], highlightName = null, lessonPackageMap,
 }: Props) {
   function barRoleFor(roleId: string | null): TenantRole | undefined {
     return roleId ? indicatorBarRoles.find(r => r.id === roleId) : undefined
@@ -140,6 +141,7 @@ export function MonthScheduleByDay({
                               <span className="font-mono-num">{slotStartHourLabel(timeSlot)}</span>{' '}
                               {rname && <span className="opacity-70">[{rname}]</span>}{' '}
                               <span className={isWithdrawn ? 'line-through opacity-70' : ''}>{assignment.member_name}</span>
+                              {assignment.lesson_package_id && (() => { const pkg = lessonPackageMap?.get(assignment.id); return pkg ? <span className="font-normal opacity-75 ml-0.5 tabular-nums">[{pkg.used}/{pkg.total}회차]</span> : null })()}
                               {assignment.is_locked && <LockIcon size={8} className="inline-block ml-0.5" />}
                             </button>
                           )

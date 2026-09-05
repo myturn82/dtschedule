@@ -1076,6 +1076,7 @@ export function SchedulePage() {
                   onCellClick={handleCellClick}
                   hiddenDays={effectiveHiddenDays}
                   highlightName={highlightName || null}
+                  lessonPackageMap={lessonPackageMap}
                 />
               ) : (
                 <ScheduleGrid
