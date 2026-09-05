@@ -67,7 +67,7 @@ export const MENU_GROUPS: NavMenuGroup[] = [
     ],
   },
   {
-    id: 'service', label: '서비스 설정', description: '조직 설정 · 알림 · 레슨권 · 피드백',
+    id: 'service', label: '서비스 설정', description: '조직 · 알림 · 레슨권 · 피드백',
     items: [
       { id: 'tab:settings',      label: '조직', path: '/admin?tab=settings',      keywords: ['조직', '설정'] },
       { id: 'tab:notifications', label: '배정알림',  path: '/admin?tab=notifications', keywords: ['알림'] },

@@ -17,7 +17,6 @@ import { useFeedbackBadge } from '../hooks/useFeedbackBadge'
 import { EMPTY_ORG_FORM, SLUG_RE, type CreateOrgForm } from '../components/superadmin/createOrgForm'
 import { displayMode } from '../lib/tenantMode'
 import { isValidPhone } from '../lib/phone'
-import { THEME_PRESETS, type ThemePresetKey } from '../lib/themePresets'
 import type { FeatureFlags } from '../lib/featureFlags'
 import { VERTICAL_PRESETS, type VerticalId } from '../lib/verticalPresets'
 import { getFunctionErrorMessage } from '../lib/functionsError'
@@ -686,15 +685,15 @@ export function SuperAdminPage() {
     }
   }
 
-  async function handleThemeChange(tenant: Tenant, presetKey: ThemePresetKey | '') {
+  async function handleThemeChange(tenant: Tenant, hexColor: string) {
     setThemeSaving(true)
     const { data, error } = await supabase
       .from('tenants')
       .update({
         settings: {
           ...tenant.settings,
-          theme_preset: presetKey || undefined,
-          theme_color: presetKey ? THEME_PRESETS[presetKey].light.accent : undefined,
+          theme_preset: undefined,
+          theme_color: hexColor || undefined,
         },
       })
       .eq('id', tenant.id)

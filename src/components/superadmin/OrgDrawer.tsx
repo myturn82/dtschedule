@@ -2,7 +2,8 @@
 import type { Tenant, TenantMode } from '../../types'
 import { colorOf, avatarColorFor, initialsOf } from '../../lib/avatarColor'
 import { displayMode } from '../../lib/tenantMode'
-import { THEME_PRESET_LIST, type ThemePresetKey } from '../../lib/themePresets'
+import { THEME_COLORS } from '../../lib/themeColors'
+import { VERTICAL_PRESETS, type VerticalId } from '../../lib/verticalPresets'
 import { getFF } from '../../lib/featureFlags'
 import type { FeatureFlags } from '../../lib/featureFlags'
 
@@ -42,7 +43,7 @@ interface Props {
   onModeChange: (tenant: Tenant, newMode: TenantMode) => void
 
   themeSaving: boolean
-  onThemeChange: (tenant: Tenant, presetKey: ThemePresetKey | '') => void
+  onThemeChange: (tenant: Tenant, hexColor: string) => void
 
   onFeatureFlagToggle: (tenant: Tenant, key: keyof FeatureFlags, value: boolean) => void
 
@@ -129,8 +130,15 @@ export function OrgDrawer({
             </button>
           )}
 
-          {tenant.business_type && <p className="text-[11.5px] text-[var(--color-text-muted)] mt-1">{tenant.business_type}</p>}
-          {tenant.is_active === false && <span className="hub-badge hub-badge-danger mt-1 inline-block">비활성</span>}
+          <div className="flex items-center gap-1.5 flex-wrap mt-1">
+            {tenant.source_vertical && (
+              <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-md bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)]">
+                {VERTICAL_PRESETS[tenant.source_vertical as VerticalId]?.appName ?? tenant.source_vertical}
+              </span>
+            )}
+            {tenant.business_type && <span className="text-[11.5px] text-[var(--color-text-muted)]">{tenant.business_type}</span>}
+            {tenant.is_active === false && <span className="hub-badge hub-badge-danger inline-block">비활성</span>}
+          </div>
         </div>
         <button onClick={onClose} className="flex-shrink-0 w-7 h-7 rounded-lg grid place-items-center text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)]" title="닫기">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -167,20 +175,22 @@ export function OrgDrawer({
         </button>
         {colorOpen && (
           <div className="flex flex-wrap gap-1.5 mt-1">
-            {THEME_PRESET_LIST.map(({ key, label, preset }) => {
-              const on = tenant.settings?.theme_preset === key
+            {THEME_COLORS.map(color => {
+              const on = tenant.settings?.theme_color === color
               return (
                 <button
-                  key={key}
+                  key={color}
                   type="button"
                   disabled={themeSaving}
-                  title={label}
-                  onClick={() => onThemeChange(tenant, on ? '' : key)}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 transition-transform hover:scale-[1.03] disabled:opacity-40 flex-shrink-0"
-                  style={{ borderColor: on ? preset.light.accent : 'var(--color-border-strong)', background: on ? preset.light.accentSoft : 'var(--color-surface)' }}
+                  onClick={() => onThemeChange(tenant, on ? '' : color)}
+                  className="w-7 h-7 rounded-lg border-2 transition-transform hover:scale-110 disabled:opacity-40 flex items-center justify-center flex-shrink-0"
+                  style={{ background: color, borderColor: on ? '#1f2937' : 'transparent', boxShadow: on ? '0 0 0 1px #fff inset' : undefined }}
                 >
-                  <span className="w-4 h-4 rounded-full flex-shrink-0" style={{ background: preset.light.accent }} />
-                  <span className="text-[11.5px] font-medium" style={{ color: on ? preset.light.accentText : 'var(--color-text-secondary)' }}>{label}</span>
+                  {on && (
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                      <path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
                 </button>
               )
             })}

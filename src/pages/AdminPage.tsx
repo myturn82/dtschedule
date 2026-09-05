@@ -17,7 +17,8 @@ import { BRAND } from '../lib/brandConfig'
 import type { TimeSlot, Tenant, TenantAccessRole, TenantRole, LegendItem, LegendColor, CustomFieldDef, CustomFieldOption, OptionValueType, CustomFieldType, Assignment } from '../types'
 import { OPTION_VALUE_TYPES, getOptionUnit, FIELD_TYPES_WITH_OPTIONS, FIELD_TYPES_WITH_DASHBOARD } from '../types'
 import { LEGEND_COLOR_STYLES } from '../components/schedule/Legend'
-import { applyThemePreset, THEME_PRESET_LIST, type ThemePresetKey } from '../lib/themePresets'
+import { applyThemePreset, type ThemePresetKey } from '../lib/themePresets'
+import { THEME_COLORS } from '../lib/themeColors'
 import { displayMode } from '../lib/tenantMode'
 import { getFunctionErrorMessage } from '../lib/functionsError'
 import { SmsModal } from '../components/modals/SmsModal'
@@ -2584,35 +2585,26 @@ export function AdminPage() {
                         <path d="M4 2l4 4-4 4" />
                       </svg>
                       <span>포인트 컬러 (선택)</span>
-                      {settingsPreset
-                        ? <span className="text-xs font-medium" style={{ color: THEME_PRESET_LIST.find(p => p.key === settingsPreset)?.preset.light.accent }}>{THEME_PRESET_LIST.find(p => p.key === settingsPreset)?.label}</span>
-                        : settingsTheme && <span className="w-4 h-4 rounded-sm border border-[var(--color-border-strong)] inline-block" style={{ background: settingsTheme }} />
-                      }
+                      {settingsTheme && <span className="w-4 h-4 rounded-sm border border-[var(--color-border-strong)] inline-block" style={{ background: settingsTheme }} />}
                     </button>
                     {colorOpen && (
                       <div className="mt-2 space-y-2">
                         <div className="flex flex-wrap gap-1.5">
-                          {THEME_PRESET_LIST.map(({ key, label, preset }) => {
-                            const on = settingsPreset === key
-                            return (
-                              <button
-                                key={key}
-                                type="button"
-                                title={label}
-                                onClick={() => {
-                                  const next = on ? '' : key
-                                  setSettingsPreset(next)
-                                  setSettingsTheme(next ? preset.light.accent : '')
-                                  applyThemePreset(next || null)
-                                }}
-                                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 transition-transform hover:scale-[1.03] flex-shrink-0"
-                                style={{ borderColor: on ? preset.light.accent : 'var(--color-border-strong)', background: on ? preset.light.accentSoft : 'var(--color-surface)' }}
-                              >
-                                <span className="w-4 h-4 rounded-full flex-shrink-0" style={{ background: preset.light.accent }} />
-                                <span className="text-xs font-medium" style={{ color: on ? preset.light.accentText : 'var(--color-text-secondary)' }}>{label}</span>
-                              </button>
-                            )
-                          })}
+                          {THEME_COLORS.map(color => (
+                            <button
+                              key={color}
+                              type="button"
+                              onClick={() => { setSettingsTheme(prev => prev === color ? '' : color); setSettingsPreset('') }}
+                              className="w-7 h-7 rounded-lg border-2 transition-transform hover:scale-110 flex items-center justify-center flex-shrink-0"
+                              style={{ background: color, borderColor: settingsTheme === color ? '#1f2937' : 'transparent', boxShadow: settingsTheme === color ? '0 0 0 1px #fff inset' : undefined }}
+                            >
+                              {settingsTheme === color && (
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                  <path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                              )}
+                            </button>
+                          ))}
                         </div>
                         <div className="flex items-center gap-2">
                           {settingsTheme && <span className="w-6 h-6 rounded-md border border-[var(--color-border-strong)] flex-shrink-0" style={{ background: settingsTheme }} />}
@@ -2636,7 +2628,7 @@ export function AdminPage() {
                 </div>
 
                 {/* Feature Flags — 슈퍼관리자 전용 */}
-                <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid var(--color-border)' }}>
+                {profile?.is_super_admin && <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid var(--color-border)' }}>
                   <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 10 }}>
                     기능 플래그 (슈퍼관리자 전용)
                   </div>
@@ -2667,7 +2659,7 @@ export function AdminPage() {
                       </label>
                     )
                   })}
-                </div>
+                </div>}
 
                 <button type="submit" disabled={saving}
                   className="px-5 py-2 bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-sm font-semibold rounded-xl hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-50">

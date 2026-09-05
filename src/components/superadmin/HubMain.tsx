@@ -9,7 +9,7 @@ import { OrgDiagramView } from './OrgDiagramView'
 import { OrgCardsView } from './OrgCardsView'
 import { EMPTY_ORG_FORM, type CreateOrgForm } from './createOrgForm'
 import { fmtPhone } from '../../lib/format'
-import { THEME_PRESET_LIST } from '../../lib/themePresets'
+import { THEME_COLORS } from '../../lib/themeColors'
 
 const inputCls = 'w-full px-3 py-2 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]'
 
@@ -391,26 +391,21 @@ export function HubMain({
             {colorOpen && (
               <div className="mt-2 space-y-2">
                 <div className="flex flex-wrap gap-1.5">
-                  {THEME_PRESET_LIST.map(({ key, label, preset }) => {
-                    const on = form.theme_preset === key
-                    return (
-                      <button
-                        key={key}
-                        type="button"
-                        title={label}
-                        onClick={() => setForm(prev => ({
-                          ...prev,
-                          theme_preset: prev.theme_preset === key ? '' : key,
-                          theme_color: prev.theme_preset === key ? '' : preset.light.accent,
-                        }))}
-                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 transition-transform hover:scale-[1.03] flex-shrink-0"
-                        style={{ borderColor: on ? preset.light.accent : 'var(--color-border-strong)', background: on ? preset.light.accentSoft : 'var(--color-surface)' }}
-                      >
-                        <span className="w-4 h-4 rounded-full flex-shrink-0" style={{ background: preset.light.accent }} />
-                        <span className="text-xs font-medium" style={{ color: on ? preset.light.accentText : 'var(--color-text-secondary)' }}>{label}</span>
-                      </button>
-                    )
-                  })}
+                  {THEME_COLORS.map(color => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => setForm(prev => ({ ...prev, theme_color: prev.theme_color === color ? '' : color, theme_preset: '' }))}
+                      className="w-7 h-7 rounded-lg border-2 transition-transform hover:scale-110 flex items-center justify-center flex-shrink-0"
+                      style={{ background: color, borderColor: form.theme_color === color ? '#1f2937' : 'transparent', boxShadow: form.theme_color === color ? '0 0 0 1px #fff inset' : undefined }}
+                    >
+                      {form.theme_color === color && (
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                          <path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                    </button>
+                  ))}
                 </div>
                 <div className="flex items-center gap-2">
                   {form.theme_color && <span className="w-6 h-6 rounded-md border border-[var(--color-border-strong)] flex-shrink-0" style={{ background: form.theme_color }} />}
