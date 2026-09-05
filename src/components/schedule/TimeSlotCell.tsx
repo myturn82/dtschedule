@@ -89,7 +89,7 @@ function NameChips({ assignments, highlightName, tintBg, tintInk, teamLeaderUser
           >
             <span style={isWithdrawn ? { textDecoration: 'line-through' } : undefined}>
               {nameLabel}
-              {pkg && <span className={`font-normal opacity-75 ml-0.5 tabular-nums`}>[{pkg.used}/{pkg.total}]</span>}
+              {pkg && <span className={`font-normal opacity-75 ml-0.5 tabular-nums`}>[{pkg.used}/{pkg.total}회차]</span>}
             </span>
             {a.is_locked && <span title="고정됨" className="inline-flex items-center"><LockIcon size={9} className="ml-0.5" /></span>}
             {isWithdrawn && <span className={`block ${subSize} font-normal`}>삭제됨</span>}

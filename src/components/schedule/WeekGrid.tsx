@@ -304,7 +304,7 @@ export function WeekGrid({
                                     </span>
                                     {isWithdrawn && <span className="block text-[6px] sm:text-[8px] font-normal">삭제됨</span>}
                                     {timeLbl && <span className="block text-[6px] sm:text-[8px] font-normal opacity-60">{timeLbl}</span>}
-                                    {a.lesson_package_id && (() => { const pkg = lessonPackageMap?.get(a.id); return pkg ? <span className="block text-[6px] sm:text-[8px] font-bold tabular-nums opacity-80">{pkg.used}/{pkg.total}</span> : null })()}
+                                    {a.lesson_package_id && (() => { const pkg = lessonPackageMap?.get(a.id); return pkg ? <span className="block text-[6px] sm:text-[8px] font-bold tabular-nums opacity-80">{pkg.used}/{pkg.total}회차</span> : null })()}
                                   </div>
                                 )
                               })
