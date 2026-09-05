@@ -61,7 +61,7 @@ export const MENU_GROUPS: NavMenuGroup[] = [
   {
     id: 'schedule', label: '스케줄 설정', description: '시간 · 요일 · 자동배정 · 범례',
     items: [
-      { id: 'tab:rules',      label: '날짜·요일·시간 설정', path: '/admin?tab=rules',      keywords: ['날짜', '요일', '시간', '규칙'] },
+      { id: 'tab:rules',      label: '날짜·요일·시간', path: '/admin?tab=rules',      keywords: ['날짜', '요일', '시간', '규칙'] },
       { id: 'tab:autoassign', label: '자동배정관리',          path: '/admin?tab=autoassign', keywords: ['자동', '배정'] },
       { id: 'tab:legend',     label: '범례 관리',           path: '/admin?tab=legend',     keywords: ['범례', '색상'] },
     ],
@@ -69,7 +69,7 @@ export const MENU_GROUPS: NavMenuGroup[] = [
   {
     id: 'service', label: '서비스 설정', description: '조직 설정 · 알림 · 레슨권 · 피드백',
     items: [
-      { id: 'tab:settings',      label: '조직 설정', path: '/admin?tab=settings',      keywords: ['조직', '설정'] },
+      { id: 'tab:settings',      label: '조직', path: '/admin?tab=settings',      keywords: ['조직', '설정'] },
       { id: 'tab:notifications', label: '배정알림',  path: '/admin?tab=notifications', keywords: ['알림'] },
       { id: 'tab:lessons',       label: '레슨권',    path: '/admin?tab=lessons',       keywords: ['레슨', '수업권'] },
       { id: 'tab:feedback',      label: '피드백',    path: '/admin?tab=feedback',      keywords: ['피드백', '의견'] },

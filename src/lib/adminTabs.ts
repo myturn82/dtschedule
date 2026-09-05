@@ -3,8 +3,8 @@ export type Tab = 'members' | 'roles' | 'rules' | 'settings' | 'autoassign' | 'l
 export const TAB_LABELS: Record<Tab, string> = {
   members: '회원 관리',
   roles: '역할 관리',
-  rules: '날짜·요일·시간 설정',
-  settings: '조직 설정',
+  rules: '날짜·요일·시간',
+  settings: '조직',
   autoassign: '자동배정관리',
   legend: '범례 관리',
   custom_fields: '입력항목',
