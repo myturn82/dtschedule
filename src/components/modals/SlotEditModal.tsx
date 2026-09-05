@@ -189,7 +189,7 @@ export function SlotEditModal({
       for (const a of assRes.data ?? []) {
         if (a.lesson_package_id) countMap.set(a.lesson_package_id, (countMap.get(a.lesson_package_id) ?? 0) + 1)
       }
-      const withUsage = pkgsRes.data.map(p => ({ ...p, used_sessions: countMap.get(p.id) ?? 0 })) as LessonPackageWithUsage[]
+      const withUsage = pkgsRes.data.map(p => ({ ...p, used_sessions: (p.initial_used_sessions ?? 0) + (countMap.get(p.id) ?? 0) })) as LessonPackageWithUsage[]
       const active = withUsage.filter(p =>
         p.used_sessions < p.total_sessions && (!p.expires_at || p.expires_at >= today)
       )
@@ -215,7 +215,7 @@ export function SlotEditModal({
       }
       const map: Record<string, LessonPackageWithUsage> = {}
       for (const p of pkgsRes.data as LessonPackage[]) {
-        map[p.id] = { ...p, used_sessions: countMap.get(p.id) ?? 0 }
+        map[p.id] = { ...p, used_sessions: (p.initial_used_sessions ?? 0) + (countMap.get(p.id) ?? 0) }
       }
       setPackageInfoMap(map)
     })

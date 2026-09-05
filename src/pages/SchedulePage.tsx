@@ -217,7 +217,7 @@ export function SchedulePage() {
     const ids = [...new Set(assignments.map(a => a.lesson_package_id).filter((id): id is string => !!id))]
     if (ids.length === 0) { setLessonPackageMap(new Map()); return }
     Promise.all([
-      supabase.from('lesson_packages').select('id,total_sessions').eq('tenant_id', tenant.id).in('id', ids),
+      supabase.from('lesson_packages').select('id,total_sessions,initial_used_sessions').eq('tenant_id', tenant.id).in('id', ids),
       supabase.from('assignments').select('lesson_package_id').eq('tenant_id', tenant.id).in('lesson_package_id', ids),
     ]).then(([pkgsRes, assRes]) => {
       const countMap = new Map<string, number>()
@@ -226,7 +226,7 @@ export function SchedulePage() {
       }
       const map = new Map<string, { remaining: number; total: number }>()
       for (const pkg of pkgsRes.data ?? []) {
-        const used = countMap.get(pkg.id) ?? 0
+        const used = (pkg.initial_used_sessions ?? 0) + (countMap.get(pkg.id) ?? 0)
         map.set(pkg.id, { remaining: pkg.total_sessions - used, total: pkg.total_sessions })
       }
       setLessonPackageMap(map)
