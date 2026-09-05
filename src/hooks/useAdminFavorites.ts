@@ -37,5 +37,18 @@ export function useAdminFavorites() {
     })
   }, [])
 
-  return { favorites, isFavorite, toggleFavorite, reorderFavorites }
+  const reorderFavoritesById = useCallback((fromId: Tab, toId: Tab) => {
+    setFavorites(prev => {
+      const from = prev.indexOf(fromId)
+      const to = prev.indexOf(toId)
+      if (from < 0 || to < 0 || from === to) return prev
+      const next = [...prev]
+      const [item] = next.splice(from, 1)
+      next.splice(to, 0, item)
+      localStorage.setItem('admin_tab_favorites', JSON.stringify(next))
+      return next
+    })
+  }, [])
+
+  return { favorites, isFavorite, toggleFavorite, reorderFavorites, reorderFavoritesById }
 }

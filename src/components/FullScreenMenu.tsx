@@ -3,6 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import { TAB_LABELS, type Tab } from '../lib/adminTabs'
 import { getFF, type FeatureFlags } from '../lib/featureFlags'
 import { useAdminFavorites } from '../hooks/useAdminFavorites'
+import {
+  DndContext, closestCenter, PointerSensor, TouchSensor,
+  useSensor, useSensors, type DragEndEvent,
+} from '@dnd-kit/core'
+import { SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 
 // ─── 최근 본 메뉴 (localStorage) ─────────────────────────────────────────────
 const RECENT_KEY = 'dts_recent_menus'
@@ -237,6 +243,42 @@ const StarIcon = ({ filled }: { filled: boolean }) => (
   </svg>
 )
 
+// ─── 즐겨찾기 정렬 가능 카드 ────────────────────────────────────────────────
+function SortableFavCard({ tabId, onGoTo, onRemove }: {
+  tabId: Tab
+  onGoTo: () => void
+  onRemove: (e: React.MouseEvent) => void
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: tabId })
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition, zIndex: isDragging ? 10 : undefined }}
+      {...attributes}
+      {...listeners}
+      className={`rounded-2xl touch-none ${isDragging ? 'opacity-40 scale-95' : ''}`}
+    >
+      <button
+        onClick={onGoTo}
+        className="text-left rounded-2xl p-2.5 border border-[var(--color-border)] bg-[var(--color-surface-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors w-full cursor-grab active:cursor-grabbing"
+      >
+        <div className="flex items-center gap-1.5 mb-1.5">
+          <div className="flex-1 h-0.5 rounded-full bg-[var(--color-brand-primary)] opacity-70" />
+          <span
+            role="button"
+            onClick={onRemove}
+            className="w-4 h-4 flex items-center justify-center rounded-md shrink-0 text-[var(--color-brand-primary)] opacity-60 hover:opacity-100 transition-opacity"
+            title="즐겨찾기 해제"
+          >
+            <StarIcon filled={true} />
+          </span>
+        </div>
+        <span className="text-xs font-medium text-[var(--color-text-primary)] leading-tight line-clamp-2">{TAB_LABELS[tabId]}</span>
+      </button>
+    </div>
+  )
+}
+
 // ─── 메인 컴포넌트 ───────────────────────────────────────────────────────────
 export function FullScreenMenu({
   profile, tenant, isPrivileged, isSuperAdmin, isCustomerAdmin,
@@ -248,10 +290,12 @@ export function FullScreenMenu({
   const [search, setSearch] = useState('')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [recent, setRecent] = useState<RecentItem[]>(getRecent)
-  const [dragFrom, setDragFrom] = useState<number | null>(null)
-  const [dragTo, setDragTo] = useState<number | null>(null)
   const searchRef = useRef<HTMLInputElement>(null)
-  const { favorites, isFavorite, toggleFavorite, reorderFavorites } = useAdminFavorites()
+  const { favorites, isFavorite, toggleFavorite, reorderFavoritesById } = useAdminFavorites()
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+  )
 
   // 피처 플래그 기반 메뉴 필터링
   const ff = tenant?.settings?.feature_flags
@@ -493,39 +537,29 @@ export function FullScreenMenu({
             {isPrivileged && visibleFavorites.length > 0 && (
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-wider mb-2 text-[var(--color-text-muted)]">즐겨찾기 <span className="font-normal normal-case opacity-60">드래그로 순서 변경</span></p>
-                <div className="grid grid-cols-3 gap-2">
-                  {visibleFavorites.map((tabId, idx) => (
-                    <div
-                      key={tabId}
-                      draggable
-                      onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; setDragFrom(idx) }}
-                      onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDragTo(idx) }}
-                      onDrop={e => {
-                        e.preventDefault()
-                        if (dragFrom !== null && dragFrom !== idx) reorderFavorites(dragFrom, idx)
-                        setDragFrom(null); setDragTo(null)
-                      }}
-                      onDragEnd={() => { setDragFrom(null); setDragTo(null) }}
-                      className={`rounded-2xl transition-all ${dragFrom === idx ? 'opacity-40 scale-95' : ''} ${dragTo === idx && dragFrom !== idx ? 'ring-2 ring-[var(--color-brand-primary)]' : ''}`}
-                    >
-                      <button
-                        onClick={() => goTo({ id: `tab:${tabId}`, label: TAB_LABELS[tabId], path: `/admin?tab=${tabId}` })}
-                        className="text-left rounded-2xl p-2.5 border border-[var(--color-border)] bg-[var(--color-surface-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors w-full cursor-grab active:cursor-grabbing">
-                        <div className="flex items-center gap-1.5 mb-1.5">
-                          <div className="flex-1 h-0.5 rounded-full bg-[var(--color-brand-primary)] opacity-70" />
-                          <span
-                            role="button"
-                            onClick={e => { e.stopPropagation(); toggleFavorite(tabId) }}
-                            className="w-4 h-4 flex items-center justify-center rounded-md shrink-0 text-[var(--color-brand-primary)] opacity-60 hover:opacity-100 transition-opacity"
-                            title="즐겨찾기 해제">
-                            <StarIcon filled={true} />
-                          </span>
-                        </div>
-                        <span className="text-xs font-medium text-[var(--color-text-primary)] leading-tight line-clamp-2">{TAB_LABELS[tabId]}</span>
-                      </button>
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={(event: DragEndEvent) => {
+                    const { active, over } = event
+                    if (over && active.id !== over.id) {
+                      reorderFavoritesById(active.id as Tab, over.id as Tab)
+                    }
+                  }}
+                >
+                  <SortableContext items={visibleFavorites} strategy={rectSortingStrategy}>
+                    <div className="grid grid-cols-3 gap-2">
+                      {visibleFavorites.map((tabId) => (
+                        <SortableFavCard
+                          key={tabId}
+                          tabId={tabId}
+                          onGoTo={() => goTo({ id: `tab:${tabId}`, label: TAB_LABELS[tabId], path: `/admin?tab=${tabId}` })}
+                          onRemove={e => { e.stopPropagation(); toggleFavorite(tabId) }}
+                        />
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </SortableContext>
+                </DndContext>
               </div>
             )}
 
