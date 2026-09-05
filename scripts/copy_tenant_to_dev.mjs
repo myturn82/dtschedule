@@ -68,6 +68,53 @@ async function dropDevAuthFKs() {
   }
 }
 
+// ── tenant_members: dev 고유 유저 멤버십 보존하며 복사 ────────────────────
+async function copyTenantMembers() {
+  console.log('\n▶ tenant_members')
+
+  const devCols = await getDevCols('tenant_members')
+  if (!devCols || devCols.size === 0) { console.log('  ⚠️  개발 DB에 테이블 없음'); return }
+
+  // dev에서만 존재하는 유저 멤버십 저장 (운영에 없는 user_id → 개발 전용 계정)
+  const prodMembers = await apiQuery(PROD_REF,
+    `SELECT user_id FROM tenant_members WHERE tenant_id = '${PROD_TID}'`, 'PROD_USERS')
+  const prodUserIds = (prodMembers ?? []).map(r => `'${r.user_id}'`).join(', ')
+
+  const devOnlyRows = prodUserIds.length
+    ? await apiQuery(DEV_REF,
+        `SELECT * FROM tenant_members WHERE tenant_id = '${DEV_TID}' AND user_id NOT IN (${prodUserIds})`,
+        'SAVE_DEV')
+    : await apiQuery(DEV_REF,
+        `SELECT * FROM tenant_members WHERE tenant_id = '${DEV_TID}'`,
+        'SAVE_DEV')
+
+  // 운영 데이터 조회 및 삽입
+  const rows = await apiQuery(PROD_REF,
+    `SELECT * FROM tenant_members WHERE tenant_id = '${PROD_TID}' ORDER BY id`, 'SELECT')
+  if (!rows) return
+  console.log(`  운영 ${rows.length}건 조회, dev 고유 ${(devOnlyRows ?? []).length}건 보존 예정`)
+
+  await apiQuery(DEV_REF, `DELETE FROM tenant_members WHERE tenant_id = '${DEV_TID}'`, 'DELETE')
+
+  const prodCols = rows.length ? Object.keys(rows[0]) : []
+  const useCols  = prodCols.filter(c => devCols.has(c))
+
+  let ok = 0, err = 0
+  for (const row of [...rows, ...(devOnlyRows ?? [])]) {
+    const cols = useCols.length ? useCols : Object.keys(row).filter(c => devCols.has(c))
+    const vals = cols.map(c => {
+      let v = row[c]
+      if (c === 'tenant_id') v = DEV_TID
+      else if (NULL_AUTH_COLS.has(c)) v = null
+      return lit(v)
+    })
+    const sql = `INSERT INTO tenant_members (${cols.join(', ')}) VALUES (${vals.join(', ')}) ON CONFLICT DO NOTHING`
+    const res = await apiQuery(DEV_REF, sql, 'INSERT')
+    if (res !== null) ok++; else err++
+  }
+  console.log(`  삽입 완료 ${ok}건` + (err ? `, 실패 ${err}건` : ''))
+}
+
 // ── tenant_id 기반 테이블 복사 ─────────────────────────────────────────────
 async function copyTable(table, orderBy = 'id') {
   console.log(`\n▶ ${table}`)
@@ -150,7 +197,7 @@ await dropDevAuthFKs()
 
 await copyProfiles()                                          // auth.users FK 제거 후 복사
 await copyTable('tenant_roles',         'id')
-await copyTable('tenant_members',       'id')                // 회원-조직 관계
+await copyTenantMembers()                                    // 회원-조직 관계 (dev 계정 보존)
 await copyTable('time_slots',           'id')
 await copyTable('lesson_package_types', 'id')
 await copyTable('slot_settings',        'id')
