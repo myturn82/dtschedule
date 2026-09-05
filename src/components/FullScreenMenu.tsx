@@ -379,8 +379,8 @@ export function FullScreenMenu({
       <div className="fixed inset-0 z-40 bg-black/40" onClick={onClose} />
     )}
     <div className={asSidebar
-      ? "fixed top-0 left-0 bottom-0 z-50 w-[400px] bg-[var(--color-bg)] overflow-y-auto shadow-2xl border-r border-[var(--color-border)]"
-      : "fixed inset-0 z-50 bg-[var(--color-bg)] overflow-y-auto"
+      ? "fixed top-0 left-0 bottom-0 z-50 w-[430px] bg-[var(--color-bg)] overflow-y-auto shadow-2xl border-r border-[var(--color-border)]"
+      : "fixed inset-0 z-50 bg-[var(--color-bg)] overflow-y-auto max-w-[430px]"
     }>
       {/* ── 헤더 ─────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-4 pt-4 pb-2 sticky top-0 z-10 bg-[var(--color-bg)] border-b border-[var(--color-border)]">
