@@ -517,7 +517,7 @@ export function AdminPage() {
   const [settingsTheme, setSettingsTheme] = useState('')
   const [settingsPreset, setSettingsPreset] = useState<ThemePresetKey | ''>('')
   const [settingsHiddenDays, setSettingsHiddenDays] = useState<number[]>([])
-  const [colorOpen, setColorOpen] = useState(false)
+  const [colorOpen, setColorOpen] = useState(true)
 
   const [slotLabels, setSlotLabels] = useState<Record<string, string>>({})
   const [roleRatios, setRoleRatios] = useState<Record<string, number>>({})
