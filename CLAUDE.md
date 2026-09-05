@@ -60,6 +60,20 @@ npx supabase db push --project-ref mcuszdvophmqrwostcah
 | 개발 (dev) | `mcuszdvophmqrwostcah` |
 | 운영 (prod) | `bjnmaajhcmhxwonybnqc` |
 
+## 운영→개발 데이터 복사 규칙
+
+`scripts/copy_tenant_to_dev.mjs` 등 운영 데이터를 개발로 복사하는 작업 시 반드시 아래를 지킨다.
+
+1. **운영 DB는 절대 수정하지 않는다.**
+   - 복사 스크립트에서 운영 DB(`bjnmaajhcmhxwonybnqc`)는 `SELECT`만 허용한다.
+   - INSERT·UPDATE·DELETE·ALTER·DROP 등 일체의 쓰기 명령을 운영 DB에 실행하지 않는다.
+   - 스크립트를 수정할 때도 `PROD_REF` 대상 쓰기 쿼리가 추가되지 않도록 반드시 확인한다.
+
+2. **개발 DB auth.users FK는 제거 상태를 유지한다.**
+   - 개발 DB에서만 `auth.users` FK를 제거해 실제 user_id를 그대로 보존한다.
+   - 이 설정은 운영 DB에 절대 적용하지 않는다.
+   - 개발 DB에 새 테이블을 추가할 때, auth.users FK가 포함된 경우 마이그레이션 직후 FK를 제거하는 SQL을 스크립트에 추가한다.
+
 ## DB 변경 워크플로우
 
 테이블·컬럼 추가/삭제/수정 등 스키마 변경이 필요한 경우 반드시 아래 순서를 따른다.
