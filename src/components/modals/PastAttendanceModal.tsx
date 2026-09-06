@@ -293,8 +293,8 @@ export function PastAttendanceModal({ tenantId, members, prefillUserId, prefillP
         </div>
 
         {/* 회원 + 결제권 */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="flex-1 min-w-0">
+        <div className="grid grid-cols-[1fr_1fr_28px] gap-2">
+          <div className="min-w-0">
             <label className="text-xs font-semibold text-[var(--color-text-secondary)] block mb-1">회원 *</label>
             <MemberSearchSelect
               value={userId}
@@ -304,7 +304,7 @@ export function PastAttendanceModal({ tenantId, members, prefillUserId, prefillP
               placeholder="회원 검색..."
             />
           </div>
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0">
             <label className="text-xs font-semibold text-[var(--color-text-secondary)] block mb-1">
               결제권 <span className="font-normal text-[var(--color-text-muted)]">선택</span>
             </label>
@@ -327,6 +327,7 @@ export function PastAttendanceModal({ tenantId, members, prefillUserId, prefillP
               </p>
             )}
           </div>
+          <div className="w-7" />
         </div>
 
         {/* 행 목록 */}
