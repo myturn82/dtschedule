@@ -5,6 +5,7 @@ import { useLessonPackages } from '../../hooks/useLessonPackages'
 import { MemberSearchSelect } from '../shared/MemberSearchSelect'
 import { DatePickerModal } from '../schedule/DatePickerModal'
 import { DevFileLabel } from '../DevFileLabel'
+import { shortSlotLabel } from '../../utils/timeSlots'
 
 interface Row {
   id: number
@@ -249,7 +250,7 @@ export function PastAttendanceModal({ tenantId, members, prefillUserId, prefillP
                     <span className="text-sm text-[var(--color-text-secondary)] tabular-nums">
                       {item.year}-{pad2(item.month)}-{pad2(item.day)}
                       <span className="ml-2 text-xs text-[var(--color-text-muted)]">
-                        {slotLabels?.[item.time_slot] ?? item.time_slot}
+                        {slotLabels?.[item.time_slot] ?? shortSlotLabel(item.time_slot)}
                       </span>
                     </span>
                     <button
@@ -351,7 +352,7 @@ export function PastAttendanceModal({ tenantId, members, prefillUserId, prefillP
                 className={inputCls + ' w-full'}
               >
                 {timeSlots.map(ts => (
-                  <option key={ts} value={ts}>{slotLabels?.[ts] ?? ts}</option>
+                  <option key={ts} value={ts}>{slotLabels?.[ts] ?? shortSlotLabel(ts)}</option>
                 ))}
               </select>
               <button
