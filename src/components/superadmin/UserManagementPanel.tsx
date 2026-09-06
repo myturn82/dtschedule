@@ -98,8 +98,10 @@ export function UserManagementPanel({ users, loading, onDeleteUsers }: Props) {
       <div className="flex items-center gap-2 flex-wrap">
         <input
           type="text"
+          lang="ko"
           value={search}
           onChange={e => setSearch(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur() }}
           placeholder="이름·이메일·전화번호·조직 검색"
           className="flex-1 min-w-0 px-3 py-2 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]"
         />

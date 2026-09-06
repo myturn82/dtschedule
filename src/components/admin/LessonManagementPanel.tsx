@@ -41,7 +41,7 @@ const STATUS_CLS: Record<ReturnType<typeof pkgStatus>, string> = {
 const inputCls = 'px-3 py-2 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 focus:border-[var(--color-brand-primary)]'
 
 export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
-  const { packageTypes, packages, loading, addPackageType, updatePackageType, deletePackageType, movePackageType, addPackage, reload } = useLessonPackages(tenantId)
+  const { packageTypes, packages, loading, addPackageType, updatePackageType, deletePackageType, movePackageType, addPackage, updatePackage, reload } = useLessonPackages(tenantId)
   const { slotLabels } = useTenant()
 
   // ── 레슨 종류 폼 ─────────────────────────────────────────
@@ -71,6 +71,9 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
   const [pkgInitialUsed, setPkgInitialUsed] = useState('')
   const [pastAttTarget, setPastAttTarget] = useState<{ userId: string; packageId: string } | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<{ pkgId: string; pkgName: string; userId: string | null } | null>(null)
+  const [editPkg, setEditPkg] = useState<{ id: string; packageName: string; totalSessions: number; initialUsed: string; paymentDate: string; expiresAt: string; notes: string } | null>(null)
+  const [editSaving, setEditSaving] = useState(false)
+  const [editError, setEditError] = useState<string | null>(null)
 
   // ── 레슨 종류 빠른 예시 ───────────────────────────────────
   const TYPE_QUICK_EXAMPLES = [
@@ -594,6 +597,23 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
                                       소급 입력
                                     </button>
                                     <button
+                                      onClick={() => {
+                                        setEditPkg({
+                                          id: pkg.id,
+                                          packageName: pkg.package_name,
+                                          totalSessions: pkg.total_sessions,
+                                          initialUsed: String(pkg.initial_used_sessions ?? 0),
+                                          paymentDate: pkg.payment_date,
+                                          expiresAt: pkg.expires_at ?? '',
+                                          notes: pkg.notes ?? '',
+                                        })
+                                        setEditError(null)
+                                      }}
+                                      className="text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] font-semibold"
+                                    >
+                                      수정
+                                    </button>
+                                    <button
                                       onClick={() => setDeleteTarget({ pkgId: pkg.id, pkgName: pkg.package_name, userId: pkg.user_id })}
                                       className="text-xs text-red-500 hover:text-red-700 font-semibold"
                                     >삭제</button>
@@ -677,6 +697,23 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
                             className="text-xs text-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary-hover)] font-semibold whitespace-nowrap"
                           >
                             소급 입력
+                          </button>
+                          <button
+                            onClick={() => {
+                              setEditPkg({
+                                id: pkg.id,
+                                packageName: pkg.package_name,
+                                totalSessions: pkg.total_sessions,
+                                initialUsed: String(pkg.initial_used_sessions ?? 0),
+                                paymentDate: pkg.payment_date,
+                                expiresAt: pkg.expires_at ?? '',
+                                notes: pkg.notes ?? '',
+                              })
+                              setEditError(null)
+                            }}
+                            className="text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] font-semibold"
+                          >
+                            수정
                           </button>
                           <button
                             onClick={() => setDeleteTarget({ pkgId: pkg.id, pkgName: pkg.package_name, userId: pkg.user_id })}
@@ -764,6 +801,102 @@ export function LessonManagementPanel({ tenantId, members, profileId }: Props) {
                 </button>
                 <button type="button" onClick={() => { setShowAddPkg(false); setPkgError(null); setPkgUserId('') }}
                   className="flex-1 px-4 py-2 rounded-xl border border-[var(--color-border)] text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]">
+                  취소
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── 결제 수정 모달 ───────────────────────────────── */}
+      {editPkg && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] p-6 w-full max-w-sm space-y-4 shadow-xl">
+            <h3 className="font-bold text-[var(--color-text-primary)] text-[16px]">결제 수정</h3>
+            <p className="text-sm text-[var(--color-text-secondary)]">{editPkg.packageName} · {editPkg.totalSessions}회권</p>
+            <form
+              onSubmit={async e => {
+                e.preventDefault()
+                setEditSaving(true); setEditError(null)
+                const initialUsedNum = parseInt(editPkg.initialUsed) || 0
+                if (initialUsedNum > editPkg.totalSessions) {
+                  setEditError(`이미 사용한 횟수는 총 횟수(${editPkg.totalSessions}회)를 초과할 수 없습니다.`)
+                  setEditSaving(false); return
+                }
+                const err = await updatePackage(editPkg.id, {
+                  initial_used_sessions: initialUsedNum,
+                  payment_date: editPkg.paymentDate,
+                  expires_at: editPkg.expiresAt || null,
+                  notes: editPkg.notes.trim() || null,
+                })
+                setEditSaving(false)
+                if (err) { setEditError(err); return }
+                setEditPkg(null)
+              }}
+              className="space-y-3"
+            >
+              <div>
+                <label className="text-xs font-semibold text-[var(--color-text-secondary)] block mb-1">결제일 *</label>
+                <input
+                  type="date"
+                  value={editPkg.paymentDate}
+                  onChange={e => setEditPkg(p => p ? { ...p, paymentDate: e.target.value } : p)}
+                  required
+                  className={inputCls + ' w-full'}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-[var(--color-text-secondary)] block mb-1">만료일 <span className="font-normal text-[var(--color-text-muted)]">선택 (없으면 무제한)</span></label>
+                <input
+                  type="date"
+                  value={editPkg.expiresAt}
+                  onChange={e => setEditPkg(p => p ? { ...p, expiresAt: e.target.value } : p)}
+                  className={inputCls + ' w-full'}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-[var(--color-text-secondary)] block mb-1">
+                  시스템 도입 전 이미 사용한 횟수 <span className="font-normal text-[var(--color-text-muted)]">선택</span>
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  max={editPkg.totalSessions}
+                  value={editPkg.initialUsed}
+                  onChange={e => setEditPkg(p => p ? { ...p, initialUsed: e.target.value } : p)}
+                  placeholder="0"
+                  className={inputCls + ' w-full text-center'}
+                />
+                {parseInt(editPkg.initialUsed) > 0 && (
+                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                    잔여 {editPkg.totalSessions - parseInt(editPkg.initialUsed)}회로 표시됨
+                  </p>
+                )}
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-[var(--color-text-secondary)] block mb-1">메모 <span className="font-normal text-[var(--color-text-muted)]">선택</span></label>
+                <input
+                  value={editPkg.notes}
+                  onChange={e => setEditPkg(p => p ? { ...p, notes: e.target.value } : p)}
+                  placeholder="예: 카드결제"
+                  className={inputCls + ' w-full'}
+                />
+              </div>
+              {editError && <p className="text-xs text-red-500">{editError}</p>}
+              <div className="flex gap-2 pt-1">
+                <button
+                  type="submit"
+                  disabled={editSaving}
+                  className="flex-1 px-4 py-2 rounded-xl bg-[var(--color-brand-primary)] text-[var(--color-brand-primary-contrast)] text-sm font-semibold hover:bg-[var(--color-brand-primary-hover)] disabled:opacity-40 transition-colors"
+                >
+                  {editSaving ? '저장 중...' : '저장'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setEditPkg(null); setEditError(null) }}
+                  className="flex-1 px-4 py-2 rounded-xl border border-[var(--color-border)] text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]"
+                >
                   취소
                 </button>
               </div>

@@ -1562,7 +1562,7 @@ export function AdminPage() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                           <label className="text-[12px] font-bold text-[var(--color-text-secondary)]">이름 *</label>
-                          <input type="text" required value={directForm.name}
+                          <input type="text" lang="ko" required value={directForm.name}
                             onChange={e => setDirectForm(p => ({ ...p, name: e.target.value }))}
                             placeholder="홍길동" className={inputCls + ' w-full mt-1'} />
                         </div>

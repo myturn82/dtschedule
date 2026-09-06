@@ -82,8 +82,29 @@ export function MemberSearchSelect({ value, onChange, options, placeholder = '�
       <input
         value={value ? selectedName : search}
         onChange={e => { onChange(''); setSearch(e.target.value); setOpen(true) }}
-        onFocus={() => { onChange(''); setOpen(true) }}
-        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        onFocus={() => {
+          // 이미 선택된 경우 선택을 유지한 채로 드롭다운만 연다
+          if (!value) onChange('')
+          setOpen(true)
+        }}
+        onBlur={() => setTimeout(() => {
+          setOpen(false)
+          // 선택이 없는데 검색어와 정확히 1건만 매칭되면 자동 선택
+          if (!value && filtered.length === 1) {
+            onChange(filtered[0].id)
+            setSearch('')
+          }
+        }, 150)}
+        onKeyDown={e => {
+          if (e.key === 'Enter') {
+            e.preventDefault()
+            if (filtered.length > 0) { onChange(filtered[0].id); setSearch(''); setOpen(false) }
+            else if (!search.trim() && clearLabel) { onChange(''); setSearch(''); setOpen(false) }
+          } else if (e.key === 'Escape') {
+            setOpen(false)
+          }
+        }}
+        lang="ko"
         placeholder={placeholder}
         autoComplete="off"
         className={className}

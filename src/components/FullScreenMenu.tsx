@@ -444,8 +444,10 @@ export function FullScreenMenu({
           <input
             ref={searchRef}
             type="text"
+            lang="ko"
             value={search}
             onChange={e => setSearch(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur() }}
             placeholder="메뉴, 기능 등을 검색해 보세요."
             className={inputCls}
           />

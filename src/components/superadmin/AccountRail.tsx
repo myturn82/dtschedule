@@ -115,8 +115,10 @@ export function AccountRail({
           </div>
           <input
             type="text"
+            lang="ko"
             value={search}
             onChange={e => setSearch(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur() }}
             placeholder="고객명 검색"
             className={inputCls + ' text-xs py-1.5'}
           />
@@ -136,7 +138,7 @@ export function AccountRail({
           {showCreateCustomer && (
             <form onSubmit={onCreateCustomer} className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] space-y-2">
               <input
-                type="text" required value={customerForm.name}
+                type="text" lang="ko" required value={customerForm.name}
                 onChange={e => setCustomerForm(p => ({ ...p, name: e.target.value }))}
                 placeholder="고객명 *" className={inputCls + ' text-xs py-1.5'}
               />

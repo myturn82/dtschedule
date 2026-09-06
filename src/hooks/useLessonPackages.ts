@@ -11,6 +11,7 @@ export interface UseLessonPackagesResult {
   deletePackageType: (id: string) => Promise<string | null>
   movePackageType: (id: string, dir: -1 | 1) => void
   addPackage: (data: { user_id: string; package_type_id: string | null; package_name: string; total_sessions: number; initial_used_sessions?: number; payment_date: string; expires_at: string | null; notes: string | null; created_by: string | null }) => Promise<string | null>
+  updatePackage: (id: string, data: Pick<LessonPackage, 'initial_used_sessions' | 'payment_date' | 'expires_at' | 'notes'>) => Promise<string | null>
   deletePackage: (id: string) => Promise<string | null>
   reload: () => Promise<void>
 }
@@ -127,6 +128,17 @@ export function useLessonPackages(tenantId: string): UseLessonPackagesResult {
     return null
   }, [tenantId])
 
+  const updatePackage = useCallback(async (id: string, data: Pick<LessonPackage, 'initial_used_sessions' | 'payment_date' | 'expires_at' | 'notes'>): Promise<string | null> => {
+    const { error } = await supabase
+      .from('lesson_packages')
+      .update(data)
+      .eq('id', id)
+      .eq('tenant_id', tenantId)
+    if (error) return error.message
+    setPackages(prev => prev.map(p => p.id === id ? { ...p, ...data, used_sessions: data.initial_used_sessions + (p.used_sessions - p.initial_used_sessions) } : p))
+    return null
+  }, [tenantId])
+
   const deletePackage = useCallback(async (id: string): Promise<string | null> => {
     const { error } = await supabase
       .from('lesson_packages')
@@ -138,5 +150,5 @@ export function useLessonPackages(tenantId: string): UseLessonPackagesResult {
     return null
   }, [tenantId])
 
-  return { packageTypes, packages, loading, addPackageType, updatePackageType, deletePackageType, movePackageType, addPackage, deletePackage, reload: load }
+  return { packageTypes, packages, loading, addPackageType, updatePackageType, deletePackageType, movePackageType, addPackage, updatePackage, deletePackage, reload: load }
 }

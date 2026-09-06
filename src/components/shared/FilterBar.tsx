@@ -12,8 +12,10 @@ export function FilterBar({ value, onChange }: Props) {
         </span>
         <input
           type="text"
+          lang="ko"
           value={value}
           onChange={e => onChange(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur() }}
           placeholder="전체 검색"
           className="pl-7 pr-7 py-1.5 text-sm border border-[var(--color-border)] rounded-xl bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500/60 transition-all duration-200 w-full min-w-[72px] sm:w-52"
         />
