@@ -172,7 +172,31 @@ export function PastAttendanceModal({ tenantId, members, prefillUserId, prefillP
   }
 
   function updateRow(id: number, field: keyof Omit<Row, 'id'>, value: string) {
-    setRows(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r))
+    setRows(prev => prev.map(r => {
+      if (r.id !== id) return r
+      const updated = { ...r, [field]: value }
+      // 날짜가 바뀌면 현재 슬롯이 해당 날짜에 운영되는지 확인하고 아니면 첫 운영 슬롯으로 리셋
+      if (field === 'date' && value) {
+        const ops = getOperationalSlots(value)
+        if (ops.length > 0 && !ops.includes(updated.time_slot)) {
+          updated.time_slot = ops[0]
+        }
+      }
+      return updated
+    }))
+  }
+
+  // 특정 날짜에 운영 중인 슬롯 목록 반환
+  function getOperationalSlots(date: string): string[] {
+    if (!date || scheduleRules.length === 0) return timeSlots
+    const override = dateOverrides.find(o => o.date === date)
+    if (override?.is_holiday || override?.is_open === false) return []
+    if (override?.is_open === true) return timeSlots
+    const [y, m, d] = date.split('-').map(Number)
+    const dow = new Date(y, m - 1, d).getDay()
+    return timeSlots.filter(ts =>
+      scheduleRules.some(r => r.day_of_week === dow && r.time_slot === ts && r.is_open)
+    )
   }
 
   function toggleLinkId(id: string) {
@@ -292,7 +316,7 @@ export function PastAttendanceModal({ tenantId, members, prefillUserId, prefillP
     setSavedItems(justInserted)
     onSaved?.()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, validRows, memberName, tenantId, packageId, selectedLinkIds, onSaved])
+  }, [userId, validRows, memberName, tenantId, packageId, selectedLinkIds, scheduleRules, dateOverrides, onSaved])
 
   async function handleDeleteSaved(id: string) {
     await supabase.from('assignments').delete().eq('id', id).eq('tenant_id', tenantId)
@@ -484,7 +508,7 @@ export function PastAttendanceModal({ tenantId, members, prefillUserId, prefillP
                 onChange={e => updateRow(row.id, 'time_slot', e.target.value)}
                 className={inputCls + ' w-full'}
               >
-                {timeSlots.map(ts => (
+                {getOperationalSlots(row.date).map(ts => (
                   <option key={ts} value={ts}>{slotLabels?.[ts] ?? shortSlotLabel(ts)}</option>
                 ))}
               </select>
