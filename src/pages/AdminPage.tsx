@@ -16,7 +16,7 @@ import { CUSTOM_FIELD_TEMPLATES } from '../utils/customFieldTemplates'
 import type { TimeSlot, Tenant, TenantAccessRole, TenantRole, LegendItem, LegendColor, CustomFieldDef, CustomFieldOption, OptionValueType, CustomFieldType, Assignment } from '../types'
 import { OPTION_VALUE_TYPES, getOptionUnit, FIELD_TYPES_WITH_OPTIONS, FIELD_TYPES_WITH_DASHBOARD } from '../types'
 import { LEGEND_COLOR_STYLES } from '../components/schedule/Legend'
-import { applyThemePreset, type ThemePresetKey } from '../lib/themePresets'
+import { applyThemePreset, applyCustomColor, type ThemePresetKey } from '../lib/themePresets'
 import { THEME_COLORS } from '../lib/themeColors'
 import { displayMode } from '../lib/tenantMode'
 import { getFunctionErrorMessage } from '../lib/functionsError'
@@ -2593,7 +2593,13 @@ export function AdminPage() {
                             <button
                               key={color}
                               type="button"
-                              onClick={() => { setSettingsTheme(prev => prev === color ? '' : color); setSettingsPreset('') }}
+                              onClick={() => {
+                                const next = settingsTheme === color ? '' : color
+                                setSettingsTheme(next)
+                                setSettingsPreset('')
+                                if (next) applyCustomColor(next)
+                                else applyThemePreset(null)
+                              }}
                               className="w-7 h-7 rounded-lg border-2 transition-transform hover:scale-110 flex items-center justify-center flex-shrink-0"
                               style={{ background: color, borderColor: settingsTheme === color ? '#1f2937' : 'transparent', boxShadow: settingsTheme === color ? '0 0 0 1px #fff inset' : undefined }}
                             >
@@ -2612,7 +2618,12 @@ export function AdminPage() {
                             placeholder="직접 입력 (#2563eb)"
                             maxLength={7}
                             value={settingsTheme}
-                            onChange={e => { setSettingsTheme(e.target.value); setSettingsPreset('') }}
+                            onChange={e => {
+                              const v = e.target.value
+                              setSettingsTheme(v)
+                              setSettingsPreset('')
+                              if (/^#[0-9A-Fa-f]{6}$/.test(v)) applyCustomColor(v)
+                            }}
                             className={inputCls + ' text-xs py-1.5 font-mono w-full'}
                           />
                           {(settingsTheme || settingsPreset) && (

@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useMemo, useRef, type R
 import { supabase } from '../lib/supabase'
 import type { Tenant, TenantMember, TenantAccessRole, LegendItem, CustomFieldDef, CustomFieldOption, PlanType } from '../types'
 import { generateTimeSlots, DEFAULT_TIME_SLOTS } from '../utils/timeSlots'
-import { applyThemePreset } from '../lib/themePresets'
+import { applyThemePreset, applyCustomColor } from '../lib/themePresets'
 import { useDarkMode } from './DarkModeContext'
 
 interface MembershipWithTenant extends TenantMember {
@@ -138,10 +138,14 @@ export function TenantProvider({ children }: { children: ReactNode }) {
 
   const { isDark } = useDarkMode()
 
-  // 조직 포인트 컬러 프리셋을 전역 CSS 변수로 주입 — 다크모드 전환 시에도 재적용
+  // 조직 포인트 컬러를 전역 CSS 변수로 주입 — 다크모드 전환 시에도 재적용
+  // theme_preset 우선, 없으면 theme_color(커스텀 hex) 적용
   useEffect(() => {
     applyThemePreset(tenant?.settings?.theme_preset, isDark)
-  }, [tenant?.settings?.theme_preset, isDark])
+    if (!tenant?.settings?.theme_preset && tenant?.settings?.theme_color) {
+      applyCustomColor(tenant.settings.theme_color, isDark)
+    }
+  }, [tenant?.settings?.theme_preset, tenant?.settings?.theme_color, isDark])
 
   // 현재 선택된 조직이 속한 customer의 플랜 조회 (대시보드 등 플랜별 기능 노출에 사용)
   useEffect(() => {

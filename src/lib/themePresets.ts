@@ -108,6 +108,33 @@ const TOKEN_TO_CSS_VAR: Record<keyof Pick<ThemeTokens, 'accent' | 'accentHover' 
   accentContrast: '--color-brand-primary-contrast',
 }
 
+// hex 커스텀 컬러를 CSS 브랜드 변수로 주입한다 (프리셋 없이 hex만 저장된 경우).
+export function applyCustomColor(hex: string, isDark = false) {
+  if (!/^#[0-9A-Fa-f]{6}$/.test(hex)) return
+  const root = document.documentElement
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  const toHex = (v: number) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')
+  const rgb = (rr: number, gg: number, bb: number) => `#${toHex(rr)}${toHex(gg)}${toHex(bb)}`
+  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+  if (isDark) {
+    root.style.setProperty('--color-brand-primary',          rgb(r * 0.8 + 255 * 0.2, g * 0.8 + 255 * 0.2, b * 0.8 + 255 * 0.2))
+    root.style.setProperty('--color-brand-primary-hover',    rgb(r * 0.7 + 255 * 0.3, g * 0.7 + 255 * 0.3, b * 0.7 + 255 * 0.3))
+    root.style.setProperty('--color-brand-primary-soft',     rgb(r * 0.15, g * 0.15, b * 0.15))
+    root.style.setProperty('--color-brand-primary-ring',     rgb(r * 0.3, g * 0.3, b * 0.3))
+    root.style.setProperty('--color-brand-primary-text',     rgb(r * 0.6 + 255 * 0.4, g * 0.6 + 255 * 0.4, b * 0.6 + 255 * 0.4))
+    root.style.setProperty('--color-brand-primary-contrast', '#0A0A0A')
+  } else {
+    root.style.setProperty('--color-brand-primary',          hex)
+    root.style.setProperty('--color-brand-primary-hover',    rgb(r * 0.85, g * 0.85, b * 0.85))
+    root.style.setProperty('--color-brand-primary-soft',     rgb(r * 0.12 + 255 * 0.88, g * 0.12 + 255 * 0.88, b * 0.12 + 255 * 0.88))
+    root.style.setProperty('--color-brand-primary-ring',     rgb(r * 0.35 + 255 * 0.65, g * 0.35 + 255 * 0.65, b * 0.35 + 255 * 0.65))
+    root.style.setProperty('--color-brand-primary-text',     rgb(r * 0.75, g * 0.75, b * 0.75))
+    root.style.setProperty('--color-brand-primary-contrast', lum > 0.55 ? '#000000' : '#FFFFFF')
+  }
+}
+
 // 조직의 포인트 컬러 프리셋을 전역 CSS 변수로 주입한다.
 // 다크모드(isDark=true) 시 각 프리셋의 dark 토큰을 사용해 조직 색상 정체성을 유지한다.
 export function applyThemePreset(key: ThemePresetKey | null | undefined, isDark = false) {
