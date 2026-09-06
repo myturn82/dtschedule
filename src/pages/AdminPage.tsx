@@ -7,6 +7,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useAdmin } from '../hooks/useAdmin'
 import { useTenant } from '../contexts/TenantContext'
+import { useDarkMode } from '../contexts/DarkModeContext'
 import { useTenantRoles } from '../hooks/useTenantRoles'
 import { supabase } from '../lib/supabase'
 import { buildSlot, parseSlotLabel, generateTimeSlots, DEFAULT_TIME_SLOTS, SLOT_TEMPLATES } from '../utils/timeSlots'
@@ -246,6 +247,7 @@ export function AdminPage() {
 
   const { profile, loading: authLoading } = useAuth()
   const { tenant, memberships, tenantRole, updateCurrentTenant } = useTenant()
+  const { isDark } = useDarkMode()
 
   // Local org selection — independent from TenantContext (doesn't affect schedule page)
   const [adminTenant, setAdminTenant] = useState<Tenant | null>(null)
@@ -2597,8 +2599,8 @@ export function AdminPage() {
                                 const next = settingsTheme === color ? '' : color
                                 setSettingsTheme(next)
                                 setSettingsPreset('')
-                                if (next) applyCustomColor(next)
-                                else applyThemePreset(null)
+                                if (next) applyCustomColor(next, isDark)
+                                else applyThemePreset(null, isDark)
                               }}
                               className="w-7 h-7 rounded-lg border-2 transition-transform hover:scale-110 flex items-center justify-center flex-shrink-0"
                               style={{ background: color, borderColor: settingsTheme === color ? '#1f2937' : 'transparent', boxShadow: settingsTheme === color ? '0 0 0 1px #fff inset' : undefined }}
@@ -2622,12 +2624,12 @@ export function AdminPage() {
                               const v = e.target.value
                               setSettingsTheme(v)
                               setSettingsPreset('')
-                              if (/^#[0-9A-Fa-f]{6}$/.test(v)) applyCustomColor(v)
+                              if (/^#[0-9A-Fa-f]{6}$/.test(v)) applyCustomColor(v, isDark)
                             }}
                             className={inputCls + ' text-xs py-1.5 font-mono w-full'}
                           />
                           {(settingsTheme || settingsPreset) && (
-                            <button type="button" onClick={() => { setSettingsTheme(''); setSettingsPreset(''); applyThemePreset(null) }} className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] flex-shrink-0">
+                            <button type="button" onClick={() => { setSettingsTheme(''); setSettingsPreset(''); applyThemePreset(null, isDark) }} className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] flex-shrink-0">
                               초기화
                             </button>
                           )}
