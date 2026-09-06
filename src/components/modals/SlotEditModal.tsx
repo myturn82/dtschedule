@@ -18,6 +18,7 @@ import type { PendingImage } from '../schedule/ImageUploadField'
 import { ImageGalleryModal } from '../schedule/ImageGalleryModal'
 import { uploadScheduleImage } from '../../lib/uploadScheduleImage'
 import { DatePickerModal } from '../schedule/DatePickerModal'
+import { PackageManageModal } from './PackageManageModal'
 
 interface Props {
   target: ModalTarget
@@ -111,6 +112,8 @@ export function SlotEditModal({
 
   const [userPackages, setUserPackages] = useState<LessonPackageWithUsage[]>([])
   const [selectedPackageId, setSelectedPackageId] = useState<string | null>(null)
+  const [pkgReloadTick, setPkgReloadTick] = useState(0)
+  const [pkgManageTarget, setPkgManageTarget] = useState<{ userId: string; memberName: string } | null>(null)
 
   // 동적 필드 값 (useDynamicFields 모드)
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({})
@@ -196,7 +199,7 @@ export function SlotEditModal({
       )
       setUserPackages(active)
     })
-  }, [isFreeform, isAdmin, selectedUserId, tenantId])
+  }, [isFreeform, isAdmin, selectedUserId, tenantId, pkgReloadTick])
 
   // 등록된 스케줄 목록 상세조회용 — 각 배정에 연결된 레슨권 정보 조회 (비회원 모드 제외)
   const [packageInfoMap, setPackageInfoMap] = useState<Record<string, LessonPackageWithUsage>>({})
@@ -798,6 +801,7 @@ export function SlotEditModal({
       : null
 
   return (
+    <>
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 sm:p-4 overflow-hidden">
       <div className="bg-[var(--color-surface)] border border-[var(--color-border-strong)] rounded-t-[26px] sm:rounded-[22px] shadow-[var(--shadow-xl)] w-full max-w-md animate-scale-in overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[calc(100dvh-2rem)]">
         {/* Header */}
@@ -1092,6 +1096,15 @@ export function SlotEditModal({
                                   · {packageInfoMap[a.lesson_package_id].payment_date}~{packageInfoMap[a.lesson_package_id].expires_at ?? '무제한'}
                                 </span>
                               </span>
+                            )}
+                            {showLessonPackages && isAdmin && !!a.user_id && (
+                              <button
+                                type="button"
+                                onClick={() => setPkgManageTarget({ userId: a.user_id!, memberName: a.member_name })}
+                                className="self-start text-[10px] font-semibold text-[var(--color-brand-primary)] px-1.5 py-0.5 rounded bg-[color-mix(in_srgb,var(--color-brand-primary)_8%,transparent)] hover:bg-[color-mix(in_srgb,var(--color-brand-primary)_16%,transparent)] transition-colors whitespace-nowrap"
+                              >
+                                {a.lesson_package_id ? '결제권 관리' : '결제권 추가'}
+                              </button>
                             )}
                           </div>
                           {(canEdit || (onToggleLock && a.is_locked && isAdmin)) && (
@@ -1404,21 +1417,40 @@ export function SlotEditModal({
                   )}
                   {showExtraCustomFields && !!selectedUserId && customFields.map(field => renderFieldInput(field))}
                   {/* 레슨 패키지 연결 */}
-                  {showLessonPackages && isAdmin && !isFreeform && !!selectedUserId && userPackages.length > 0 && (
+                  {showLessonPackages && isAdmin && !isFreeform && !!selectedUserId && (
                     <div>
-                      <p className="text-xs font-bold text-[var(--color-text-muted)] mb-2">레슨 패키지 연결 <span className="font-normal">선택</span></p>
-                      <select
-                        value={selectedPackageId ?? ''}
-                        onChange={e => setSelectedPackageId(e.target.value || null)}
-                        className={inputClass}
-                      >
-                        <option value="">연결 안 함</option>
-                        {userPackages.map(p => (
-                          <option key={p.id} value={p.id}>
-                            {p.package_name} ({p.used_sessions}/{p.total_sessions}회 사용{p.expires_at ? ` · ~${p.expires_at}` : ''})
-                          </option>
-                        ))}
-                      </select>
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs font-bold text-[var(--color-text-muted)]">결제권 연결 <span className="font-normal">선택</span></p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const p = profiles.find(pr => pr.id === selectedUserId)
+                            setPkgManageTarget({ userId: selectedUserId, memberName: p?.name ?? '' })
+                          }}
+                          className="flex items-center gap-1 text-xs font-semibold text-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary-hover)] transition-colors"
+                        >
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                          {userPackages.length > 0 ? '관리' : '결제권 추가'}
+                        </button>
+                      </div>
+                      {userPackages.length > 0 ? (
+                        <select
+                          value={selectedPackageId ?? ''}
+                          onChange={e => setSelectedPackageId(e.target.value || null)}
+                          className={inputClass}
+                        >
+                          <option value="">연결 안 함</option>
+                          {userPackages.map(p => (
+                            <option key={p.id} value={p.id}>
+                              {p.package_name} ({p.used_sessions}/{p.total_sessions}회 사용{p.expires_at ? ` · ~${p.expires_at}` : ''})
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <p className="text-xs text-[var(--color-text-muted)] py-2 px-3 rounded-lg bg-[var(--color-surface-secondary)] border border-[var(--color-border)]">
+                          결제권 미등록
+                        </p>
+                      )}
                     </div>
                   )}
                   {(!isSplitMode || !!selectedUserId) && (
@@ -1510,13 +1542,24 @@ export function SlotEditModal({
           </div>
         )}
       </div>
-      {galleryUrls && (
-        <ImageGalleryModal
-          urls={galleryUrls}
-          onClose={() => setGalleryUrls(null)}
-        />
-      )}
-      <DevFileLabel file="SlotEditModal.tsx" />
     </div>
+    {galleryUrls && (
+      <ImageGalleryModal
+        urls={galleryUrls}
+        onClose={() => setGalleryUrls(null)}
+      />
+    )}
+    {pkgManageTarget && tenantId && (
+      <PackageManageModal
+        tenantId={tenantId}
+        userId={pkgManageTarget.userId}
+        memberName={pkgManageTarget.memberName}
+        profileId={profile?.id ?? ''}
+        onClose={() => setPkgManageTarget(null)}
+        onChanged={() => setPkgReloadTick(t => t + 1)}
+      />
+    )}
+    <DevFileLabel file="SlotEditModal.tsx" />
+    </>
   )
 }
