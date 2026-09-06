@@ -144,10 +144,12 @@ export function PastAttendanceModal({ tenantId, members, prefillUserId, prefillP
     if (override?.is_holiday) return true
     if (override?.is_open === false) return true
     if (override?.is_open === true) return false
+    if (scheduleRules.length === 0) return false  // 규칙 미로드 시 차단 안 함
     const [y, m, d] = date.split('-').map(Number)
     const dow = new Date(y, m - 1, d).getDay()
     const rule = scheduleRules.find(r => r.day_of_week === dow && r.time_slot === time_slot)
-    return rule !== undefined && !rule.is_open
+    // 규칙이 없거나(해당 요일·슬롯 미운영) is_open=false면 비운영
+    return rule === undefined || !rule.is_open
   }
 
   const validRows = rows.filter(r => r.date && r.time_slot)
