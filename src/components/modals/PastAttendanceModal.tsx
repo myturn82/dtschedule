@@ -106,7 +106,7 @@ export function PastAttendanceModal({ tenantId, members, prefillUserId, prefillP
       .from('assignments')
       .select('id,year,month,day,time_slot')
       .eq('tenant_id', tenantId)
-      .eq('user_id', userId)
+      .eq('member_name', memberName)
       .is('lesson_package_id', null)
       .gte('year', payYear)
       .then(({ data }) => {
