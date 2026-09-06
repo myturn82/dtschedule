@@ -22,6 +22,14 @@ interface SavedItem {
   note: string | null
 }
 
+interface ExistingAssignment {
+  id: string
+  year: number
+  month: number
+  day: number
+  time_slot: string
+}
+
 interface ScheduleRule {
   day_of_week: number
   time_slot: string
@@ -60,10 +68,15 @@ export function PastAttendanceModal({ tenantId, members, prefillUserId, prefillP
   const [error, setError] = useState<string | null>(null)
   const [savedItems, setSavedItems] = useState<SavedItem[] | null>(null)
   const [skippedCount, setSkippedCount] = useState(0)
+  const [linkedCount, setLinkedCount] = useState(0)
   const [openPickerRowId, setOpenPickerRowId] = useState<number | null>(null)
 
   const [scheduleRules, setScheduleRules] = useState<ScheduleRule[]>([])
   const [dateOverrides, setDateOverrides] = useState<DateOverride[]>([])
+
+  // 결제일 이후 기 등록 스케줄 (결제권 미연결)
+  const [existingUnlinked, setExistingUnlinked] = useState<ExistingAssignment[]>([])
+  const [selectedLinkIds, setSelectedLinkIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (!tenantId) return
@@ -76,10 +89,45 @@ export function PastAttendanceModal({ tenantId, members, prefillUserId, prefillP
     })
   }, [tenantId])
 
-  // 달력에서 선택 가능한 날짜 여부 (날짜 수준 체크)
+  const memberName = members.find(m => m.id === userId)?.name ?? ''
+  const userPackages = packages.filter(p => p.user_id === userId)
+  const selectedPackage = userPackages.find(p => p.id === packageId)
+
+  // 결제권 선택 시 결제일 이후 미연결 기존 스케줄 조회
+  useEffect(() => {
+    if (!userId || !packageId || !selectedPackage?.payment_date) {
+      setExistingUnlinked([])
+      setSelectedLinkIds(new Set())
+      return
+    }
+    const payDate = selectedPackage.payment_date
+    const payYear = Number(payDate.split('-')[0])
+    supabase
+      .from('assignments')
+      .select('id,year,month,day,time_slot')
+      .eq('tenant_id', tenantId)
+      .eq('user_id', userId)
+      .is('lesson_package_id', null)
+      .gte('year', payYear)
+      .then(({ data }) => {
+        const filtered = ((data ?? []) as ExistingAssignment[]).filter(a => {
+          const dateStr = `${a.year}-${pad2(a.month)}-${pad2(a.day)}`
+          return dateStr >= payDate
+        })
+        filtered.sort((a, b) => {
+          if (a.year !== b.year) return a.year - b.year
+          if (a.month !== b.month) return a.month - b.month
+          if (a.day !== b.day) return a.day - b.day
+          return a.time_slot.localeCompare(b.time_slot)
+        })
+        setExistingUnlinked(filtered)
+        setSelectedLinkIds(new Set())
+      })
+  }, [userId, packageId, selectedPackage?.payment_date, tenantId])
+
+  // 달력에서 선택 가능한 날짜 여부
   function isDateOperational(year: number, month: number, day: number): boolean {
     const dateStr = `${year}-${pad2(month)}-${pad2(day)}`
-    // 결제권이 선택된 경우 결제일 이전은 선택 불가
     if (selectedPackage && dateStr < selectedPackage.payment_date) return false
     const override = dateOverrides.find(o => o.date === dateStr)
     if (override?.is_holiday) return false
@@ -90,7 +138,6 @@ export function PastAttendanceModal({ tenantId, members, prefillUserId, prefillP
     return scheduleRules.some(r => r.day_of_week === dow && r.is_open)
   }
 
-  // 저장 시 최종 안전망 체크 (날짜+슬롯 수준)
   function isNonOperational(date: string, time_slot: string): boolean {
     if (!date) return false
     const override = dateOverrides.find(o => o.date === date)
@@ -103,13 +150,11 @@ export function PastAttendanceModal({ tenantId, members, prefillUserId, prefillP
     return rule !== undefined && !rule.is_open
   }
 
-  const memberName = members.find(m => m.id === userId)?.name ?? ''
-  const userPackages = packages.filter(p => p.user_id === userId)
-  const selectedPackage = userPackages.find(p => p.id === packageId)
-
   const validRows = rows.filter(r => r.date && r.time_slot)
   const remaining = selectedPackage ? selectedPackage.total_sessions - selectedPackage.used_sessions : null
-  const afterRemaining = remaining !== null && packageId ? remaining - validRows.length : null
+  const afterRemaining = remaining !== null && packageId
+    ? remaining - validRows.length - selectedLinkIds.size
+    : null
 
   function addRow() {
     const last = rows[rows.length - 1]
@@ -128,10 +173,30 @@ export function PastAttendanceModal({ tenantId, members, prefillUserId, prefillP
     setRows(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r))
   }
 
+  function toggleLinkId(id: string) {
+    setSelectedLinkIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function toggleAllLink() {
+    if (selectedLinkIds.size === existingUnlinked.length) {
+      setSelectedLinkIds(new Set())
+    } else {
+      setSelectedLinkIds(new Set(existingUnlinked.map(a => a.id)))
+    }
+  }
+
   const handleSave = useCallback(async () => {
     if (!userId) { setError('회원을 선택해 주세요.'); return }
-    if (validRows.length === 0) { setError('날짜와 시간 슬롯이 입력된 행이 없습니다.'); return }
-    if (!memberName) { setError('유효하지 않은 회원입니다.'); return }
+    if (validRows.length === 0 && selectedLinkIds.size === 0) {
+      setError('날짜와 시간 슬롯이 입력된 행이 없고, 연결할 기존 스케줄도 선택되지 않았습니다.')
+      return
+    }
+    if (validRows.length > 0 && !memberName) { setError('유효하지 않은 회원입니다.'); return }
 
     const nonOpRows = validRows.filter(r => isNonOperational(r.date, r.time_slot))
     if (nonOpRows.length > 0) {
@@ -140,6 +205,28 @@ export function PastAttendanceModal({ tenantId, members, prefillUserId, prefillP
     }
 
     setSaving(true); setError(null)
+
+    // ── 기존 스케줄에 결제권 연결 (UPDATE) ──────────────────
+    let linked = 0
+    if (selectedLinkIds.size > 0 && packageId) {
+      const { error: updateErr } = await supabase
+        .from('assignments')
+        .update({ lesson_package_id: packageId })
+        .in('id', [...selectedLinkIds])
+        .eq('tenant_id', tenantId)
+      if (updateErr) { setSaving(false); setError(updateErr.message); return }
+      linked = selectedLinkIds.size
+    }
+
+    // ── 새 행 INSERT ────────────────────────────────────────
+    if (validRows.length === 0) {
+      setSaving(false)
+      setSkippedCount(0)
+      setLinkedCount(linked)
+      setSavedItems([])
+      onSaved?.()
+      return
+    }
 
     const parsed = validRows.map(r => {
       const parts = r.date.split('-').map(Number)
@@ -157,8 +244,6 @@ export function PastAttendanceModal({ tenantId, members, prefillUserId, prefillP
       }
     })
 
-    // unique_member_assignment가 partial index라 upsert onConflict 미사용.
-    // 삽입 전 기존 슬롯을 조회해 중복을 클라이언트에서 걸러낸다.
     const years = [...new Set(parsed.map(r => r.year))]
     const { data: existing, error: fetchErr } = await supabase
       .from('assignments')
@@ -178,17 +263,15 @@ export function PastAttendanceModal({ tenantId, members, prefillUserId, prefillP
     if (toInsert.length === 0) {
       setSaving(false)
       setSkippedCount(skipped)
+      setLinkedCount(linked)
       setSavedItems([])
       onSaved?.()
       return
     }
 
     const { error: dbErr } = await supabase.from('assignments').insert(toInsert)
-
     if (dbErr) { setSaving(false); setError(dbErr.message); return }
 
-    // insert().select() 가 RLS 설정에 따라 빈 배열을 반환할 수 있으므로
-    // 별도 SELECT로 방금 삽입한 항목의 ID를 조회한다.
     const insertedKeys = new Set(toInsert.map(r => `${r.year}-${r.month}-${r.day}-${r.time_slot}`))
     const { data: fetched } = await supabase
       .from('assignments')
@@ -203,10 +286,11 @@ export function PastAttendanceModal({ tenantId, members, prefillUserId, prefillP
 
     setSaving(false)
     setSkippedCount(skipped)
+    setLinkedCount(linked)
     setSavedItems(justInserted)
     onSaved?.()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, validRows, memberName, tenantId, packageId, onSaved])
+  }, [userId, validRows, memberName, tenantId, packageId, selectedLinkIds, onSaved])
 
   async function handleDeleteSaved(id: string) {
     await supabase.from('assignments').delete().eq('id', id).eq('tenant_id', tenantId)
@@ -214,7 +298,6 @@ export function PastAttendanceModal({ tenantId, members, prefillUserId, prefillP
     onSaved?.()
   }
 
-  // ── 날짜 피커 팝업 ──────────────────────────────────────────
   const pickerRow = openPickerRowId !== null ? rows.find(r => r.id === openPickerRowId) : null
   const pickerInit = (() => {
     if (!pickerRow) return null
@@ -235,6 +318,9 @@ export function PastAttendanceModal({ tenantId, members, prefillUserId, prefillP
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-green-500 shrink-0"><path d="M20 6L9 17l-5-5"/></svg>
             <p className="font-bold text-[var(--color-text-primary)]">
               {savedItems.length}건 등록 완료
+              {linkedCount > 0 && (
+                <span className="text-xs font-normal text-[var(--color-brand-primary)] ml-1">(결제권 연결 {linkedCount}건)</span>
+              )}
               {skippedCount > 0 && (
                 <span className="text-xs font-normal text-[var(--color-text-muted)] ml-1">(중복 {skippedCount}건 건너뜀)</span>
               )}
@@ -265,7 +351,9 @@ export function PastAttendanceModal({ tenantId, members, prefillUserId, prefillP
               </div>
             </>
           ) : (
-            <p className="text-xs text-[var(--color-text-muted)]">모두 이미 등록된 항목이었습니다.</p>
+            <p className="text-xs text-[var(--color-text-muted)]">
+              {linkedCount > 0 ? `기존 스케줄 ${linkedCount}건에 결제권을 연결했습니다.` : '모두 이미 등록된 항목이었습니다.'}
+            </p>
           )}
 
           <button
@@ -330,6 +418,48 @@ export function PastAttendanceModal({ tenantId, members, prefillUserId, prefillP
           <div className="w-7" />
         </div>
 
+        {/* 결제일 이후 기 등록 스케줄 (결제권 미연결) */}
+        {existingUnlinked.length > 0 && (
+          <div className="rounded-xl border border-[var(--color-border)] overflow-hidden">
+            <div className="flex items-center justify-between px-3 py-2 bg-[var(--color-surface-secondary)] border-b border-[var(--color-border)]">
+              <span className="text-xs font-semibold text-[var(--color-text-secondary)]">
+                결제일 이후 기 등록 스케줄
+                <span className="ml-1 font-normal text-[var(--color-text-muted)]">— 결제권 미연결 {existingUnlinked.length}건</span>
+              </span>
+              <button
+                type="button"
+                onClick={toggleAllLink}
+                className="text-xs font-semibold text-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary-hover)] transition-colors"
+              >
+                {selectedLinkIds.size === existingUnlinked.length ? '전체해제' : '전체선택'}
+              </button>
+            </div>
+            <div className="max-h-40 overflow-y-auto divide-y divide-[var(--color-border)]">
+              {existingUnlinked.map(a => {
+                const checked = selectedLinkIds.has(a.id)
+                const dateStr = `${a.year}-${pad2(a.month)}-${pad2(a.day)}`
+                return (
+                  <label
+                    key={a.id}
+                    className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-[var(--color-surface-hover)] transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleLinkId(a.id)}
+                      className="w-4 h-4 rounded accent-[var(--color-brand-primary)] flex-shrink-0"
+                    />
+                    <span className="text-sm text-[var(--color-text-secondary)] tabular-nums">{dateStr}</span>
+                    <span className="text-xs text-[var(--color-text-muted)]">
+                      {slotLabels?.[a.time_slot] ?? shortSlotLabel(a.time_slot)}
+                    </span>
+                  </label>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
         {/* 행 목록 */}
         <div className="space-y-2">
           <div className="grid grid-cols-[1fr_1fr_28px] gap-2 px-1">
@@ -379,7 +509,12 @@ export function PastAttendanceModal({ tenantId, members, prefillUserId, prefillP
 
         {/* 요약 */}
         <div className="text-xs text-[var(--color-text-muted)] bg-[var(--color-surface-secondary)] rounded-xl px-3.5 py-2.5 flex flex-wrap gap-x-4 gap-y-1">
-          <span>총 <strong className="text-[var(--color-text-primary)]">{validRows.length}건</strong> 등록 예정</span>
+          <span>
+            신규 <strong className="text-[var(--color-text-primary)]">{validRows.length}건</strong>
+            {selectedLinkIds.size > 0 && (
+              <span className="ml-2">결제권 연결 <strong className="text-[var(--color-brand-primary)]">{selectedLinkIds.size}건</strong></span>
+            )}
+          </span>
           {packageId && remaining !== null && afterRemaining !== null && (
             <span>
               결제권 잔여{' '}
