@@ -75,12 +75,12 @@ async function resizePngToFile(page, sourcePath, size, outputPath) {
   mkdirSync(dirname(outputPath), { recursive: true })
   const sourceBase64 = readFileSync(sourcePath).toString('base64')
   await page.setViewportSize({ width: size, height: size })
-  await page.setContent(`<!DOCTYPE html><html><body style="margin:0;padding:0;overflow:hidden">
+  await page.setContent(`<!DOCTYPE html><html><body style="margin:0;padding:0;overflow:hidden;background:transparent">
     <img id="i" src="data:image/png;base64,${sourceBase64}"
       width="${size}" height="${size}" style="display:block;width:${size}px;height:${size}px" />
   </body></html>`)
   await page.waitForLoadState('load')
-  const buf = await page.screenshot({ clip: { x: 0, y: 0, width: size, height: size } })
+  const buf = await page.screenshot({ clip: { x: 0, y: 0, width: size, height: size }, omitBackground: true })
   writeFileSync(outputPath, buf)
   console.log(`   → ${outputPath} (${size}×${size} resized from source)`)
 }
