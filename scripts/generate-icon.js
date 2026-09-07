@@ -8,8 +8,10 @@
  *   public/icons/<vertical>/*.png    — PWA 홈화면 아이콘 5종
  *
  * 모서리 처리 원칙:
- *   - 모든 아이콘: fullbleed solid 브랜드색 (투명 픽셀 없음)
- *   - OS/브라우저가 플랫폼별 rounding을 자체 적용 → 흰 여백 없음
+ *   purpose:any         → 투명 라운드 (설치 배너 등 자체 shape 포함)
+ *   purpose:maskable    → fullbleed solid (Chrome/OS가 squircle 등 shape를 직접 적용)
+ *   apple-touch-icon    → fullbleed solid (iOS가 자체 라운드 적용)
+ *   Capacitor 소스      → fullbleed solid (Android adaptive icon 레이어)
  */
 import { chromium } from 'playwright'
 import { writeFileSync, readFileSync, mkdirSync } from 'fs'
@@ -110,27 +112,29 @@ async function generateIcon(vertical = 'lesson-on') {
   const browser = await chromium.launch()
   const page = await browser.newPage()
 
-  // Capacitor용 1024px (Android 빌드 입력)
-  await renderToFile(page, buildSvg(conf, 1024), 1024, 'assets/icon-only.png')
+  // Capacitor용 1024px: fullbleed solid (Android adaptive icon 레이어)
+  await renderToFileSolid(page, buildSvg(conf, 1024, { maskable: true }), 1024, 'assets/icon-only.png')
 
   // PWA 아이콘 → public/icons/<vertical>/
-  // purpose:any  → 라운드+투명 (설치 배너 등)
-  // purpose:maskable → fullbleed 솔리드 (홈화면 — OS가 직접 shape 클리핑)
   const pwaDest = `public/icons/${vertical}`
-  await resizePngToFile(page, 'assets/icon-only.png', 512, `${pwaDest}/icon-512.png`)
-  await resizePngToFile(page, 'assets/icon-only.png', 192, `${pwaDest}/icon-192.png`)
-  await resizePngToFile(page, 'assets/icon-only.png', 180, `${pwaDest}/apple-touch-icon.png`)
-  await resizePngToFile(page, 'assets/icon-only.png', 512, `${pwaDest}/icon-maskable-512.png`)
-  await resizePngToFile(page, 'assets/icon-only.png', 192, `${pwaDest}/icon-maskable-192.png`)
+
+  // purpose:any — 투명 라운드 (설치 배너·파비콘 등 자체 shape 포함)
+  await renderToFile(page, buildSvg(conf, 512), 512, `${pwaDest}/icon-512.png`)
+  await renderToFile(page, buildSvg(conf, 192), 192, `${pwaDest}/icon-192.png`)
+
+  // apple-touch-icon / maskable — fullbleed solid (플랫폼이 직접 shape 적용)
+  await renderToFileSolid(page, buildSvg(conf, 180, { maskable: true }), 180, `${pwaDest}/apple-touch-icon.png`)
+  await renderToFileSolid(page, buildSvg(conf, 512, { maskable: true }), 512, `${pwaDest}/icon-maskable-512.png`)
+  await renderToFileSolid(page, buildSvg(conf, 192, { maskable: true }), 192, `${pwaDest}/icon-maskable-192.png`)
 
   // dts는 public/icons/ 기본 위치에도 복사 (dev 서버 참조 대상)
   if (vertical === 'dts') {
     const defaultDest = 'public/icons'
-    await resizePngToFile(page, 'assets/icon-only.png', 512, `${defaultDest}/icon-512.png`)
-    await resizePngToFile(page, 'assets/icon-only.png', 192, `${defaultDest}/icon-192.png`)
-    await resizePngToFile(page, 'assets/icon-only.png', 180, `${defaultDest}/apple-touch-icon.png`)
-    await resizePngToFile(page, 'assets/icon-only.png', 512, `${defaultDest}/icon-maskable-512.png`)
-    await resizePngToFile(page, 'assets/icon-only.png', 192, `${defaultDest}/icon-maskable-192.png`)
+    await renderToFile(page, buildSvg(conf, 512), 512, `${defaultDest}/icon-512.png`)
+    await renderToFile(page, buildSvg(conf, 192), 192, `${defaultDest}/icon-192.png`)
+    await renderToFileSolid(page, buildSvg(conf, 180, { maskable: true }), 180, `${defaultDest}/apple-touch-icon.png`)
+    await renderToFileSolid(page, buildSvg(conf, 512, { maskable: true }), 512, `${defaultDest}/icon-maskable-512.png`)
+    await renderToFileSolid(page, buildSvg(conf, 192, { maskable: true }), 192, `${defaultDest}/icon-maskable-192.png`)
     console.log(`   기본 위치: ${defaultDest}/`)
   }
 
