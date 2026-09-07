@@ -79,7 +79,7 @@ interface AppHeaderProps {
 
 export function AppHeader({ funcMenuItems, extraMenuGroups, userMenuItems, leftSlot, memberSelectSlot, rightSlot, roleLabel, onShowLogin }: AppHeaderProps) {
   const navigate = useNavigate()
-  const { profile, loading: authLoading, signOut, deleteAccount, linkGoogle, linkKakao, getIdentities } = useAuth()
+  const { profile, loading: authLoading, signOut, deleteAccount, linkKakao, getIdentities } = useAuth()
   const { isCustomerAdmin } = useCustomerAdmin()
   const { tenant, tenantRole, tenantPlan, memberships, resetTenantSelection, reloadMemberships } = useTenant()
   // 데스크탑 사이드바 상태 (lg 이상에서 사용)
@@ -480,7 +480,7 @@ export function AppHeader({ funcMenuItems, extraMenuGroups, userMenuItems, leftS
       {isPrivileged && (profile?.is_super_admin || tenantPlan === 'business') && <DashboardNav />}
 
       {showProfile && profile && (
-        <ProfileModal profile={profile} onClose={() => setShowProfile(false)} linkGoogle={linkGoogle} linkKakao={linkKakao} getIdentities={getIdentities} />
+        <ProfileModal profile={profile} onClose={() => setShowProfile(false)} linkKakao={linkKakao} getIdentities={getIdentities} />
       )}
 
       {showJoinOrg && profile && (

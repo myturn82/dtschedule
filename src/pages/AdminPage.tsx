@@ -1695,16 +1695,20 @@ export function AdminPage() {
                               {m.user_id === profile.id && <span className="ml-1.5 text-xs text-[var(--color-text-muted)]">(나)</span>}
                               {/* 모바일: 이메일·전화번호 요약 표시 (탭 → 편집) */}
                               <div className="sm:hidden flex flex-col items-center gap-0.5 mt-1">
-                                <button
-                                  onClick={() => { setEditingEmailUserId(m.user_id); setEditEmail(m.profile?.email ?? '') }}
-                                  className="text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-brand-primary)] truncate max-w-full inline-flex items-center gap-0.5"
-                                >
-                                  {m.profile?.signup_provider === 'kakao' && (
-                                    <KakaoBadge size={13} className="shrink-0" />
-                                  )}
-                                  {m.profile?.email ?? '이메일 없음'}
-                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-                                </button>
+                                {m.profile?.signup_provider == null ? (
+                                  <button
+                                    onClick={() => { setEditingEmailUserId(m.user_id); setEditEmail(m.profile?.email ?? '') }}
+                                    className="text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-brand-primary)] truncate max-w-full inline-flex items-center gap-0.5"
+                                  >
+                                    {m.profile?.email ?? '이메일 없음'}
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                                  </button>
+                                ) : (
+                                  <span className="text-[10px] text-[var(--color-text-muted)] truncate max-w-full inline-flex items-center gap-0.5">
+                                    {m.profile?.signup_provider === 'kakao' && <KakaoBadge size={13} className="shrink-0" />}
+                                    {m.profile?.email ?? '이메일 없음'}
+                                  </span>
+                                )}
                                 <button
                                   onClick={() => { setEditingPhoneUserId(m.user_id); setEditPhone(fmtPhone(m.profile?.phone)) }}
                                   className="text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-brand-primary)] inline-flex items-center gap-0.5"
@@ -1736,18 +1740,20 @@ export function AdminPage() {
                                   <button onClick={() => setEditingEmailUserId(null)}
                                     className="px-1.5 py-1 text-[10px] border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] rounded-lg">취소</button>
                                 </span>
-                              ) : (
+                              ) : m.profile?.signup_provider == null ? (
                                 <button
                                   onClick={() => { setEditingEmailUserId(m.user_id); setEditEmail(m.profile?.email ?? '') }}
                                   className="hover:text-[var(--color-brand-primary)] transition-colors text-[var(--color-text-muted)] inline-flex items-center gap-1"
                                   title="이메일 수정"
                                 >
-                                  {m.profile?.signup_provider === 'kakao' && (
-                                    <KakaoBadge size={13} />
-                                  )}
                                   {m.profile?.email ?? '-'}
                                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                                 </button>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 text-[var(--color-text-muted)]" title="소셜 계정은 이메일을 수정할 수 없습니다">
+                                  {m.profile?.signup_provider === 'kakao' && <KakaoBadge size={13} />}
+                                  {m.profile?.email ?? '-'}
+                                </span>
                               )}
                             </td>
                             <td className="px-2 py-2 sm:px-4 sm:py-3 hidden sm:table-cell text-xs text-center">
@@ -1856,13 +1862,19 @@ export function AdminPage() {
                                 ) : (
                                   <div className="flex items-center gap-2">
                                     <span className="text-[10px] font-semibold text-[var(--color-text-muted)] w-12 shrink-0">이메일</span>
-                                    <button
-                                      onClick={() => { setEditingEmailUserId(m.user_id); setEditEmail(m.profile?.email ?? '') }}
-                                      className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-brand-primary)] transition-colors text-left flex-1 truncate"
-                                      title="이메일 수정"
-                                    >
-                                      {m.profile?.email ?? '-'}
-                                    </button>
+                                    {m.profile?.signup_provider == null ? (
+                                      <button
+                                        onClick={() => { setEditingEmailUserId(m.user_id); setEditEmail(m.profile?.email ?? '') }}
+                                        className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-brand-primary)] transition-colors text-left flex-1 truncate"
+                                        title="이메일 수정"
+                                      >
+                                        {m.profile?.email ?? '-'}
+                                      </button>
+                                    ) : (
+                                      <span className="text-xs text-[var(--color-text-muted)] flex-1 truncate">
+                                        {m.profile?.email ?? '-'}
+                                      </span>
+                                    )}
                                   </div>
                                 )}
                                 {/* 전화번호 */}

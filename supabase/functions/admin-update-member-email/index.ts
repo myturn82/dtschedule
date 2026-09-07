@@ -54,6 +54,13 @@ Deno.serve(async (req) => {
       if (!targetMember) return json({ error: '해당 조직의 회원이 아닙니다.' }, 403, corsHeaders)
     }
 
+    // 대상 회원의 가입 방식 확인 — 소셜/이메일 인증 계정은 이메일 변경 불가
+    const { data: targetProfile } = await supabaseAdmin
+      .from('profiles').select('signup_provider').eq('id', user_id).single()
+    if (targetProfile?.signup_provider != null) {
+      return json({ error: '소셜 또는 이메일 인증으로 가입한 계정은 이메일을 변경할 수 없습니다.' }, 403, corsHeaders)
+    }
+
     // auth.users 이메일 업데이트
     // email_confirm: true 없이 호출하면 "Confirm email" 설정이 켜진 프로젝트에서
     // 새 이메일이 미확인 상태로 남아 해당 이메일로 로그인이 거부된다.
