@@ -28,11 +28,15 @@ const VERTICAL_ICONS = {
 
 const ICON_RADIUS = 13 // 64 기준 약 20% — Android 런처 squircle에 맞춤
 
-function buildSvg(conf, size) {
+// maskable=true → fullbleed 솔리드(OS가 직접 클리핑), false → 라운드+투명
+function buildSvg(conf, size, { maskable = false } = {}) {
+  const clipDefs = maskable ? '' : `<defs><clipPath id="r"><rect width="64" height="64" rx="${ICON_RADIUS}" ry="${ICON_RADIUS}"/></clipPath></defs>`
+  const groupAttr = maskable ? '' : ' clip-path="url(#r)"'
+
   if (conf.type === 'dts') {
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 64 64">
-  <defs><clipPath id="r"><rect width="64" height="64" rx="${ICON_RADIUS}" ry="${ICON_RADIUS}"/></clipPath></defs>
-  <g clip-path="url(#r)">
+  ${clipDefs}
+  <g${groupAttr}>
     <rect width="64" height="64" fill="${conf.fill}"/>
     <text x="32" y="40" font-family="-apple-system,Arial" font-weight="800" font-size="22" letter-spacing="-0.5" fill="white" text-anchor="middle">DTS<tspan fill="rgba(255,255,255,0.55)">.</tspan></text>
   </g>
@@ -44,8 +48,8 @@ function buildSvg(conf, size) {
     .map(({ x, y }) => `<rect x="${x}" y="${y}" width="16" height="16" fill="white" fill-opacity="0.09"/>`)
     .join('\n  ')
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 64 64">
-  <defs><clipPath id="r"><rect width="64" height="64" rx="${ICON_RADIUS}" ry="${ICON_RADIUS}"/></clipPath></defs>
-  <g clip-path="url(#r)">
+  ${clipDefs}
+  <g${groupAttr}>
     <rect width="64" height="64" fill="${fill}"/>
     <rect x="14" y="0" width="4" height="10" rx="2" fill="white" fill-opacity="0.35"/>
     <rect x="46" y="0" width="4" height="10" rx="2" fill="white" fill-opacity="0.35"/>
@@ -68,6 +72,16 @@ async function renderToFile(page, svg, size, outputPath) {
   const buf = await page.screenshot({ clip: { x: 0, y: 0, width: size, height: size }, omitBackground: true })
   writeFileSync(outputPath, buf)
   console.log(`   → ${outputPath} (${size}×${size})`)
+}
+
+// maskable 아이콘용 — fullbleed 솔리드 배경(투명 픽셀 없음), OS가 직접 shape 적용
+async function renderToFileSolid(page, svg, size, outputPath) {
+  mkdirSync(dirname(outputPath), { recursive: true })
+  await page.setViewportSize({ width: size, height: size })
+  await page.setContent(`<!DOCTYPE html><html><body style="margin:0;padding:0;overflow:hidden">${svg}</body></html>`)
+  const buf = await page.screenshot({ clip: { x: 0, y: 0, width: size, height: size } })
+  writeFileSync(outputPath, buf)
+  console.log(`   → ${outputPath} (${size}×${size} maskable)`)
 }
 
 // 1024px 소스 PNG를 img 태그로 리사이즈 — 네이티브 아이콘과 동일한 소스 보장
@@ -99,13 +113,15 @@ async function generateIcon(vertical = 'lesson-on') {
   // Capacitor용 1024px (Android 빌드 입력)
   await renderToFile(page, buildSvg(conf, 1024), 1024, 'assets/icon-only.png')
 
-  // PWA 아이콘 → public/icons/<vertical>/  (1024px 소스에서 리사이즈 — 네이티브와 동일)
+  // PWA 아이콘 → public/icons/<vertical>/
+  // purpose:any  → 라운드+투명 (설치 배너 등)
+  // purpose:maskable → fullbleed 솔리드 (홈화면 — OS가 직접 shape 클리핑)
   const pwaDest = `public/icons/${vertical}`
   await resizePngToFile(page, 'assets/icon-only.png', 512, `${pwaDest}/icon-512.png`)
   await resizePngToFile(page, 'assets/icon-only.png', 192, `${pwaDest}/icon-192.png`)
   await resizePngToFile(page, 'assets/icon-only.png', 180, `${pwaDest}/apple-touch-icon.png`)
-  await resizePngToFile(page, 'assets/icon-only.png', 512, `${pwaDest}/icon-maskable-512.png`)
-  await resizePngToFile(page, 'assets/icon-only.png', 192, `${pwaDest}/icon-maskable-192.png`)
+  await renderToFileSolid(page, buildSvg(conf, 512, { maskable: true }), 512, `${pwaDest}/icon-maskable-512.png`)
+  await renderToFileSolid(page, buildSvg(conf, 192, { maskable: true }), 192, `${pwaDest}/icon-maskable-192.png`)
 
   // dts는 public/icons/ 기본 위치에도 복사 (dev 서버 참조 대상)
   if (vertical === 'dts') {
@@ -113,8 +129,8 @@ async function generateIcon(vertical = 'lesson-on') {
     await resizePngToFile(page, 'assets/icon-only.png', 512, `${defaultDest}/icon-512.png`)
     await resizePngToFile(page, 'assets/icon-only.png', 192, `${defaultDest}/icon-192.png`)
     await resizePngToFile(page, 'assets/icon-only.png', 180, `${defaultDest}/apple-touch-icon.png`)
-    await resizePngToFile(page, 'assets/icon-only.png', 512, `${defaultDest}/icon-maskable-512.png`)
-    await resizePngToFile(page, 'assets/icon-only.png', 192, `${defaultDest}/icon-maskable-192.png`)
+    await renderToFileSolid(page, buildSvg(conf, 512, { maskable: true }), 512, `${defaultDest}/icon-maskable-512.png`)
+    await renderToFileSolid(page, buildSvg(conf, 192, { maskable: true }), 192, `${defaultDest}/icon-maskable-192.png`)
     console.log(`   기본 위치: ${defaultDest}/`)
   }
 
