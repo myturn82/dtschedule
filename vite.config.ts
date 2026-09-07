@@ -69,7 +69,7 @@ export default defineConfig(({ command, mode }) => {
           short_name:       shortName,
           description:      tagline,
           theme_color:      brandColor,
-          background_color: '#0a0b10',
+          background_color: brandColor,
           display:          'standalone',
           start_url:        '/',
           scope:            '/',

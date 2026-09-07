@@ -120,8 +120,8 @@ async function generateIcon(vertical = 'lesson-on') {
   await resizePngToFile(page, 'assets/icon-only.png', 512, `${pwaDest}/icon-512.png`)
   await resizePngToFile(page, 'assets/icon-only.png', 192, `${pwaDest}/icon-192.png`)
   await resizePngToFile(page, 'assets/icon-only.png', 180, `${pwaDest}/apple-touch-icon.png`)
-  await renderToFileSolid(page, buildSvg(conf, 512, { maskable: true }), 512, `${pwaDest}/icon-maskable-512.png`)
-  await renderToFileSolid(page, buildSvg(conf, 192, { maskable: true }), 192, `${pwaDest}/icon-maskable-192.png`)
+  await resizePngToFile(page, 'assets/icon-only.png', 512, `${pwaDest}/icon-maskable-512.png`)
+  await resizePngToFile(page, 'assets/icon-only.png', 192, `${pwaDest}/icon-maskable-192.png`)
 
   // dts는 public/icons/ 기본 위치에도 복사 (dev 서버 참조 대상)
   if (vertical === 'dts') {
@@ -129,8 +129,8 @@ async function generateIcon(vertical = 'lesson-on') {
     await resizePngToFile(page, 'assets/icon-only.png', 512, `${defaultDest}/icon-512.png`)
     await resizePngToFile(page, 'assets/icon-only.png', 192, `${defaultDest}/icon-192.png`)
     await resizePngToFile(page, 'assets/icon-only.png', 180, `${defaultDest}/apple-touch-icon.png`)
-    await renderToFileSolid(page, buildSvg(conf, 512, { maskable: true }), 512, `${defaultDest}/icon-maskable-512.png`)
-    await renderToFileSolid(page, buildSvg(conf, 192, { maskable: true }), 192, `${defaultDest}/icon-maskable-192.png`)
+    await resizePngToFile(page, 'assets/icon-only.png', 512, `${defaultDest}/icon-maskable-512.png`)
+    await resizePngToFile(page, 'assets/icon-only.png', 192, `${defaultDest}/icon-maskable-192.png`)
     console.log(`   기본 위치: ${defaultDest}/`)
   }
 
