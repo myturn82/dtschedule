@@ -111,6 +111,7 @@ Deno.serve(async (req) => {
         email,
         is_approved: false,
         is_super_admin: false,
+        signup_provider: null,
       })
       if (profileErr) {
         console.error(`[admin-create-user] profile create failed: ${profileErr.message}`)
