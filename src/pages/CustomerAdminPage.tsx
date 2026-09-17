@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useCallback } from 'react'
 import { DevFileLabel } from '../components/DevFileLabel'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { BRAND } from '../lib/brandConfig'
 import { VERTICAL_PRESETS } from '../lib/verticalPresets'
@@ -49,6 +49,10 @@ export function CustomerAdminPage() {
   const { setTenant, reloadMemberships } = useTenant()
   const { planLimits } = usePlanLimits()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const urlVertical = searchParams.get('vertical')
+  const effectiveVertical = urlVertical ?? (BRAND.vertical !== 'generic' ? BRAND.vertical : null)
+  const runtimePreset = effectiveVertical ? VERTICAL_PRESETS[effectiveVertical as keyof typeof VERTICAL_PRESETS] : null
 
   const [tenants, setTenants]     = useState<Tenant[]>([])
   const [totalUsers, setTotalUsers] = useState(0)
@@ -148,7 +152,7 @@ export function CustomerAdminPage() {
         )
         if (cancelled) return
         sessionStorage.setItem('vs_setup_tenant', JSON.stringify({ id: createdId, slug: createdSlug, name: orgName, customer_id: myCustomer!.id, is_active: true, settings: tenantSettings }))
-        navigate(`/setup?org=${createdId}${BRAND.vertical !== 'generic' ? `&vertical=${BRAND.vertical}` : ''}`)
+        navigate(`/setup?org=${createdId}${effectiveVertical ? `&vertical=${effectiveVertical}` : ''}`)
         reloadMemberships()
         return
       } else if (list.length === 1 && !list[0].settings?.setup_completed_at) {
@@ -159,7 +163,7 @@ export function CustomerAdminPage() {
         if (sessionStorage.getItem(redirectKey)) return
         sessionStorage.setItem(redirectKey, '1')
         sessionStorage.setItem('vs_setup_tenant', JSON.stringify(list[0]))
-        navigate('/setup?org=' + list[0].id)
+        navigate(`/setup?org=${list[0].id}${effectiveVertical ? `&vertical=${effectiveVertical}` : ''}`)
       }
     }
     load()
@@ -292,7 +296,7 @@ export function CustomerAdminPage() {
     setCreateSlots(['09-12', '13-14', '14-16', '16-18', '20-22'])
     sessionStorage.setItem('vs_setup_tenant', JSON.stringify({ id: tenantId, slug: finalSlug, name: form.name.trim(), customer_id: customerId, is_active: true, settings: tenantSettings }))
     setSaving(false)
-    navigate(`/setup?org=${tenantId}${BRAND.vertical !== 'generic' ? `&vertical=${BRAND.vertical}` : ''}`)
+    navigate(`/setup?org=${tenantId}${effectiveVertical ? `&vertical=${effectiveVertical}` : ''}`)
   }, [form, createSlots, myCustomer, tenants.length, profile, refreshCustomer, reloadMemberships, planLimits])
 
   if (authLoading || loading) {
@@ -501,6 +505,7 @@ export function CustomerAdminPage() {
                       value={form.business_type}
                       onChange={v => setForm(prev => ({ ...prev, business_type: v }))}
                       inputCls={inputCls}
+                      allowedCategories={runtimePreset?.industry_categories}
                     />
                   </div>
                 </div>

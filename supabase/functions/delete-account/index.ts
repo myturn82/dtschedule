@@ -42,7 +42,12 @@ Deno.serve(async (req) => {
         .eq('tenant_id', tenantId)
       if (error) return json({ error: '조직 탈퇴에 실패했습니다.' }, 500, corsHeaders)
     } else {
+      // 전체 계정 삭제: FK 캐스케이드에 의존하지 않고 명시적으로 삭제
+      // (개발 DB의 auth.users→profiles FK 구조 변경으로 auth.admin.deleteUser 단독 호출 시 실패 가능)
       await supabaseAdmin.from('tenant_members').delete().eq('user_id', user.id)
+      // profiles 삭제 → anonymize 트리거(assignments 익명화) + notifications/push_subscriptions CASCADE
+      await supabaseAdmin.from('profiles').delete().eq('id', user.id)
+      // auth.users 삭제 → push_tokens CASCADE, auth 스키마 정리
       const { error } = await supabaseAdmin.auth.admin.deleteUser(user.id)
       if (error) return json({ error: '계정 삭제에 실패했습니다.' }, 500, corsHeaders)
     }

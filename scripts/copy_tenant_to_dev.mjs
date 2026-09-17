@@ -128,7 +128,8 @@ async function copyTenantMembers() {
 }
 
 // ── tenant_id 기반 테이블 복사 ─────────────────────────────────────────────
-async function copyTable(table, orderBy = 'id') {
+// upsert=true 이면 DELETE 실패 시에도 ON CONFLICT (id) DO UPDATE SET 으로 덮어씀
+async function copyTable(table, orderBy = 'id', { upsert = false } = {}) {
   console.log(`\n▶ ${table}`)
 
   const devCols = await getDevCols(table)
@@ -152,6 +153,8 @@ async function copyTable(table, orderBy = 'id') {
   const skipped  = prodCols.filter(c => !devCols.has(c))
   if (skipped.length) console.log(`  ℹ️  개발에 없는 컬럼 제외: ${skipped.join(', ')}`)
 
+  const updateCols = useCols.filter(c => c !== 'id')
+
   let ok = 0, err = 0
   for (const row of rows) {
     const vals = useCols.map(c => {
@@ -160,7 +163,10 @@ async function copyTable(table, orderBy = 'id') {
       else if (NULL_AUTH_COLS.has(c)) v = null
       return lit(v)
     })
-    const sql = `INSERT INTO ${table} (${useCols.join(', ')}) VALUES (${vals.join(', ')}) ON CONFLICT DO NOTHING`
+    const conflict = upsert
+      ? `ON CONFLICT (id) DO UPDATE SET ${updateCols.map(c => `${c}=EXCLUDED.${c}`).join(', ')}`
+      : `ON CONFLICT DO NOTHING`
+    const sql = `INSERT INTO ${table} (${useCols.join(', ')}) VALUES (${vals.join(', ')}) ${conflict}`
     const res = await apiQuery(DEV_REF, sql, 'INSERT')
     if (res !== null) ok++; else err++
   }
@@ -215,7 +221,7 @@ await copyTable('lesson_package_types', 'id')
 await copyTable('slot_settings',        'id')
 await copyTable('schedule_rules',       'id')
 await copyTable('date_overrides',       'date')
-await copyTable('lesson_packages',      'created_at')
+await copyTable('lesson_packages',      'created_at', { upsert: true })
 await copyTable('assignments',          'year, month, day, created_at')
 
 console.log('\n✅ 완료')

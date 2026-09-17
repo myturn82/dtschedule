@@ -1,5 +1,5 @@
 ﻿import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { DevFileLabel } from '../DevFileLabel'
 import { supabase } from '../../lib/supabase'
 import { BRAND } from '../../lib/brandConfig'
@@ -21,6 +21,8 @@ const DEFAULT_SLOTS = ['09-10', '10-11', '11-12', '12-13', '13-14', '14-15', '15
 
 export function StartServiceModal({ userId, onClose }: Props) {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const effectiveVertical = searchParams.get('vertical') ?? (BRAND.vertical !== 'generic' ? BRAND.vertical : null)
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [creating, setCreating] = useState(false)
@@ -55,7 +57,7 @@ export function StartServiceModal({ userId, onClose }: Props) {
 
     // 2. 조직 생성 — ID 미리 생성 후 INSERT만 수행 (SELECT 없이, RLS 우회)
     const orgName = name.trim()
-    const verticalPreset = BRAND.vertical !== 'generic' ? VERTICAL_PRESETS[BRAND.vertical] : undefined
+    const verticalPreset = effectiveVertical ? VERTICAL_PRESETS[effectiveVertical as keyof typeof VERTICAL_PRESETS] : undefined
     const tenantSettings = {
       title: orgName, time_slots: DEFAULT_SLOTS,
       open_from: '09:00', open_to: '22:00', slot_interval_minutes: 60,
@@ -70,7 +72,7 @@ export function StartServiceModal({ userId, onClose }: Props) {
       const { error: tenantErr } = await supabase.from('tenants').insert({
         id: tenantId, slug: tenantSlug, name: orgName,
         customer_id: customerId, is_active: true, settings: tenantSettings,
-        source_vertical: BRAND.vertical,
+        source_vertical: effectiveVertical ?? BRAND.vertical,
       })
       if (!tenantErr) break
       if (tenantErr.code !== '23505') { setError(`오류: ${tenantErr.message}`); setCreating(false); return }
@@ -96,7 +98,7 @@ export function StartServiceModal({ userId, onClose }: Props) {
       customer_id: customerId, is_active: true, settings: tenantSettings,
     }))
     onClose()
-    navigate(`/setup?org=${tenantId}${BRAND.vertical !== 'generic' ? `&vertical=${BRAND.vertical}` : ''}`)
+    navigate(`/setup?org=${tenantId}${effectiveVertical ? `&vertical=${effectiveVertical}` : ''}`)
   }
 
   return (
