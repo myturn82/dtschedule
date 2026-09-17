@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { DevFileLabel } from '../components/DevFileLabel'
 import { useAuth } from '../hooks/useAuth'
 import { useTenant } from '../contexts/TenantContext'
 import { supabase } from '../lib/supabase'
 import { BRAND } from '../lib/brandConfig'
-import { VERTICAL_PRESETS } from '../lib/verticalPresets'
+import { VERTICAL_PRESETS, type VerticalId } from '../lib/verticalPresets'
 import { ScheduleBackground } from '../components/auth/ScheduleBackground'
 import { isValidPhone, formatPhone } from '../lib/phone'
 
@@ -42,8 +42,12 @@ const labelSt: React.CSSProperties = { display: 'block', fontSize: 12, fontWeigh
 
 export function PendingPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { profile, signOut, deleteAccount, refreshCustomer } = useAuth()
   const { reloadMemberships } = useTenant()
+  const effectiveVertical: VerticalId | null = BRAND.vertical !== 'generic'
+    ? BRAND.vertical
+    : ((searchParams.get('vertical') ?? localStorage.getItem('vs_pending_vertical')) as VerticalId | null)
   const [mode, setMode] = useState<'choose' | 'start-service' | 'join-org'>('choose')
 
   useEffect(() => {
@@ -209,7 +213,7 @@ export function PendingPage() {
 
     // 2. 조직 생성 — ID 미리 생성 후 INSERT만 수행 (SELECT 없이, RLS 우회)
     const orgName = customerName.trim()
-    const verticalPreset = BRAND.vertical !== 'generic' ? VERTICAL_PRESETS[BRAND.vertical] : undefined
+    const verticalPreset = effectiveVertical ? VERTICAL_PRESETS[effectiveVertical] : undefined
     const tenantSettings = {
       title: orgName, time_slots: DEFAULT_SLOTS,
       open_from: '09:00', open_to: '22:00', slot_interval_minutes: 60,
@@ -225,7 +229,7 @@ export function PendingPage() {
       const { error: tenantErr } = await supabase.from('tenants').insert({
         id: tenantId, slug: tenantSlug, name: orgName,
         customer_id: customerId, is_active: true, settings: tenantSettings,
-        source_vertical: BRAND.vertical,
+        source_vertical: effectiveVertical ?? BRAND.vertical,
       })
       if (!tenantErr) break
       if (tenantErr.code !== '23505') { setError(`오류: ${tenantErr.message}`); setCustomerCreating(false); return }
@@ -250,7 +254,8 @@ export function PendingPage() {
       id: tenantId, slug: tenantSlug, name: orgName,
       customer_id: customerId, is_active: true, settings: tenantSettings,
     }))
-    navigate(`/setup?org=${tenantId}${BRAND.vertical !== 'generic' ? `&vertical=${BRAND.vertical}` : ''}`)
+    localStorage.removeItem('vs_pending_vertical')
+    navigate(`/setup?org=${tenantId}${effectiveVertical ? `&vertical=${effectiveVertical}` : ''}`)
     refreshCustomer().then(() => reloadMemberships())
   }
 

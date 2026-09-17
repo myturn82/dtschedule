@@ -2,6 +2,9 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import { Capacitor } from '@capacitor/core'
 import { App as CapApp } from '@capacitor/app'
 import { supabase } from '../lib/supabase'
+import { BRAND } from '../lib/brandConfig'
+import { VERTICAL_PRESETS } from '../lib/verticalPresets'
+import type { VerticalId } from '../lib/verticalPresets'
 import type { Profile, Customer } from '../types'
 
 const NATIVE_OAUTH_REDIRECT = `${import.meta.env.VITE_APP_ID ?? 'com.dtschedule.app'}://login-callback`
@@ -144,15 +147,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = useCallback(async (email: string, password: string, name: string, role: 'volunteer' | '50plus' | 'team_leader' | 'admin', tenantId?: string, tenantRoleId?: string, phone?: string): Promise<{ error: string | null; userId: string | null }> => {
     const consentTs = sessionStorage.getItem('vs_consent_ts') ?? new Date().toISOString()
+    const urlVertical = new URLSearchParams(window.location.search).get('vertical') as VerticalId | null
+    const preset = urlVertical ? VERTICAL_PRESETS[urlVertical] : null
+    const appName = preset?.appName ?? BRAND.name
+    const brandColor = preset?.brandColor ?? BRAND.color
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: getOAuthRedirect(),
+        emailRedirectTo: getOAuthRedirect() + (urlVertical ? `?vertical=${urlVertical}` : ''),
         data: {
           name, role,
           terms_agreed_at: consentTs,
           privacy_agreed_at: consentTs,
+          app_name: appName,
+          brand_color: brandColor,
           ...(tenantId ? { tenant_id: tenantId } : {}),
           ...(tenantRoleId ? { tenant_role_id: tenantRoleId } : {}),
           ...(phone ? { phone } : {}),

@@ -234,6 +234,9 @@ export function AuthPage() {
   async function handleSignUpForService() {
     setLoading(true); setError(null)
     localStorage.setItem('vs_pending_mode', 'start-service')
+    const verticalFromUrl = searchParams.get('vertical')
+    if (verticalFromUrl) localStorage.setItem('vs_pending_vertical', verticalFromUrl)
+    else localStorage.removeItem('vs_pending_vertical')
     const { error: err } = await signUp(joinEmail.trim(), joinPw, joinName.trim(), 'volunteer', '', undefined, undefined)
     setLoading(false)
     if (err) {
@@ -283,6 +286,9 @@ export function AuthPage() {
       localStorage.setItem('vs_pending_social', JSON.stringify({ tenantId: selectedTenantId, tenantRoleId: null }))
     } else {
       localStorage.setItem('vs_pending_mode', 'start-service')
+      const verticalFromUrl = searchParams.get('vertical')
+      if (verticalFromUrl) localStorage.setItem('vs_pending_vertical', verticalFromUrl)
+      else localStorage.removeItem('vs_pending_vertical')
     }
     const err = await signInWithKakao()
     setLoading(false); if (err) setError(err)
