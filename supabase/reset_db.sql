@@ -72,6 +72,7 @@ DROP TABLE IF EXISTS feedback_replies CASCADE;
 DROP TABLE IF EXISTS feedback_posts   CASCADE;
 DROP TABLE IF EXISTS consent_logs    CASCADE;
 DROP TABLE IF EXISTS policy_versions CASCADE;
+DROP TABLE IF EXISTS pre_lesson_alert_log CASCADE;
 DROP TABLE IF EXISTS push_subscriptions CASCADE;
 DROP TABLE IF EXISTS push_tokens CASCADE;
 DROP TABLE IF EXISTS notifications CASCADE;
@@ -344,7 +345,9 @@ CREATE TABLE notification_settings (
   send_time  text DEFAULT '18:00' NOT NULL,
   recipients jsonb DEFAULT '{"assigned_members": true, "admins": false}'::jsonb NOT NULL,
   msg_template text DEFAULT '안녕하세요! 내일 {{date}} {{slot}} 배정이 있습니다. ({{org}})' NOT NULL,
-  updated_at timestamptz DEFAULT now() NOT NULL
+  updated_at timestamptz DEFAULT now() NOT NULL,
+  pre_lesson_alert_enabled boolean  DEFAULT false NOT NULL,
+  pre_lesson_alert_minutes smallint DEFAULT 10    NOT NULL
 );
 
 -- notifications
@@ -370,6 +373,15 @@ CREATE TABLE push_tokens (
   created_at  timestamptz DEFAULT now(),
   updated_at  timestamptz DEFAULT now(),
   UNIQUE (user_id, token)
+);
+
+-- pre_lesson_alert_log (중복 발송 방지)
+CREATE TABLE pre_lesson_alert_log (
+  tenant_id   uuid  NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  alert_date  date  NOT NULL,
+  time_slot   text  NOT NULL,
+  sent_at     timestamptz DEFAULT now(),
+  PRIMARY KEY (tenant_id, alert_date, time_slot)
 );
 
 -- push_subscriptions
@@ -438,6 +450,7 @@ CREATE UNIQUE INDEX unique_member_assignment
 CREATE INDEX idx_notifications_user_unread ON notifications(user_id, is_read);
 CREATE INDEX idx_notifications_tenant ON notifications(tenant_id);
 CREATE INDEX idx_notifications_active ON notifications(user_id, created_at DESC) WHERE archived_at IS NULL;
+CREATE INDEX idx_pre_lesson_log_sent_at ON pre_lesson_alert_log(sent_at);
 CREATE INDEX idx_push_tokens_user ON push_tokens(user_id);
 CREATE INDEX idx_push_subs_user ON push_subscriptions(user_id);
 CREATE UNIQUE INDEX idx_push_subs_endpoint ON push_subscriptions(endpoint);
@@ -465,9 +478,10 @@ ALTER TABLE date_overrides ENABLE ROW LEVEL SECURITY;
 ALTER TABLE plan_limits             ENABLE ROW LEVEL SECURITY;
 ALTER TABLE assignment_snapshots    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE slot_highlights         ENABLE ROW LEVEL SECURITY;
-ALTER TABLE notification_settings ENABLE ROW LEVEL SECURITY;
-ALTER TABLE notifications         ENABLE ROW LEVEL SECURITY;
-ALTER TABLE push_subscriptions    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notification_settings  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notifications          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE push_subscriptions     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE pre_lesson_alert_log   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE push_tokens           ENABLE ROW LEVEL SECURITY;
 ALTER TABLE policy_versions       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE consent_logs          ENABLE ROW LEVEL SECURITY;

@@ -41,8 +41,8 @@ function ServeSyncDemo() {
     const t = setInterval(() => setPhase(p => (p + 1) % 8), 750)
     return () => clearInterval(t)
   }, [])
-  const assigneeName  = phase >= 2 ? '박미영' : phase === 1 ? '배정 중...' : ''
-  const volunteerName = phase >= 5 ? '박미영' : ''
+  const assigneeName  = phase >= 2 ? '박O영' : phase === 1 ? '배정 중...' : ''
+  const volunteerName = phase >= 5 ? '박O영' : ''
   const arrowOn       = phase >= 3 && phase <= 4
   const volunteerPop  = phase === 5
 
@@ -73,18 +73,18 @@ function ServeSyncDemo() {
     <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 8, alignItems: 'center' }}>
         <Panel label="담당자 화면" rows={[
-          { time: '09:00', name: '김영희' },
+          { time: '09:00', name: '김O희' },
           { time: '10:00', name: assigneeName },
-          { time: '14:00', name: '최준호' },
+          { time: '14:00', name: '최O호' },
         ]} />
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
           <span style={{ fontSize: 16, color: arrowOn ? ACCENT : 'rgba(255,255,255,0.18)', transition: 'color 0.3s', animation: arrowOn ? 'ledPulse 0.5s ease-in-out infinite' : undefined }}>↔</span>
           <span style={{ fontSize: 8, color: arrowOn ? ACCENT : 'transparent', fontWeight: 700, transition: 'color 0.3s', whiteSpace: 'nowrap' }}>동기화</span>
         </div>
         <Panel label="봉사자 화면" rows={[
-          { time: '09:00', name: '김영희' },
+          { time: '09:00', name: '김O희' },
           { time: '10:00', name: volunteerName, pop: volunteerPop },
-          { time: '14:00', name: '최준호' },
+          { time: '14:00', name: '최O호' },
         ]} />
       </div>
     </div>
@@ -145,9 +145,9 @@ function ServeWizardStepDemo() {
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '28px 1fr 1fr', gap: 2 }}>
         {([
-          { t: '09:00', a: '김영희', b: '이철수' },
-          { t: '10:00', a: '박미영', b: '최준호' },
-          { t: '14:00', a: '김영희', b: '' },
+          { t: '09:00', a: '김O희', b: '이O수' },
+          { t: '10:00', a: '박O영', b: '최O호' },
+          { t: '14:00', a: '김O희', b: '' },
         ] as { t: string; a: string; b: string }[]).map(row => [
           <div key={`t${row.t}`} style={{ fontSize: 7, color: 'rgba(255,255,255,0.28)', display: 'flex', alignItems: 'center' }}>{row.t}</div>,
           <div key={`a${row.t}`} style={{ height: 15, borderRadius: 3, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, color: 'rgba(255,255,255,0.65)' }}>{row.a}</div>,
@@ -290,9 +290,9 @@ function ViewCycleDemo() {
         <div />
         {['월','화','수','목','금'].map(d => <div key={d} style={{ textAlign: 'center', fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.3)', paddingBottom: 3 }}>{d}</div>)}
         {[
-          { time: '10:00', cells: ['김영희', null, '박미영', null, '이철수'] },
-          { time: '13:00', cells: [null, '최준호', null, '정다은', null] },
-          { time: '14:00', cells: ['정다은', null, '이철수', null, '최준호'] },
+          { time: '10:00', cells: ['김O희', null, '박O영', null, '이O수'] },
+          { time: '13:00', cells: [null, '최O호', null, '정다은', null] },
+          { time: '14:00', cells: ['정다은', null, '이O수', null, '최O호'] },
         ].map(row => [
           <div key={`t-${row.time}`} style={{ fontSize: 8, color: 'rgba(255,255,255,0.28)', display: 'flex', alignItems: 'center' }}>{row.time}</div>,
           ...row.cells.map((n, ci) => (
@@ -308,11 +308,11 @@ function ViewCycleDemo() {
         <div style={{ fontSize: 10, fontWeight: 700, textAlign: 'center', marginBottom: 5, color: 'rgba(255,255,255,0.6)' }}>8월 12일 (화)</div>
         {[
           { time: '09:00', name: null },
-          { time: '10:00', name: '김영희' },
-          { time: '11:00', name: '박미영' },
+          { time: '10:00', name: '김O희' },
+          { time: '11:00', name: '박O영' },
           { time: '12:00', name: null },
-          { time: '13:00', name: '이철수' },
-          { time: '14:00', name: '최준호' },
+          { time: '13:00', name: '이O수' },
+          { time: '14:00', name: '최O호' },
         ].map(s => (
           <div key={s.time} style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 3 }}>
             <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.28)', width: 28, flexShrink: 0 }}>{s.time}</span>
@@ -334,18 +334,18 @@ function ViewCycleDemo() {
             <div key={`h${i}`} style={{ fontSize: 7, textAlign: 'center', color: i===5?'#60a5fa':i===6?'#f87171':'rgba(255,255,255,0.4)', padding: '1px 0' }}>{d ?? ''}</div>
           ))}
           {([
-            { d:3,  ents:['10시 김영희','11시 박미영'], more:3 },
-            { d:4,  ents:['10시 김영희','13시 박미영'], more:4 },
-            { d:5,  ents:['11시 이철수'], more:2 },
-            { d:6,  ents:['10시 김영희'], more:5 },
-            { d:7,  ents:['10시 김영희'], more:2 },
+            { d:3,  ents:['10시 김O희','11시 박O영'], more:3 },
+            { d:4,  ents:['10시 김O희','13시 박O영'], more:4 },
+            { d:5,  ents:['11시 이O수'], more:2 },
+            { d:6,  ents:['10시 김O희'], more:5 },
+            { d:7,  ents:['10시 김O희'], more:2 },
             { d:8,  ents:[], more:0 },
             { d:9,  ents:[], more:0 },
-            { d:10, ents:['10시 최준호','11시 최준호'], more:3 },
-            { d:11, ents:['10시 김영희'], more:3 },
-            { d:12, ents:['10시 최준호'], more:2 },
-            { d:13, ents:['10시 김영희'], more:5 },
-            { d:14, ents:['10시 김영희'], more:3 },
+            { d:10, ents:['10시 최O호','11시 최O호'], more:3 },
+            { d:11, ents:['10시 김O희'], more:3 },
+            { d:12, ents:['10시 최O호'], more:2 },
+            { d:13, ents:['10시 김O희'], more:5 },
+            { d:14, ents:['10시 김O희'], more:3 },
             { d:15, ents:[], more:0 },
             { d:16, ents:[], more:0 },
           ] as { d:number; ents:string[]; more:number }[]).map(({ d, ents, more }, i) => (
@@ -372,11 +372,11 @@ function ViewCycleDemo() {
           ))}
         </div>
         {([
-          { time: '10:00', cells: ['김영희', '김영희', null,   '김영희', '김영희'] },
-          { time: '11:00', cells: ['김영희', null,     null,   '박미영', '박미영'] },
-          { time: '13:00', cells: ['김영희', null,     '김영희','박미영', null    ] },
-          { time: '14:00', cells: ['이철수', '이철수', '김영희','박미영', '이철수'] },
-          { time: '15:00', cells: ['이철수', '이철수', null,   null,    '이철수'] },
+          { time: '10:00', cells: ['김O희', '김O희', null,   '김O희', '김O희'] },
+          { time: '11:00', cells: ['김O희', null,     null,   '박O영', '박O영'] },
+          { time: '13:00', cells: ['김O희', null,     '김O희','박O영', null    ] },
+          { time: '14:00', cells: ['이O수', '이O수', '김O희','박O영', '이O수'] },
+          { time: '15:00', cells: ['이O수', '이O수', null,   null,    '이O수'] },
         ] as { time: string; cells: (string|null)[] }[]).map(row => (
           <div key={row.time} style={{ display: 'grid', gridTemplateColumns: '30px repeat(5, 1fr)', gap: 2, marginBottom: 2 }}>
             <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.28)', display: 'flex', alignItems: 'center' }}>{row.time}</div>
@@ -679,10 +679,6 @@ export function LandingServeOn() {
         @keyframes wizFill   { from{ width:0%; } to{ width:100%; } }
         @keyframes dragSel   { 0%,8%{ background:rgba(255,255,255,0.04); box-shadow:none; } 32%,68%{ background:rgba(16,185,129,0.18); box-shadow:inset 0 0 0 2px rgba(16,185,129,0.6); } 88%,100%{ background:rgba(255,255,255,0.04); box-shadow:none; } }
         @keyframes barGrow   { from{ width:0%; } to{ width:var(--bar-w); } }
-        @keyframes float1    { 0%,100%{ transform:translateY(0px) rotate(-2deg); } 50%{ transform:translateY(-10px) rotate(-2deg); } }
-        @keyframes float2    { 0%,100%{ transform:translateY(0px) rotate(2deg); } 50%{ transform:translateY(-14px) rotate(2deg); } }
-        @keyframes float3    { 0%,100%{ transform:translateY(0px) rotate(-1deg); } 50%{ transform:translateY(-8px) rotate(-1deg); } }
-        @keyframes float4    { 0%,100%{ transform:translateY(0px) rotate(1.5deg); } 50%{ transform:translateY(-12px) rotate(1.5deg); } }
         body { margin:0; background:#0a0b10; }
         .sv-nav   { animation: navFade 0.5s ease both; }
         .sv-badge { animation: badgePop 0.6s cubic-bezier(.34,1.56,.64,1) 0.1s both; }
@@ -694,15 +690,10 @@ export function LandingServeOn() {
         .sv-card:hover { transform:translateY(-6px); border-color:rgba(16,185,129,0.3) !important; box-shadow:0 16px 48px rgba(0,0,0,0.35); }
         .sv-tag-btn { transition: background 0.18s, transform 0.18s; }
         .sv-tag-btn:hover { transform:scale(1.06); }
-        .sv-hero-card1 { animation: float1 4.5s ease-in-out 0.3s infinite; }
-        .sv-hero-card2 { animation: float2 5s ease-in-out 0.8s infinite; }
-        .sv-hero-card3 { animation: float3 4.2s ease-in-out 1.2s infinite; }
-        .sv-hero-card4 { animation: float4 4.8s ease-in-out 0.5s infinite; }
         @media (max-width:720px) {
           .sv-feat-grid { grid-template-columns:1fr !important; gap:10px !important; }
           .sv-feat-visual { max-width:none !important; justify-self:stretch !important; order:2 !important; }
           .sv-feat-text { order:1 !important; text-align:center !important; }
-          .sv-hero-cards { display:none !important; }
         }
       `}</style>
 
@@ -721,56 +712,9 @@ export function LandingServeOn() {
         <section style={{ textAlign: 'center', padding: '120px 24px 140px', position: 'relative', overflow: 'hidden' }}>
           <div className="sv-glow" style={{ position: 'absolute', top: -200, left: '50%', width: 900, height: 500, background: 'radial-gradient(circle, rgba(16,185,129,0.22), transparent 70%)', pointerEvents: 'none', transformOrigin: 'center center' }} />
 
-          {/* 플로팅 카드 */}
-          <div className="sv-hero-cards" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none' }}>
-            {/* 카드1: 봉사자 현황 */}
-            <div className="sv-hero-card1" style={{ position: 'absolute', top: '14%', left: '4%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 14, padding: '14px 16px', textAlign: 'left', minWidth: 170 }}>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>봉사자 현황</div>
-              {[
-                { label: '등록', value: '42명', color: 'rgba(255,255,255,0.7)' },
-                { label: '이번 달 활동', value: '18명', color: ACCENT },
-              ].map(r => (
-                <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
-                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>{r.label}</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: r.color }}>{r.value}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* 카드2: 참석 알림 */}
-            <div className="sv-hero-card2" style={{ position: 'absolute', top: '12%', right: '4%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 14, padding: '14px 16px', textAlign: 'left', maxWidth: 210 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                <span style={{ fontSize: 14 }}>◆</span>
-                <span style={{ fontSize: 10, color: ACCENT, fontWeight: 700 }}>참석 알림</span>
-              </div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', lineHeight: 1.6 }}>내일 오전 9시<br />급식 봉사가 있습니다.</div>
-              <div style={{ marginTop: 8, fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>방금 전 · 읽음 ✓</div>
-            </div>
-
-            {/* 카드3: 이번 주 배정 */}
-            <div className="sv-hero-card3" style={{ position: 'absolute', bottom: '12%', left: '5%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 14, padding: '14px 16px', textAlign: 'left' }}>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>이번 주 배정</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 3 }}>
-                {['월', '화', '수', '목', '금'].map(d => (
-                  <div key={d} style={{ textAlign: 'center', fontSize: 8, color: 'rgba(255,255,255,0.3)', paddingBottom: 2 }}>{d}</div>
-                ))}
-                {[true, false, true, false, true, false, true, false, true, false].map((filled, i) => (
-                  <div key={i} style={{ height: 20, borderRadius: 4, background: filled ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.04)', border: `1px solid ${filled ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.07)'}` }} />
-                ))}
-              </div>
-            </div>
-
-            {/* 카드4: 봉사 시간 */}
-            <div className="sv-hero-card4" style={{ position: 'absolute', bottom: '14%', right: '5%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 14, padding: '14px 18px', textAlign: 'left' }}>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 6 }}>봉사 시간</div>
-              <div style={{ fontSize: 26, fontWeight: 800, color: '#fff', lineHeight: 1 }}>126<span style={{ fontSize: 14, fontWeight: 400, color: 'rgba(255,255,255,0.5)', marginLeft: 3 }}>시간</span></div>
-              <div style={{ marginTop: 6, fontSize: 11, color: ACCENT, fontWeight: 700 }}>평균 7시간/인</div>
-            </div>
-          </div>
-
           <div className="sv-badge" style={{ display: 'inline-block', background: 'rgba(16,185,129,0.13)', color: ACCENT, borderRadius: 20, padding: '4px 14px', fontSize: 12, fontWeight: 700, marginBottom: 24 }}>봉사 활동 관리 플랫폼</div>
           <h1 className="sv-h1" style={{ fontSize: 'clamp(32px,6vw,56px)', fontWeight: 800, lineHeight: 1.25, letterSpacing: '-1.2px', margin: '0 auto 24px', maxWidth: 720 }}>
-            봉사자 모집부터 배정·확인까지<br /><span style={{ color: ACCENT }}>엑셀 없이 한 화면에</span>
+            봉사자 배정·시간 집계·알림 발송을<br /><span style={{ color: ACCENT }}>엑셀 없이 한 화면에</span>
           </h1>
           <p className="sv-sub" style={{ fontSize: 17, color: 'rgba(255,255,255,0.5)', maxWidth: 520, margin: '0 auto 40px', lineHeight: 1.7 }}>봉사자 명단, 일정 배정, 봉사 시간 집계를 SERVE:ON이 자동으로 처리합니다.</p>
           <button className="sv-cta" onClick={goStart} style={{ background: ACCENT, color: '#fff', border: 0, borderRadius: 12, padding: '16px 36px', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>무료로 시작하기 →</button>
@@ -787,13 +731,59 @@ export function LandingServeOn() {
           </Anim>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
             {[
-              { icon: '·', title: '엑셀 + 카톡 그룹방', desc: '봉사자 명단을 엑셀로 관리하고 카톡 그룹방으로 공지하느라 정보가 분산됩니다.' },
-              { icon: '·', title: '일일이 전화·문자', desc: '참석 여부를 한 명씩 확인하느라 봉사 준비보다 연락에 더 많은 시간을 씁니다.' },
-              { icon: '·', title: '봉사 시간 수기 계산', desc: '활동 시간을 개별로 집계하고 인증서 자료를 수작업으로 정리합니다.' },
+              {
+                icon: (
+                  <svg width="44" height="44" viewBox="0 0 44 44" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                    <rect x="2" y="7" width="24" height="22" rx="2.5"/>
+                    <line x1="2" y1="14" x2="26" y2="14"/>
+                    <line x1="2" y1="21" x2="26" y2="21"/>
+                    <line x1="10" y1="7" x2="10" y2="29"/>
+                    <line x1="18" y1="7" x2="18" y2="29"/>
+                    <rect x="24" y="14" width="17" height="12" rx="3"/>
+                    <path d="M26 26 L23 32 L31 26"/>
+                    <line x1="27" y1="18.5" x2="38" y2="18.5"/>
+                    <line x1="27" y1="21.5" x2="35" y2="21.5"/>
+                  </svg>
+                ),
+                title: '엑셀 + 카톡 그룹방',
+                desc: '봉사자 명단을 엑셀로 관리하고 카톡 그룹방으로 공지하느라 정보가 분산됩니다.',
+              },
+              {
+                icon: (
+                  <svg width="44" height="44" viewBox="0 0 44 44" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                    <path d="M7 8 C7 7 10 6 11 8 L14 14 C14.5 15.5 14 17 13 18 C12 19 15 24 17 25.5 C19 27 21 26 22 25 L24 23 C25.5 21.5 28 23 28.5 24.5 L31 30 C32 32.5 29 35.5 27 36 C13 40 3 22 4 13 C3.5 8.5 6.5 8.5 7 8 Z"/>
+                    <rect x="27" y="3" width="14" height="10" rx="3"/>
+                    <path d="M29 13 L27 17 L33 13"/>
+                    <rect x="29" y="19" width="13" height="10" rx="3"/>
+                    <path d="M31 29 L29 33 L35 29"/>
+                    <line x1="30" y1="7.5" x2="38" y2="7.5"/>
+                    <line x1="30" y1="10.5" x2="36" y2="10.5"/>
+                    <line x1="32" y1="23.5" x2="39" y2="23.5"/>
+                  </svg>
+                ),
+                title: '일일이 전화·문자',
+                desc: '참석 여부를 한 명씩 확인하느라 봉사 준비보다 연락에 더 많은 시간을 씁니다.',
+              },
+              {
+                icon: (
+                  <svg width="44" height="44" viewBox="0 0 44 44" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                    <rect x="5" y="9" width="24" height="29" rx="2.5"/>
+                    <rect x="11" y="6" width="12" height="7" rx="2"/>
+                    <line x1="10" y1="19" x2="24" y2="19"/>
+                    <line x1="10" y1="24" x2="24" y2="24"/>
+                    <line x1="10" y1="29" x2="18" y2="29"/>
+                    <path d="M26 29 L37 16 L41 20 L30 33 Z"/>
+                    <path d="M26 29 L24 37 L32 34 Z"/>
+                    <line x1="35" y1="18" x2="39" y2="22"/>
+                  </svg>
+                ),
+                title: '봉사 시간 수기 계산',
+                desc: '활동 시간을 개별로 집계하고 인증서 자료를 수작업으로 정리합니다.',
+              },
             ].map((item, i) => (
               <Anim key={item.title} delay={i * 80}>
-                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '28px 20px', textAlign: 'left' }}>
-                  <div style={{ fontSize: 28, marginBottom: 14 }}>{item.icon}</div>
+                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '28px 20px', textAlign: 'center', height: '100%', boxSizing: 'border-box' }}>
+                  <div style={{ fontSize: 28, marginBottom: 14, display: 'flex', justifyContent: 'center' }}>{item.icon}</div>
                   <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 10 }}>{item.title}</div>
                   <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', lineHeight: 1.7 }}>{item.desc}</div>
                 </div>
@@ -802,175 +792,258 @@ export function LandingServeOn() {
           </div>
         </section>
 
+
         {/* wave divider */}
         <div style={{ height: 2, background: 'linear-gradient(90deg, transparent, rgba(16,185,129,0.3), transparent)', margin: '0 24px' }} />
 
-        {/* F01 — 봉사자 명단 + 커스텀 필드 */}
-        <section style={{ padding: '80px 24px', background: 'linear-gradient(180deg, transparent, rgba(16,185,129,0.05), transparent)' }}>
-          <div className="sv-feat-grid" style={{ maxWidth: 960, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, alignItems: 'center' }}>
-            <Anim className="sv-feat-text">
-              <div style={{ fontSize: 13, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 16 }}>01 — 봉사자 명단</div>
-              <h2 style={{ fontSize: 'clamp(24px,3.5vw,34px)', fontWeight: 800, letterSpacing: '-0.5px', marginBottom: 16 }}>봉사자 정보를<br />체계적으로 관리합니다</h2>
-              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', lineHeight: 1.8 }}>가능 요일, 자격증, 보유 차량 등 단체 고유 항목을 코드 수정 없이 추가합니다. 모든 정보를 한 화면에서 조회하십시오.</p>
+        {/* 스케줄러 핵심 기능 */}
+        <section style={{ padding: '100px 24px', background: 'linear-gradient(180deg, transparent, rgba(16,185,129,0.05), transparent)' }}>
+          <div style={{ maxWidth: 960, margin: '0 auto' }}>
+            <Anim style={{ textAlign: 'center', marginBottom: 56 }}>
+              <div style={{ fontSize: 13, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 16 }}>스케줄러</div>
+              <h2 style={{ fontSize: 'clamp(24px,3.5vw,34px)', fontWeight: 800, letterSpacing: '-0.5px', marginBottom: 12 }}>봉사 현장에 최적화된 스케줄 관리</h2>
+              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.45)', maxWidth: 540, margin: '0 auto', lineHeight: 1.7 }}>역할 분리부터 잠금·빈슬롯 알림까지, 현장 운영에 필요한 기능을 기본 제공합니다.</p>
             </Anim>
-            <Anim delay={120} className="sv-feat-visual">
-              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 28 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 14 }}>
-                  <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#EF4444' }} />
-                  <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#F59E0B' }} />
-                  <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#22C55E' }} />
-                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginLeft: 8 }}>봉사자 명단</span>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 0.8fr 0.8fr 0.5fr 0.7fr', fontSize: 10, color: 'rgba(255,255,255,0.35)', padding: '0 6px 8px', textAlign: 'center' }}>
-                  <span style={{ textAlign: 'left' }}>이름</span><span>가능 요일</span><span>자격증</span><span>차량</span><span>누적시간</span>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {[
-                    { name: '김영희', days: '월·수·금', cert: '사회복지사', car: '○', hours: '48h', highlight: false },
-                    { name: '이철수', days: '화·목', cert: '없음', car: '○', hours: '32h', highlight: false },
-                    { name: '박미영', days: '전일 가능', cert: '요양보호사', car: '✕', hours: '61h', highlight: true },
-                    { name: '최준호', days: '주말', cert: '없음', car: '○', hours: '24h', highlight: false },
-                  ].map((r, i) => (
-                    <div key={r.name} style={{ display: 'grid', gridTemplateColumns: '1fr 0.8fr 0.8fr 0.5fr 0.7fr', alignItems: 'center', background: r.highlight ? 'rgba(16,185,129,0.08)' : 'rgba(255,255,255,0.04)', border: `1px solid ${r.highlight ? 'rgba(16,185,129,0.22)' : 'rgba(255,255,255,0.07)'}`, borderRadius: 10, padding: '9px 10px', fontSize: 11, textAlign: 'center', opacity: 0, animation: `fadeUp 0.5s ease ${150 + i * 100}ms forwards` }}>
-                      <span style={{ fontWeight: 600, textAlign: 'left' }}>{r.name}</span>
-                      <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: 10 }}>{r.days}</span>
-                      <span style={{ color: r.cert !== '없음' ? ACCENT : 'rgba(255,255,255,0.35)', fontSize: 10, fontWeight: r.cert !== '없음' ? 700 : undefined }}>{r.cert}</span>
-                      <span style={{ color: r.car === '○' ? ACCENT : 'rgba(255,255,255,0.35)' }}>{r.car}</span>
-                      <span style={{ color: r.highlight ? ACCENT : 'rgba(255,255,255,0.6)', fontWeight: r.highlight ? 700 : undefined }}>{r.hours}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </Anim>
-          </div>
-        </section>
-
-        {/* F02 — 자동 배정 */}
-        <section style={{ padding: '80px 24px' }}>
-          <div className="sv-feat-grid" style={{ maxWidth: 960, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, alignItems: 'center' }}>
-            <Anim delay={120} className="sv-feat-visual">
-              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 28, maxWidth: 360, justifySelf: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 14 }}>
-                  <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#EF4444' }} />
-                  <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#F59E0B' }} />
-                  <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#22C55E' }} />
-                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginLeft: 8 }}>활동 배정</span>
-                </div>
-                {/* 활동 카드 */}
-                <div style={{ background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 12, padding: '14px 16px', marginBottom: 14 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 6 }}>급식 봉사</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 10 }}>8월 15일 오전 9시 · 경로식당</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
-                    {[
-                      { label: '봉사자', need: 5, filled: 3 },
-                      { label: '담당자', need: 1, filled: 1 },
-                    ].map(r => (
-                      <div key={r.label} style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: '8px 10px', textAlign: 'center' }}>
-                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>{r.label}</div>
-                        <div style={{ fontSize: 16, fontWeight: 800, color: r.filled >= r.need ? ACCENT : '#F59E0B' }}>{r.filled}<span style={{ fontSize: 11, fontWeight: 400, color: 'rgba(255,255,255,0.35)' }}>/{r.need}</span></div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
+              {[
+                {
+                  visual: (
+                    <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: '10px 12px', marginBottom: 16 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '28px repeat(3, 1fr)', gap: 2, marginBottom: 4 }}>
+                        <div />
+                        {['월', '화', '수'].map(d => (
+                          <div key={d}>
+                            <div style={{ textAlign: 'center', fontSize: 8, color: 'rgba(255,255,255,0.3)', marginBottom: 2 }}>{d}</div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
+                              <div style={{ fontSize: 6.5, color: ACCENT, fontWeight: 700, textAlign: 'center' }}>봉사자</div>
+                              <div style={{ fontSize: 6.5, color: '#60A5FA', fontWeight: 700, textAlign: 'center' }}>활동가</div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                  <div style={{ background: ACCENT, color: '#fff', fontSize: 12, fontWeight: 700, textAlign: 'center', borderRadius: 8, padding: '8px', animation: 'autoGlow 3s ease-in-out infinite', cursor: 'default' }}>자동배정 실행</div>
-                </div>
-                {/* 배정 결과 */}
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginBottom: 6 }}>배정 결과</div>
-                {['김영희', '박미영', '최준호'].map((name, i) => (
-                  <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.15)', borderRadius: 7, marginBottom: 4, fontSize: 11, opacity: 0, animation: `fadeUp 0.4s ease ${300 + i * 100}ms forwards` }}>
-                    <span style={{ color: ACCENT }}>✓</span>
-                    <span style={{ color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}>{name}</span>
-                    <span style={{ marginLeft: 'auto', fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>배정됨</span>
-                  </div>
-                ))}
-              </div>
-            </Anim>
-            <Anim className="sv-feat-text">
-              <div style={{ fontSize: 13, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 16 }}>02 — 자동 배정</div>
-              <h2 style={{ fontSize: 'clamp(24px,3.5vw,34px)', fontWeight: 800, letterSpacing: '-0.5px', marginBottom: 16 }}>역할별 필요 인원을<br />자동으로 채웁니다</h2>
-              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', lineHeight: 1.8 }}>활동마다 필요한 역할·인원 수를 설정하면 가능한 봉사자를 자동으로 배정합니다. 직접 연락하지 않아도 적임자가 채워집니다.</p>
-            </Anim>
-          </div>
-        </section>
-
-        {/* F03 — 봉사 시간 자동 집계 */}
-        <section style={{ padding: '80px 24px', background: 'linear-gradient(180deg, transparent, rgba(16,185,129,0.05), transparent)' }}>
-          <div className="sv-feat-grid" style={{ maxWidth: 960, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, alignItems: 'center' }}>
-            <Anim className="sv-feat-text">
-              <div style={{ fontSize: 13, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 16 }}>03 — 봉사 시간 집계</div>
-              <h2 style={{ fontSize: 'clamp(24px,3.5vw,34px)', fontWeight: 800, letterSpacing: '-0.5px', marginBottom: 16 }}>인증서 발급 자료가<br />자동으로 준비됩니다</h2>
-              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', lineHeight: 1.8 }}>참석 체크 시 봉사 시간이 자동으로 누적됩니다. 개인별 누적 시간을 인증서·수료증 발급 자료로 즉시 활용하십시오.</p>
-            </Anim>
-            <Anim delay={120} className="sv-feat-visual">
-              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 28 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 14 }}>
-                  <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#EF4444' }} />
-                  <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#F59E0B' }} />
-                  <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#22C55E' }} />
-                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginLeft: 8 }}>봉사자별 누적 시간</span>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {[
-                    { name: '박미영', hours: 61, max: 80, color: ACCENT },
-                    { name: '김영희', hours: 48, max: 80, color: '#60A5FA' },
-                    { name: '이철수', hours: 32, max: 80, color: '#A78BFA' },
-                    { name: '최준호', hours: 24, max: 80, color: '#F59E0B' },
-                    { name: '정다은', hours: 18, max: 80, color: 'rgba(255,255,255,0.4)' },
-                  ].map((r, i) => (
-                    <div key={r.name} style={{ opacity: 0, animation: `fadeUp 0.5s ease ${150 + i * 80}ms forwards` }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
-                        <span style={{ fontSize: 12, fontWeight: 600 }}>{r.name}</span>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: r.color }}>{r.hours}h</span>
-                      </div>
-                      <div style={{ height: 8, background: 'rgba(255,255,255,0.07)', borderRadius: 4, overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${(r.hours / r.max) * 100}%`, background: r.color, borderRadius: 4, transition: 'width 1s ease' }} />
+                      <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', margin: '3px 0 5px' }} />
+                      {[
+                        { time: '10:00', cells: [['김O희', ''], ['이O화', '최O화'], ['', '']] },
+                        { time: '14:00', cells: [['박O영', '이O화'], ['', '최O화'], ['이O화', '']] },
+                        { time: '16:00', cells: [['', '이O화'], ['최O화', ''], ['박O영', '이O화']] },
+                      ].map(row => (
+                        <div key={row.time} style={{ display: 'grid', gridTemplateColumns: '28px repeat(3, 1fr)', gap: 2, marginBottom: 2 }}>
+                          <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center' }}>{row.time}</div>
+                          {row.cells.map(([a, b], ci) => (
+                            <div key={ci} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
+                              <div style={{ height: 18, borderRadius: 2, borderLeft: `2px solid ${a ? ACCENT : 'rgba(255,255,255,0.1)'}`, background: a ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 6.5, color: 'rgba(255,255,255,0.75)' }}>{a ? a.slice(0, 2) : ''}</div>
+                              <div style={{ height: 18, borderRadius: 2, borderLeft: `2px solid ${b ? '#60A5FA' : 'rgba(255,255,255,0.1)'}`, background: b ? 'rgba(96,165,250,0.1)' : 'rgba(255,255,255,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 6.5, color: 'rgba(255,255,255,0.75)' }}>{b ? b.slice(0, 2) : ''}</div>
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                      <div style={{ display: 'flex', gap: 10, marginTop: 8, justifyContent: 'center' }}>
+                        {[{ color: ACCENT, label: '봉사자' }, { color: '#60A5FA', label: '활동가' }].map(r => (
+                          <div key={r.label} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 8, color: 'rgba(255,255,255,0.4)' }}>
+                            <span style={{ width: 3, height: 14, borderRadius: 1, background: r.color, display: 'inline-block' }} />
+                            {r.label}
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  ))}
-                </div>
-                <div style={{ marginTop: 14, padding: '8px 12px', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.18)', borderRadius: 8, fontSize: 11, color: ACCENT, textAlign: 'center', fontWeight: 700 }}>인증서 자료 내보내기</div>
-              </div>
-            </Anim>
+                  ),
+                  title: '역할별 셀 분리',
+                  desc: '봉사자·활동가 등 역할마다 독립 칸을 분리하고 색상 바로 구분합니다. 한눈에 인원 현황을 파악할 수 있습니다.',
+                },
+                {
+                  visual: (
+                    <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: '10px 12px', marginBottom: 16 }}>
+                      <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+                        {['관리자 모드', '공유 모드'].map((m, i) => (
+                          <span key={m} style={{ flex: 1, textAlign: 'center', fontSize: 9, padding: '3px 0', borderRadius: 5, background: i === 1 ? ACCENT : 'rgba(255,255,255,0.07)', color: i === 1 ? '#fff' : 'rgba(255,255,255,0.4)', fontWeight: i === 1 ? 700 : undefined }}>{m}</span>
+                        ))}
+                      </div>
+                      <div style={{ fontSize: 8.5, color: 'rgba(255,255,255,0.35)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <span style={{ width: 5, height: 5, borderRadius: '50%', background: ACCENT, display: 'inline-block' }} />
+                        회원이 직접 슬롯 등록 가능
+                      </div>
+                      {[
+                        { time: '10:00', name: '이O화', mine: false },
+                        { time: '13:00', name: '', mine: false },
+                        { time: '14:00', name: '최O화', mine: false },
+                        { time: '16:00', name: '박O영', mine: true },
+                      ].map(row => (
+                        <div key={row.time} style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 4 }}>
+                          <span style={{ fontSize: 7.5, color: 'rgba(255,255,255,0.28)', width: 28, flexShrink: 0 }}>{row.time}</span>
+                          <div style={{ flex: 1, height: 22, borderRadius: 4, background: row.mine ? 'rgba(16,185,129,0.15)' : row.name ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.03)', border: `1px solid ${row.mine ? ACCENT : row.name ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)'}`, display: 'flex', alignItems: 'center', paddingLeft: row.name ? 8 : 0, justifyContent: row.name ? 'flex-start' : 'center', fontSize: 9, color: 'rgba(255,255,255,0.75)', gap: 5 }}>
+                            {row.name ? (
+                              <>
+                                {row.mine && <span style={{ color: ACCENT, fontSize: 7.5, fontWeight: 700, background: 'rgba(16,185,129,0.2)', padding: '1px 4px', borderRadius: 3 }}>나</span>}
+                                {row.name}
+                              </>
+                            ) : <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.18)' }}>+</span>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ),
+                  title: '회원공유모드',
+                  desc: '팀장이 전체 스케줄을 관리하면서 각 역할 회원이 직접 자신의 슬롯을 등록할 수 있습니다.',
+                },
+                {
+                  visual: (
+                    <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: '10px 12px', marginBottom: 16 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                        <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)' }}>빈슬롯 알림</span>
+                        <span style={{ background: '#F59E0B', color: '#000', fontSize: 8, fontWeight: 700, padding: '2px 7px', borderRadius: 10 }}>공석 2</span>
+                      </div>
+                      {[
+                        { time: '10:00', name: '김O희', dashed: false },
+                        { time: '13:00', name: '', dashed: true },
+                        { time: '14:00', name: '박O영', dashed: false },
+                        { time: '15:00', name: '', dashed: true },
+                        { time: '16:00', name: '이O화', dashed: false },
+                      ].map(row => (
+                        <div key={row.time} style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 4 }}>
+                          <span style={{ fontSize: 7.5, color: 'rgba(255,255,255,0.28)', width: 28, flexShrink: 0 }}>{row.time}</span>
+                          <div style={{ flex: 1, height: 22, borderRadius: 4, background: row.name ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.05)', border: row.dashed ? '1.5px dashed rgba(245,158,11,0.5)' : `1px solid ${row.name ? 'rgba(16,185,129,0.25)' : 'rgba(255,255,255,0.07)'}`, display: 'flex', alignItems: 'center', paddingLeft: row.name ? 8 : 0, justifyContent: row.name ? 'flex-start' : 'center', fontSize: 9, color: 'rgba(255,255,255,0.75)' }}>
+                            {row.name || (row.dashed ? <span style={{ fontSize: 8, color: 'rgba(245,158,11,0.7)', fontWeight: 700 }}>인원 필요</span> : null)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ),
+                  title: '빈슬롯 알림',
+                  desc: '채워지지 않은 시간대를 점선으로 강조 표시합니다. 인원이 필요한 슬롯을 팀원에게 즉시 공유할 수 있습니다.',
+                },
+                {
+                  visual: (
+                    <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: '10px 12px', marginBottom: 16 }}>
+                      <div style={{ display: 'flex', gap: 4, marginBottom: 8, alignItems: 'center' }}>
+                        <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', flex: 1 }}>완료 후 수정 불가</span>
+                        <span style={{ background: 'rgba(16,185,129,0.15)', border: `1px solid rgba(16,185,129,0.3)`, color: ACCENT, fontSize: 8.5, fontWeight: 700, padding: '3px 8px', borderRadius: 6 }}>전체 고정</span>
+                      </div>
+                      {[
+                        { time: '10:00', name: '김O희', locked: true },
+                        { time: '13:00', name: '이O화', locked: true },
+                        { time: '14:00', name: '박O영', locked: false },
+                        { time: '16:00', name: '최O화', locked: false },
+                      ].map(row => (
+                        <div key={row.time} style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 4 }}>
+                          <span style={{ fontSize: 7.5, color: 'rgba(255,255,255,0.28)', width: 28, flexShrink: 0 }}>{row.time}</span>
+                          <div style={{ flex: 1, height: 22, borderRadius: 4, background: row.locked ? 'rgba(255,255,255,0.04)' : 'rgba(16,185,129,0.1)', border: `1px solid ${row.locked ? 'rgba(255,255,255,0.09)' : 'rgba(16,185,129,0.25)'}`, display: 'flex', alignItems: 'center', paddingLeft: 8, gap: 5, fontSize: 9, color: row.locked ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.8)' }}>
+                            {row.locked && (
+                              <svg width="9" height="10" viewBox="0 0 9 10" fill="none" style={{ flexShrink: 0 }}>
+                                <rect x="1" y="4" width="7" height="6" rx="1.2" stroke="rgba(255,255,255,0.3)" strokeWidth="1.2"/>
+                                <path d="M2.5 4V3a2 2 0 014 0v1" stroke="rgba(255,255,255,0.3)" strokeWidth="1.2" strokeLinecap="round"/>
+                              </svg>
+                            )}
+                            {row.name}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ),
+                  title: '전체 · 개별 고정',
+                  desc: '완료 처리된 슬롯은 잠금 상태로 전환됩니다. 공유 모드에서도 회원이 임의로 수정할 수 없습니다.',
+                },
+                {
+                  visual: (
+                    <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: '10px 12px', marginBottom: 16 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, marginBottom: 4 }}>
+                        {['월', '화', '수', '목', '금', '토', '일'].map((d, i) => (
+                          <div key={d} style={{ textAlign: 'center', fontSize: 7.5, color: i >= 5 ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.3)', paddingBottom: 2 }}>{d}</div>
+                        ))}
+                      </div>
+                      {[[1,2,3,4,5,6,7],[8,9,10,11,12,13,14]].map((week, wi) => (
+                        <div key={wi} style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, marginBottom: 3 }}>
+                          {week.map(d => {
+                            const isHoliday = d === 6
+                            const isSpecial = d === 11
+                            return (
+                              <div key={d} style={{ borderRadius: 4, padding: '3px 0', background: isHoliday ? 'rgba(239,68,68,0.14)' : isSpecial ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.03)', border: `1px solid ${isHoliday ? 'rgba(239,68,68,0.28)' : isSpecial ? 'rgba(16,185,129,0.28)' : 'rgba(255,255,255,0.06)'}`, textAlign: 'center' }}>
+                                <div style={{ fontSize: 8, color: isHoliday ? '#EF4444' : isSpecial ? ACCENT : 'rgba(255,255,255,0.4)' }}>{d}</div>
+                                {isHoliday && <div style={{ fontSize: 5.5, color: '#EF4444', fontWeight: 700, marginTop: 1 }}>휴관</div>}
+                                {isSpecial && <div style={{ fontSize: 5, color: ACCENT, fontWeight: 700, marginTop: 1 }}>전체회의</div>}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      ))}
+                      <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                        {[{ color: '#EF4444', label: '휴관일' }, { color: ACCENT, label: '특별일정' }].map(r => (
+                          <div key={r.label} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 8, color: 'rgba(255,255,255,0.4)' }}>
+                            <span style={{ width: 7, height: 7, borderRadius: 2, background: r.color, opacity: 0.7, display: 'inline-block' }} />
+                            {r.label}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ),
+                  title: '특별일정 등록',
+                  desc: '휴관일에도 전체회의·특별 행사 등 별도 일정을 등록해 팀 전체에 공유합니다.',
+                },
+                {
+                  visual: (
+                    <div style={{ background: 'rgba(20,20,30,0.7)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, overflow: 'hidden', marginBottom: 16 }}>
+                      {/* 모달 헤더 */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.85)' }}>문자 발송</span>
+                        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', cursor: 'default' }}>✕</span>
+                      </div>
+                      {/* 안내 문구 */}
+                      <div style={{ margin: '7px 12px 5px', padding: '4px 8px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 5, fontSize: 8, color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>
+                        당월 스케줄 등록자(관리자 제외)를 대상으로 발송합니다.
+                      </div>
+                      {/* 수신자 수 */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 12px 4px', fontSize: 8.5, color: 'rgba(255,255,255,0.45)' }}>
+                        <span>수신자 <b style={{ color: 'rgba(255,255,255,0.75)' }}>32</b>/32명</span>
+                        <span style={{ color: 'rgba(255,255,255,0.25)' }}>전체 해제</span>
+                      </div>
+                      {/* 체크박스 목록 */}
+                      {[
+                        { name: '강O민', phone: '010-xxxx-3327' },
+                        { name: '강O우', phone: '010-xxxx-4119' },
+                        { name: '권O운', phone: '010-xxxx-8450' },
+                        { name: '김O흔', phone: '010-xxxx-5894' },
+                      ].map((r, i) => (
+                        <div key={r.name} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3.5px 12px', borderTop: '1px solid rgba(255,255,255,0.04)', fontSize: 9, opacity: 0, animation: `fadeUp 0.35s ease ${i * 60}ms forwards` }}>
+                          <span style={{ width: 11, height: 11, borderRadius: 3, background: ACCENT, opacity: 0.85, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <svg width="7" height="7" viewBox="0 0 7 7" fill="none"><polyline points="1,3.5 3,5.5 6,2" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          </span>
+                          <span style={{ flex: 1, color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>{r.name}</span>
+                          <span style={{ color: 'rgba(255,255,255,0.3)' }}>{r.phone}</span>
+                        </div>
+                      ))}
+                      {/* 메시지 영역 */}
+                      <div style={{ margin: '6px 12px 0', borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 6 }}>
+                        <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.3)', marginBottom: 3 }}>메시지</div>
+                        <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 5, padding: '5px 7px', fontSize: 8.5, color: 'rgba(255,255,255,0.55)', lineHeight: 1.6 }}>
+                          이번달 봉사활동 스케줄 등록이 완료되었습니다. 확인 부탁드립니다.
+                        </div>
+                      </div>
+                      {/* 발송 버튼 */}
+                      <div style={{ padding: '8px 12px 10px' }}>
+                        <div style={{ background: ACCENT, borderRadius: 6, padding: '6px 0', textAlign: 'center', fontSize: 9.5, fontWeight: 700, color: '#fff' }}>
+                          문자 발송 (32명)
+                        </div>
+                      </div>
+                    </div>
+                  ),
+                  title: '일괄 문자발송',
+                  desc: '당월 스케줄에 등록된 회원 전체에게 안내 문자를 한 번에 발송합니다. 개별 연락 없이 전체 공지가 완료됩니다.',
+                },
+              ].map((card, i) => (
+                <Anim key={card.title} delay={i * 60}>
+                  <div className="sv-card" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: 18, overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ fontSize: 11, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 6, paddingLeft: 2 }}>{String(i + 1).padStart(2, '0')}</div>
+                    <div style={{ fontWeight: 700, marginBottom: 8, paddingLeft: 2 }}>{card.title}</div>
+                    <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, paddingLeft: 2, marginBottom: 16 }}>{card.desc}</div>
+                    <div style={{ overflow: 'hidden' }}>{card.visual}</div>
+                  </div>
+                </Anim>
+              ))}
+            </div>
           </div>
         </section>
 
-        {/* F04 — D-1 참석 알림 */}
-        <section style={{ padding: '80px 24px' }}>
-          <div className="sv-feat-grid" style={{ maxWidth: 960, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, alignItems: 'center' }}>
-            <Anim delay={120} className="sv-feat-visual">
-              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 28, maxWidth: 340, justifySelf: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 14 }}>
-                  <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#EF4444' }} />
-                  <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#F59E0B' }} />
-                  <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#22C55E' }} />
-                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginLeft: 8 }}>참석 알림 발송 현황</span>
-                </div>
-                <div style={{ background: '#111827', border: '2px solid rgba(255,255,255,0.1)', borderRadius: 18, padding: '16px 14px', marginBottom: 16 }}>
-                  <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', marginBottom: 8, textAlign: 'center' }}>SERVE:ON 알림</div>
-                  <div style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', borderRadius: 12, padding: '12px 14px' }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 4 }}>◆ 내일 봉사 안내</div>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>내일 오전 9시 급식 봉사가<br />있습니다. 시간에 맞춰<br />참석하십시오.</div>
-                  </div>
-                </div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>발송 내역 · 오늘 오후 2시</div>
-                {[
-                  { name: '김영희', status: '읽음', color: ACCENT },
-                  { name: '박미영', status: '읽음', color: ACCENT },
-                  { name: '이철수', status: '미확인', color: 'rgba(255,255,255,0.35)' },
-                ].map((r, i) => (
-                  <div key={r.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, marginBottom: 5, fontSize: 12, opacity: 0, animation: `fadeUp 0.4s ease ${200 + i * 100}ms forwards` }}>
-                    <span style={{ fontWeight: 600 }}>{r.name}</span>
-                    <span style={{ color: r.color, fontSize: 11, fontWeight: 700 }}>{r.status}</span>
-                  </div>
-                ))}
-              </div>
-            </Anim>
-            <Anim className="sv-feat-text">
-              <div style={{ fontSize: 13, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 16 }}>04 — D-1 참석 알림</div>
-              <h2 style={{ fontSize: 'clamp(24px,3.5vw,34px)', fontWeight: 800, letterSpacing: '-0.5px', marginBottom: 16 }}>참석 확인 연락을<br />자동으로 보냅니다</h2>
-              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', lineHeight: 1.8 }}>활동 하루 전 배정된 봉사자에게 자동 알림을 발송합니다. 읽음 여부를 추적하여 미확인 인원에게 추가 안내를 보낼 수 있습니다.</p>
-            </Anim>
-          </div>
-        </section>
+        {/* wave divider */}
+        <div style={{ height: 2, background: 'linear-gradient(90deg, transparent, rgba(16,185,129,0.3), transparent)', margin: '0 24px' }} />
 
         {/* 업종 배지 */}
         <section style={{ textAlign: 'center', padding: '80px 24px' }}>
@@ -980,6 +1053,7 @@ export function LandingServeOn() {
               {['복지관', '사회복지시설', '시민단체', '종교단체', '지자체', '도서관', '문화시설', '자원봉사센터', '병원 봉사', '환경단체'].map((tag, i) => (
                 <span key={tag} className="sv-tag-btn" style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 20, padding: '6px 14px', fontSize: 13, opacity: 0, animation: `fadeUp 0.4s ease ${i * 50}ms forwards` }}>{tag}</span>
               ))}
+              <span style={{ background: 'transparent', border: '1px dashed rgba(255,255,255,0.2)', borderRadius: 20, padding: '6px 14px', fontSize: 13, color: 'rgba(255,255,255,0.3)', opacity: 0, animation: 'fadeUp 0.4s ease 500ms forwards' }}>그 외 다수</span>
             </div>
           </Anim>
         </section>
@@ -1042,9 +1116,9 @@ export function LandingServeOn() {
                       <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginBottom: 5 }}>인원 설정</div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 10 }}>
                         {([
-                          { name: '김영희', color: ACCENT, days: '월·수·금', max: 12, delay: 0 },
-                          { name: '박미영', color: '#60A5FA', days: '전일', max: 16, delay: 80 },
-                          { name: '이철수', color: '#A78BFA', days: '화·목', max: 8, delay: 160 },
+                          { name: '김O희', color: ACCENT, days: '월·수·금', max: 12, delay: 0 },
+                          { name: '박O영', color: '#60A5FA', days: '전일', max: 16, delay: 80 },
+                          { name: '이O수', color: '#A78BFA', days: '화·목', max: 8, delay: 160 },
                         ] as { name: string; color: string; days: string; max: number; delay: number }[]).map(m => (
                           <div key={m.name} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '5px 9px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 7, fontSize: 11, opacity: 0, animation: `fadeUp 0.4s ease ${m.delay}ms forwards` }}>
                             <span style={{ width: 7, height: 7, borderRadius: '50%', background: m.color, flexShrink: 0 }} />
@@ -1171,9 +1245,9 @@ export function LandingServeOn() {
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 10 }}>
                         {[
-                          { name: '박미영', hours: 61, pct: 76 },
-                          { name: '김영희', hours: 48, pct: 60 },
-                          { name: '이철수', hours: 32, pct: 40 },
+                          { name: '박O영', hours: 61, pct: 76 },
+                          { name: '김O희', hours: 48, pct: 60 },
+                          { name: '이O수', hours: 32, pct: 40 },
                         ].map((r, i) => (
                           <div key={r.name} style={{ opacity: 0, animation: `fadeUp 0.4s ease ${150 + i * 80}ms forwards` }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, marginBottom: 3 }}>
@@ -1211,7 +1285,7 @@ export function LandingServeOn() {
                       <div style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 10, padding: '12px 14px' }}>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 16px', marginBottom: 10 }}>
                           {([
-                            { label: '봉사자', value: '김영희' },
+                            { label: '봉사자', value: '김O희' },
                             { label: '요일', value: '다음주 월요일' },
                             { label: '시간', value: '09:00' },
                             { label: '활동', value: '급식봉사' },

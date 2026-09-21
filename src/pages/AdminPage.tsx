@@ -553,6 +553,8 @@ export function AdminPage() {
     send_time: string
     recipients: { assigned_members: boolean; admins: boolean }
     msg_template: string
+    pre_lesson_alert_enabled: boolean
+    pre_lesson_alert_minutes: number
   } | null>(null)
   const [notifSaving, setNotifSaving] = useState(false)
   const [manualSending, setManualSending] = useState(false)
@@ -647,11 +649,15 @@ export function AdminPage() {
           send_time: data.send_time,
           recipients: data.recipients as { assigned_members: boolean; admins: boolean },
           msg_template: data.msg_template,
+          pre_lesson_alert_enabled: data.pre_lesson_alert_enabled ?? false,
+          pre_lesson_alert_minutes: data.pre_lesson_alert_minutes ?? 10,
         } : {
           is_enabled: false,
           send_time: '18:00',
           recipients: { assigned_members: true, admins: false },
           msg_template: '안녕하세요 {{name}}님! 내일 {{date}} {{slot}} 배정이 있습니다. ({{org}})',
+          pre_lesson_alert_enabled: false,
+          pre_lesson_alert_minutes: 10,
         })
       })
   }, [adminTenant?.id])
@@ -1314,6 +1320,8 @@ export function AdminPage() {
         send_time: notifSettings.send_time,
         recipients: notifSettings.recipients,
         msg_template: notifSettings.msg_template,
+        pre_lesson_alert_enabled: notifSettings.pre_lesson_alert_enabled,
+        pre_lesson_alert_minutes: notifSettings.pre_lesson_alert_minutes,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'tenant_id' })
     setNotifSaving(false)
@@ -3491,6 +3499,50 @@ export function AdminPage() {
                         <code className="bg-[var(--color-surface-secondary)] px-1 rounded">{'{{slot}}'}</code> 시간대,{' '}
                         <code className="bg-[var(--color-surface-secondary)] px-1 rounded">{'{{org}}'}</code> 조직명
                       </p>
+                    </div>
+
+                    <button
+                      onClick={saveNotifSettings}
+                      disabled={notifSaving}
+                      className="px-4 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition-colors"
+                      style={{ background: 'var(--color-brand-primary)' }}
+                    >
+                      {notifSaving ? '저장 중...' : '저장'}
+                    </button>
+                  </section>
+
+                  <section className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h2 className="text-base font-bold text-[var(--color-text-primary)]">레슨 시작 전 알림</h2>
+                        <p className="text-xs text-[var(--color-text-muted)] mt-0.5">레슨 시작 N분 전 관리자에게 Android 푸시 알림을 발송합니다.</p>
+                      </div>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <span className="text-sm text-[var(--color-text-secondary)]">
+                          {notifSettings.pre_lesson_alert_enabled ? '활성' : '비활성'}
+                        </span>
+                        <button
+                          role="switch"
+                          aria-checked={notifSettings.pre_lesson_alert_enabled}
+                          onClick={() => setNotifSettings(s => s ? { ...s, pre_lesson_alert_enabled: !s.pre_lesson_alert_enabled } : s)}
+                          className={`relative w-10 h-6 rounded-full transition-colors ${notifSettings.pre_lesson_alert_enabled ? 'bg-[var(--color-brand-primary)]' : 'bg-[var(--color-border-strong)]'}`}
+                        >
+                          <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${notifSettings.pre_lesson_alert_enabled ? 'translate-x-4' : 'translate-x-0'}`} />
+                        </button>
+                      </label>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5">알림 시점</label>
+                      <select
+                        value={notifSettings.pre_lesson_alert_minutes}
+                        onChange={e => setNotifSettings(s => s ? { ...s, pre_lesson_alert_minutes: Number(e.target.value) } : s)}
+                        className="w-full px-3 py-2 text-sm rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30"
+                      >
+                        {[5, 10, 15, 20, 30].map(min => (
+                          <option key={min} value={min}>{min}분 전</option>
+                        ))}
+                      </select>
                     </div>
 
                     <button
