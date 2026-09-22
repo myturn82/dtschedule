@@ -44,12 +44,11 @@ function resolveTint(colType: 'vol' | 'plus' | 'role', _slotStart: number): { bg
   return { bg: 'var(--tint-brand)', ink: 'var(--tint-brand-ink)' }
 }
 
-// Striped closed-cell pattern matching design
 const STRIPE_STYLE = {
-  background: '#f7f7f7',
+  background: 'var(--color-schedule-breaktime)',
 } as const
 const HOLIDAY_STRIPE_STYLE = {
-  background: '#f7f7f7',
+  background: 'var(--color-schedule-close)',
 } as const
 
 function NameChips({ assignments, highlightName, tintBg, tintInk, teamLeaderUserIds, small, showTimeSub, withdrawnUserIds, isAdmin, myUserId, hasBarInCell, lessonPackageMap }: {
@@ -84,7 +83,7 @@ function NameChips({ assignments, highlightName, tintBg, tintInk, teamLeaderUser
             key={a.id}
             className={`rounded-[6px] px-1.5 py-0.5 leading-tight ${textSize} font-semibold w-full truncate text-center`}
             style={isHighlighted
-              ? { background: '#fef08a', color: '#92400e' }
+              ? { background: 'var(--color-schedule-highlight)', color: 'var(--color-schedule-highlight-ink)' }
               : { background: tintBg, color: tintInk, ...(isMyOwn && !isWithdrawn ? { boxShadow: '0 0 0 1px var(--color-brand-primary)' } : {}) }}
           >
             <span style={isWithdrawn ? { textDecoration: 'line-through' } : undefined}>
@@ -143,7 +142,7 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
     if (colType === 'plus') return <div className={`h-full ${cellMinH}`} style={HOLIDAY_STRIPE_STYLE} />
     return (
       <div className={`h-full ${cellMinH} flex items-center justify-center`} style={HOLIDAY_STRIPE_STYLE}>
-        <span className="text-[9px] font-medium" style={{ color: 'oklch(0.55 0.16 25)' }}>휴관</span>
+        <span className="text-[9px] font-medium" style={{ color: 'var(--color-schedule-close-ink)' }}>휴관</span>
       </div>
     )
   }
@@ -263,7 +262,7 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
         {hasAssignments
           ? <>
               <NameChips assignments={roleAssignments} highlightName={highlightName} tintBg={effectiveTint.bg} tintInk={effectiveTint.ink} teamLeaderUserIds={teamLeaderUserIds} withdrawnUserIds={withdrawnUserIds} isAdmin={isAdmin} myUserId={myUserId} hasBarInCell={hasIndicatorBar} lessonPackageMap={lessonPackageMap} />
-              {isFull && <span className="text-[7px] sm:text-[9px] font-semibold mt-0.5 px-1.5 py-0.5 rounded-full" style={{ background: 'oklch(0.97 0.02 25)', color: 'oklch(0.55 0.16 25)' }}>마감</span>}
+              {isFull && <span className="text-[7px] sm:text-[9px] font-semibold mt-0.5 px-1.5 py-0.5 rounded-full" style={{ background: 'var(--tint-withdrawn)', color: 'var(--tint-withdrawn-ink)' }}>마감</span>}
             </>
           : highlighted && !isLocked
             ? null
@@ -279,9 +278,9 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
   const saturdayAssignments = isSaturdayShift ? [...volunteerAssignments, ...plusAssignments] : volunteerAssignments
   const hasTeamLeaderInVol = !!(teamLeaderUserIds && volunteerAssignments.some(a => teamLeaderUserIds.has(a.user_id ?? '')))
 
-  const teamLeaderTint = { bg: 'oklch(0.95 0.07 85)', ink: 'oklch(0.42 0.12 80)' }
+  const teamLeaderTint = { bg: 'var(--tint-team-leader)', ink: 'var(--tint-team-leader-ink)' }
 
-  const indicatorTint = { bg: 'oklch(0.97 0.04 60)', ink: 'oklch(0.45 0.12 60)' }
+  const indicatorTint = { bg: 'var(--tint-indicator)', ink: 'var(--tint-indicator-ink)' }
 
   if (colType === 'vol') {
     const activeTint = hasTeamLeaderInVol ? teamLeaderTint : effectiveTint
@@ -345,7 +344,7 @@ export function TimeSlotCell({ cellState, timeSlot, colType, onClick, highlightN
         {hasAssign
           ? <>
               <NameChips assignments={visibleAssignments} highlightName={highlightName} tintBg={cellTint.bg} tintInk={cellTint.ink} teamLeaderUserIds={teamLeaderUserIds} withdrawnUserIds={withdrawnUserIds} isAdmin={isAdmin} myUserId={myUserId} hasBarInCell={hasIndicatorBar} lessonPackageMap={lessonPackageMap} />
-              {isFull && <span className="text-[7px] sm:text-[9px] font-semibold mt-0.5 px-1.5 py-0.5 rounded-full" style={{ background: 'oklch(0.97 0.02 25)', color: 'oklch(0.55 0.16 25)' }}>마감</span>}
+              {isFull && <span className="text-[7px] sm:text-[9px] font-semibold mt-0.5 px-1.5 py-0.5 rounded-full" style={{ background: 'var(--tint-withdrawn)', color: 'var(--tint-withdrawn-ink)' }}>마감</span>}
             </>
           : highlighted && !isLocked
             ? null

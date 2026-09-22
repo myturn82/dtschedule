@@ -52,6 +52,20 @@
   --tint-plus: oklch(0.93 0.05 20);
   --tint-plus-ink: oklch(0.42 0.12 20);
 
+  /* 팀장 tint */
+  --tint-team-leader: oklch(0.95 0.07 85);
+  --tint-team-leader-ink: oklch(0.42 0.12 80);
+  /* indicator-only tint */
+  --tint-indicator: oklch(0.97 0.04 60);
+  --tint-indicator-ink: oklch(0.45 0.12 60);
+  /* 탈퇴/삭제 tint */
+  --tint-withdrawn: oklch(0.97 0.02 25);
+  --tint-withdrawn-ink: oklch(0.55 0.16 25);
+  /* 이름 검색 하이라이트 ink */
+  --color-schedule-highlight-ink: #92400e;
+  /* 휴관 텍스트 */
+  --color-schedule-close-ink: oklch(0.55 0.16 25);
+
   --shadow-xs: 0 1px 2px rgba(20, 23, 28, 0.04);
   --shadow-sm: 0 1px 0 rgba(20, 23, 28, 0.04), 0 1px 2px rgba(20, 23, 28, 0.04);
   --shadow-md: 0 1px 0 rgba(20, 23, 28, 0.04), 0 8px 24px -8px rgba(20, 23, 28, 0.08);
@@ -90,9 +104,25 @@
   --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.6), 0 4px 8px rgba(0, 0, 0, 0.4);
   --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.7), 0 8px 16px rgba(0, 0, 0, 0.5);
 
+  /* 이름 검색 하이라이트 */
+  --color-schedule-highlight: oklch(0.30 0.12 75);
+  --color-schedule-highlight-ink: oklch(0.90 0.14 70);
+  /* 휴관 텍스트 — 다크 bg에서 보이도록 밝게 */
+  --color-schedule-close-ink: oklch(0.72 0.14 25);
+  /* 팀장 tint */
+  --tint-team-leader: oklch(0.26 0.07 85);
+  --tint-team-leader-ink: oklch(0.82 0.10 80);
+  /* indicator-only tint */
+  --tint-indicator: oklch(0.26 0.05 60);
+  --tint-indicator-ink: oklch(0.80 0.10 60);
+  /* 탈퇴/삭제 tint */
+  --tint-withdrawn: oklch(0.26 0.04 25);
+  --tint-withdrawn-ink: oklch(0.74 0.12 25);
+
   /* 배정 슬롯 tint — 다크모드에서 surface에 브랜드색을 혼합해 어두운 tint 생성 */
   --tint-brand: color-mix(in srgb, var(--color-brand-primary) 22%, var(--color-surface));
-  --tint-brand-ink: var(--color-brand-primary-text, var(--color-brand-primary));
+  /* fallback: 테마 미설정 조직도 항상 brand 색의 밝은 혼합색으로 가독성 확보 */
+  --tint-brand-ink: var(--color-brand-primary-text, color-mix(in srgb, var(--color-brand-primary) 50%, white));
   --tint-sun:   oklch(0.24 0.06 70);
   --tint-sun-ink: oklch(0.78 0.10 70);
   --tint-break: oklch(0.22 0.05 230);

@@ -7,7 +7,7 @@ import { fmtPhone, maskPhone } from '../../lib/format'
 const DAY_KR = ['일', '월', '화', '수', '목', '금', '토']
 
 const BREAK_STRIPE = {
-  background: '#f7f7f7',
+  background: 'var(--color-schedule-breaktime)',
 } as const
 
 const HOLIDAY_STRIPE = {
@@ -49,7 +49,7 @@ function PersonChip({ a, withdrawnUserIds, onClick, isAdmin, lessonPackageMap }:
       <span
         className="w-[26px] h-[26px] rounded-full flex-shrink-0 flex items-center justify-center text-[11.5px] font-bold"
         style={isW
-          ? { background: 'oklch(0.97 0.02 25)', color: 'oklch(0.55 0.16 25)' }
+          ? { background: 'var(--tint-withdrawn)', color: 'var(--tint-withdrawn-ink)' }
           : { background: 'var(--tint-brand)', color: 'var(--tint-brand-ink)' }
         }
       >
@@ -59,7 +59,7 @@ function PersonChip({ a, withdrawnUserIds, onClick, isAdmin, lessonPackageMap }:
         {cellLabel}
       </span>
       {isW && (
-        <span className="text-[10px] px-1.5 rounded" style={{ background: 'oklch(0.97 0.02 25)', color: 'oklch(0.55 0.16 25)' }}>
+        <span className="text-[10px] px-1.5 rounded" style={{ background: 'var(--tint-withdrawn)', color: 'var(--tint-withdrawn-ink)' }}>
           삭제됨
         </span>
       )}

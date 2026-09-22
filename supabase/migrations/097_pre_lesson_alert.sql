@@ -24,20 +24,20 @@ ALTER TABLE pre_lesson_alert_log ENABLE ROW LEVEL SECURITY;
 -- Edge Function(service_role)만 접근하므로 별도 사용자 정책 불필요
 
 -- ── pg_cron 스케줄 등록 안내 ─────────────────────────────────────────────────
--- Supabase Dashboard > Database > Cron Jobs 에서 아래 SQL을 실행하거나
--- 직접 UI 등록 (Project Settings > Database > Cron Jobs):
+-- 함수는 verify_jwt=false로 배포되어 있으며, x-cron-secret 헤더로만 인증한다.
+-- Authorization 헤더는 불필요하다 (긴 JWT를 cron 명령에 포함하면 줄바꿈 문제 발생).
+--
+-- Supabase Dashboard > Database > Cron Jobs 에서 아래 SQL을 실행한다:
 --
 --   이름: pre-lesson-alerts
 --   스케줄: * * * * *  (매 1분)
---   명령:
---     SELECT
---       net.http_post(
---         url    := '{SUPABASE_URL}/functions/v1/send-pre-lesson-alerts',
---         headers := jsonb_build_object(
---           'Content-Type', 'application/json',
---           'x-cron-secret', '{CRON_SECRET}'
---         ),
---         body   := '{}'::jsonb
---       );
+--   명령 (단일 행으로 입력):
+--
+--     SELECT net.http_post(
+--       url     := '{SUPABASE_URL}/functions/v1/send-pre-lesson-alerts',
+--       headers := '{"Content-Type":"application/json","x-cron-secret":"{CRON_SECRET}"}'::jsonb,
+--       body    := '{}'::jsonb
+--     );
 --
 -- {SUPABASE_URL}과 {CRON_SECRET}은 실제 값으로 교체한다.
+-- 주의: headers 값은 반드시 한 줄로 입력한다. 줄바꿈이 들어가면 JSON 파싱 오류 발생.

@@ -21,7 +21,7 @@ function IndicatorBar({ assigns, roles }: { assigns: Assignment[]; roles: Tenant
 }
 
 const STRIPE_STYLE = {
-  background: '#f7f7f7',
+  background: 'var(--color-schedule-breaktime)',
 } as const
 const HOLIDAY_STRIPE = {
   background: 'var(--color-schedule-close)',
@@ -293,9 +293,9 @@ export function WeekGrid({
                                     key={a.id}
                                     className="w-full rounded-md px-1 py-0.5 text-[8px] sm:text-[10px] font-semibold text-center"
                                     style={isHighlighted
-                                      ? { background: '#fef08a', color: '#92400e' }
+                                      ? { background: 'var(--color-schedule-highlight)', color: 'var(--color-schedule-highlight-ink)' }
                                       : isWithdrawn
-                                        ? { background: 'oklch(0.97 0.02 25)', color: 'oklch(0.55 0.16 25)', opacity: 0.85 }
+                                        ? { background: 'var(--tint-withdrawn)', color: 'var(--tint-withdrawn-ink)', opacity: 0.85 }
                                         : { background: tint.bg, color: tint.ink }}
                                   >
                                     <span className="flex items-center justify-center gap-0.5 w-full">
@@ -369,9 +369,9 @@ export function WeekGrid({
                             key={a.id}
                             className="w-full rounded-md px-1 py-0.5 text-[8px] sm:text-[10px] font-semibold text-center"
                             style={isHighlighted
-                              ? { background: '#fef08a', color: '#92400e' }
+                              ? { background: 'var(--color-schedule-highlight)', color: 'var(--color-schedule-highlight-ink)' }
                               : isWithdrawn
-                                ? { background: 'oklch(0.97 0.02 25)', color: 'oklch(0.55 0.16 25)', opacity: 0.85 }
+                                ? { background: 'var(--tint-withdrawn)', color: 'var(--tint-withdrawn-ink)', opacity: 0.85 }
                                 : { background: chipTint.bg, color: chipTint.ink }}
                           >
                             <span className="flex items-center justify-center gap-0.5 w-full">

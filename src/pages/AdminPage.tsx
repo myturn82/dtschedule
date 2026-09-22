@@ -261,9 +261,17 @@ export function AdminPage() {
   // adminTenant은 TenantContext와 독립적이라 포인트 컬러도 별도로 주입해야 한다 —
   // 이 화면을 벗어나면 전역 tenant 기준 색상으로 되돌린다
   useEffect(() => {
-    applyThemePreset(adminTenant?.settings?.theme_preset)
-    return () => applyThemePreset(tenant?.settings?.theme_preset)
-  }, [adminTenant?.settings?.theme_preset, tenant?.settings?.theme_preset])
+    applyThemePreset(adminTenant?.settings?.theme_preset, isDark)
+    if (!adminTenant?.settings?.theme_preset && adminTenant?.settings?.theme_color) {
+      applyCustomColor(adminTenant.settings.theme_color, isDark)
+    }
+    return () => {
+      applyThemePreset(tenant?.settings?.theme_preset, isDark)
+      if (!tenant?.settings?.theme_preset && tenant?.settings?.theme_color) {
+        applyCustomColor(tenant.settings.theme_color, isDark)
+      }
+    }
+  }, [adminTenant?.settings?.theme_preset, adminTenant?.settings?.theme_color, tenant?.settings?.theme_preset, tenant?.settings?.theme_color, isDark])
 
   const {
     members, scheduleRules, dateOverrides, loading,
@@ -555,6 +563,7 @@ export function AdminPage() {
     msg_template: string
     pre_lesson_alert_enabled: boolean
     pre_lesson_alert_minutes: number
+    pre_lesson_alert_message: string
   } | null>(null)
   const [notifSaving, setNotifSaving] = useState(false)
   const [manualSending, setManualSending] = useState(false)
@@ -651,6 +660,7 @@ export function AdminPage() {
           msg_template: data.msg_template,
           pre_lesson_alert_enabled: data.pre_lesson_alert_enabled ?? false,
           pre_lesson_alert_minutes: data.pre_lesson_alert_minutes ?? 10,
+          pre_lesson_alert_message: data.pre_lesson_alert_message ?? '',
         } : {
           is_enabled: false,
           send_time: '18:00',
@@ -658,6 +668,7 @@ export function AdminPage() {
           msg_template: '안녕하세요 {{name}}님! 내일 {{date}} {{slot}} 배정이 있습니다. ({{org}})',
           pre_lesson_alert_enabled: false,
           pre_lesson_alert_minutes: 10,
+          pre_lesson_alert_message: '',
         })
       })
   }, [adminTenant?.id])
@@ -1322,6 +1333,7 @@ export function AdminPage() {
         msg_template: notifSettings.msg_template,
         pre_lesson_alert_enabled: notifSettings.pre_lesson_alert_enabled,
         pre_lesson_alert_minutes: notifSettings.pre_lesson_alert_minutes,
+        pre_lesson_alert_message: notifSettings.pre_lesson_alert_message || null,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'tenant_id' })
     setNotifSaving(false)
@@ -3534,15 +3546,36 @@ export function AdminPage() {
 
                     <div>
                       <label className="block text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5">알림 시점</label>
-                      <select
-                        value={notifSettings.pre_lesson_alert_minutes}
-                        onChange={e => setNotifSettings(s => s ? { ...s, pre_lesson_alert_minutes: Number(e.target.value) } : s)}
-                        className="w-full px-3 py-2 text-sm rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30"
-                      >
-                        {[5, 10, 15, 20, 30].map(min => (
-                          <option key={min} value={min}>{min}분 전</option>
-                        ))}
-                      </select>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          min={1}
+                          max={120}
+                          value={notifSettings.pre_lesson_alert_minutes}
+                          onChange={e => {
+                            const v = Math.max(1, Math.min(120, Number(e.target.value) || 1))
+                            setNotifSettings(s => s ? { ...s, pre_lesson_alert_minutes: v } : s)
+                          }}
+                          className="w-24 px-3 py-2 text-sm rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 text-center"
+                        />
+                        <span className="text-sm text-[var(--color-text-secondary)]">분 전</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5">알림 메시지</label>
+                      <textarea
+                        rows={2}
+                        value={notifSettings.pre_lesson_alert_message}
+                        onChange={e => setNotifSettings(s => s ? { ...s, pre_lesson_alert_message: e.target.value } : s)}
+                        placeholder="{{time}} 레슨이 {{minutes}}분 후 시작됩니다. ({{members}})"
+                        className="w-full px-3 py-2 text-sm rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]/30 resize-none"
+                      />
+                      <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                        변수: <code className="bg-[var(--color-surface-secondary)] px-1 rounded">{'{{time}}'}</code> 레슨시간&nbsp;
+                        <code className="bg-[var(--color-surface-secondary)] px-1 rounded">{'{{minutes}}'}</code> 알림시점&nbsp;
+                        <code className="bg-[var(--color-surface-secondary)] px-1 rounded">{'{{members}}'}</code> 회원명 · 비워두면 기본 메시지 사용
+                      </p>
                     </div>
 
                     <button

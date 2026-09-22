@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
   // ── pre_lesson_alert_enabled 조직 목록 조회 ───────────────────────────────
   let settingsQuery = supabase
     .from('notification_settings')
-    .select('tenant_id, pre_lesson_alert_minutes, tenant:tenants(name)')
+    .select('tenant_id, pre_lesson_alert_minutes, pre_lesson_alert_message, tenant:tenants(name)')
     .eq('pre_lesson_alert_enabled', true)
   if (tenant_id) settingsQuery = settingsQuery.eq('tenant_id', tenant_id)
 
@@ -160,8 +160,13 @@ Deno.serve(async (req) => {
       .map(a => (a.profiles as { name: string } | null)?.name ?? '')
       .filter(Boolean)
       .join(', ')
-    const title = '📅 레슨 시작 전 알림'
-    const bodyText = `${slotLabel} 레슨이 ${alertMinutes}분 후 시작됩니다. (${memberNames})`
+    const title = '🔔 레슨 시작 전 알림'
+    const customTemplate = (setting as { pre_lesson_alert_message?: string | null }).pre_lesson_alert_message
+    const defaultTemplate = '{{time}} 레슨이 {{minutes}}분 후 시작됩니다. ({{members}})'
+    const bodyText = (customTemplate?.trim() || defaultTemplate)
+      .replace(/\{\{time\}\}/g, slotLabel)
+      .replace(/\{\{minutes\}\}/g, String(alertMinutes))
+      .replace(/\{\{members\}\}/g, memberNames)
 
     // ── 수신 대상: 조직 관리자 + 슈퍼관리자 (중복 제거) ─────────────────────
     const [{ data: tenantAdmins }, { data: superAdmins }] = await Promise.all([

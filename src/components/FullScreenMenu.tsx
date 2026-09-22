@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { TAB_LABELS, type Tab } from '../lib/adminTabs'
 import { getFF, type FeatureFlags } from '../lib/featureFlags'
+import { displayMode } from '../lib/tenantMode'
 import { useAdminFavorites } from '../hooks/useAdminFavorites'
 import {
   DndContext, closestCenter, PointerSensor, TouchSensor,
@@ -299,14 +300,15 @@ export function FullScreenMenu({
 
   // 피처 플래그 기반 메뉴 필터링
   const ff = tenant?.settings?.feature_flags
+  const isFreeform = displayMode(tenant?.settings?.tenant_mode) === '비회원'
   const filteredMenuGroups = MENU_GROUPS.map(group => ({
     ...group,
     items: group.items.filter(item => {
       const tabId = item.id.replace('tab:', '')
       if (tabId === 'attendance'    && !getFF(ff, 'attendance'))      return false
       if (tabId === 'hours'         && !getFF(ff, 'volunteer_hours')) return false
-      if (tabId === 'autoassign'    && !getFF(ff, 'autoassign'))      return false
-      if (tabId === 'notifications' && !getFF(ff, 'notifications'))   return false
+      if (tabId === 'autoassign'    && (isFreeform || !getFF(ff, 'autoassign')))      return false
+      if (tabId === 'notifications' && (isFreeform || !getFF(ff, 'notifications')))   return false
       if (tabId === 'lessons'       && !getFF(ff, 'lesson_packages')) return false
       return true
     }),

@@ -133,7 +133,7 @@ export function MonthScheduleByDay({
                               onClick={() => onCellClick({ year, month, day, timeSlot, memberType: assignment.member_type, roleId: assignment.role_id })}
                               className={`text-left text-[10px] leading-tight px-1 py-0.5 rounded truncate hover:brightness-95 ${isHighlighted ? '' : 'bg-[var(--tint-brand)] text-[var(--tint-brand-ink)]'}`}
                               style={{
-                                ...(isHighlighted ? { background: '#fef08a', color: '#92400e' } : undefined),
+                                ...(isHighlighted ? { background: 'var(--color-schedule-highlight)', color: 'var(--color-schedule-highlight-ink)' } : undefined),
                                 ...(barRole ? { borderLeft: `3px solid ${indicatorBarColorFor(barRole, indicatorBarRoles)}` } : undefined),
                               }}
                               title={rangeSlotLabel(timeSlot)}
