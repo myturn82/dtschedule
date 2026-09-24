@@ -257,6 +257,7 @@ export function AdminPage() {
   const adminTenantId = adminTenant?.id ?? ''
   const adminTenantMode = displayMode(adminTenant?.settings?.tenant_mode)
   const adminIsFreeform = adminTenantMode === '비회원'
+  const adminIsShared = adminTenantMode === '회원공유'
 
   // adminTenant은 TenantContext와 독립적이라 포인트 컬러도 별도로 주입해야 한다 —
   // 이 화면을 벗어나면 전역 tenant 기준 색상으로 되돌린다
@@ -300,10 +301,14 @@ export function AdminPage() {
   const [reorderMode, setReorderMode] = useState(false)
   const dragTabRef = useRef<Tab | null>(null)
   const visibleOrderedTabs = tabOrder.filter(t => {
-    if (adminIsFreeform && (t === 'notifications' || t === 'autoassign')) return false
+    if (adminIsFreeform && t === 'autoassign') return false
     if (t === 'lessons' && !getFF(tenantFF, 'lesson_packages')) return false
     if (t === 'autoassign' && !getFF(tenantFF, 'autoassign')) return false
-    if (t === 'notifications' && !getFF(tenantFF, 'notifications')) return false
+    if (t === 'notifications') {
+      const hasDOne = !adminIsFreeform && adminIsShared && getFF(tenantFF, 'notifications')
+      const hasPreLesson = getFF(tenantFF, 'pre_lesson_alert')
+      if (!hasDOne && !hasPreLesson) return false
+    }
     if (t === 'hours' && !getFF(tenantFF, 'volunteer_hours')) return false
     if (t === 'attendance' && !getFF(tenantFF, 'attendance')) return false
     return true
@@ -329,13 +334,16 @@ export function AdminPage() {
 
   // 비회원 모드 또는 feature flag 꺼짐 시 해당 탭 강제 이탈
   useEffect(() => {
-    if (adminIsFreeform && tab === 'notifications') { setTab('members'); return }
     if (tab === 'lessons' && !getFF(tenantFF, 'lesson_packages')) setTab('members')
-    if (tab === 'autoassign' && !getFF(tenantFF, 'autoassign')) setTab('members')
-    if (tab === 'notifications' && !getFF(tenantFF, 'notifications')) setTab('members')
+    if (tab === 'autoassign' && (adminIsFreeform || !getFF(tenantFF, 'autoassign'))) setTab('members')
+    if (tab === 'notifications') {
+      const hasDOne = !adminIsFreeform && adminIsShared && getFF(tenantFF, 'notifications')
+      const hasPreLesson = getFF(tenantFF, 'pre_lesson_alert')
+      if (!hasDOne && !hasPreLesson) setTab('members')
+    }
     if (tab === 'hours' && !getFF(tenantFF, 'volunteer_hours')) setTab('members')
     if (tab === 'attendance' && !getFF(tenantFF, 'attendance')) setTab('members')
-  }, [adminIsFreeform, tab, tenantFF])
+  }, [adminIsFreeform, adminIsShared, tab, tenantFF])
 
   // Hours tab
   const [hoursFrom, setHoursFrom] = useState(() => {
@@ -3418,8 +3426,11 @@ export function AdminPage() {
                 </form>
               </div>
             )}
-            {/* ── 배정알림 (비회원 모드는 지원하지 않음) ── */}
-            {tab === 'notifications' && !adminIsFreeform && getFF(tenantFF, 'notifications') && (
+            {/* ── 배정알림 ── */}
+            {tab === 'notifications' && (
+              (!adminIsFreeform && adminIsShared && getFF(tenantFF, 'notifications')) ||
+              getFF(tenantFF, 'pre_lesson_alert')
+            ) && (
               <div className="max-w-lg space-y-4">
                 <header className="mb-5">
                   <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10 px-3 py-[5px] rounded-full">
@@ -3434,6 +3445,7 @@ export function AdminPage() {
 
                 {notifSettings ? (
                   <>
+                  {adminIsShared && getFF(tenantFF, 'notifications') && (
                   <section className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 space-y-4">
                     <div className="flex items-center justify-between">
                       <h2 className="text-base font-bold text-[var(--color-text-primary)]">D-1 배정 알림</h2>
@@ -3522,7 +3534,9 @@ export function AdminPage() {
                       {notifSaving ? '저장 중...' : '저장'}
                     </button>
                   </section>
+                  )}
 
+                  {getFF(tenantFF, 'pre_lesson_alert') && (
                   <section className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
@@ -3587,7 +3601,9 @@ export function AdminPage() {
                       {notifSaving ? '저장 중...' : '저장'}
                     </button>
                   </section>
+                  )}
 
+                  {adminIsShared && getFF(tenantFF, 'notifications') && (
                   <section className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 space-y-3">
                     <div>
                       <h2 className="text-base font-bold text-[var(--color-text-primary)]">수동 발송</h2>
@@ -3619,7 +3635,9 @@ export function AdminPage() {
                       )}
                     </div>
                   </section>
+                  )}
 
+                  {adminIsShared && getFF(tenantFF, 'notifications') && (
                   <section className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 space-y-3">
                     <div className="flex items-center justify-between">
                       <div>
@@ -3709,6 +3727,7 @@ export function AdminPage() {
                       </div>
                     )}
                   </section>
+                  )}
                   </>
                 ) : (
                   <div className="text-center py-8 text-[var(--color-text-muted)] text-sm">로딩 중...</div>

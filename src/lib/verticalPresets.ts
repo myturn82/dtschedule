@@ -32,7 +32,7 @@ export const VERTICAL_PRESETS: Record<VerticalId, VerticalPreset> = {
     tagline:      '강사 혼자 다 챙기던 회원권 관리, 이제 문자 한 통이 대신합니다',
     tenant_mode:  '회원개별',
     allowed_modes: ['회원개별', '회원공유'],
-    feature_flags: { lesson_packages: true, autoassign: true, notifications: true },
+    feature_flags: { lesson_packages: true, autoassign: true, notifications: true, pre_lesson_alert: true },
     default_roles: ['강사', '회원'],
     custom_field_presets: ['lesson_type', 'injury_history', 'goal'],
     theme_preset: 'salmon',
