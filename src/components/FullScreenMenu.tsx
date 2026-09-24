@@ -301,7 +301,6 @@ export function FullScreenMenu({
   // 피처 플래그 기반 메뉴 필터링
   const ff = tenant?.settings?.feature_flags
   const isFreeform = displayMode(tenant?.settings?.tenant_mode) === '비회원'
-  const isShared   = displayMode(tenant?.settings?.tenant_mode) === '회원공유'
   const filteredMenuGroups = MENU_GROUPS.map(group => ({
     ...group,
     items: group.items.filter(item => {
@@ -310,7 +309,7 @@ export function FullScreenMenu({
       if (tabId === 'hours'         && !getFF(ff, 'volunteer_hours')) return false
       if (tabId === 'autoassign'    && (isFreeform || !getFF(ff, 'autoassign')))      return false
       if (tabId === 'notifications') {
-        const hasDOne = !isFreeform && isShared && getFF(ff, 'notifications')
+        const hasDOne = !isFreeform && getFF(ff, 'notifications')
         const hasPreLesson = getFF(ff, 'pre_lesson_alert')
         if (!hasDOne && !hasPreLesson) return false
       }

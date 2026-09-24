@@ -305,7 +305,7 @@ export function AdminPage() {
     if (t === 'lessons' && !getFF(tenantFF, 'lesson_packages')) return false
     if (t === 'autoassign' && !getFF(tenantFF, 'autoassign')) return false
     if (t === 'notifications') {
-      const hasDOne = !adminIsFreeform && adminIsShared && getFF(tenantFF, 'notifications')
+      const hasDOne = !adminIsFreeform && getFF(tenantFF, 'notifications')
       const hasPreLesson = getFF(tenantFF, 'pre_lesson_alert')
       if (!hasDOne && !hasPreLesson) return false
     }
@@ -337,7 +337,7 @@ export function AdminPage() {
     if (tab === 'lessons' && !getFF(tenantFF, 'lesson_packages')) setTab('members')
     if (tab === 'autoassign' && (adminIsFreeform || !getFF(tenantFF, 'autoassign'))) setTab('members')
     if (tab === 'notifications') {
-      const hasDOne = !adminIsFreeform && adminIsShared && getFF(tenantFF, 'notifications')
+      const hasDOne = !adminIsFreeform && getFF(tenantFF, 'notifications')
       const hasPreLesson = getFF(tenantFF, 'pre_lesson_alert')
       if (!hasDOne && !hasPreLesson) setTab('members')
     }
@@ -3428,7 +3428,7 @@ export function AdminPage() {
             )}
             {/* ── 배정알림 ── */}
             {tab === 'notifications' && (
-              (!adminIsFreeform && adminIsShared && getFF(tenantFF, 'notifications')) ||
+              (!adminIsFreeform && getFF(tenantFF, 'notifications')) ||
               getFF(tenantFF, 'pre_lesson_alert')
             ) && (
               <div className="max-w-lg space-y-4">
@@ -3445,7 +3445,7 @@ export function AdminPage() {
 
                 {notifSettings ? (
                   <>
-                  {adminIsShared && getFF(tenantFF, 'notifications') && (
+                  {!adminIsFreeform && getFF(tenantFF, 'notifications') && (
                   <section className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 space-y-4">
                     <div className="flex items-center justify-between">
                       <h2 className="text-base font-bold text-[var(--color-text-primary)]">D-1 배정 알림</h2>
@@ -3603,7 +3603,7 @@ export function AdminPage() {
                   </section>
                   )}
 
-                  {adminIsShared && getFF(tenantFF, 'notifications') && (
+                  {!adminIsFreeform && getFF(tenantFF, 'notifications') && (
                   <section className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 space-y-3">
                     <div>
                       <h2 className="text-base font-bold text-[var(--color-text-primary)]">수동 발송</h2>
@@ -3637,7 +3637,7 @@ export function AdminPage() {
                   </section>
                   )}
 
-                  {adminIsShared && getFF(tenantFF, 'notifications') && (
+                  {!adminIsFreeform && getFF(tenantFF, 'notifications') && (
                   <section className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 space-y-3">
                     <div className="flex items-center justify-between">
                       <div>
