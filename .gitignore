@@ -57,7 +57,18 @@ src/styles/tokens.css
 android/app/keystore.properties
 android/app/keystores/
 
+# Firebase 설정 (민감 정보)
+android/app/google-services.json
+
 # @capacitor/assets 소스 이미지 (빌드 산출물)
 assets/icon-only.png
 assets/icon-background.png
 assets/splash.png
+
+# OMC 세션/체크포인트 (로컬 전용)
+.omc/sessions/
+.omc/state/checkpoints/
+.omc/state/hud-stdin-cache.json.bak
+
+# Claude Code worktrees
+.claude/worktrees/

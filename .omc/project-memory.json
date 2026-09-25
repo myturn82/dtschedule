@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1784176510064,
-  "projectRoot": "C:\\claudePrj\\dtschedule",
+  "lastScanned": 1790214040997,
+  "projectRoot": "D:\\claudePrj\\dtschedule",
   "techStack": {
     "languages": [
       {
@@ -33,6 +33,11 @@
         "category": "frontend"
       },
       {
+        "name": "playwright",
+        "version": "1.62.0",
+        "category": "testing"
+      },
+      {
         "name": "vite",
         "version": "8.0.10",
         "category": "build"
@@ -47,16 +52,41 @@
     "runtime": null
   },
   "build": {
-    "buildCommand": "npx tsc -b 2>&1 | tail -100",
-    "testCommand": "npx vitest run 2>&1 | tail -60",
+    "buildCommand": "npx tsc -b 2>&1",
+    "testCommand": "npm test",
     "lintCommand": "npm run lint",
     "devCommand": "npm run dev",
     "scripts": {
       "dev": "vite",
+      "dev:lesson-on": "dotenv -e .env.lesson-on -- vite",
+      "dev:shift-on": "dotenv -e .env.shift-on -- vite",
+      "dev:serve-on": "dotenv -e .env.serve-on -- vite",
+      "dev:class-on": "dotenv -e .env.class-on -- vite",
+      "dev:work-on": "dotenv -e .env.work-on -- vite",
+      "dev:salon-on": "dotenv -e .env.salon-on -- vite",
+      "dev:care-on": "dotenv -e .env.care-on -- vite",
       "predev": "npm run build:tokens",
       "build": "tsc -b && vite build",
       "prebuild": "npm run build:tokens",
       "build:tokens": "style-dictionary build --config style-dictionary.config.js",
+      "build:lesson-on": "npm run build:tokens && vite build --mode lesson-on",
+      "build:lesson-on:android": "npm run build:lesson-on && npx cap sync android",
+      "build:shift-on": "npm run build:tokens && vite build --mode shift-on",
+      "build:serve-on": "npm run build:tokens && vite build --mode serve-on",
+      "build:class-on": "npm run build:tokens && vite build --mode class-on",
+      "build:work-on": "npm run build:tokens && vite build --mode work-on",
+      "build:salon-on": "npm run build:tokens && vite build --mode salon-on",
+      "build:care-on": "npm run build:tokens && vite build --mode care-on",
+      "reel:landing": "vite build --config vite.promo-landing.config.ts && node scripts/record-reel-landing.js",
+      "reel:blog13": "vite build --config vite.promo13.config.ts && node scripts/record-reel-blog13.js",
+      "icon:dts": "node scripts/generate-icon.js dts",
+      "icon:lesson-on": "node scripts/generate-icon.js lesson-on && npx @capacitor/assets generate --android",
+      "icon:shift-on": "node scripts/generate-icon.js shift-on",
+      "icon:serve-on": "node scripts/generate-icon.js serve-on",
+      "icon:class-on": "node scripts/generate-icon.js class-on",
+      "icon:work-on": "node scripts/generate-icon.js work-on",
+      "icon:salon-on": "node scripts/generate-icon.js salon-on",
+      "icon:care-on": "node scripts/generate-icon.js care-on",
       "lint": "eslint .",
       "preview": "vite preview",
       "test": "vitest"
@@ -72,8 +102,10 @@
     "isMonorepo": false,
     "workspaces": [],
     "mainDirectories": [
+      "assets",
       "docs",
       "public",
+      "scripts",
       "src"
     ],
     "gitBranches": {
@@ -83,57 +115,97 @@
   },
   "customNotes": [],
   "directoryMap": {
+    "android": {
+      "path": "android",
+      "purpose": null,
+      "fileCount": 9,
+      "lastAccessed": 1790214040914,
+      "keyFiles": [
+        "build.gradle",
+        "capacitor.settings.gradle",
+        "gradle.properties",
+        "gradlew",
+        "gradlew.bat"
+      ]
+    },
+    "assets": {
+      "path": "assets",
+      "purpose": "Static assets",
+      "fileCount": 17,
+      "lastAccessed": 1790214040915,
+      "keyFiles": [
+        "01_hero.png",
+        "02_schedule_register.png",
+        "03_auto_deduction.png",
+        "04_expiry_sms.png",
+        "05_dashboard_stats.png"
+      ]
+    },
     "dist": {
       "path": "dist",
       "purpose": "Distribution/build output",
-      "fileCount": 10,
-      "lastAccessed": 1784176510023,
+      "fileCount": 25,
+      "lastAccessed": 1790214040932,
       "keyFiles": [
         "favicon.svg",
         "icons.svg",
         "index.html",
-        "logo-colon-time.png",
-        "logo-timetable-stack.png"
+        "landing-lesson-on.html",
+        "logo-colon-time.png"
       ]
+    },
+    "dist-promo": {
+      "path": "dist-promo",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1790214040933,
+      "keyFiles": []
     },
     "docs": {
       "path": "docs",
       "purpose": "Documentation",
-      "fileCount": 41,
-      "lastAccessed": 1784176510023,
-      "keyFiles": [
-        "blog_series_1.md",
-        "blog_series_10.md",
-        "blog_series_11.md",
-        "blog_series_2.md",
-        "blog_series_3.md"
-      ]
+      "fileCount": 0,
+      "lastAccessed": 1790214040933,
+      "keyFiles": []
+    },
+    "DclaudePrjdtscheduledocssuperpowersplans": {
+      "path": "DclaudePrjdtscheduledocssuperpowersplans",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1790214040934,
+      "keyFiles": []
     },
     "public": {
       "path": "public",
       "purpose": "Public files",
-      "fileCount": 6,
-      "lastAccessed": 1784176510033,
+      "fileCount": 9,
+      "lastAccessed": 1790214040935,
       "keyFiles": [
         "favicon.svg",
         "icons.svg",
+        "landing-lesson-on.html",
         "logo-colon-time.png",
-        "logo-timetable-stack.png",
-        "manifest.json"
+        "logo-timetable-stack.png"
       ]
     },
-    "publicicons": {
-      "path": "publicicons",
-      "purpose": null,
-      "fileCount": 0,
-      "lastAccessed": 1784176510034,
-      "keyFiles": []
+    "scripts": {
+      "path": "scripts",
+      "purpose": "Build/utility scripts",
+      "fileCount": 10,
+      "lastAccessed": 1790214040936,
+      "keyFiles": [
+        "capture-blog12.mjs",
+        "check_alert.sql",
+        "copy_tenant_to_dev.mjs",
+        "copy_tenant_to_dev.py",
+        "generate-feature-graphic.js"
+      ]
     },
     "src": {
       "path": "src",
       "purpose": "Source code",
       "fileCount": 5,
-      "lastAccessed": 1784176510034,
+      "lastAccessed": 1790214040936,
       "keyFiles": [
         "App.css",
         "App.tsx",
@@ -146,7 +218,7 @@
       "path": "supabase",
       "purpose": null,
       "fileCount": 6,
-      "lastAccessed": 1784176510035,
+      "lastAccessed": 1790214040937,
       "keyFiles": [
         "CLAUDE.md",
         "config.toml",
@@ -155,22 +227,40 @@
         "seed_members_202606.sql"
       ]
     },
+    "android\\app": {
+      "path": "android\\app",
+      "purpose": "Application code",
+      "fileCount": 7,
+      "lastAccessed": 1790214040938,
+      "keyFiles": [
+        "build.gradle",
+        "capacitor.build.gradle",
+        "google-services.json"
+      ]
+    },
+    "android\\build": {
+      "path": "android\\build",
+      "purpose": "Build output",
+      "fileCount": 0,
+      "lastAccessed": 1790214040939,
+      "keyFiles": []
+    },
     "dist\\assets": {
       "path": "dist\\assets",
       "purpose": "Static assets",
-      "fileCount": 8,
-      "lastAccessed": 1784176510036,
+      "fileCount": 43,
+      "lastAccessed": 1790214040942,
       "keyFiles": [
-        "html2canvas-DAUDsNMm.js",
-        "index-BEkYfel2.js",
-        "index-C15MP2Wo.css"
+        "blog1-B5-l1TQh.js",
+        "blog1-Be9KJUjr.css",
+        "blog10-BxOePzqU.js"
       ]
     },
     "src\\assets": {
       "path": "src\\assets",
       "purpose": "Static assets",
       "fileCount": 3,
-      "lastAccessed": 1784176510038,
+      "lastAccessed": 1790214040948,
       "keyFiles": [
         "hero.png",
         "react.svg",
@@ -180,8 +270,8 @@
     "src\\components": {
       "path": "src\\components",
       "purpose": "UI components",
-      "fileCount": 6,
-      "lastAccessed": 1784176510038,
+      "fileCount": 7,
+      "lastAccessed": 1790214040950,
       "keyFiles": [
         "AppHeader.tsx",
         "DashboardNav.tsx",
@@ -192,7 +282,7 @@
       "path": "src\\data",
       "purpose": "Data files",
       "fileCount": 1,
-      "lastAccessed": 1784176510039,
+      "lastAccessed": 1790214040952,
       "keyFiles": [
         "industryCategories.ts"
       ]
@@ -200,19 +290,19 @@
     "src\\lib": {
       "path": "src\\lib",
       "purpose": "Library code",
-      "fileCount": 20,
-      "lastAccessed": 1784176510039,
+      "fileCount": 27,
+      "lastAccessed": 1790214040956,
       "keyFiles": [
+        "adminTabs.ts",
         "aiParse.ts",
-        "assignments.ts",
-        "avatarColor.ts"
+        "assignments.ts"
       ]
     },
     "supabase\\migrations": {
       "path": "supabase\\migrations",
       "purpose": "Database migrations",
-      "fileCount": 63,
-      "lastAccessed": 1784176510043,
+      "fileCount": 98,
+      "lastAccessed": 1790214040961,
       "keyFiles": [
         "001_schema.sql",
         "002_rls.sql",
@@ -222,303 +312,303 @@
   },
   "hotPaths": [
     {
-      "path": "src\\pages\\SchedulePage.tsx",
-      "accessCount": 661,
-      "lastAccessed": 1784191525970,
-      "type": "file"
-    },
-    {
       "path": "src\\pages\\AdminPage.tsx",
-      "accessCount": 463,
-      "lastAccessed": 1784188085843,
-      "type": "file"
-    },
-    {
-      "path": "src",
-      "accessCount": 300,
-      "lastAccessed": 1784187796289,
+      "accessCount": 159,
+      "lastAccessed": 1790217285825,
       "type": "directory"
     },
     {
+      "path": "src\\pages\\SchedulePage.tsx",
+      "accessCount": 77,
+      "lastAccessed": 1788596022262,
+      "type": "directory"
+    },
+    {
+      "path": "src",
+      "accessCount": 77,
+      "lastAccessed": 1790217425295,
+      "type": "directory"
+    },
+    {
+      "path": "src\\components\\AppHeader.tsx",
+      "accessCount": 66,
+      "lastAccessed": 1790215431220,
+      "type": "file"
+    },
+    {
       "path": "src\\components\\modals\\SlotEditModal.tsx",
-      "accessCount": 286,
-      "lastAccessed": 1784091836342,
-      "type": "file"
-    },
-    {
-      "path": "src\\pages\\SuperAdminPage.tsx",
-      "accessCount": 218,
-      "lastAccessed": 1783065984045,
-      "type": "file"
-    },
-    {
-      "path": "src\\types\\index.ts",
-      "accessCount": 155,
-      "lastAccessed": 1784187694586,
-      "type": "file"
-    },
-    {
-      "path": "src\\pages\\TenantSelectPage.tsx",
-      "accessCount": 153,
-      "lastAccessed": 1783064184415,
-      "type": "file"
-    },
-    {
-      "path": "src\\components\\schedule\\WeekGrid.tsx",
-      "accessCount": 132,
-      "lastAccessed": 1784188686984,
-      "type": "file"
-    },
-    {
-      "path": "src\\components\\schedule\\ScheduleGrid.tsx",
-      "accessCount": 129,
-      "lastAccessed": 1784190977318,
+      "accessCount": 46,
+      "lastAccessed": 1788662025407,
       "type": "file"
     },
     {
       "path": "src\\components\\schedule\\TimeSlotCell.tsx",
-      "accessCount": 128,
-      "lastAccessed": 1784191382792,
+      "accessCount": 39,
+      "lastAccessed": 1790078547034,
       "type": "file"
     },
     {
-      "path": "src\\pages\\PendingPage.tsx",
-      "accessCount": 103,
-      "lastAccessed": 1784002742450,
+      "path": "src\\components\\admin\\LessonManagementPanel.tsx",
+      "accessCount": 37,
+      "lastAccessed": 1788659381487,
       "type": "file"
     },
     {
-      "path": "src\\contexts\\TenantContext.tsx",
-      "accessCount": 100,
-      "lastAccessed": 1784164318542,
+      "path": "src\\components\\modals\\PastAttendanceModal.tsx",
+      "accessCount": 37,
+      "lastAccessed": 1788696655240,
       "type": "file"
     },
     {
       "path": "",
-      "accessCount": 84,
-      "lastAccessed": 1783925688737,
+      "accessCount": 36,
+      "lastAccessed": 1790217299145,
       "type": "directory"
     },
     {
-      "path": "src\\components\\auth\\LoginModal.tsx",
-      "accessCount": 78,
-      "lastAccessed": 1780647126853,
+      "path": "src\\components\\schedule\\DayView.tsx",
+      "accessCount": 25,
+      "lastAccessed": 1790078571182,
+      "type": "directory"
+    },
+    {
+      "path": "src\\components\\schedule\\WeekGrid.tsx",
+      "accessCount": 24,
+      "lastAccessed": 1790078568644,
+      "type": "directory"
+    },
+    {
+      "path": "src\\types\\index.ts",
+      "accessCount": 18,
+      "lastAccessed": 1789992736514,
+      "type": "directory"
+    },
+    {
+      "path": "src\\components\\schedule\\ScheduleGrid.tsx",
+      "accessCount": 15,
+      "lastAccessed": 1788583734813,
+      "type": "directory"
+    },
+    {
+      "path": "src\\contexts\\AuthContext.tsx",
+      "accessCount": 14,
+      "lastAccessed": 1789646348113,
       "type": "file"
     },
     {
-      "path": "src\\App.tsx",
-      "accessCount": 74,
-      "lastAccessed": 1783581034417,
+      "path": "supabase\\reset_db.sql",
+      "accessCount": 14,
+      "lastAccessed": 1789993084562,
       "type": "file"
     },
     {
-      "path": "src\\hooks\\useAdmin.ts",
-      "accessCount": 53,
-      "lastAccessed": 1784092161411,
+      "path": "src\\hooks\\useLessonPackages.ts",
+      "accessCount": 13,
+      "lastAccessed": 1788659376029,
       "type": "file"
     },
     {
-      "path": "src\\hooks\\useSchedule.ts",
-      "accessCount": 53,
-      "lastAccessed": 1784095247755,
-      "type": "file"
+      "path": "src\\components\\shared\\MemberSearchSelect.tsx",
+      "accessCount": 6,
+      "lastAccessed": 1788658773039,
+      "type": "directory"
     },
     {
-      "path": "src\\utils\\cellState.ts",
-      "accessCount": 31,
-      "lastAccessed": 1784191350158,
-      "type": "file"
-    },
-    {
-      "path": "supabase\\functions\\admin-create-user\\index.ts",
-      "accessCount": 30,
-      "lastAccessed": 1784092757333,
-      "type": "file"
-    },
-    {
-      "path": "src\\pages\\SharePage.tsx",
-      "accessCount": 29,
-      "lastAccessed": 1784090734032,
-      "type": "file"
-    },
-    {
-      "path": "src\\hooks\\useAuth.ts",
-      "accessCount": 26,
-      "lastAccessed": 1782781287562,
+      "path": "src\\contexts\\TenantContext.tsx",
+      "accessCount": 6,
+      "lastAccessed": 1788664220143,
       "type": "file"
     },
     {
       "path": "supabase\\migrations",
-      "accessCount": 24,
-      "lastAccessed": 1783901033543,
+      "accessCount": 6,
+      "lastAccessed": 1789047373017,
       "type": "directory"
     },
     {
-      "path": "supabase\\migrations\\001_schema.sql",
-      "accessCount": 19,
-      "lastAccessed": 1784090718363,
+      "path": "src\\hooks\\useSchedule.ts",
+      "accessCount": 5,
+      "lastAccessed": 1788581929385,
+      "type": "directory"
+    },
+    {
+      "path": "src\\components\\schedule\\DatePickerModal.tsx",
+      "accessCount": 5,
+      "lastAccessed": 1788588727280,
       "type": "file"
     },
     {
-      "path": "vite.config.ts",
-      "accessCount": 17,
-      "lastAccessed": 1783587619736,
+      "path": "src\\components\\modals\\RecurringModal.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1788264962721,
       "type": "file"
     },
     {
-      "path": "src\\hooks\\useTenantRoles.ts",
-      "accessCount": 17,
-      "lastAccessed": 1784187843195,
+      "path": "src\\components",
+      "accessCount": 4,
+      "lastAccessed": 1788270041844,
+      "type": "directory"
+    },
+    {
+      "path": "src\\utils\\cellState.ts",
+      "accessCount": 4,
+      "lastAccessed": 1788656688494,
       "type": "file"
     },
     {
-      "path": "supabase\\functions\\delete-account\\index.ts",
-      "accessCount": 14,
-      "lastAccessed": 1783066141135,
+      "path": "src\\components\\modals\\PackageDeleteModal.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1788659381216,
+      "type": "file"
+    },
+    {
+      "path": "src\\lib\\featureFlags.ts",
+      "accessCount": 4,
+      "lastAccessed": 1790215150871,
+      "type": "file"
+    },
+    {
+      "path": "C:\\WINDOWS\\TEMP\\claude\\D--claudePrj-dtschedule\\29265a92-6f61-4d7b-8e2b-4fd2f9ed3497\\tasks\\bum87ra8w.output",
+      "accessCount": 3,
+      "lastAccessed": 1788260893215,
+      "type": "file"
+    },
+    {
+      "path": "src\\utils\\autoAssign.ts",
+      "accessCount": 3,
+      "lastAccessed": 1788441154351,
       "type": "file"
     },
     {
       "path": "src\\hooks\\useProfiles.ts",
-      "accessCount": 14,
-      "lastAccessed": 1784092770298,
-      "type": "file"
-    },
-    {
-      "path": "index.html",
-      "accessCount": 13,
-      "lastAccessed": 1783916027162,
+      "accessCount": 3,
+      "lastAccessed": 1788441371166,
       "type": "directory"
     },
     {
-      "path": "src\\components\\modals\\CapacityModal.tsx",
-      "accessCount": 13,
-      "lastAccessed": 1784092183193,
-      "type": "file"
-    },
-    {
-      "path": "package.json",
-      "accessCount": 12,
-      "lastAccessed": 1784092769633,
-      "type": "file"
-    },
-    {
-      "path": "supabase",
-      "accessCount": 10,
-      "lastAccessed": 1783498926605,
+      "path": "src\\components\\schedule",
+      "accessCount": 3,
+      "lastAccessed": 1788581914736,
       "type": "directory"
     },
     {
-      "path": "supabase\\migrations\\014_security_hardening.sql",
-      "accessCount": 9,
-      "lastAccessed": 1780639400917,
-      "type": "file"
-    },
-    {
-      "path": "supabase\\migrations\\012_profile_approval.sql",
-      "accessCount": 8,
-      "lastAccessed": 1780902191770,
-      "type": "file"
-    },
-    {
-      "path": "supabase\\migrations\\002_rls.sql",
-      "accessCount": 8,
-      "lastAccessed": 1781224060992,
-      "type": "file"
-    },
-    {
-      "path": "vercel.json",
-      "accessCount": 8,
-      "lastAccessed": 1783571949209,
-      "type": "file"
-    },
-    {
-      "path": ".env",
-      "accessCount": 7,
-      "lastAccessed": 1780991709214,
-      "type": "file"
-    },
-    {
-      "path": "supabase\\migrations\\013_tenant_member_approval.sql",
-      "accessCount": 6,
-      "lastAccessed": 1780639413613,
-      "type": "file"
-    },
-    {
-      "path": "supabase\\migrations\\010_assignment_extra_data.sql",
-      "accessCount": 6,
-      "lastAccessed": 1784090750116,
-      "type": "file"
-    },
-    {
-      "path": "src\\lib\\supabase.ts",
-      "accessCount": 4,
-      "lastAccessed": 1780360936984,
-      "type": "file"
-    },
-    {
-      "path": "supabase\\migrations\\011_tenant_role_indicator_bar.sql",
-      "accessCount": 4,
-      "lastAccessed": 1780902156101,
-      "type": "file"
-    },
-    {
-      "path": "supabase\\migrations\\005_volunteer_type.sql",
-      "accessCount": 4,
-      "lastAccessed": 1781581434497,
-      "type": "file"
-    },
-    {
-      "path": "supabase\\config.toml",
-      "accessCount": 4,
-      "lastAccessed": 1782805630104,
-      "type": "file"
-    },
-    {
-      "path": "supabase\\migrations\\007_schedule_rules.sql",
-      "accessCount": 4,
-      "lastAccessed": 1784090703109,
-      "type": "file"
-    },
-    {
-      "path": "supabase\\migrations\\003_seed.sql",
+      "path": "src\\components\\IndustryPicker.tsx",
       "accessCount": 3,
-      "lastAccessed": 1780639409710,
+      "lastAccessed": 1789643954864,
       "type": "file"
     },
     {
-      "path": "supabase\\migrations\\008_team_leader.sql",
-      "accessCount": 3,
-      "lastAccessed": 1780639429998,
-      "type": "file"
-    },
-    {
-      "path": "public\\favicon.svg",
-      "accessCount": 3,
-      "lastAccessed": 1781672385331,
-      "type": "file"
-    },
-    {
-      "path": "supabase\\migrations\\006_assignment_color.sql",
+      "path": "src\\lib\\assignments.ts",
       "accessCount": 2,
-      "lastAccessed": 1779596214870,
+      "lastAccessed": 1788265663948,
       "type": "file"
     },
     {
-      "path": "supabase\\migrations\\004_auth_social.sql",
+      "path": "src\\contexts\\DarkModeContext.tsx",
       "accessCount": 2,
-      "lastAccessed": 1779770081124,
+      "lastAccessed": 1788270046957,
       "type": "file"
     },
     {
-      "path": "supabase\\migrations\\009_assignment_unique.sql",
+      "path": "src\\components\\modals\\QuickBookingModal.tsx",
       "accessCount": 2,
-      "lastAccessed": 1780537254793,
+      "lastAccessed": 1788659361831,
       "type": "file"
     },
     {
-      "path": "gen_icons.py",
+      "path": "src\\types",
+      "accessCount": 2,
+      "lastAccessed": 1788776262025,
+      "type": "directory"
+    },
+    {
+      "path": "supabase\\migrations\\001_schema.sql",
+      "accessCount": 2,
+      "lastAccessed": 1789046497305,
+      "type": "file"
+    },
+    {
+      "path": "supabase\\migrations\\075_lesson_packages.sql",
+      "accessCount": 2,
+      "lastAccessed": 1789046510065,
+      "type": "file"
+    },
+    {
+      "path": "src\\lib\\slotSettings.ts",
+      "accessCount": 2,
+      "lastAccessed": 1789991392699,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\DashboardNav.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1790079066666,
+      "type": "file"
+    },
+    {
+      "path": "docs\\checklists\\checklist_2026-08-30.md",
+      "accessCount": 2,
+      "lastAccessed": 1790225037121,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\schedule\\ScheduleHeader.tsx",
       "accessCount": 1,
-      "lastAccessed": 1779538107634,
+      "lastAccessed": 1788262296447,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\schedule\\MobileScheduleView.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1788263865079,
+      "type": "directory"
+    },
+    {
+      "path": "supabase\\migrations\\089_attendance.sql",
+      "accessCount": 1,
+      "lastAccessed": 1788264936963,
+      "type": "file"
+    },
+    {
+      "path": "src\\utils",
+      "accessCount": 1,
+      "lastAccessed": 1788264954092,
+      "type": "directory"
+    },
+    {
+      "path": "C:\\Users\\mytur\\.claude\\plans\\encapsulated-sniffing-pike.md",
+      "accessCount": 1,
+      "lastAccessed": 1788265589061,
+      "type": "file"
+    },
+    {
+      "path": "supabase\\migrations\\095_initial_used_sessions.sql",
+      "accessCount": 1,
+      "lastAccessed": 1788265811471,
+      "type": "file"
+    },
+    {
+      "path": "supabase\\migrations\\047_fix_unique_member_assignment_tenant.sql",
+      "accessCount": 1,
+      "lastAccessed": 1788266367209,
+      "type": "file"
+    },
+    {
+      "path": "src\\App.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1788269401547,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\admin\\FeedbackBoardPanel.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1788269415215,
+      "type": "file"
+    },
+    {
+      "path": "src\\hooks\\useDarkMode.ts",
+      "accessCount": 1,
+      "lastAccessed": 1788270046285,
       "type": "file"
     }
   ],
