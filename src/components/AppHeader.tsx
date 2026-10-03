@@ -496,7 +496,7 @@ export function AppHeader({ funcMenuItems, extraMenuGroups, userMenuItems, leftS
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-lg w-full max-w-xs p-5 space-y-3">
               <h2 className="text-base font-semibold text-[var(--color-text-primary)]">탈퇴 방식 선택</h2>
-              {tenant && memberships.filter(m => m.is_approved).length > 1 && (
+              {tenant && (
                 <button
                   onClick={async () => { setShowWithdrawModal(false); const err = await deleteAccount(tenant.id); if (err) alert(err); else await reloadMemberships() }}
                   className="w-full px-4 py-3 text-left rounded-xl border border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] transition-colors"

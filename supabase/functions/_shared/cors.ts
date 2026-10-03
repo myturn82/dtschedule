@@ -7,6 +7,10 @@ const ALLOWED_ORIGINS = [
   'https://shifton.dtschedule.com',
   'https://serveon.dtschedule.com',
   'http://localhost:5173',
+  // Capacitor Android (v5+/v8): WebView origin
+  'https://localhost',
+  // Capacitor iOS: WebView origin
+  'capacitor://localhost',
 ]
 
 export function getCorsHeaders(req: Request): Record<string, string> {

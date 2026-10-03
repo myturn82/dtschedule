@@ -870,6 +870,100 @@ function BeforeAfterDemo() {
   )
 }
 
+// 레슨 N분 전 앱 알림 데모
+function LessonAlertDemo() {
+  const [phase, setPhase] = useState(0)
+  // 0: idle, 1: appearing, 2: visible, 3: fading
+
+  useEffect(() => {
+    const SEQ = [2200, 450, 2800, 450]
+    let idx = 0
+    let t: ReturnType<typeof setTimeout>
+    function tick() {
+      t = setTimeout(() => {
+        idx = (idx + 1) % SEQ.length
+        setPhase(idx)
+        tick()
+      }, SEQ[idx])
+    }
+    tick()
+    return () => clearTimeout(t)
+  }, [])
+
+  const notifVisible = phase === 1 || phase === 2
+
+  return (
+    <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
+      {/* 알림 시점 설정 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+        <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', flexShrink: 0 }}>알림 시점</span>
+        <div style={{ display: 'flex', gap: 3 }}>
+          {(['30분 전', '1시간 전', '직접 입력'] as string[]).map((label, i) => (
+            <span key={label} style={{
+              padding: '2px 8px', borderRadius: 5, fontSize: 9,
+              background: i === 0 ? ACCENT : 'rgba(255,255,255,0.07)',
+              color: i === 0 ? '#fff' : 'rgba(255,255,255,0.38)',
+              fontWeight: i === 0 ? 700 : undefined,
+              border: `1px solid ${i === 0 ? ACCENT : 'rgba(255,255,255,0.09)'}`,
+            }}>{label}</span>
+          ))}
+        </div>
+      </div>
+
+      {/* 오늘 레슨 목록 */}
+      <div style={{ marginBottom: 10 }}>
+        {([
+          { time: '09:30', name: '박진희', state: 'done' },
+          { time: '10:00', name: '김민지', state: 'soon' },
+          { time: '11:00', name: '윤소이', state: 'upcoming' },
+        ] as { time: string; name: string; state: string }[]).map(s => (
+          <div key={s.time} style={{
+            display: 'flex', alignItems: 'center', gap: 8, padding: '5px 8px',
+            borderRadius: 6, marginBottom: 3,
+            background: s.state === 'soon' ? 'rgba(242,96,78,0.09)' : 'rgba(255,255,255,0.03)',
+            border: `1px solid ${s.state === 'soon' ? 'rgba(242,96,78,0.28)' : 'rgba(255,255,255,0.07)'}`,
+          }}>
+            <span style={{ fontSize: 9, color: s.state === 'done' ? 'rgba(255,255,255,0.18)' : s.state === 'soon' ? ACCENT : 'rgba(255,255,255,0.45)', width: 36, flexShrink: 0 }}>{s.time}</span>
+            <span style={{ flex: 1, fontSize: 10, color: s.state === 'done' ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.72)', textDecoration: s.state === 'done' ? 'line-through' : undefined }}>{s.name}</span>
+            {s.state === 'soon' && (
+              <span style={{ fontSize: 8, color: ACCENT, fontWeight: 700, background: 'rgba(242,96,78,0.12)', padding: '1px 5px', borderRadius: 4 }}>30분 후</span>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* 회원 기기 알림 */}
+      <div style={{ background: 'rgba(0,0,0,0.25)', borderRadius: 8, padding: '8px 10px' }}>
+        <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.22)', marginBottom: 6 }}>회원 기기 알림</div>
+        <div style={{
+          display: 'flex', alignItems: 'flex-start', gap: 9, padding: '9px 11px',
+          background: 'rgba(28,28,38,0.96)',
+          border: `1px solid ${notifVisible ? 'rgba(242,96,78,0.3)' : 'rgba(255,255,255,0.09)'}`,
+          borderRadius: 10,
+          opacity: notifVisible ? 1 : 0.3,
+          transform: notifVisible ? 'translateY(0)' : 'translateY(-10px)',
+          transition: 'opacity 0.4s ease, transform 0.4s ease, border-color 0.4s ease',
+        }}>
+          <div style={{ width: 26, height: 26, borderRadius: 7, background: `linear-gradient(135deg, ${ACCENT}, #ff8c7a)`, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.85)', marginBottom: 3 }}>LESSON:ON</div>
+            <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.55)', lineHeight: 1.6 }}>
+              <span style={{ color: 'rgba(255,255,255,0.82)', fontWeight: 600 }}>김민지</span>님,{' '}
+              오늘 <span style={{ color: ACCENT, fontWeight: 700 }}>10:00 레슨</span>이 30분 후 시작됩니다.
+            </div>
+          </div>
+          <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.28)', flexShrink: 0 }}>방금 전</div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function LandingLessonOn() {
   const navigate = useNavigate()
   const goStart = () => navigate('/consent?vertical=lessonon')
@@ -1014,10 +1108,30 @@ export function LandingLessonOn() {
           </div>
         </section>
 
-        {/* 04 — 데이터로 관리 */}
+        {/* 04 — 레슨 N분 전 앱 알림 */}
         <section style={{ padding: '80px 24px', background: 'linear-gradient(180deg, transparent, rgba(242,96,78,0.05), transparent)' }}>
+          <div className="lo-feat-grid" style={{ maxWidth: 960, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, alignItems: 'center' }}>
+            <Anim style={{}} className="lo-feat-text">
+              <div style={{ fontSize: 13, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 16 }}>04 — 레슨 N분 전 앱 알림</div>
+              <h2 style={{ fontSize: 'clamp(24px,4vw,36px)', fontWeight: 800, lineHeight: 1.5, letterSpacing: '-0.5px', marginBottom: 16 }}>
+                "오늘 수업인데,<br />연락이 없으시네요..."
+              </h2>
+              <h2 style={{ fontSize: 'clamp(24px,3.5vw,34px)', fontWeight: 800, letterSpacing: '-0.5px', marginBottom: 16 }}>레슨 시작 전,<br />회원 기기로 자동 발송</h2>
+              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', lineHeight: 1.8 }}>레슨 시작 N분 전, 등록된 회원의 기기로 푸시 알림을 자동 발송합니다. 알림 시점은 30분 전·1시간 전·직접 입력 중에서 조직별로 설정합니다. 노쇼를 줄이고 회원 만족도를 높입니다.</p>
+            </Anim>
+            <Anim delay={120} className="lo-feat-visual">
+              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 28 }}>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 16 }}>레슨 전 알림 설정 및 발송 미리보기</div>
+                <LessonAlertDemo />
+              </div>
+            </Anim>
+          </div>
+        </section>
+
+        {/* 05 — 데이터로 관리 */}
+        <section style={{ padding: '80px 24px' }}>
           <Anim style={{ maxWidth: 760, margin: '0 auto', textAlign: 'center', marginBottom: 48 }}>
-            <div style={{ fontSize: 13, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 16 }}>04 — 데이터로 관리</div>
+            <div style={{ fontSize: 13, color: ACCENT, fontWeight: 700, letterSpacing: 1, marginBottom: 16 }}>05 — 데이터로 관리</div>
             <h2 style={{ fontSize: 'clamp(24px,3.5vw,34px)', fontWeight: 800, letterSpacing: '-0.5px', marginBottom: 16 }}>대시보드에서 레슨권 통계를<br />한눈에 조회합니다</h2>
             <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', lineHeight: 1.8 }}>회원별 레슨권 차감 추이를 자동 집계합니다. 아래 통계 항목을 대시보드에서 바로 확인할 수 있습니다.</p>
           </Anim>
@@ -1050,10 +1164,11 @@ export function LandingLessonOn() {
         <section style={{ textAlign: 'center', padding: '80px 24px' }}>
           <Anim>
             <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 16 }}>주요 활용 업종</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', maxWidth: 600, margin: '0 auto' }}>
-              {['PT·헬스', '요가', '필라테스', '골프 레슨', '무술·격투기', '수영', '발레', '댄스'].map((tag, i) => (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', maxWidth: 680, margin: '0 auto' }}>
+              {['PT·헬스', '요가', '필라테스', '골프 레슨', '무술·격투기', '수영', '발레', '댄스', '테니스', '검도', '악기 레슨', '미술·드로잉', '클라이밍', '스케이트보드'].map((tag, i) => (
                 <span key={tag} className="lo-tag-btn" style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 20, padding: '6px 14px', fontSize: 13, opacity: 0, animation: `fadeUp 0.4s ease ${i * 50}ms forwards` }}>{tag}</span>
               ))}
+              <span style={{ background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(255,255,255,0.15)', borderRadius: 20, padding: '6px 14px', fontSize: 13, color: 'rgba(255,255,255,0.35)', opacity: 0, animation: `fadeUp 0.4s ease ${14 * 50}ms forwards` }}>등 다양한 업종</span>
             </div>
           </Anim>
         </section>

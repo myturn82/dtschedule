@@ -199,7 +199,7 @@ Deno.serve(async (req) => {
         .map(a => a.time_slot).filter(Boolean).sort().map(formatSlot).join(', ')
       const slotLabel = userSlots || allDaySlots || '미정'
       const userName = nameMap.get(userId) ?? ''
-      const title = '📅 내일 배정 알림'
+      const title = '내일 배정 알림'
       const bodyText = renderTemplate(
         setting.msg_template ?? '안녕하세요 {{name}}님! 내일 {{date}} {{slot}} 배정이 있습니다. ({{org}})',
         { date: dateLabel, slot: slotLabel, org: tenantName, name: userName },

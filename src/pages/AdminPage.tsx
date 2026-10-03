@@ -623,12 +623,17 @@ export function AdminPage() {
         const { data } = await supabase.from('tenants').select('*').order('name')
         orgs = (data ?? []) as Tenant[]
       } else {
-        const ctxAdminOrgs = memberships
+        const adminTenantIds = memberships
           .filter(m => m.role === 'admin')
-          .map(m => (m as { tenant: Tenant }).tenant)
+          .map(m => m.tenant_id)
 
-        if (ctxAdminOrgs.length > 0) {
-          orgs = ctxAdminOrgs
+        if (adminTenantIds.length > 0) {
+          // TenantContext 캐시는 feature_flags 변경에 따라 stale할 수 있으므로 DB 직접 조회
+          const { data } = await supabase
+            .from('tenants')
+            .select('*')
+            .in('id', adminTenantIds)
+          orgs = (data ?? []) as Tenant[]
         } else {
           // memberships가 아직 로드되지 않은 경우(위저드 직후 등) — DB 직접 조회
           const { data } = await supabase
@@ -3464,8 +3469,9 @@ export function AdminPage() {
                       </label>
                     </div>
 
-                    <p className="text-xs text-[var(--color-text-muted)] bg-[var(--color-surface-secondary)] rounded-lg px-3 py-2">
-                      ⚠️ 자동 정시 발송은 현재 잠시 중단된 상태입니다. 아래 설정은 발송 시간·메시지 템플릿을 미리 준비해두는 용도이며, 실제 발송은 "지금 발송" 버튼을 눌러야 이뤄집니다.
+                    <p className="flex items-start gap-1.5 text-xs text-[var(--color-text-muted)] bg-[var(--color-surface-secondary)] rounded-lg px-3 py-2">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-[1px]"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                      자동 정시 발송은 현재 잠시 중단된 상태입니다. 아래 설정은 발송 시간·메시지 템플릿을 미리 준비해두는 용도이며, 실제 발송은 "지금 발송" 버튼을 눌러야 이뤄집니다.
                     </p>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -3533,6 +3539,36 @@ export function AdminPage() {
                     >
                       {notifSaving ? '저장 중...' : '저장'}
                     </button>
+
+                    <div className="pt-3 border-t border-[var(--color-border)] space-y-2">
+                      <div>
+                        <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">수동 발송</h3>
+                        <p className="text-xs text-[var(--color-text-muted)] mt-0.5">현재 설정 기준으로 내일 배정된 멤버에게 즉시 발송합니다.</p>
+                      </div>
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <button
+                          onClick={sendManualReminder}
+                          disabled={manualSending}
+                          className="px-4 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition-colors"
+                          style={{ background: 'var(--color-brand-primary)' }}
+                        >
+                          {manualSending ? '발송 중...' : '지금 발송'}
+                        </button>
+                        <button
+                          onClick={openNotifSmsModal}
+                          disabled={notifSmsLoading}
+                          className="px-4 py-2 rounded-xl text-sm font-semibold border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] disabled:opacity-50 transition-colors"
+                        >
+                          {notifSmsLoading ? '불러오는 중...' : '해당 회원 문자발송'}
+                        </button>
+                        {manualSendResult && (
+                          <span className="text-sm text-[var(--color-text-secondary)]">
+                            발송 완료: {manualSendResult.sent}건
+                            {manualSendResult.failed > 0 && ` / 실패: ${manualSendResult.failed}건`}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </section>
                   )}
 
@@ -3600,40 +3636,7 @@ export function AdminPage() {
                     >
                       {notifSaving ? '저장 중...' : '저장'}
                     </button>
-                  </section>
-                  )}
 
-                  {!adminIsFreeform && getFF(tenantFF, 'notifications') && (
-                  <section className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 space-y-3">
-                    <div>
-                      <h2 className="text-base font-bold text-[var(--color-text-primary)]">수동 발송</h2>
-                      <p className="text-sm text-[var(--color-text-muted)] mt-0.5">
-                        현재 설정 기준으로 내일 배정된 멤버에게 즉시 발송합니다.
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <button
-                        onClick={sendManualReminder}
-                        disabled={manualSending}
-                        className="px-4 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition-colors"
-                        style={{ background: 'var(--color-brand-primary)' }}
-                      >
-                        {manualSending ? '발송 중...' : '지금 발송'}
-                      </button>
-                      <button
-                        onClick={openNotifSmsModal}
-                        disabled={notifSmsLoading}
-                        className="px-4 py-2 rounded-xl text-sm font-semibold border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] disabled:opacity-50 transition-colors"
-                      >
-                        {notifSmsLoading ? '불러오는 중...' : '해당 회원 문자발송'}
-                      </button>
-                      {manualSendResult && (
-                        <span className="text-sm text-[var(--color-text-secondary)]">
-                          발송 완료: {manualSendResult.sent}건
-                          {manualSendResult.failed > 0 && ` / 실패: ${manualSendResult.failed}건`}
-                        </span>
-                      )}
-                    </div>
                   </section>
                   )}
 

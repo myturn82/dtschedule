@@ -25,6 +25,7 @@ import { LandingClassOn  } from './pages/landing/LandingClassOn'
 import { LandingWorkOn   } from './pages/landing/LandingWorkOn'
 import { LandingSalonOn  } from './pages/landing/LandingSalonOn'
 import { LandingCareOn   } from './pages/landing/LandingCareOn'
+import { PromoCard       } from './pages/landing/PromoCard'
 import { ConsentPage }  from './pages/ConsentPage'
 import { PrivacyPage }  from './pages/PrivacyPage'
 import { AuthPage }     from './pages/AuthPage'
@@ -89,6 +90,7 @@ function AppRoutes() {
         <Route path="/share"          element={<SharePage />} />
         <Route path="/embed"          element={<EmbedPage />} />
         <Route path="/privacy"        element={<PrivacyPage />} />
+        <Route path="/promo-card"     element={<PromoCard />} />
         <Route path="*"               element={<Navigate to="/" replace />} />
       </Routes>
     )

@@ -54,6 +54,9 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       if (session?.user) {
         // TOKEN_REFRESHED는 멤버십 변경 없음 — 재조회 불필요 (실패 시 빈 배열 덮어쓰기 방지)
         if (event === 'TOKEN_REFRESHED') return
+        // INITIAL_SESSION(null) → loading=false 이후 SIGNED_IN 이벤트가 오면
+        // fetch 완료 전까지 loading=true를 유지해 PendingPage 순간 노출을 방지
+        setLoading(true)
         fetchMemberships(session.user.id)
       } else {
         setMemberships([])

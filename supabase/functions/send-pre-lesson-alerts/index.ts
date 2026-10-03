@@ -160,7 +160,7 @@ Deno.serve(async (req) => {
       .map(a => (a.profiles as { name: string } | null)?.name ?? '')
       .filter(Boolean)
       .join(', ')
-    const title = '🔔 레슨 시작 전 알림'
+    const title = '레슨 시작 전 알림'
     const customTemplate = (setting as { pre_lesson_alert_message?: string | null }).pre_lesson_alert_message
     const defaultTemplate = '{{time}} 레슨이 {{minutes}}분 후 시작됩니다. ({{members}})'
     const bodyText = (customTemplate?.trim() || defaultTemplate)

@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Capacitor } from '@capacitor/core'
+import { App as CapApp } from '@capacitor/app'
 import { TAB_LABELS, type Tab } from '../lib/adminTabs'
 import { getFF, type FeatureFlags } from '../lib/featureFlags'
 import { displayMode } from '../lib/tenantMode'
@@ -289,6 +291,13 @@ export function FullScreenMenu({
 }: FullScreenMenuProps) {
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
+  const [appVersion, setAppVersion] = useState<string>('')
+
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      CapApp.getInfo().then(info => setAppVersion(info.version)).catch(() => {})
+    }
+  }, [])
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [recent, setRecent] = useState<RecentItem[]>(getRecent)
   const searchRef = useRef<HTMLInputElement>(null)
@@ -665,6 +674,11 @@ export function FullScreenMenu({
                   </span>
                   <span className="text-sm font-medium text-[var(--color-text-muted)]">로그아웃</span>
                 </button>
+                {appVersion && (
+                  <div className="mt-3 text-center text-xs text-[var(--color-text-muted)] opacity-40">
+                    v{appVersion}
+                  </div>
+                )}
               </div>
             </div>
           </>

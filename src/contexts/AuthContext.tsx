@@ -48,7 +48,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') { setLoading(false); return }
       if (window.location.pathname === '/reset-password') { setLoading(false); return }
-      if (session?.user) fetchProfile(session.user.id)
+      // TOKEN_REFRESHED는 프로필 변경 없음 — 재조회 불필요
+      if (event === 'TOKEN_REFRESHED') return
+      if (session?.user) {
+        // INITIAL_SESSION(null) → loading=false 이후 SIGNED_IN 이벤트 시 로딩 재활성화
+        setLoading(true)
+        fetchProfile(session.user.id)
+      }
       else { setProfile(null); setMyCustomer(null); setLoading(false) }
     })
 
