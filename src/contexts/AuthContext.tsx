@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { Capacitor } from '@capacitor/core'
 import { App as CapApp } from '@capacitor/app'
+import { Browser } from '@capacitor/browser'
 import { supabase } from '../lib/supabase'
 import { BRAND } from '../lib/brandConfig'
 import { VERTICAL_PRESETS } from '../lib/verticalPresets'
@@ -59,6 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
 
     // Capacitor 딥링크 처리: OAuth 후 앱으로 돌아올 때 URL에서 세션 복구
+    // Browser.open()으로 인앱 브라우저에서 OAuth를 처리하므로, 완료 후 Browser.close()로 닫는다.
     let capListenerHandle: { remove: () => void } | null = null
     if (Capacitor.isNativePlatform()) {
       CapApp.addListener('appUrlOpen', async ({ url }) => {
@@ -68,6 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const code = new URLSearchParams(queryStr).get('code')
         if (code) {
           await supabase.auth.exchangeCodeForSession(code)
+          await Browser.close()
           return
         }
         // Implicit flow 폴백: #access_token=...&refresh_token=... 해시
@@ -77,6 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const refreshToken = hashParams.get('refresh_token')
         if (accessToken && refreshToken) {
           await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
+          await Browser.close()
         }
       }).then(h => { capListenerHandle = h })
     }
@@ -185,6 +189,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const signInWithGoogle = useCallback(async (): Promise<string | null> => {
+    if (Capacitor.isNativePlatform()) {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: getOAuthRedirect(), skipBrowserRedirect: true },
+      })
+      if (error) return error.message
+      if (data.url) await Browser.open({ url: data.url })
+      return null
+    }
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: getOAuthRedirect() },
@@ -193,6 +206,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const signInWithKakao = useCallback(async (): Promise<string | null> => {
+    if (Capacitor.isNativePlatform()) {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'kakao',
+        options: { redirectTo: getOAuthRedirect(), scopes: 'profile_nickname profile_image', skipBrowserRedirect: true },
+      })
+      if (error) return error.message
+      if (data.url) await Browser.open({ url: data.url })
+      return null
+    }
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'kakao',
       options: { redirectTo: getOAuthRedirect(), scopes: 'profile_nickname profile_image' },
@@ -201,6 +223,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const linkGoogle = useCallback(async (): Promise<string | null> => {
+    if (Capacitor.isNativePlatform()) {
+      const { data, error } = await supabase.auth.linkIdentity({
+        provider: 'google',
+        options: { redirectTo: getOAuthRedirect(), skipBrowserRedirect: true },
+      })
+      if (error) return error.message
+      if (data.url) await Browser.open({ url: data.url })
+      return null
+    }
     const { error } = await supabase.auth.linkIdentity({
       provider: 'google',
       options: { redirectTo: getOAuthRedirect() },
@@ -209,6 +240,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const linkKakao = useCallback(async (): Promise<string | null> => {
+    if (Capacitor.isNativePlatform()) {
+      const { data, error } = await supabase.auth.linkIdentity({
+        provider: 'kakao',
+        options: { redirectTo: getOAuthRedirect(), scopes: 'profile_nickname profile_image', skipBrowserRedirect: true },
+      })
+      if (error) return error.message
+      if (data.url) await Browser.open({ url: data.url })
+      return null
+    }
     const { error } = await supabase.auth.linkIdentity({
       provider: 'kakao',
       options: { redirectTo: getOAuthRedirect(), scopes: 'profile_nickname profile_image' },
@@ -236,6 +276,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const signOut = useCallback(async () => {
+    // 로그아웃 후 AuthPage가 로그인 탭으로 시작하도록 플래그 설정
+    sessionStorage.setItem('vs_return_to_login', '1')
     const { data: { session } } = await supabase.auth.getSession()
     if (session?.user?.id) {
       const userId = session.user.id

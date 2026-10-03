@@ -43,22 +43,25 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   const [alreadyMemberNotice, setAlreadyMemberNotice] = useState<string | null>(null)
   // ref로 동기적으로 추적 — async fetchMemberships 클로저에서 최신값 읽기 위해
   const tenantSelectedRef = useRef(false)
+  // SIGNED_IN 이벤트가 이미 fetchMemberships를 시작했으면 getSession() null 결과가 loading을 false로 덮어쓰지 않도록 보호
+  const authEventFiredRef = useRef(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) fetchMemberships(session.user.id)
-      else setLoading(false)
+      // authEventFiredRef가 true면 SIGNED_IN이 이미 fetch를 시작했으므로 loading을 false로 덮어쓰지 않음
+      else if (!authEventFiredRef.current) setLoading(false)
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
         // TOKEN_REFRESHED는 멤버십 변경 없음 — 재조회 불필요 (실패 시 빈 배열 덮어쓰기 방지)
         if (event === 'TOKEN_REFRESHED') return
-        // INITIAL_SESSION(null) → loading=false 이후 SIGNED_IN 이벤트가 오면
-        // fetch 완료 전까지 loading=true를 유지해 PendingPage 순간 노출을 방지
+        authEventFiredRef.current = true
         setLoading(true)
         fetchMemberships(session.user.id)
       } else {
+        authEventFiredRef.current = false
         setMemberships([])
         setTenantState(null)
         setTenantRole(null)

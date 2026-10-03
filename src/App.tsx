@@ -184,6 +184,7 @@ function AppRoutes() {
         isCustomerAdmin || profile?.is_super_admin ? <CustomerAdminPage /> : <Navigate to="/" replace />
       } />
       <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="*" element={<Navigate to="/schedule" replace />} />
     </Routes>
   )
 }

@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
+import { Capacitor } from '@capacitor/core'
+import { App as CapApp } from '@capacitor/app'
 import { DevFileLabel } from '../components/DevFileLabel'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
@@ -91,11 +93,18 @@ export function AuthPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
-  const initTab = searchParams.get('tab') === 'login' ? 'login' : 'signup'
+  const initTab: Tab = (() => {
+    if (sessionStorage.getItem('vs_return_to_login') === '1') {
+      sessionStorage.removeItem('vs_return_to_login')
+      return 'login'
+    }
+    return searchParams.get('tab') === 'login' ? 'login' : 'signup'
+  })()
 
   const [tab, setTab] = useState<Tab>(initTab)
 
   const signupInProgress = useRef(false)
+  const kakaoOAuthPending = useRef(false)
 
   // Login
   const [loginStep, setLoginStep] = useState<LoginStep>('buttons')
@@ -145,6 +154,28 @@ export function AuthPage() {
       navigate('/consent', { replace: true })
     }
   }, [tab, navigate])
+
+  // Capacitor: OAuth 취소 시 (Custom Tab 닫고 앱으로 돌아왔는데 appUrlOpen이 오지 않는 경우)
+  // loading을 리셋해 버튼이 다시 활성화되도록 한다
+  // 타이머를 충분히 길게(10초) 설정해 exchangeCodeForSession 완료 전에 리셋되지 않도록 함
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return
+    let timer: ReturnType<typeof setTimeout> | null = null
+    let handle: { remove: () => void } | null = null
+    CapApp.addListener('appStateChange', ({ isActive }) => {
+      if (!isActive || !kakaoOAuthPending.current) return
+      timer = setTimeout(() => {
+        if (kakaoOAuthPending.current) {
+          kakaoOAuthPending.current = false
+          setLoading(false)
+        }
+      }, 10000)
+    }).then(h => { handle = h })
+    return () => {
+      handle?.remove()
+      if (timer) clearTimeout(timer)
+    }
+  }, [])
 
   function switchTab(t: Tab) {
     signupInProgress.current = false
@@ -269,7 +300,8 @@ export function AuthPage() {
       setLoading(true)
       sessionStorage.setItem('vs_just_logged_in', '1')
       const err = await signInWithKakao()
-      setLoading(false); if (err) setError(err)
+      if (err) { setLoading(false); setError(err) }
+      else { kakaoOAuthPending.current = true }
     } else {
       setKakaoWizMode(true)
       setWizChoice('service')
@@ -291,7 +323,8 @@ export function AuthPage() {
       else localStorage.removeItem('vs_pending_vertical')
     }
     const err = await signInWithKakao()
-    setLoading(false); if (err) setError(err)
+    if (err) { setLoading(false); setError(err) }
+    else { kakaoOAuthPending.current = true }
   }
 
   // ── step counter ──────────────────────────────────────────────
