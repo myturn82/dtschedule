@@ -1,7 +1,7 @@
 # 버티컬 앱 Android 출시 체크리스트
 
 > **범위:** LESSON:ON → SHIFT:ON → SERVE:ON → CLASS:ON → WORK:ON → SALON:ON → CARE:ON  
-> **최종 수정:** 2026-08-23 (LESSON:ON 시행착오 반영)
+> **최종 수정:** 2026-10-04 (자동 빌드 시스템 반영)
 
 ---
 
@@ -27,7 +27,7 @@
 | 로그인 화면 Dynamic·Schedule 글씨 안 보임 | PNG 이미지를 다크모드/WebView force-dark가 반전 | PNG 제거 → `LogoStack` 코드 컴포넌트로 교체 (완료) |
 | 웹 빌드 후 앱에 미반영 | `cap sync` 누락 | vite build 후 반드시 `npx cap sync android` 실행 후 APK 빌드 |
 | Android에서 PWA 설치 배너 표시 | `beforeinstallprompt` 이벤트가 Android 브라우저에서도 발생 | `InstallBanner.tsx` Android 감지 로직 추가 (완료) |
-| `cap sync` 후 applicationId가 바뀌지 않음 | `keystore.properties`가 이전 버티컬 키스토어를 가리킴 | 빌드 전 `keystore.properties`를 해당 버티컬용으로 교체 |
+| `cap sync` 후 applicationId가 바뀌지 않음 | `VITE_APP_ID` 환경 변수 미주입 | `build:android:<vertical>` 스크립트가 자동 주입 — 직접 빌드 시 `$env:VITE_APP_ID` 설정 |
 
 ---
 
@@ -118,115 +118,95 @@ Firebase Console → 프로젝트 선택
 - [x] 🤖 `android/app/build.gradle` — `signingConfigs.release` 설정
 
 #### SHIFT:ON (`com.dtschedule.shifton`)
-- [ ] 🤖 `.env.shift-on` 파일 작성
-- [ ] 🤖 `package.json` — `build:shift-on`, `icon:shift-on` 스크립트 추가
+- [x] 🤖 `.env.shift-on` 파일 작성
+- [x] 🤖 `package.json` — `build:shift-on`, `icon:shift-on` 스크립트 추가
 - [ ] 🤖 `android/app/keystores/shift-on.keystore` 생성
-- [ ] 👤 키스토어 비밀번호 암호 관리자 백업
+- [ ] 👤 키스토어 비밀번호 암호 관리자 백업 (**분실 시 업데이트 영구 불가**)
+- [ ] 🤖 아이콘 생성 + AAB 빌드 (`npm run build:android:shift-on`)
+- [ ] 👤 Play Console 앱 등록 + 제출
 
 #### SERVE:ON (`com.dtschedule.serveon`)
 - [x] 🤖 `.env.serve-on` 파일 작성
 - [x] 🤖 `package.json` — `build:serve-on`, `icon:serve-on` 스크립트 추가
 - [x] 🤖 `scripts/generate-icon.js` — `VERTICAL_ICONS`에 `serve-on` 추가
-- [ ] 🤖 `icon:serve-on` 스크립트에 `@capacitor/assets generate --android` 추가 (미완료)
-- [ ] 🤖 `android/app/keystores/serve-on.keystore` 생성 ← **키스토어 비밀번호 사용자 제공 필요**
+- [x] 🤖 `android/app/keystores/serve-on.keystore` 생성
 - [ ] 👤 키스토어 비밀번호 암호 관리자 백업 (**분실 시 업데이트 영구 불가**)
-- [ ] 👤 `android/app/keystore.properties` serve-on용으로 수정
 - [x] 👤 Firebase 콘솔 `com.dtschedule.serveon` 앱 등록 + google-services.json 교체
 - [x] 👤 Supabase `com.dtschedule.serveon://login-callback` 추가
-- [ ] 🤖 아이콘 생성 + 웹 빌드 + AAB 빌드
+- [ ] 🤖 아이콘 생성 (`npm run icon:serve-on`)
+- [x] 🤖 AAB 빌드 완료 (`builds/serve-on.aab`)
 - [ ] 👤 Play Console 앱 등록 + 제출
 
 #### CLASS:ON (`com.dtschedule.classon`)
-- [ ] 🤖 `.env.class-on` 파일 작성
-- [ ] 🤖 `package.json` — `build:class-on`, `icon:class-on` 스크립트 추가
+- [x] 🤖 `.env.class-on` 파일 작성
+- [x] 🤖 `package.json` — `build:class-on`, `icon:class-on` 스크립트 추가
 - [ ] 🤖 `android/app/keystores/class-on.keystore` 생성
-- [ ] 👤 키스토어 비밀번호 암호 관리자 백업
+- [ ] 👤 키스토어 비밀번호 암호 관리자 백업 (**분실 시 업데이트 영구 불가**)
+- [ ] 🤖 아이콘 생성 + AAB 빌드 (`npm run build:android:class-on`)
+- [ ] 👤 Play Console 앱 등록 + 제출
 
 #### WORK:ON (`com.dtschedule.workon`)
-- [ ] 🤖 `.env.work-on` 파일 작성
-- [ ] 🤖 `package.json` — `build:work-on`, `icon:work-on` 스크립트 추가
+- [x] 🤖 `.env.work-on` 파일 작성
+- [x] 🤖 `package.json` — `build:work-on`, `icon:work-on` 스크립트 추가
 - [ ] 🤖 `android/app/keystores/work-on.keystore` 생성
-- [ ] 👤 키스토어 비밀번호 암호 관리자 백업
+- [ ] 👤 키스토어 비밀번호 암호 관리자 백업 (**분실 시 업데이트 영구 불가**)
+- [ ] 🤖 아이콘 생성 + AAB 빌드 (`npm run build:android:work-on`)
+- [ ] 👤 Play Console 앱 등록 + 제출
 
 #### SALON:ON (`com.dtschedule.salonon`)
-- [ ] 🤖 `.env.salon-on` 파일 작성
-- [ ] 🤖 `package.json` — `build:salon-on`, `icon:salon-on` 스크립트 추가
+- [x] 🤖 `.env.salon-on` 파일 작성
+- [x] 🤖 `package.json` — `build:salon-on`, `icon:salon-on` 스크립트 추가
 - [ ] 🤖 `android/app/keystores/salon-on.keystore` 생성
-- [ ] 👤 키스토어 비밀번호 암호 관리자 백업
+- [ ] 👤 키스토어 비밀번호 암호 관리자 백업 (**분실 시 업데이트 영구 불가**)
+- [ ] 🤖 아이콘 생성 + AAB 빌드 (`npm run build:android:salon-on`)
+- [ ] 👤 Play Console 앱 등록 + 제출
 
 #### CARE:ON (`com.dtschedule.careon`)
-- [ ] 🤖 `.env.care-on` 파일 작성
-- [ ] 🤖 `package.json` — `build:care-on`, `icon:care-on` 스크립트 추가
+- [x] 🤖 `.env.care-on` 파일 작성
+- [x] 🤖 `package.json` — `build:care-on`, `icon:care-on` 스크립트 추가
 - [ ] 🤖 `android/app/keystores/care-on.keystore` 생성
-- [ ] 👤 키스토어 비밀번호 암호 관리자 백업
+- [ ] 👤 키스토어 비밀번호 암호 관리자 백업 (**분실 시 업데이트 영구 불가**)
+- [ ] 🤖 아이콘 생성 + AAB 빌드 (`npm run build:android:care-on`)
+- [ ] 👤 Play Console 앱 등록 + 제출
 
 ---
 
 ## 3단계 — 빌드 & 설치 절차 (배포마다 반복)
 
-> 버티컬을 `lesson-on` 예시로 표기. 다른 버티컬은 이름만 교체.  
-> **모두 🤖 Claude가 실행.**
+> **모두 🤖 Claude가 실행.** `keystore.*.properties`는 자동 선택되므로 수동 교체 불필요.
 
-### 3-1. 빌드 전 keystore.properties 교체
-
-> 👤 **사용자가 직접** `android/app/keystore.properties` 내용을 해당 버티컬로 교체.  
-> Git 제외 파일이므로 수동 편집 필요.
-
-```
-storeFile=keystores/lesson-on.keystore
-storePassword=<비밀번호>
-keyAlias=lesson-on
-keyPassword=<비밀번호>
-```
-
-### 3-2. 아이콘 생성 🤖
+### 3-1. 아이콘 생성 🤖 (최초 1회 또는 아이콘 변경 시)
 
 ```powershell
 npm run icon:lesson-on
 # → assets/icon-only.png (1024×1024) + Android 전체 사이즈 + PWA 아이콘 생성
 ```
 
-### 3-3. 웹 빌드 🤖
+### 3-2. AAB 빌드 🤖 (웹빌드 + cap sync + Gradle 자동 포함)
 
 ```powershell
-# ⚠️ PowerShell 5.1에서 npm run build:lesson-on 직접 실행 불가 (&&미지원)
-npm run build:tokens; if ($?) { npx vite build --mode lesson-on }
+# 단일 버티컬
+npm run build:android:lesson-on
+
+# 전체 버티컬 일괄 빌드 (키스토어 없는 버티컬은 자동 건너뜀)
+npm run build:android:all
 ```
 
-### 3-4. Capacitor 동기화 🤖
+> 출력 경로: `builds/<vertical>.aab`  
+> (예: `builds/lesson-on.aab`, `builds/serve-on.aab`)
+
+### 3-3. 기기 설치 🤖 (선택 — 기기 테스트 시)
 
 ```powershell
-# capacitor.build.gradle의 applicationId를 VITE_APP_ID로 업데이트
-npx cap sync android
-```
-
-### 3-5. Android APK/AAB 빌드 🤖
-
-```powershell
-# 기기 테스트용 Debug APK
+# Debug APK가 필요한 경우 별도 빌드
 Set-Location android; .\gradlew.bat assembleDebug; Set-Location ..
 
-# Play Store 제출용 Release AAB
-Set-Location android; .\gradlew.bat bundleRelease; Set-Location ..
-```
-
-> 출력 경로:
-> - Debug APK: `android/app/build/outputs/apk/debug/app-debug.apk`
-> - Release AAB: `android/app/build/outputs/bundle/release/app-release.aab`
-
-### 3-6. 기기 설치 🤖
-
-```powershell
 $adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
-
-# 기존 앱 제거 (서명 충돌 방지 — 반드시 먼저 실행)
-& $adb uninstall com.dtschedule.lessonon
-
-# Debug APK 설치
+& $adb uninstall com.dtschedule.lessonon   # 서명 충돌 방지
 & $adb install android\app\build\outputs\apk\debug\app-debug.apk
 ```
 
-### 3-7. 동작 검증 👤
+### 3-4. 동작 검증 👤
 
 - [ ] 앱 실행 → 로그인 화면 진입
 - [ ] 로그인 화면 상단 로고 (DYNAMIC / TEAM / SCHEDULE) 모두 정상 표시
@@ -264,9 +244,9 @@ $adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
 | 버티컬 | 준비 | Supabase | Firebase | 빌드·설치 | 검증 | Play Store |
 |--------|------|----------|----------|-----------|------|------------|
 | LESSON:ON | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| SHIFT:ON  | 🔲 | ✅ | ✅ | 🔲 | 🔲 | 🔲 |
-| SERVE:ON  | 🔵 | ✅ | ✅ | 🔲 | 🔲 | 🔲 |
-| CLASS:ON  | 🔲 | ✅ | ✅ | 🔲 | 🔲 | 🔲 |
-| WORK:ON   | 🔲 | ✅ | ✅ | 🔲 | 🔲 | 🔲 |
-| SALON:ON  | 🔲 | ✅ | ✅ | 🔲 | 🔲 | 🔲 |
-| CARE:ON   | 🔲 | ✅ | ✅ | 🔲 | 🔲 | 🔲 |
+| SHIFT:ON  | 🔵 | ✅ | ✅ | 🔲 | 🔲 | 🔲 |
+| SERVE:ON  | 🔵 | ✅ | ✅ | 🔵 | 🔲 | 🔲 |
+| CLASS:ON  | 🔵 | ✅ | ✅ | 🔲 | 🔲 | 🔲 |
+| WORK:ON   | 🔵 | ✅ | ✅ | 🔲 | 🔲 | 🔲 |
+| SALON:ON  | 🔵 | ✅ | ✅ | 🔲 | 🔲 | 🔲 |
+| CARE:ON   | 🔵 | ✅ | ✅ | 🔲 | 🔲 | 🔲 |
