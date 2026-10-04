@@ -130,10 +130,10 @@ Firebase Console → 프로젝트 선택
 - [x] 🤖 `package.json` — `build:serve-on`, `icon:serve-on` 스크립트 추가
 - [x] 🤖 `scripts/generate-icon.js` — `VERTICAL_ICONS`에 `serve-on` 추가
 - [x] 🤖 `android/app/keystores/serve-on.keystore` 생성
-- [ ] 👤 키스토어 비밀번호 암호 관리자 백업 (**분실 시 업데이트 영구 불가**)
+- [x] 👤 키스토어 비밀번호 암호 관리자 백업 (**분실 시 업데이트 영구 불가**)
 - [x] 👤 Firebase 콘솔 `com.dtschedule.serveon` 앱 등록 + google-services.json 교체
 - [x] 👤 Supabase `com.dtschedule.serveon://login-callback` 추가
-- [ ] 🤖 아이콘 생성 (`npm run icon:serve-on`)
+- [x] 🤖 아이콘 생성 (`npm run icon:serve-on`)
 - [x] 🤖 AAB 빌드 완료 (`builds/serve-on.aab`)
 - [ ] 👤 Play Console 앱 등록 + 제출
 

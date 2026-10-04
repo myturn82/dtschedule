@@ -29,7 +29,7 @@
     "icon:dts": "node scripts/generate-icon.js dts",
     "icon:lesson-on": "node scripts/generate-icon.js lesson-on && npx @capacitor/assets generate --android",
     "icon:shift-on": "node scripts/generate-icon.js shift-on",
-    "icon:serve-on": "node scripts/generate-icon.js serve-on",
+    "icon:serve-on": "node scripts/generate-icon.js serve-on && npx @capacitor/assets generate --android",
     "icon:class-on": "node scripts/generate-icon.js class-on",
     "icon:work-on": "node scripts/generate-icon.js work-on",
     "icon:salon-on": "node scripts/generate-icon.js salon-on",
