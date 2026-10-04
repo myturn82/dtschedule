@@ -4,7 +4,7 @@ android {
     namespace = "com.dtschedule.lessonon"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.dtschedule.lessonon"
+        applicationId System.getenv('VITE_APP_ID') ?: 'com.dtschedule.lessonon'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 17
@@ -17,8 +17,12 @@ android {
         }
     }
 
-    // 서명 설정: app/keystore.properties (Git 제외) 에서 읽기
-    def keystorePropsFile = file("keystore.properties")
+    // 서명 설정: APP_VARIANT 환경 변수로 keystore.<variant>.properties 자동 선택
+    def variantId = System.getenv('APP_VARIANT') ?: (System.getenv('VITE_APP_ID') ?: 'com.dtschedule.lessonon').replace('com.dtschedule.', '')
+    def keystorePropsFile = file("keystore.${variantId}.properties")
+    if (!keystorePropsFile.exists()) {
+        keystorePropsFile = file("keystore.properties")
+    }
     def keystoreProps = new Properties()
     if (keystorePropsFile.exists()) {
         keystoreProps.load(new FileInputStream(keystorePropsFile))

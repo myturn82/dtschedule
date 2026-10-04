@@ -55,7 +55,11 @@ src/styles/tokens.css
 
 # Android 서명 키스토어 (절대 커밋 금지)
 android/app/keystore.properties
+android/app/keystore.*.properties
 android/app/keystores/
+
+# 버티컬별 AAB 빌드 산출물
+builds/
 
 # Firebase 설정 (민감 정보)
 android/app/google-services.json

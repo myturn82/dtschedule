@@ -71,7 +71,7 @@ com.dtschedule.careon://login-callback
 ```
 
 - [x] 👤 `com.dtschedule.lessonon://login-callback` 추가 (완료)
-- [ ] 👤 위 6개 URL 추가
+- [x] 👤 위 6개 URL 추가
 
 ---
 
@@ -97,12 +97,12 @@ Firebase Console → 프로젝트 선택
 | 버티컬 | 패키지명 | Firebase 등록 | json 교체 |
 |--------|----------|--------------|-----------|
 | LESSON:ON | `com.dtschedule.lessonon` | ✅ | ✅ |
-| SHIFT:ON  | `com.dtschedule.shifton`  | 🔲 | 🔲 |
-| SERVE:ON  | `com.dtschedule.serveon`  | 🔲 | 🔲 |
-| CLASS:ON  | `com.dtschedule.classon`  | 🔲 | 🔲 |
-| WORK:ON   | `com.dtschedule.workon`   | 🔲 | 🔲 |
-| SALON:ON  | `com.dtschedule.salonon`  | 🔲 | 🔲 |
-| CARE:ON   | `com.dtschedule.careon`   | 🔲 | 🔲 |
+| SHIFT:ON  | `com.dtschedule.shifton`  | ✅ | ✅ |
+| SERVE:ON  | `com.dtschedule.serveon`  | ✅ | ✅ |
+| CLASS:ON  | `com.dtschedule.classon`  | ✅ | ✅ |
+| WORK:ON   | `com.dtschedule.workon`   | ✅ | ✅ |
+| SALON:ON  | `com.dtschedule.salonon`  | ✅ | ✅ |
+| CARE:ON   | `com.dtschedule.careon`   | ✅ | ✅ |
 
 ---
 
@@ -124,10 +124,17 @@ Firebase Console → 프로젝트 선택
 - [ ] 👤 키스토어 비밀번호 암호 관리자 백업
 
 #### SERVE:ON (`com.dtschedule.serveon`)
-- [ ] 🤖 `.env.serve-on` 파일 작성
-- [ ] 🤖 `package.json` — `build:serve-on`, `icon:serve-on` 스크립트 추가
-- [ ] 🤖 `android/app/keystores/serve-on.keystore` 생성
-- [ ] 👤 키스토어 비밀번호 암호 관리자 백업
+- [x] 🤖 `.env.serve-on` 파일 작성
+- [x] 🤖 `package.json` — `build:serve-on`, `icon:serve-on` 스크립트 추가
+- [x] 🤖 `scripts/generate-icon.js` — `VERTICAL_ICONS`에 `serve-on` 추가
+- [ ] 🤖 `icon:serve-on` 스크립트에 `@capacitor/assets generate --android` 추가 (미완료)
+- [ ] 🤖 `android/app/keystores/serve-on.keystore` 생성 ← **키스토어 비밀번호 사용자 제공 필요**
+- [ ] 👤 키스토어 비밀번호 암호 관리자 백업 (**분실 시 업데이트 영구 불가**)
+- [ ] 👤 `android/app/keystore.properties` serve-on용으로 수정
+- [x] 👤 Firebase 콘솔 `com.dtschedule.serveon` 앱 등록 + google-services.json 교체
+- [x] 👤 Supabase `com.dtschedule.serveon://login-callback` 추가
+- [ ] 🤖 아이콘 생성 + 웹 빌드 + AAB 빌드
+- [ ] 👤 Play Console 앱 등록 + 제출
 
 #### CLASS:ON (`com.dtschedule.classon`)
 - [ ] 🤖 `.env.class-on` 파일 작성
@@ -256,10 +263,10 @@ $adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
 
 | 버티컬 | 준비 | Supabase | Firebase | 빌드·설치 | 검증 | Play Store |
 |--------|------|----------|----------|-----------|------|------------|
-| LESSON:ON | ✅ | ✅ | ✅ | ✅ | ✅ | 🔲 |
-| SHIFT:ON  | 🔲 | 🔲 | 🔲 | 🔲 | 🔲 | 🔲 |
-| SERVE:ON  | 🔲 | 🔲 | 🔲 | 🔲 | 🔲 | 🔲 |
-| CLASS:ON  | 🔲 | 🔲 | 🔲 | 🔲 | 🔲 | 🔲 |
-| WORK:ON   | 🔲 | 🔲 | 🔲 | 🔲 | 🔲 | 🔲 |
-| SALON:ON  | 🔲 | 🔲 | 🔲 | 🔲 | 🔲 | 🔲 |
-| CARE:ON   | 🔲 | 🔲 | 🔲 | 🔲 | 🔲 | 🔲 |
+| LESSON:ON | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| SHIFT:ON  | 🔲 | ✅ | ✅ | 🔲 | 🔲 | 🔲 |
+| SERVE:ON  | 🔵 | ✅ | ✅ | 🔲 | 🔲 | 🔲 |
+| CLASS:ON  | 🔲 | ✅ | ✅ | 🔲 | 🔲 | 🔲 |
+| WORK:ON   | 🔲 | ✅ | ✅ | 🔲 | 🔲 | 🔲 |
+| SALON:ON  | 🔲 | ✅ | ✅ | 🔲 | 🔲 | 🔲 |
+| CARE:ON   | 🔲 | ✅ | ✅ | 🔲 | 🔲 | 🔲 |
