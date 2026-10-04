@@ -295,7 +295,7 @@ export function FullScreenMenu({
 
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
-      CapApp.getInfo().then(info => setAppVersion(`${info.version} (${info.build})`)).catch(() => {})
+      CapApp.getInfo().then(info => setAppVersion(info.build ? `${info.version} (${info.build})` : info.version)).catch(() => {})
     }
   }, [])
   const [expandedId, setExpandedId] = useState<string | null>(null)
